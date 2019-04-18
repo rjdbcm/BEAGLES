@@ -1,6 +1,7 @@
 import numpy as np
 cimport numpy as np
 cimport cython
+from cython.parallel import prange
 ctypedef np.float_t DTYPE_t
 from libc.math cimport exp
 from ..utils.box import BoundBox
@@ -33,15 +34,16 @@ cdef void _softmax_c(float* x, int classes):
         float sum = 0
         np.intp_t k
         float arr_max = 0
-    for k in range(classes):
-        arr_max = max(arr_max,x[k])
-    
-    for k in range(classes):
-        x[k] = exp(x[k]-arr_max)
-        sum += x[k]
+    with nogil:
+        for k in prange(classes):
+            arr_max = max(arr_max,x[k])
 
-    for k in range(classes):
-        x[k] = x[k]/sum
+        for k in prange(classes):
+            x[k] = exp(x[k]-arr_max)
+            sum += x[k]
+
+        for k in prange(classes):
+            x[k] = x[k]/sum
 """
         
         
@@ -68,7 +70,7 @@ def box_constructor(meta,np.ndarray[float,ndim=3] net_out_in):
         float[:, :, :, ::1] Classes = net_out[:, :, :, 5:]
         float[:, :, :, ::1] Bbox_pred =  net_out[:, :, :, :5]
         float[:, :, :, ::1] probs = np.zeros((H, W, B, C), dtype=np.float32)
-    
+
     for row in range(H):
         for col in range(W):
             for box_loop in range(B):
@@ -82,13 +84,13 @@ def box_constructor(meta,np.ndarray[float,ndim=3] net_out_in):
                 #SOFTMAX BLOCK, no more pointer juggling
                 for class_loop in range(C):
                     arr_max=max_c(arr_max,Classes[row,col,box_loop,class_loop])
-                
+
                 for class_loop in range(C):
                     Classes[row,col,box_loop,class_loop]=exp(Classes[row,col,box_loop,class_loop]-arr_max)
                     sum+=Classes[row,col,box_loop,class_loop]
-                
+
                 for class_loop in range(C):
-                    tempc = Classes[row, col, box_loop, class_loop] * Bbox_pred[row, col, box_loop, 4]/sum                    
+                    tempc = Classes[row, col, box_loop, class_loop] * Bbox_pred[row, col, box_loop, 4]/sum
                     if(tempc > threshold):
                         probs[row, col, box_loop, class_loop] = tempc
     

@@ -18,7 +18,9 @@ if os.name =='nt' :
         Extension("darkflow.cython_utils.cy_yolo2_findboxes",
             sources=["darkflow/cython_utils/cy_yolo2_findboxes.pyx"],
             #libraries=["m"] # Unix-like specific
-            include_dirs=[numpy.get_include()]
+            include_dirs=[numpy.get_include()],
+            extra_compile_args=['/fopenmp'],
+            extra_link_args=['/fopenmp']
         ),
         Extension("darkflow.cython_utils.cy_yolo_findboxes",
             sources=["darkflow/cython_utils/cy_yolo_findboxes.pyx"],
@@ -37,7 +39,9 @@ elif os.name =='posix' :
         Extension("darkflow.cython_utils.cy_yolo2_findboxes",
             sources=["darkflow/cython_utils/cy_yolo2_findboxes.pyx"],
             libraries=["m"], # Unix-like specific
-            include_dirs=[numpy.get_include()]
+            include_dirs=[numpy.get_include()],
+            extra_compile_args=['-fopenmp'],
+            extra_link_args=['-fopenmp']
         ),
         Extension("darkflow.cython_utils.cy_yolo_findboxes",
             sources=["darkflow/cython_utils/cy_yolo_findboxes.pyx"],
