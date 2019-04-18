@@ -1,7 +1,99 @@
 #! /usr/bin/env python
 
-import sys
-from darkflow.cli import cliHandler
+import os
+import argparse
+from darkflow.net.build import TFNet
 
-cliHandler(sys.argv)
+cli = argparse.ArgumentParser(description='[dark]flow translates darknet into tensorflow.',
+                              formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+cli.add_argument('--imgdir', default='./sample_img/', metavar='', help='path to testing directory with images')
+cli.add_argument('--binary', default='./bin/', metavar='', help='path to .weights directory')
+cli.add_argument('--config', default='./cfg/', metavar='', help='path to .cfg directory')
+cli.add_argument('--dataset', default='../pascal/VOCdevkit/IMG/', metavar='', help='path to dataset directory')
+cli.add_argument('--summary', default='', help='path to Tensorboard summaries directory')
+cli.add_argument('--annotation', default='../pascal/VOCdevkit/ANN/', metavar='',
+                 help='path to the annotation directory')
+cli.add_argument('--trainer', default='rmsprop', metavar='', help='training algorithm')
+cli.add_argument('--momentum', default=0.0, metavar='', help='applicable for rmsprop and momentum optimizers')
+cli.add_argument('--keep', default=20, metavar='N', help='number of most recent training results to save')
+cli.add_argument('--batch', default=16, metavar='N', help='batch size')
+cli.add_argument('--epoch', default=1000, metavar='N', help='number of epochs')
+cli.add_argument('--save', default=2000, metavar='N', help='save a checkpoint ever N training examples')
+cli.add_argument('--demo', default=False, metavar='', help='demo on webcam')
+cli.add_argument('--queue', default=1, metavar='', help='process demo in batch')
+cli.add_argument('--json', default=False, metavar='', help='output bounding box information in json format')
+cli.add_argument('--saveVideo', default=False, metavar='', help='record video from input or camera')
+cli.add_argument('--metaLoad', default='', metavar='',
+                 help='path to .meta file generated during --savepb that corresponds to .pb file')
+cli.add_argument('--gpu', default=0.0, metavar='[0 .. 1.0]', help='amount of GPU to use')
+cli.add_argument('--gpuName', default='/gpu:0', metavar='/gpu:N', help='GPU device name')
+cli.add_argument('-l', '--load', metavar='', help='filename of weights or checkpoint to load')
+cli.add_argument('-m', '--model', metavar='', help='filename of model to use')
+cli.add_argument('--threshold', default=-0.1, metavar='[0.01 .. 0.99]',
+                 help='threshold of confidence to record an annotation hit')
+cli.add_argument('--train', default=False, metavar='', help='train the whole net')
+cli.add_argument('--verbalise', default=True, metavar='', help='show graph structure while building')
+cli.add_argument('--savepb', default=False, metavar='', help='save net and weight to a .pb file')
+cli.add_argument('--lr', default=1e-5, metavar='N', help='learning rate')
 
+FLAGS = cli.parse_args()
+
+
+# Make sure all necessary dirs exist
+
+def _get_dir(dirs):
+    for d in dirs:
+        this = os.path.abspath(os.path.join(os.path.curdir, d))
+        if not os.path.exists(this): os.makedirs(this)
+
+
+requiredDirectories = [FLAGS.imgdir, FLAGS.binary, FLAGS.backup, os.path.join(FLAGS.imgdir, 'out')]
+
+if FLAGS.summary:
+    requiredDirectories.append(FLAGS.summary)
+
+_get_dir(requiredDirectories)
+
+# Make sure all integer and float arguments are fixed to their respective types
+try:
+    FLAGS.load = int(FLAGS.load)
+except:
+    pass  # Non-integer passed as filename
+
+try:
+    FLAGS.threshold = float(FLAGS.threshold)
+except ValueError:
+    print('ValueError: the chosen threshold value {} is not a number'.format(FLAGS.threshold))
+
+try:
+    FLAGS.gpu = float(FLAGS.gpu)
+except ValueError:
+    print('ValueError: chosen GPU utilization value {} is not a number'.format(FLAGS.gpu))
+
+try:
+    FLAGS.lr = float(FLAGS.lr)
+except ValueError:
+    print('ValueError: chosen learning rate value {} is not a number'.format(FLAGS.lr))
+
+# Pass the flags to Tensorflow
+
+print(FLAGS)
+
+tfnet = TFNet(FLAGS)
+
+if FLAGS.demo:
+    tfnet.camera()
+    exit('Demo stopped, exit.')
+
+if FLAGS.train:
+    print('Enter training ...')
+    tfnet.train()
+    if not FLAGS.savepb:
+        exit('Training finished, exit.')
+
+if FLAGS.savepb:
+    print('Rebuild a constant version ...')
+    tfnet.savepb()
+    exit('Done')
+
+tfnet.predict()

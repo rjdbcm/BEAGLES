@@ -1,3 +1,5 @@
+# DEPRECATED #
+
 from .defaults import argHandler #Import the default arguments
 import os
 from .net.build import TFNet
@@ -30,7 +32,8 @@ def cliHandler(args):
         exit('Demo stopped, exit.')
 
     if FLAGS.train:
-        print('Enter training ...'); tfnet.train()
+        print('Enter training ...');
+        tfnet.train()
         if not FLAGS.savepb: 
             exit('Training finished, exit.')
 

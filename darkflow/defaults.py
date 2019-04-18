@@ -1,3 +1,5 @@
+# DEPRECATED #
+
 class argHandler(dict):
     #A super duper fancy custom made CLI argument handler!!
     __getattr__ = dict.get
