@@ -4,15 +4,17 @@ import os
 import argparse
 from darkflow.net.build import TFNet
 
+
 cli = argparse.ArgumentParser(description='[dark]flow translates darknet into tensorflow.',
                               formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 cli.add_argument('--imgdir', default='./sample_img/', metavar='', help='path to testing directory with images')
 cli.add_argument('--binary', default='./bin/', metavar='', help='path to .weights directory')
 cli.add_argument('--config', default='./cfg/', metavar='', help='path to .cfg directory')
 cli.add_argument('--dataset', default='../pascal/VOCdevkit/IMG/', metavar='', help='path to dataset directory')
-cli.add_argument('--summary', default='', help='path to Tensorboard summaries directory')
+cli.add_argument('--backup', default='./ckpt/', metavar='', help='path to checkpoint directory')
 cli.add_argument('--annotation', default='../pascal/VOCdevkit/ANN/', metavar='',
                  help='path to the annotation directory')
+cli.add_argument('--summary', default='', help='path to Tensorboard summaries directory')
 cli.add_argument('--trainer', default='rmsprop', metavar='', help='training algorithm')
 cli.add_argument('--momentum', default=0.0, metavar='', help='applicable for rmsprop and momentum optimizers')
 cli.add_argument('--keep', default=20, metavar='N', help='number of most recent training results to save')
@@ -23,6 +25,7 @@ cli.add_argument('--demo', default=False, metavar='', help='demo on webcam')
 cli.add_argument('--queue', default=1, metavar='', help='process demo in batch')
 cli.add_argument('--json', default=False, metavar='', help='output bounding box information in json format')
 cli.add_argument('--saveVideo', default=False, metavar='', help='record video from input or camera')
+cli.add_argument('--pbLoad', default='', metavar='*.pb', help='name of protobuf file to load')
 cli.add_argument('--metaLoad', default='', metavar='',
                  help='path to .meta file generated during --savepb that corresponds to .pb file')
 cli.add_argument('--gpu', default=0.0, metavar='[0 .. 1.0]', help='amount of GPU to use')
