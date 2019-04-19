@@ -1,102 +1,229 @@
 #! /usr/bin/env python
 
+# will fix repetitious parser.add_argument() statements at some point with parent/child parsers
+# Will add image processing to demo command
+# will add thread-based frame buffer for video processing
+
 import os
 import argparse
+import sys
+import cv2
+import numpy as np
 from darkflow.net.build import TFNet
 
 
-cli = argparse.ArgumentParser(description='[dark]flow translates darknet into tensorflow.',
-                              formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-cli.add_argument('--imgdir', default='./sample_img/', metavar='', help='path to testing directory with images')
-cli.add_argument('--binary', default='./bin/', metavar='', help='path to .weights directory')
-cli.add_argument('--config', default='./cfg/', metavar='', help='path to .cfg directory')
-cli.add_argument('--dataset', default='../pascal/VOCdevkit/IMG/', metavar='', help='path to dataset directory')
-cli.add_argument('--backup', default='./ckpt/', metavar='', help='path to checkpoint directory')
-cli.add_argument('--annotation', default='../pascal/VOCdevkit/ANN/', metavar='',
-                 help='path to the annotation directory')
-cli.add_argument('--summary', default='', help='path to Tensorboard summaries directory')
-cli.add_argument('--trainer', default='rmsprop', metavar='', help='training algorithm')
-cli.add_argument('--momentum', default=0.0, metavar='', help='applicable for rmsprop and momentum optimizers')
-cli.add_argument('--keep', default=20, metavar='N', help='number of most recent training results to save')
-cli.add_argument('--batch', default=16, metavar='N', help='batch size')
-cli.add_argument('--epoch', default=1000, metavar='N', help='number of epochs')
-cli.add_argument('--save', default=2000, metavar='N', help='save a checkpoint ever N training examples')
-cli.add_argument('--demo', default=False, metavar='', help='demo on webcam')
-cli.add_argument('--queue', default=1, metavar='', help='process demo in batch')
-cli.add_argument('--json', default=False, metavar='', help='output bounding box information in json format')
-cli.add_argument('--saveVideo', default=False, metavar='', help='record video from input or camera')
-cli.add_argument('--pbLoad', default='', metavar='*.pb', help='name of protobuf file to load')
-cli.add_argument('--metaLoad', default='', metavar='',
-                 help='path to .meta file generated during --savepb that corresponds to .pb file')
-cli.add_argument('--gpu', default=0.0, metavar='[0 .. 1.0]', help='amount of GPU to use')
-cli.add_argument('--gpuName', default='/gpu:0', metavar='/gpu:N', help='GPU device name')
-cli.add_argument('-l', '--load', metavar='', help='filename of weights or checkpoint to load')
-cli.add_argument('-m', '--model', metavar='', help='filename of model to use')
-cli.add_argument('--threshold', default=-0.1, metavar='[0.01 .. 0.99]',
-                 help='threshold of confidence to record an annotation hit')
-cli.add_argument('--train', default=False, metavar='', help='train the whole net')
-cli.add_argument('--verbalise', default=True, metavar='', help='show graph structure while building')
-cli.add_argument('--savepb', default=False, metavar='', help='save net and weight to a .pb file')
-cli.add_argument('--lr', default=1e-5, metavar='N', help='learning rate')
+class flow(object):
 
-FLAGS = cli.parse_args()
+    def __init__(self):
+        parser = argparse.ArgumentParser(
+            description='[dark]flow translates darknet to tensorflow',
+            usage='''flow <command> [<args>]
 
+The most commonly used commands are:
+   train     Train a model
+   test      Test a model
+   demo      Demo a model on images, video, or webcam
+   savepb    Freeze a trained model
+''')
+        parser.add_argument('command', help='Subcommand to run')
+        # parse_args defaults to [1:] for args, but you need to
+        # exclude the rest of the args too, or validation will fail
+        args = parser.parse_args(sys.argv[1:2])
+        if not hasattr(self, args.command):
+            print('Unrecognized command')
+            parser.print_help()
+            exit(1)
+        # use dispatch pattern to invoke method with same name
+        getattr(self, args.command)()
 
-# Make sure all necessary dirs exist
+    def _get_dir(self, dirs):
+        for d in dirs:
+            this = os.path.abspath(os.path.join(os.path.curdir, d))
+            if not os.path.exists(this): os.makedirs(this)
 
-def _get_dir(dirs):
-    for d in dirs:
-        this = os.path.abspath(os.path.join(os.path.curdir, d))
-        if not os.path.exists(this): os.makedirs(this)
+    def train(self):
+        parser = argparse.ArgumentParser(
+            description='Train a model')
+        # prefixing the argument with -- means it's optional
+        parser.add_argument('--train', default=True, help=argparse.SUPPRESS) #to keep train in the namespace
+        parser.add_argument('--imgdir', default='./sample_img/', metavar='', help='path to testing directory with images')
+        parser.add_argument('--binary', default='./bin/', metavar='', help='path to .weights directory')
+        parser.add_argument('--config', default='./cfg/', metavar='', help='path to .cfg directory')
+        parser.add_argument('--dataset', default='../pascal/VOCdevkit/IMG/', metavar='', help='path to dataset directory')
+        parser.add_argument('--backup', default='./ckpt/', metavar='', help='path to checkpoint directory')
+        parser.add_argument('--labels', default='labels.txt', metavar='', help='path to textfile containing labels')
+        parser.add_argument('--annotation', default='../pascal/VOCdevkit/ANN/', metavar='',
+                         help='path to the annotation directory')
+        parser.add_argument('--summary', default='', help='path to Tensorboard summaries directory')
+        parser.add_argument('--trainer', default='rmsprop', metavar='', help='training algorithm')
+        parser.add_argument('--momentum', default=0.0, metavar='', help='applicable for rmsprop and momentum optimizers')
+        parser.add_argument('--keep', default=20, metavar='N', help='number of most recent training results to save')
+        parser.add_argument('--batch', default=16, metavar='N', help='batch size')
+        parser.add_argument('--epoch', default=1000, metavar='N', help='number of epochs')
+        parser.add_argument('--save', default=2000, metavar='N', help='save a checkpoint ever N training examples')
+        parser.add_argument('--pbLoad', default='', metavar='*.pb', help='name of protobuf file to load')
+        parser.add_argument('--metaLoad', default='', metavar='',
+                         help='path to .meta file generated during --savepb that corresponds to .pb file')
+        parser.add_argument('--gpu', default=0.0, metavar='[0 .. 1.0]', help='amount of GPU to use')
+        parser.add_argument('--gpuName', default='/gpu:0', metavar='/gpu:N', help='GPU device name')
+        parser.add_argument('-l', '--load', metavar='', help='filename of weights or checkpoint to load')
+        parser.add_argument('-m', '--model', metavar='', help='filename of model to use')
+        parser.add_argument('--threshold', default=-0.1, metavar='[0.01 .. 0.99]',
+                         help='threshold of confidence to record an annotation hit')
+        parser.add_argument('--lr', default=1e-5, metavar='N', help='learning rate')
+        parser.add_argument('-v', '--verbalise', default=True, metavar='', help='show graph structure while building')
+        # now that we're inside a subcommand, ignore the first
+        # TWO argvs, ie the command (flow) and the subcommand (train)
 
+        FLAGS = parser.parse_args(sys.argv[2:])
+        requiredDirectories = [FLAGS.imgdir, FLAGS.binary, FLAGS.backup, os.path.join(FLAGS.imgdir, 'out')]
+        if FLAGS.summary:
+            requiredDirectories.append(FLAGS.summary)
 
-requiredDirectories = [FLAGS.imgdir, FLAGS.binary, FLAGS.backup, os.path.join(FLAGS.imgdir, 'out')]
+        self._get_dir(requiredDirectories)
 
-if FLAGS.summary:
-    requiredDirectories.append(FLAGS.summary)
+        try:
+            FLAGS.load = int(FLAGS.load)
+        except:
+            pass  # Non-integer passed as filename using bare except
 
-_get_dir(requiredDirectories)
-
-# Make sure all integer and float arguments are fixed to their respective types
-try:
-    FLAGS.load = int(FLAGS.load)
-except:
-    pass  # Non-integer passed as filename
-
-try:
-    FLAGS.threshold = float(FLAGS.threshold)
-except ValueError:
-    print('ValueError: the chosen threshold value {} is not a number'.format(FLAGS.threshold))
-
-try:
-    FLAGS.gpu = float(FLAGS.gpu)
-except ValueError:
-    print('ValueError: chosen GPU utilization value {} is not a number'.format(FLAGS.gpu))
-
-try:
-    FLAGS.lr = float(FLAGS.lr)
-except ValueError:
-    print('ValueError: chosen learning rate value {} is not a number'.format(FLAGS.lr))
-
-# Pass the flags to Tensorflow
-
-print(FLAGS)
-
-tfnet = TFNet(FLAGS)
-
-if FLAGS.demo:
-    tfnet.camera()
-    exit('Demo stopped, exit.')
-
-if FLAGS.train:
-    print('Enter training ...')
-    tfnet.train()
-    if not FLAGS.savepb:
+        tfnet = TFNet(FLAGS)
+        tfnet.train()
         exit('Training finished, exit.')
 
-if FLAGS.savepb:
-    print('Rebuild a constant version ...')
-    tfnet.savepb()
-    exit('Done')
+    def demo(self):
+        parser = argparse.ArgumentParser(description='Frame-by-frame annotation using darkflow')
+        parser.add_argument('--input', help='input video (.mp4)')
+        parser.add_argument('--output', default='out.avi', help='name of the file to output to')
+        parser.add_argument('--train', default=True, help=argparse.SUPPRESS)  # to keep train in the namespace
+        parser.add_argument('--savepb', default=True, help=argparse.SUPPRESS)  # to keep savepb in the namespace
+        parser.add_argument('--trainer', default='rmsprop', metavar='', help='training algorithm')
+        parser.add_argument('-l', '--load', metavar='', help='filename of weights or checkpoint to load')
+        parser.add_argument('-m', '--model', metavar='', help='filename of model to use')
+        parser.add_argument('--pbLoad', default='', metavar='*.pb', help='name of protobuf file to load')
+        parser.add_argument('--binary', default='./bin/', metavar='', help='path to .weights directory')
+        parser.add_argument('--metaLoad', default='', metavar='',
+                            help='path to .meta file generated during --savepb that corresponds to .pb file')
+        parser.add_argument('--labels', default='labels.txt', metavar='', help='path to textfile containing labels')
+        parser.add_argument('--threshold', default=-0.1, metavar='[0.01 .. 0.99]',
+                            help='threshold of confidence to record an annotation hit')
+        parser.add_argument('-v', '--verbalise', default=True, metavar='', help='show graph structure while building')
+        parser.add_argument('--gpu', default=0.0, metavar='[0 .. 1.0]', help='amount of GPU to use')
+        parser.add_argument('--gpuName', default='/gpu:0', metavar='/gpu:N', help='GPU device name')
+        parser.add_argument('--lr', default=1e-5, metavar='N', help='learning rate')
+        parser.add_argument('--summary', default='', help='path to Tensorboard summaries directory')
+        parser.add_argument('--keep', default=20, metavar='N', help='number of most recent training results to save')
+        parser.add_argument('--backup', default='./ckpt/', metavar='', help='path to checkpoint directory')
 
-tfnet.predict()
+        FLAGS = parser.parse_args(sys.argv[2:])
+        print(FLAGS)
+        INPUT_VIDEO = FLAGS.input
+        FRAME_NUMBER = 1
+        try:
+            FLAGS.load = int(FLAGS.load)
+        except:
+            pass  # Non-integer passed as filename using bare except
+        tfnet = TFNet(FLAGS)
+
+        cap = cv2.VideoCapture(INPUT_VIDEO)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
+        fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
+        out = cv2.VideoWriter(FLAGS.output, fourcc, 20.0, (int(width), int(height)))
+
+        def boxing(original_img, predictions):
+            newImage = np.copy(original_img)
+
+            for result in predictions:
+                top_x = result['topleft']['x']
+                top_y = result['topleft']['y']
+
+                btm_x = result['bottomright']['x']
+                btm_y = result['bottomright']['y']
+
+                confidence = result['confidence']
+                label = result['label'] + " " + str(round(confidence, 3))
+
+                if confidence > 0.3:
+                    newImage = cv2.rectangle(newImage, (top_x, top_y), (btm_x, btm_y), (255, 0, 0), 3)
+                    newImage = cv2.putText(newImage, label, (top_x, top_y - 5), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,
+                                           (0, 230, 0), 1, cv2.LINE_AA)
+
+            return newImage
+
+        while (True):
+            # Capture frame-by-frame
+
+            ret, frame = cap.read()
+            print("Frame {}/{} [{}%]".format(FRAME_NUMBER, total_frames, round(100 * FRAME_NUMBER / total_frames, 1)),
+                  end='\r')
+            FRAME_NUMBER += 1
+
+            if ret:
+                frame = np.asarray(frame)
+                result = tfnet.return_predict(frame)
+
+                new_frame = boxing(frame, result)
+
+                # Create annotation file
+                labels = []
+                conf = []
+                for item in result:
+                    labels.append(item['label'])
+                    conf.append(round(item['confidence'], 3))
+                    # print("{}; {}; {}".format(round(cap.get(cv2.CAP_PROP_POS_MSEC)/1000, 4), labels, conf))
+
+                # Display the resulting frame
+                out.write(new_frame)
+                cv2.imshow('frame', new_frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+            else:
+                break
+
+        # When everything done, release the capture
+        cap.release()
+        out.release()
+        cv2.destroyAllWindows()
+
+    def savepb(self):
+        parser = argparse.ArgumentParser(
+            description='Freeze a trained model')
+        parser.add_argument('--train', default=True, help=argparse.SUPPRESS) #to keep train in the namespace
+        parser.add_argument('--savepb', default=True, help=argparse.SUPPRESS) #to keep savepb in the namespace
+        parser.add_argument('--trainer', default='rmsprop', metavar='', help='training algorithm')
+        parser.add_argument('-l', '--load', metavar='', help='filename of weights or checkpoint to load')
+        parser.add_argument('-m', '--model', metavar='', help='filename of model to use')
+        parser.add_argument('--pbLoad', default='', metavar='*.pb', help='name of protobuf file to load')
+        parser.add_argument('--binary', default='./bin/', metavar='', help='path to .weights directory')
+        parser.add_argument('--metaLoad', default='', metavar='',
+                            help='path to .meta file generated during --savepb that corresponds to .pb file')
+        parser.add_argument('--labels', default='labels.txt', metavar='', help='path to textfile containing labels')
+        parser.add_argument('--threshold', default=-0.1, metavar='[0.01 .. 0.99]',
+                         help='threshold of confidence to record an annotation hit')
+        parser.add_argument('-v', '--verbalise', default=True, metavar='', help='show graph structure while building')
+        parser.add_argument('--gpu', default=0.0, metavar='[0 .. 1.0]', help='amount of GPU to use')
+        parser.add_argument('--gpuName', default='/gpu:0', metavar='/gpu:N', help='GPU device name')
+        parser.add_argument('--lr', default=1e-5, metavar='N', help='learning rate')
+        parser.add_argument('--summary', default='', help='path to Tensorboard summaries directory')
+        parser.add_argument('--keep', default=20, metavar='N', help='number of most recent training results to save')
+        parser.add_argument('--backup', default='./ckpt/', metavar='', help='path to checkpoint directory')
+        FLAGS = parser.parse_args(sys.argv[2:])
+        try:
+            FLAGS.load = int(FLAGS.load)
+        except:
+            pass  # Non-integer passed as filename using bare except
+        print('Freezing graph of % to a protobuf...'.format(FLAGS.model))
+        tfnet = TFNet(FLAGS)
+        tfnet.savepb()
+        exit('Done')
+
+
+if __name__ == '__main__':
+    flow()
+
+
+
+

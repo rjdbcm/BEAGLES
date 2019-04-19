@@ -133,13 +133,10 @@ During training, the script will occasionally save intermediate results into Ten
 
 ```bash
 # Resume the most recent checkpoint for training
-flow --train --model cfg/yolo-new.cfg --load -1
-
-# Test with checkpoint at step 1500
-flow --model cfg/yolo-new.cfg --load 1500
+flow train --model cfg/yolo-new.cfg --load -1
 
 # Fine tuning yolo-tiny from the original one
-flow --train --model cfg/tiny-yolo.cfg --load bin/tiny-yolo.weights
+flow train --model=cfg/tiny-yolo.cfg --load=bin/tiny-yolo.weights
 ```
 
 Example of training on Pascal VOC 2007:
@@ -217,13 +214,13 @@ flow --model cfg/yolo-new.cfg --train --dataset "~/VOCdevkit/VOC2007/JPEGImages"
 For a demo that entirely runs on the CPU:
 
 ```bash
-flow --model cfg/yolo-new.cfg --load bin/yolo-new.weights --demo videofile.avi
+flow demo --model cfg/yolo-new.cfg --load bin/yolo-new.weights
 ```
 
 For a demo that runs 100% on the GPU:
 
 ```bash
-flow --model cfg/yolo-new.cfg --load bin/yolo-new.weights --demo videofile.avi --gpu 1.0
+flow demo --model cfg/yolo-new.cfg --load bin/yolo-new.weights --gpu 1.0
 ```
 
 To use your webcam/camera, simply replace `videofile.avi` with keyword `camera`.
@@ -254,10 +251,10 @@ print(result)
 
 ```bash
 ## Saving the lastest checkpoint to protobuf file
-flow --model cfg/yolo-new.cfg --load -1 --savepb
+flow savepb --model=cfg/yolo-new.cfg --load=-1
 
 ## Saving graph and weights to protobuf file
-flow --model cfg/yolo.cfg --load bin/yolo.weights --savepb
+flow savepb --model=cfg/yolo.cfg --load=bin/yolo.weights
 ```
 When saving the `.pb` file, a `.meta` file will also be generated alongside it. This `.meta` file is a JSON dump of everything in the `meta` dictionary that contains information nessecary for post-processing such as `anchors` and `labels`. This way, everything you need to make predictions from the graph and do post processing is contained in those two files - no need to have the `.cfg` or any labels file tagging along.
 
