@@ -50,14 +50,14 @@ def postprocess(self, net_out, im, save = True):
 		if self.FLAGS.json:
 			resultsForJSON.append({"label": mess, "confidence": float('%.2f' % confidence), "topleft": {"x": left, "y": top}, "bottomright": {"x": right, "y": bot}})
 			continue
-
+		mess = mess + " " + str(round(confidence, 3))
 		cv2.rectangle(imgcv,
-			(left, top), (right, bot),
-			colors[max_indx], thick)
-		cv2.putText(imgcv, mess, (left, top - 12),
-			0, 1e-3 * h, colors[max_indx],thick//3)
+					  (left, top), (right, bot),
+					  colors[max_indx], 3)
+		cv2.putText(imgcv, mess, (left, top - 12), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8, (0, 230, 0), 1, cv2.LINE_AA)
 
-	if not save: return imgcv
+	if not save:
+		return imgcv
 
 	outfolder = os.path.join(self.FLAGS.imgdir, 'out')
 	img_name = os.path.join(outfolder, os.path.basename(im))

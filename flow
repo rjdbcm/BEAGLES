@@ -15,13 +15,14 @@ class Flow(object):
         parser = argparse.ArgumentParser(
             description='[dark]flow translates darknet to tensorflow')
         parser.add_argument('--train', default=False, action='store_true',
-                            help='train a model on annotated data')  # to keep train in the namespace
+                            help='train a model on annotated data')
         parser.add_argument('--savepb', default=False, action='store_true',
-                            help='freeze the model to a .pb')  # to keep savepb in the namespace
+                            help='freeze the model to a .pb')
         parser.add_argument('--demo', default='', help='demo model on video or webcam')
         parser.add_argument('--saveVideo', default='out.avi', help='filename of video output')
         parser.add_argument('--queue', default=1, help='batch process demo')
-        parser.add_argument('--json', default=False, help='output bounding box information in .json')
+        parser.add_argument('--json', default=False, action='store_true',
+                            help='output bounding box information in .json')
         parser.add_argument('--imgdir', default='./sample_img/', metavar='',
                             help='path to testing directory with images')
         parser.add_argument('--binary', default='./bin/', metavar='', help='path to .weights directory')
