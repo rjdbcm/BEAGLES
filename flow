@@ -51,7 +51,6 @@ class Flow(object):
                             help='threshold of confidence to record an annotation hit')
         parser.add_argument('--lr', default=1e-5, metavar='N', help='learning rate')
         parser.add_argument('-v', '--verbalise', default=True, metavar='', help='show graph structure while building')
-
         FLAGS = parser.parse_args()
 
         def _get_dir(dirs):
