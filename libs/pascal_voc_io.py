@@ -14,13 +14,12 @@ ENCODE_METHOD = DEFAULT_ENCODING
 
 class PascalVocWriter:
 
-    def __init__(self, foldername, filename, imgSize,databaseSrc='Unknown', localImgPath=None):
+    def __init__(self, foldername, filename, imgSize,databaseSrc='Unknown'):
         self.foldername = foldername
         self.filename = filename
         self.databaseSrc = databaseSrc
         self.imgSize = imgSize
         self.boxlist = []
-        self.localImgPath = localImgPath
         self.verified = False
 
     def prettify(self, elem):
@@ -53,10 +52,6 @@ class PascalVocWriter:
 
         filename = SubElement(top, 'filename')
         filename.text = self.filename
-
-        if self.localImgPath is not None:
-            localImgPath = SubElement(top, 'path')
-            localImgPath.text = self.localImgPath
 
         source = SubElement(top, 'source')
         database = SubElement(source, 'database')

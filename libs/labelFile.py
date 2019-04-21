@@ -42,7 +42,7 @@ class LabelFile(object):
         imageShape = [image.height(), image.width(),
                       1 if image.isGrayscale() else 3]
         writer = PascalVocWriter(imgFolderName, imgFileName,
-                                 imageShape, localImgPath=imagePath)
+                                 imageShape)
         writer.verified = self.verified
 
         for shape in shapes:
