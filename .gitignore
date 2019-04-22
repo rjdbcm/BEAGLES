@@ -2,7 +2,7 @@ resources/icons/.DS_Store
 
 resources.py
 
-rawframes/*
+
 
 .idea*
 labelImg.egg-info*
