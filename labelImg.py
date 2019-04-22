@@ -11,6 +11,8 @@ import subprocess
 from functools import partial
 from collections import defaultdict
 
+# TODO: Make it so we can create mirror images and mirror annotation files
+
 try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
@@ -1191,13 +1193,11 @@ class MainWindow(QMainWindow, WindowMixin):
         formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
         filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
         filename = QFileDialog.getOpenFileName(self, '%s - Choose Video file' % __appname__, path, filters)
-        target = os.path.dirname(os.path.realpath(__file__))+'/rawframes'
-        # Try moving imported video into rawframes then calling frame_capture since the imwrite function has path issues
+        target = os.path.dirname(os.path.realpath(__file__))+'/data/rawframes'
+        # TODO: Try moving imported video into rawframes then calling frame_capture since the imwrite function has path issues
         frame_capture(filename[0])
 
         self.importDirImages(target)
-
-
 
     def importDirImages(self, dirpath):
         if not self.mayContinue() or not dirpath:
@@ -1469,15 +1469,16 @@ def frame_capture(path):
 
     import cv2
     vidObj = cv2.VideoCapture(path)
-    count = 0
+    count = 1  # Start the frame index at 1 >.>
     success = 1
     name = os.path.splitext(path)[0]
+    total_zeros = len(str(int(vidObj.get(cv2.CAP_PROP_FRAME_COUNT))))
 
     while success:
         success, image = vidObj.read()
-        # Saves the frames with frame-count
-        cv2.imwrite("{}_frame_{}.jpg".format(name, count),
-                    image)  # TODO: zfill the systematically named frame numbers using total frames
+        fileno = str(count)
+        cv2.imwrite("{}_frame_{}.jpg".format(name, fileno.zfill(total_zeros)),
+                    image)
         count += 1
 
 
