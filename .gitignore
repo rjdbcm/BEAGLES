@@ -2,8 +2,6 @@ resources/icons/.DS_Store
 
 resources.py
 
-
-
 .idea*
 labelImg.egg-info*
 
