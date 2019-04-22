@@ -7,7 +7,7 @@
 import os
 import argparse
 from darkflow.net.build import TFNet
-
+from darkflow.utils.fbf_annotate import fbf
 
 class Flow(object):
 
@@ -19,6 +19,7 @@ class Flow(object):
         parser.add_argument('--savepb', default=False, action='store_true',
                             help='freeze the model to a .pb')
         parser.add_argument('--demo', default='', help='demo model on video or webcam')
+        parser.add_argument('--fbf', default='', help='generate frame-by-frame annotation')
         parser.add_argument('--saveVideo', default='out.avi', help='filename of video output')
         parser.add_argument('--queue', default=1, help='batch process demo')
         parser.add_argument('--json', default=False, action='store_true',
@@ -77,11 +78,12 @@ class Flow(object):
             exit('[INFO] Training finished, exit.')
         elif FLAGS.savepb:
             print('[INFO] Freezing graph of {} at {} to a protobuf file...'.format(FLAGS.model, FLAGS.load))
-            tfnet = TFNet(FLAGS)
             tfnet.savepb()
             exit('[INFO] Done')
-        elif FLAGS.demo:
+        elif FLAGS.demo != '':
             tfnet.camera()
+        elif FLAGS.fbf != '':
+            fbf.annotate(FLAGS)  # TODO: move fbf.annotate to TFnet
         else:
             tfnet.predict()
 
