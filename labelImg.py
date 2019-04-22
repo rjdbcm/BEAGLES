@@ -205,6 +205,9 @@ class MainWindow(QMainWindow, WindowMixin):
         opendir = action(getStr('openDir'), self.openDirDialog,
                          'Ctrl+u', 'open', getStr('openDir'))
 
+        impVideo = action(getStr('impVideo'), self.impVideo, 'Ctrl+i',
+                          'open', getStr('impVideoDetail'))
+
         changeSavedir = action(getStr('changeSaveDir'), self.changeSavedirDialog,
                                'Ctrl+r', 'open', getStr('changeSavedAnnotationDir'))
 
@@ -333,7 +336,7 @@ class MainWindow(QMainWindow, WindowMixin):
                               fitWindow=fitWindow, fitWidth=fitWidth,
                               zoomActions=zoomActions,
                               fileMenuActions=(
-                                  open, opendir, save, saveAs, close, resetAll, quit),
+                                  open, opendir, impVideo, save, saveAs, close, resetAll, quit),
                               beginner=(), advanced=(),
                               editMenu=(edit, copy, delete,
                                         None, color1, self.drawSquaresOption),
@@ -369,7 +372,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.displayLabelOption.triggered.connect(self.togglePaintLabelsOption)
 
         addActions(self.menus.file,
-                   (open, opendir, changeSavedir, openAnnotation, self.menus.recentFiles, save, save_format, saveAs, close, resetAll, quit))
+                   (open, opendir, impVideo, changeSavedir, openAnnotation, self.menus.recentFiles, save, save_format, saveAs, close, resetAll, quit))
         addActions(self.menus.help, (help, showInfo))
         addActions(self.menus.view, (
             self.autoSaving,
@@ -1180,6 +1183,22 @@ class MainWindow(QMainWindow, WindowMixin):
                                                      QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
         self.importDirImages(targetDirPath)
 
+    def impVideo(self, _value=False):
+        # Program To Read video
+        # and Extract Frames
+
+        path = os.path.dirname(ustr(self.filePath)) if self.filePath else '.'
+        formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
+        filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
+        filename = QFileDialog.getOpenFileName(self, '%s - Choose Video file' % __appname__, path, filters)
+        target = os.path.dirname(os.path.realpath(__file__))+'/rawframes'
+        # Try moving imported video into rawframes then calling frame_capture since the imwrite function has path issues
+        frame_capture(filename[0])
+
+        self.importDirImages(target)
+
+
+
     def importDirImages(self, dirpath):
         if not self.mayContinue() or not dirpath:
             return
@@ -1444,6 +1463,22 @@ def read(filename, default=None):
             return f.read()
     except:
         return default
+
+
+def frame_capture(path):
+
+    import cv2
+    vidObj = cv2.VideoCapture(path)
+    count = 0
+    success = 1
+    name = os.path.splitext(path)[0]
+
+    while success:
+        success, image = vidObj.read()
+        # Saves the frames with frame-count
+        cv2.imwrite("{}_frame_{}.jpg".format(name, count),
+                    image)  # TODO: zfill the systematically named frame numbers using total frames
+        count += 1
 
 
 def get_main_app(argv=[]):
