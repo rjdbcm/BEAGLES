@@ -6,6 +6,7 @@ import os.path
 import platform
 import re
 import sys
+import shutil
 import subprocess
 
 from functools import partial
@@ -1186,17 +1187,19 @@ class MainWindow(QMainWindow, WindowMixin):
         self.importDirImages(targetDirPath)
 
     def impVideo(self, _value=False):
-        # Program To Read video
-        # and Extract Frames
+        if not self.mayContinue():
+            return
 
         path = os.path.dirname(ustr(self.filePath)) if self.filePath else '.'
         formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
         filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
         filename = QFileDialog.getOpenFileName(self, '%s - Choose Video file' % __appname__, path, filters)
-        target = os.path.dirname(os.path.realpath(__file__))+'/data/rawframes'
-        # TODO: Try moving imported video into rawframes then calling frame_capture since the imwrite function has path issues
-        frame_capture(filename[0])
+        target = './data/rawframes/'+os.path.basename(os.path.splitext(filename[0])[0])
+        if not os.path.exists(target):
+            os.makedirs(target)
+        video = shutil.copy2(filename[0], target)
 
+        frame_capture(video)
         self.importDirImages(target)
 
     def importDirImages(self, dirpath):
