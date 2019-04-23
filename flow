@@ -52,7 +52,8 @@ class Flow(object):
         parser.add_argument('--threshold', default=-0.1, metavar='[0.01 .. 0.99]',
                             help='threshold of confidence to record an annotation hit')
         parser.add_argument('--lr', default=1e-5, metavar='N', help='learning rate')
-        parser.add_argument('-v', '--verbalise', default=True, metavar='', help='show graph structure while building')
+        parser.add_argument('-v', '--verbalise', default=False, action='store_true',
+                            help='show graph structure while building')
         FLAGS = parser.parse_args()
 
         def _get_dir(dirs):
@@ -68,6 +69,7 @@ class Flow(object):
 
         try:
             FLAGS.load = int(FLAGS.load)
+            FLAGS.threshold = float(FLAGS.threshold)
         except:
             pass  # Non-integer passed as filename using bare except
 

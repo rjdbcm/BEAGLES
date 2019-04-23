@@ -1,6 +1,7 @@
 from darkflow.net.build import TFNet
 import numpy as np
 import cv2
+import csv
 
 
 class fbf(object):
@@ -8,8 +9,6 @@ class fbf(object):
     def annotate(FLAGS):
 
         INPUT_VIDEO = FLAGS.fbf
-        FRAME_NUMBER = 1
-
         tfnet = TFNet(FLAGS)
 
         cap = cv2.VideoCapture(INPUT_VIDEO)
@@ -40,42 +39,27 @@ class fbf(object):
 
             return newImage
 
-        def annotate(predictions):
+        def gen_annotations(predictions):
+            with open('annotations.csv', mode='a') as file:
+                file_writer = csv.writer(file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                for item in predictions:
+                    time_elapsed = ('%.3f' % (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000))
+                    labels = item['label']
+                    conf = ('%.3f' % item['confidence'])
+                    top_x = item['topleft']['x']
+                    top_y = item['topleft']['y']
+                    btm_x = item['bottomright']['x']
+                    btm_y = item['bottomright']['y']
+                    file_writer.writerow([time_elapsed, labels, conf, top_x, top_y, btm_x, btm_y])
 
-            time = []
-            labels = []
-            conf = []
-            top_x = []
-            top_y = []
-            btm_x = []
-            btm_y = []
-
-            for item in predictions:
-                time.append('%.3f' % (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000))
-                labels.append(item['label'])
-                conf.append('%.3f' % item['confidence'])
-                top_x.append(item['topleft']['x'])
-                top_y.append(item['topleft']['y'])
-                btm_x.append(item['bottomright']['x'])
-                btm_y.append(item['bottomright']['y'])
-                print('{}{}{}{}{}{}{}'.format(time, labels, conf, top_x, top_y, btm_x, btm_y))
-
-        while (True):
+        while True:
             # Capture frame-by-frame
-
             ret, frame = cap.read()
-            print("Frame {}/{} [{}%]".format(FRAME_NUMBER, total_frames, round(100 * FRAME_NUMBER / total_frames, 1)),
-                  end='\r')
-            FRAME_NUMBER += 1
-
             if ret == True:
                 frame = np.asarray(frame)
                 result = tfnet.return_predict(frame)
-
                 new_frame = boxing(frame, result)
-
-                annotate(result)
-
+                gen_annotations(result)
                 # Display the resulting frame
                 out.write(new_frame)
                 cv2.imshow('frame', new_frame)
