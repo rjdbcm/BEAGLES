@@ -12,7 +12,7 @@ import subprocess
 from functools import partial
 from collections import defaultdict
 
-# TODO: Make it so we can create mirror images and mirror annotation files
+# TODO: Make it so we can create mirror images and mirror annotation files automatically in mirror mode
 
 try:
     from PyQt5.QtGui import *
@@ -209,7 +209,7 @@ class MainWindow(QMainWindow, WindowMixin):
                          'Ctrl+u', 'open', getStr('openDir'))
 
         impVideo = action(getStr('impVideo'), self.impVideo, 'Ctrl+i',
-                          'open', getStr('impVideoDetail'))
+                          'impvideo', getStr('impVideoDetail'))
 
         changeSavedir = action(getStr('changeSaveDir'), self.changeSavedirDialog,
                                'Ctrl+r', 'open', getStr('changeSavedAnnotationDir'))
@@ -246,6 +246,9 @@ class MainWindow(QMainWindow, WindowMixin):
                             'w', 'new', getStr('crtBoxDetail'), enabled=False)
         editMode = action('&Edit\nRectBox', self.setEditMode,
                           'Ctrl+J', 'edit', u'Move and edit Boxs', enabled=False)
+
+        mirrorMode = action(getStr('mirrorMode'), self.toggleMirrorMode,
+                          'Ctrl+M', 'mirrormode', getStr('mirrorModeDetail'), enabled=False)
 
         create = action(getStr('crtBox'), self.createShape,
                         'w', 'new', getStr('crtBoxDetail'), enabled=False)
@@ -342,9 +345,9 @@ class MainWindow(QMainWindow, WindowMixin):
                                   open, opendir, impVideo, save, saveAs, close, resetAll, quit),
                               beginner=(), advanced=(),
                               editMenu=(edit, copy, delete,
-                                        None, color1, self.drawSquaresOption),
+                                        None, mirrorMode, color1, self.drawSquaresOption),
                               beginnerContext=(create, edit, copy, delete),
-                              advancedContext=(createMode, editMode, edit, copy,
+                              advancedContext=(createMode, editMode, mirrorMode, edit, copy,
                                                delete, shapeLineColor, shapeFillColor),
                               onLoadActive=(
                                   close, create, createMode, editMode),
@@ -396,11 +399,11 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.tools = self.toolbar('Tools')
         self.actions.beginner = (
-            open, opendir, impVideo, changeSavedir, openNextImg, openPrevImg, verify, save, save_format, None, create, copy, delete, None,
+            open, opendir, changeSavedir, openNextImg, openPrevImg, verify, save, save_format, None, create, copy, delete, None,
             zoomIn, zoom, zoomOut, fitWindow, fitWidth)
 
         self.actions.advanced = (
-            open, opendir, changeSavedir, openNextImg, openPrevImg, save, save_format, None,
+            open, opendir, impVideo, changeSavedir, openNextImg, openPrevImg, save, save_format, mirrorMode, None,
             createMode, editMode, None,
             hideAll, showAll)
 
@@ -526,6 +529,9 @@ class MainWindow(QMainWindow, WindowMixin):
             self.dock.setFeatures(self.dock.features() | self.dockFeatures)
         else:
             self.dock.setFeatures(self.dock.features() ^ self.dockFeatures)
+
+    def toggleMirrorMode(self, value=True):
+        pass
 
     def populateModeActions(self):
         if self.beginner():
@@ -1186,21 +1192,29 @@ class MainWindow(QMainWindow, WindowMixin):
                                                      QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
         self.importDirImages(targetDirPath)
 
-    def impVideo(self, _value=False):
+    def impVideo(self, _value=False, dirpath=None):
         if not self.mayContinue():
             return
 
-        path = os.path.dirname(ustr(self.filePath)) if self.filePath else '.'
+        defaultOpenDirPath = dirpath if dirpath else '.'
+        if self.lastOpenDir and os.path.exists(self.lastOpenDir):
+            defaultOpenDirPath = self.lastOpenDir
+        else:
+            defaultOpenDirPath = os.path.dirname(self.filePath) if self.filePath else '.'
+
         formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
         filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
-        filename = QFileDialog.getOpenFileName(self, '%s - Choose Video file' % __appname__, path, filters)
+        filename = QFileDialog.getOpenFileName(self, '%s - Choose Video file' % __appname__, defaultOpenDirPath, filters)
         target = './data/rawframes/'+os.path.basename(os.path.splitext(filename[0])[0])
         if not os.path.exists(target):
             os.makedirs(target)
-        video = shutil.copy2(filename[0], target)
 
-        frame_capture(video)
-        self.importDirImages(target)
+        if os.path.exists(filename[0]):
+            video = shutil.copy2(filename[0], target)
+            frame_capture(video)
+            self.importDirImages(target)
+        else:
+            pass
 
     def importDirImages(self, dirpath):
         if not self.mayContinue() or not dirpath:
