@@ -11,7 +11,7 @@ See demo below or see on [this imgur](http://i.imgur.com/EyZZKAA.gif)
 
 ## Dependencies
 
-Python3, pandas, tensorflow 1.0, numpy, opencv 3.
+Python3, matplotlib, pyqt5, tensorflow 1.0, numpy, opencv 3.
 
 ### Getting started
 

@@ -1,6 +1,11 @@
 import os
 import time
 import numpy as np
+import datetime as dt
+import matplotlib
+matplotlib.use('Qt5Agg')
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 import tensorflow as tf
 import pickle
 from multiprocessing.pool import ThreadPool
@@ -13,6 +18,10 @@ train_stats = (
     '\tBackup every  : {}'
 )
 pool = ThreadPool()
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+xs = []
+ys = []
 
 def _save_ckpt(self, step, loss_profile):
     file = '{}-{}{}'
@@ -28,7 +37,6 @@ def _save_ckpt(self, step, loss_profile):
     self.say('Checkpoint at step {}'.format(step))
     self.saver.save(self.sess, ckpt)
 
-
 def train(self):
     loss_ph = self.framework.placeholders
     loss_mva = None; profile = list()
@@ -37,6 +45,7 @@ def train(self):
     loss_op = self.framework.loss
 
     for i, (x_batch, datum) in enumerate(batches):
+
         if not i: self.say(train_stats.format(
             self.FLAGS.lr, self.FLAGS.batch,
             self.FLAGS.epoch, self.FLAGS.save
@@ -65,6 +74,7 @@ def train(self):
 
         form = 'step {} - loss {} - moving ave loss {}'
         self.say(form.format(step_now, loss, loss_mva))
+        # TODO: Add live plotting with matplotlib
         profile += [(loss, loss_mva)]
 
         ckpt = (i+1) % (self.FLAGS.save // self.FLAGS.batch)
@@ -72,6 +82,8 @@ def train(self):
         if not ckpt: _save_ckpt(self, *args)
 
     if ckpt: _save_ckpt(self, *args)
+
+
 
 def return_predict(self, im):
     assert isinstance(im, np.ndarray), \
