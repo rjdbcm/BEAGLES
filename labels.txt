@@ -1,4 +1,4 @@
-aeroplane
-bicycle
-bird
-boat
+orienting
+singing
+licking
+mounting
