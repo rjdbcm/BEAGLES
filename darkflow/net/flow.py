@@ -18,10 +18,6 @@ train_stats = (
     '\tBackup every  : {}'
 )
 pool = ThreadPool()
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1)
-xs = []
-ys = []
 
 def _save_ckpt(self, step, loss_profile):
     file = '{}-{}{}'
