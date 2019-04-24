@@ -1,6 +1,8 @@
 from darkflow.net.build import TFNet
 import numpy as np
 import cv2
+import time
+from .videocaptureasync import VideoCaptureAsync
 import csv
 
 
@@ -8,6 +10,7 @@ class fbf(object):
 
     def annotate(FLAGS):
 
+        # TODO: add asynchronous video capture from webcam
         INPUT_VIDEO = FLAGS.fbf
         tfnet = TFNet(FLAGS)
 
