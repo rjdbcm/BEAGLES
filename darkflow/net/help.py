@@ -193,7 +193,7 @@ def annotate(self):
 
     def gen_annotations(predictions):
         with open(os.path.splitext(INPUT_VIDEO)[0] + '_annotations.csv', mode='a') as file:
-            file_writer = csv.writer(file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            file_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             for item in predictions:
                 time_elapsed = ('%.3f' % (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000))
                 labels = item['label']
