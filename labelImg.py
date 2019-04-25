@@ -1213,6 +1213,9 @@ class MainWindow(QMainWindow, WindowMixin):
             video = shutil.copy2(filename[0], target)
             frame_capture(video)
             self.importDirImages(target)
+            if target is not None and len(target) > 1:
+                self.defaultSaveDir = target
+            # TODO: Get rid of relative path to target
         else:
             pass
 
