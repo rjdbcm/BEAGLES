@@ -28,5 +28,7 @@ qt5py3:
 
 clean:
 	rm -f ~/.labelImgSettings.pkl resources.pyc
+	rm -f ./darkflow/darkflow/cython_utils/*.c
+	rm -rf ./build
 
 .PHONY: test
