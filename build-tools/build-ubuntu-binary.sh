@@ -13,7 +13,7 @@ python pyinstaller/pyinstaller.py --hidden-import=xml \
             --hidden-import=xml.etree \
             --hidden-import=xml.etree.ElementTree \
             --hidden-import=lxml.etree \
-             -D -F -n labelImg -c "../labelImg.py" -p ../libs -p ../
+             -D -F -n slgr_suite -c "../slgr_suite.py" -p ../libs -p ../
 
 FOLDER=$(git describe --abbrev=0 --tags)
 FOLDER="linux_"$FOLDER
