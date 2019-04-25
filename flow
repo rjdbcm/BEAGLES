@@ -85,7 +85,7 @@ class Flow(object):
         elif FLAGS.demo != '':
             tfnet.camera()
         elif FLAGS.fbf != '':
-            fbf.annotate(FLAGS)  # TODO: move fbf.annotate to TFnet
+            tfnet.annotate()
         else:
             tfnet.predict()
 

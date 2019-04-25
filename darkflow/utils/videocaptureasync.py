@@ -2,7 +2,6 @@
 import threading
 import cv2
 
-
 class VideoCaptureAsync:
     def __init__(self, src=0, width=640, height=480):
         self.src = src
