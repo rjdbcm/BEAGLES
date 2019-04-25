@@ -25,9 +25,9 @@ elif _platform == "darwin":
    SET_REQUIRES.append('py2app')
 
 required_packages = find_packages()
-required_packages.append('labelImg')
+required_packages.append('slgr_suite')
 
-APP = ['labelImg.py']
+APP = ['slgr_suite.py']
 OPTIONS = {
     'argv_emulation': True,
     'iconfile': 'resources/icons/app.icns'
@@ -35,25 +35,25 @@ OPTIONS = {
 
 setup(
     app=APP,
-    name='labelImg',
+    name='SLGR-Suite',
     version=__version__,
-    description="LabelImg is a graphical image annotation tool and label object bounding boxes in images",
+    description="SLGR-Suite is a graphical image annotation tool and frontend for machine learning algorithms",
     long_description=readme + '\n\n' + history,
-    author="TzuTa Lin",
-    author_email='tzu.ta.lin@gmail.com',
-    url='https://github.com/tzutalin/labelImg',
-    package_dir={'labelImg': '.'},
+    author="Ross J. Duff",
+    author_email='rjdbcm@mail.umkc.edu',
+    url='https://github.com/rjdbcm/slgr-suite',
+    package_dir={'slgr-suite': '.'},
     packages=required_packages,
     entry_points={
         'console_scripts': [
-            'labelImg=labelImg.labelImg:main'
+            'slgr_suite=slgr_suite.slgr_suite:main'
         ]
     },
     include_package_data=True,
     install_requires=requirements,
     license="MIT license",
     zip_safe=False,
-    keywords='labelImg labelTool development annotation deeplearning',
+    keywords='YOLO development annotation deeplearning',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
