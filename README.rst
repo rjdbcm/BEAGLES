@@ -4,7 +4,7 @@ SLGR-Suite
     :width: 200px
     :align: center
 
-LabelImg is a graphical image annotation tool.
+SLGR-Suite is a graphical image annotation tool.
 
 It is written in Python and uses Qt for its graphical interface.
 
@@ -24,8 +24,6 @@ Installation
 
 Download prebuilt binaries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
--  `Windows <https://github.com/tzutalin/labelImg/releases>`__
 
 -  macOS. Binaries for macOS are not yet available. Help would be appreciated. At present, it must be `built from source <#macos>`__.
 
@@ -103,7 +101,7 @@ in your /Applications folder. You can consider this script: build-tools/build-fo
     make qt5py3
     rm -rf build dist
     python setup.py py2app -A
-    mv "dist/labelImg.app" /Applications
+    mv "dist/SLGR-Suite.app" /Applications
 
 
 Windows
@@ -113,7 +111,7 @@ Install `Python <https://www.python.org/downloads/windows/>`__,
 `PyQt5 <https://www.riverbankcomputing.com/software/pyqt/download5>`__
 and `install lxml <http://lxml.de/installation.html>`__.
 
-Open cmd and go to the `labelImg <#labelimg>`__ directory
+Open cmd and go to the `slgr_suite <#slgr_suite>`__ directory
 
 .. code::
 
@@ -126,7 +124,7 @@ Windows + Anaconda
 
 Download and install `Anaconda <https://www.anaconda.com/download/#download>`__ (Python 3+)
 
-Open the Anaconda Prompt and go to the `labelImg <#labelimg>`__ directory
+Open the Anaconda Prompt and go to the `slgr_suite <#slgr_suite>`__ directory
 
 .. code::
 
@@ -139,9 +137,9 @@ Get from PyPI
 ~~~~~~~~~~~~~~~~~
 .. code::
 
-    pip install labelImg
-    labelImg
-    labelImg [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
+    pip install slgr_suite
+    slgr_suite
+    slgr_suite [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 
 I tested pip on Ubuntu 14.04 and 16.04. However, I didn't test pip on macOS and Windows
 
@@ -153,7 +151,7 @@ Use Docker
     --user $(id -u) \
     -e DISPLAY=unix$DISPLAY \
     --workdir=$(pwd) \
-    --volume="/home/$USER:/home/$USER" \
+    --volume="/home/$USER:/home/$USER"
     --volume="/etc/group:/etc/group:ro" \
     --volume="/etc/passwd:/etc/passwd:ro" \
     --volume="/etc/shadow:/etc/shadow:ro" \
@@ -161,7 +159,7 @@ Use Docker
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     tzutalin/py2qt4
 
-    make qt4py2;./labelImg.py
+    make qt4py2;./slgr_suite.py
 
 You can pull the image which has all of the installed and required dependencies. `Watch a demo video <https://youtu.be/nw1GexJzbCI>`__
 
