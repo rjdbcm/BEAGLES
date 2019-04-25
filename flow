@@ -7,7 +7,6 @@
 import os
 import argparse
 from darkflow.net.build import TFNet
-from darkflow.utils.fbf_annotate import fbf
 
 class Flow(object):
 

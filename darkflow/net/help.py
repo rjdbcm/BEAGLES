@@ -170,7 +170,7 @@ def annotate(self):
     height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
     out = cv2.VideoWriter(os.path.splitext(INPUT_VIDEO)[0] + '_annotated.avi', fourcc, 20.0, (int(width), int(height)))
-
+    self.say('Annotating ' + INPUT_VIDEO + ' press [ESC] to quit')
     def boxing(original_img, predictions):
         newImage = np.copy(original_img)
 
@@ -215,7 +215,8 @@ def annotate(self):
             # Display the resulting frame
             out.write(new_frame)
             cv2.imshow('frame', new_frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            choice = cv2.waitKey(1)
+            if choice == 27:
                 break
         else:
             break
