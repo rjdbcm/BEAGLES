@@ -2,14 +2,77 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
+from setuptools.extension import Extension
 from libs.version import __version__
 from sys import platform as _platform
-
+from Cython.Build import cythonize
+import numpy
+import imp
+import os
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
+
+
+if os.name =='nt' :
+    ext_modules=[
+        Extension("darkflow.darkflow.cython_utils.nms",
+            sources=["darkflow/darkflow/cython_utils/nms.pyx"],
+            #libraries=["m"] # Unix-like specific
+            include_dirs=[numpy.get_include()]
+        ),
+        Extension("darkflow.darkflow.cython_utils.cy_yolo2_findboxes",
+            sources=["darkflow/darkflow/cython_utils/cy_yolo2_findboxes.pyx"],
+            #libraries=["m"] # Unix-like specific
+            include_dirs=[numpy.get_include()],
+            extra_compile_args=['/fopenmp'],
+            extra_link_args=['/fopenmp']
+        ),
+        Extension("darkflow.darkflow.cython_utils.cy_yolo_findboxes",
+            sources=["darkflow/darkflow/cython_utils/cy_yolo_findboxes.pyx"],
+            #libraries=["m"] # Unix-like specific
+            include_dirs=[numpy.get_include()]
+        )
+    ]
+
+elif os.name =='posix' :
+    ext_modules=[
+        Extension("darkflow.darkflow.cython_utils.nms",
+            sources=["darkflow/darkflow/cython_utils/nms.pyx"],
+            libraries=["m"], # Unix-like specific
+            include_dirs=[numpy.get_include()]
+        ),
+        Extension("darkflow.darkflow.cython_utils.cy_yolo2_findboxes",
+            sources=["darkflow/darkflow/cython_utils/cy_yolo2_findboxes.pyx"],
+            libraries=["m"], # Unix-like specific
+            include_dirs=[numpy.get_include()],
+            extra_compile_args=['-fopenmp'],
+            extra_link_args=['-fopenmp']
+        ),
+        Extension("darkflow.darkflow.cython_utils.cy_yolo_findboxes",
+            sources=["darkflow/darkflow/cython_utils/cy_yolo_findboxes.pyx"],
+            libraries=["m"], # Unix-like specific
+            include_dirs=[numpy.get_include()]
+        )
+    ]
+
+else :
+    ext_modules=[
+        Extension("darkflow.darkflow.cython_utils.nms",
+            sources=["darkflow/darkflow/cython_utils/nms.pyx"],
+            libraries=["m"] # Unix-like specific
+        ),
+        Extension("darkflow.darkflow.cython_utils.cy_yolo2_findboxes",
+            sources=["darkflow/darkflow/cython_utils/cy_yolo2_findboxes.pyx"],
+            libraries=["m"] # Unix-like specific
+        ),
+        Extension("darkflow.darkflow.cython_utils.cy_yolo_findboxes",
+            sources=["darkflow/darkflow/cython_utils/cy_yolo_findboxes.pyx"],
+            libraries=["m"] # Unix-like specific
+        )
+    ]
 
 requirements = [
     # TODO: Different OS have different requirements
@@ -53,6 +116,8 @@ setup(
     install_requires=requirements,
     license="MIT license",
     zip_safe=False,
+    scripts = ['flow'],
+    ext_modules = cythonize(ext_modules),
     keywords='YOLO development annotation deeplearning',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
