@@ -19,6 +19,7 @@
 <file alias="open">resources/icons/open.png</file>
 <file alias="impvideo">resources/icons/impvideo.png</file>
 <file alias="mirrormode">resources/icons/mirrormode.png</file>
+<file alias="mirrormode_off">resources/icons/mirrormode_off.png</file>
 <file alias="save">resources/icons/save.png</file>
 <file alias="format_voc">resources/icons/format_voc.png</file>
 <file alias="format_yolo">resources/icons/format_yolo.png</file>

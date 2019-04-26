@@ -27,11 +27,11 @@ class Flow(object):
                             help='path to testing directory with images')
         parser.add_argument('--binary', default='./bin/', metavar='', help='path to .weights directory')
         parser.add_argument('--config', default='./cfg/', metavar='', help='path to .cfg directory')
-        parser.add_argument('--dataset', default='../pascal/VOCdevkit/IMG/', metavar='',
+        parser.add_argument('--dataset', default='../data/rawframes', metavar='',
                             help='path to dataset directory')
         parser.add_argument('--backup', default='./ckpt/', metavar='', help='path to checkpoint directory')
-        parser.add_argument('--labels', default='labels.txt', metavar='', help='path to textfile containing labels')
-        parser.add_argument('--annotation', default='../pascal/VOCdevkit/ANN/', metavar='',
+        parser.add_argument('--labels', default='../data/predefined_classes.txt', metavar='', help='path to textfile containing labels')
+        parser.add_argument('--annotation', default='../data/rawframes', metavar='',
                             help='path to the annotation directory')
         parser.add_argument('--summary', default='', help='path to Tensorboard summaries directory')
         parser.add_argument('--trainer', default='rmsprop', metavar='', help='training algorithm')

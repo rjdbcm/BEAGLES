@@ -9,6 +9,7 @@ import sys
 import shutil
 import subprocess
 
+#from darkflow.darkflow.net.build import TFNet
 from functools import partial
 from collections import defaultdict
 
@@ -86,6 +87,10 @@ class MainWindow(QMainWindow, WindowMixin):
         # Load string bundle for i18n
         self.stringBundle = StringBundle.getBundle()
         getStr = lambda strId: self.stringBundle.getString(strId)
+
+        # Mirror mode default is off
+        self.mirrorModeOn = False
+        self.mirrorModeOff = True
 
         # Save as Pascal voc xml
         self.defaultSaveDir = defaultSaveDir
@@ -247,8 +252,8 @@ class MainWindow(QMainWindow, WindowMixin):
         editMode = action('&Edit\nRectBox', self.setEditMode,
                           'Ctrl+J', 'edit', u'Move and edit Boxs', enabled=False)
 
-        mirrorMode = action(getStr('mirrorMode'), self.toggleMirrorMode,
-                          'Ctrl+M', 'mirrormode', getStr('mirrorModeDetail'), enabled=False)
+        mirrorMode = action(getStr('mirrorMode'), self.changeMirrorMode,
+                          'Ctrl+M', 'mirrormode', getStr('mirrorModeDetail'), enabled=True)
 
         create = action(getStr('crtBox'), self.createShape,
                         'w', 'new', getStr('crtBoxDetail'), enabled=False)
@@ -335,7 +340,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         # Store actions for further handling.
         self.actions = struct(save=save, save_format=save_format, saveAs=saveAs, open=open, close=close, resetAll = resetAll,
-                              lineColor=color1, create=create, delete=delete, edit=edit, copy=copy,
+                              lineColor=color1, create=create, delete=delete, edit=edit, copy=copy, mirrorMode=mirrorMode,
                               createMode=createMode, editMode=editMode, advancedMode=advancedMode,
                               shapeLineColor=shapeLineColor, shapeFillColor=shapeFillColor,
                               zoom=zoom, zoomIn=zoomIn, zoomOut=zoomOut, zoomOrg=zoomOrg,
@@ -530,8 +535,25 @@ class MainWindow(QMainWindow, WindowMixin):
         else:
             self.dock.setFeatures(self.dock.features() ^ self.dockFeatures)
 
-    def toggleMirrorMode(self, value=True):
-        pass
+    def setMirrorMode(self, mirrorMode):
+        if mirrorMode == False:
+            self.actions.mirrorMode.setIcon(newIcon("mirrormode"))
+            self.mirrorModeOn = False
+            self.mirrorModeOff = True
+            print(self.mirrorModeOn, self.mirrorModeOff)
+        if mirrorMode == True:
+            self.actions.mirrorMode.setIcon(newIcon("mirrormode_off"))
+            self.mirrorModeOn = True
+            self.mirrorModeOff = False
+            print(self.mirrorModeOn, self.mirrorModeOff)
+
+
+    def changeMirrorMode(self): # TODO: Fix to work like save_format, set_format, change_format
+        if self.mirrorModeOn:
+            self.setMirrorMode(False)
+        elif self.mirrorModeOff:
+            self.setMirrorMode(True)
+
 
     def populateModeActions(self):
         if self.beginner():
