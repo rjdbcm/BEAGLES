@@ -62,15 +62,15 @@ elif os.name =='posix' :
 
 else :
     ext_modules=[
-        Extension("darkflow.darkflow.cython_utils.nms",
+        Extension("darkflow.cython_utils.nms",
             sources=["darkflow/darkflow/cython_utils/nms.pyx"],
             libraries=["m"] # Unix-like specific
         ),
-        Extension("darkflow.darkflow.cython_utils.cy_yolo2_findboxes",
+        Extension("darkflow.cython_utils.cy_yolo2_findboxes",
             sources=["darkflow/darkflow/cython_utils/cy_yolo2_findboxes.pyx"],
             libraries=["m"] # Unix-like specific
         ),
-        Extension("darkflow.darkflow.cython_utils.cy_yolo_findboxes",
+        Extension("darkflow.cython_utils.cy_yolo_findboxes",
             sources=["darkflow/darkflow/cython_utils/cy_yolo_findboxes.pyx"],
             libraries=["m"] # Unix-like specific
         )
