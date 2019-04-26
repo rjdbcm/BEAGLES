@@ -22,11 +22,14 @@ qt5: qt5py3
 
 qt5py3:
 	pyrcc5 -o resources.py resources.qrc
-
+	cd ./darkflowlib;   python3 setup.py build_ext --inplace
 clean:
 	rm -f ~/.labelImgSettings.pkl resources.pyc
-	rm -f ./darkflow/darkflow/cython_utils/*.c
-	rm -f ./darkflow/darkflow/cython_utils/*.so
+	rm -f ./darkflowlib/darkflow/cython_utils/*.c
+	rm -f ./darkflowlib/darkflow/cython_utils/*.so
+	rm -rf ./darkflowlib/build
 	rm -rf ./build
 
 .PHONY: test
+
+.PHONY: flow

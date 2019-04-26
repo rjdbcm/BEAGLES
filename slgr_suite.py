@@ -9,7 +9,6 @@ import sys
 import shutil
 import subprocess
 
-#from darkflow.darkflow.net.build import TFNet
 from functools import partial
 from collections import defaultdict
 
