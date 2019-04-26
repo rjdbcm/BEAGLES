@@ -15,22 +15,24 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
+os.environ["CC"] = "gcc"
+os.environ["CXX"] = "g++"
 
 if os.name =='nt' :
     ext_modules=[
-        Extension("darkflow.darkflow.cython_utils.nms",
+        Extension("darkflow.cython_utils.nms",
             sources=["darkflow/darkflow/cython_utils/nms.pyx"],
             #libraries=["m"] # Unix-like specific
             include_dirs=[numpy.get_include()]
         ),
-        Extension("darkflow.darkflow.cython_utils.cy_yolo2_findboxes",
+        Extension("darkflow.cython_utils.cy_yolo2_findboxes",
             sources=["darkflow/darkflow/cython_utils/cy_yolo2_findboxes.pyx"],
             #libraries=["m"] # Unix-like specific
             include_dirs=[numpy.get_include()],
             extra_compile_args=['/fopenmp'],
             extra_link_args=['/fopenmp']
         ),
-        Extension("darkflow.darkflow.cython_utils.cy_yolo_findboxes",
+        Extension("darkflow.cython_utils.cy_yolo_findboxes",
             sources=["darkflow/darkflow/cython_utils/cy_yolo_findboxes.pyx"],
             #libraries=["m"] # Unix-like specific
             include_dirs=[numpy.get_include()]
@@ -39,19 +41,19 @@ if os.name =='nt' :
 
 elif os.name =='posix' :
     ext_modules=[
-        Extension("darkflow.darkflow.cython_utils.nms",
+        Extension("darkflow.cython_utils.nms",
             sources=["darkflow/darkflow/cython_utils/nms.pyx"],
             libraries=["m"], # Unix-like specific
             include_dirs=[numpy.get_include()]
         ),
-        Extension("darkflow.darkflow.cython_utils.cy_yolo2_findboxes",
+        Extension("darkflow.cython_utils.cy_yolo2_findboxes",
             sources=["darkflow/darkflow/cython_utils/cy_yolo2_findboxes.pyx"],
             libraries=["m"], # Unix-like specific
             include_dirs=[numpy.get_include()],
             extra_compile_args=['-fopenmp'],
             extra_link_args=['-fopenmp']
         ),
-        Extension("darkflow.darkflow.cython_utils.cy_yolo_findboxes",
+        Extension("darkflow.cython_utils.cy_yolo_findboxes",
             sources=["darkflow/darkflow/cython_utils/cy_yolo_findboxes.pyx"],
             libraries=["m"], # Unix-like specific
             include_dirs=[numpy.get_include()]

@@ -66,9 +66,21 @@ class Flow(object):
             requiredDirectories.append(FLAGS.summary)
         _get_dir(requiredDirectories)
 
+        if FLAGS.gpu > 1.0 or FLAGS.gpu < 0:
+            raise Exception('--gpu should be a number between 0 and 1')
+
+        try: # TODO: add constraints on FLAGS.gpu range and except: ValueError also add individual error catching for numbers
+            FLAGS.save = int(FLAGS.save)
+            FLAGS.epoch = int(FLAGS.epoch)
+            FLAGS.batch = int(FLAGS.batch)
+            FLAGS.threshold = float(FLAGS.threshold)
+            FLAGS.gpu = float(FLAGS.gpu)
+            FLAGS.lr = float(FLAGS.lr)
+        except ValueError:
+            print('You should try using numbers instead.')
+
         try:
             FLAGS.load = int(FLAGS.load)
-            FLAGS.threshold = float(FLAGS.threshold)
         except:
             pass  # Non-integer passed as filename using bare except
 
