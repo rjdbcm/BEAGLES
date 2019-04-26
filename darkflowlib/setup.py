@@ -8,6 +8,8 @@ import imp
 VERSION = imp.load_source('version', os.path.join('.', 'darkflow', 'version.py'))
 VERSION = VERSION.__version__
 
+
+
 if os.name =='nt' :
     ext_modules=[
         Extension("darkflow.cython_utils.nms",
@@ -40,8 +42,8 @@ elif os.name =='posix' :
             sources=["darkflow/cython_utils/cy_yolo2_findboxes.pyx"],
             libraries=["m"], # Unix-like specific
             include_dirs=[numpy.get_include()],
-            extra_compile_args=['-fopenmp'],
-            extra_link_args=['-fopenmp']
+            extra_compile_args=[''],
+            extra_link_args=['']
         ),
         Extension("darkflow.cython_utils.cy_yolo_findboxes",
             sources=["darkflow/cython_utils/cy_yolo_findboxes.pyx"],
