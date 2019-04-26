@@ -7,7 +7,7 @@ class TestStringBundle(unittest.TestCase):
 
     def test_loadDefaultBundle_withoutError(self):
         strBundle = StringBundle.getBundle('en')
-        self.assertEqual(strBundle.getString("openDir"), 'Open Dir', 'Fail to load the default bundle')
+        self.assertEqual(strBundle.getString("openDir"), 'Open Folder', 'Fail to load the default bundle')
 
     def test_fallback_withoutError(self):
         strBundle = StringBundle.getBundle('zh-TW')
@@ -19,7 +19,7 @@ class TestStringBundle(unittest.TestCase):
         os.environ['LC_ALL'] = 'UTF-8'
         os.environ['LANG'] = 'UTF-8'
         strBundle = StringBundle.getBundle()
-        self.assertEqual(strBundle.getString("openDir"), 'Open Dir', 'Fail to load the default bundle')
+        self.assertEqual(strBundle.getString("openDir"), 'Open Folder', 'Fail to load the default bundle')
         os.environ['LC_ALL'] = prev_lc
         os.environ['LANG'] = prev_lang
 
