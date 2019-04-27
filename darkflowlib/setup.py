@@ -2,6 +2,7 @@ from setuptools import setup, find_packages
 from setuptools.extension import Extension
 from Cython.Build import cythonize
 import numpy
+import sys
 import os
 import imp
 
@@ -32,6 +33,12 @@ if os.name =='nt' :
     ]
 
 elif os.name =='posix' :
+    if sys.platform == 'darwin':
+        compile_args = ''
+        linker_args = ''
+    else:
+        compile_args = '-fopenmp'
+        linker_args = '-fopenmp'
     ext_modules=[
         Extension("darkflow.cython_utils.nms",
             sources=["darkflow/cython_utils/nms.pyx"],
@@ -39,12 +46,12 @@ elif os.name =='posix' :
             include_dirs=[numpy.get_include()]
         ),        
         Extension("darkflow.cython_utils.cy_yolo2_findboxes",
-            sources=["darkflow/cython_utils/cy_yolo2_findboxes.pyx"],
-            libraries=["m"], # Unix-like specific
-            include_dirs=[numpy.get_include()],
-            extra_compile_args=[''],
-            extra_link_args=['']
-        ),
+                  sources=["darkflow/cython_utils/cy_yolo2_findboxes.pyx"],
+                  libraries=["m"],  # Unix-like specific
+                  include_dirs=[numpy.get_include()],
+                  extra_compile_args=[compile_args],
+                  extra_link_args=[linker_args]
+                  ),
         Extension("darkflow.cython_utils.cy_yolo_findboxes",
             sources=["darkflow/cython_utils/cy_yolo_findboxes.pyx"],
             libraries=["m"], # Unix-like specific

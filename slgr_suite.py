@@ -267,7 +267,8 @@ class MainWindow(QMainWindow, WindowMixin):
         commitAnnotatedFrames = action(getStr('commitAnnotatedFrames'), self.commitAnnotatedFrames, None, 'commitAnnotatedFrames',
                                getStr('commitAnnotatedFrames'), enabled=False)
 
-        trainModel = action(getStr('trainModel'), self.trainModel, None, 'trainModel', getStr('trainModelDetail'), enabled=False)
+        trainModel = action(getStr('trainModel'), self.trainModel, None, 'trainModel', getStr('trainModelDetail'),
+                            enabled=True)
 
         frameByFrame = action(getStr('frameByFrame'), self.frameByFrame, None, 'frameByFrame',
                               getStr('frameByFrameDetail'), enabled=False)
@@ -1253,10 +1254,27 @@ class MainWindow(QMainWindow, WindowMixin):
         else:
             pass
 
-    def trainModel(self):
+    def commitAnnotatedFrames(self):
         return
 
-    def commitAnnotatedFrames(self):
+    def trainModel(self):
+        if not self.mayContinue():
+            return
+
+        dir = os.path.abspath('./')
+        darkflowlib = os.path.abspath('darkflowlib')
+        os.chdir(darkflowlib)
+        cmd = sys.executable
+        args = ["flow", "--train", "-v"]
+        process = QProcess(self)
+        process.finished.connect(self.onFinished)
+        process.startDetached(cmd, args)
+        os.chdir('..')
+        print(os.path.abspath)
+
+    def onFinished(self, exitCode, exitStatus):
+        self.actions.trainModel.setEnabled(True)
+        os.chdir('../')
         return
 
     def frameByFrame(self):
@@ -1518,11 +1536,6 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def toogleDrawSquare(self):
         self.canvas.setDrawingShapeToSquare(self.drawSquaresOption.isChecked())
-
-class Darkflow(QObject):
-
-    def train(self):
-        self.pushButton
 
 def inverted(color):
     return QColor(*[255 - v for v in color.getRgb()])
