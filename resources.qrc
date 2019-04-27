@@ -20,6 +20,10 @@
 <file alias="impvideo">resources/icons/impvideo.png</file>
 <file alias="mirrormode">resources/icons/mirrormode.png</file>
 <file alias="mirrormode_off">resources/icons/mirrormode_off.png</file>
+<file alias="trainModel">resources/icons/trainModel.png</file>
+<file alias="commitAnnotatedFrames">resources/icons/commitAnnotatedFrames.png</file>
+<file alias="frameByFrame">resources/icons/frameByFrame.png</file>
+<file alias="demoWebcam">resources/icons/demoWebcam.png</file>
 <file alias="save">resources/icons/save.png</file>
 <file alias="format_voc">resources/icons/format_voc.png</file>
 <file alias="format_yolo">resources/icons/format_yolo.png</file>

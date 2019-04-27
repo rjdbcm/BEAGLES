@@ -256,11 +256,24 @@ class MainWindow(QMainWindow, WindowMixin):
 
         create = action(getStr('crtBox'), self.createShape,
                         'w', 'new', getStr('crtBoxDetail'), enabled=False)
+
         delete = action(getStr('delBox'), self.deleteSelectedShape,
                         'Delete', 'delete', getStr('delBoxDetail'), enabled=False)
+
         copy = action(getStr('dupBox'), self.copySelectedShape,
                       'Ctrl+D', 'copy', getStr('dupBoxDetail'),
                       enabled=False)
+
+        commitAnnotatedFrames = action(getStr('commitAnnotatedFrames'), self.commitAnnotatedFrames, None, 'commitAnnotatedFrames',
+                               getStr('commitAnnotatedFrames'), enabled=False)
+
+        trainModel = action(getStr('trainModel'), self.trainModel, None, 'trainModel', getStr('trainModelDetail'), enabled=False)
+
+        frameByFrame = action(getStr('frameByFrame'), self.frameByFrame, None, 'frameByFrame',
+                              getStr('frameByFrameDetail'), enabled=False)
+
+        demoWebcam = action(getStr('demoWebcam'), self.demoWebcam, None, 'demoWebcam',
+                            getStr('demoWebcamDetail'), enabled=False)
 
         advancedMode = action(getStr('advancedMode'), self.toggleAdvancedMode,
                               'Ctrl+Shift+A', 'expert', getStr('advancedModeDetail'),
@@ -346,7 +359,7 @@ class MainWindow(QMainWindow, WindowMixin):
                               fitWindow=fitWindow, fitWidth=fitWidth,
                               zoomActions=zoomActions,
                               fileMenuActions=(
-                                  open, opendir, impVideo, save, saveAs, close, resetAll, quit),
+                                  open, opendir, impVideo, save, saveAs, commitAnnotatedFrames, trainModel, frameByFrame, demoWebcam, close, resetAll, quit),
                               beginner=(), advanced=(),
                               editMenu=(edit, copy, delete,
                                         None, mirrorMode, color1, self.drawSquaresOption),
@@ -408,7 +421,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.actions.advanced = (
             open, opendir, impVideo, changeSavedir, openNextImg, openPrevImg, save, save_format, mirrorMode, None,
-            createMode, editMode, None,
+            createMode, editMode, commitAnnotatedFrames, trainModel, frameByFrame, demoWebcam, None,
             hideAll, showAll)
 
         self.statusBar().showMessage('%s started.' % __appname__)
@@ -1240,6 +1253,18 @@ class MainWindow(QMainWindow, WindowMixin):
         else:
             pass
 
+    def trainModel(self):
+        return
+
+    def commitAnnotatedFrames(self):
+        return
+
+    def frameByFrame(self):
+        return
+
+    def demoWebcam(self):
+        return
+
     def importDirImages(self, dirpath):
         if not self.mayContinue() or not dirpath:
             return
@@ -1493,6 +1518,11 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def toogleDrawSquare(self):
         self.canvas.setDrawingShapeToSquare(self.drawSquaresOption.isChecked())
+
+class Darkflow(QObject):
+
+    def train(self):
+        self.pushButton
 
 def inverted(color):
     return QColor(*[255 - v for v in color.getRgb()])

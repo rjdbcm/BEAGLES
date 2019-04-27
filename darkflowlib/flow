@@ -1,9 +1,5 @@
 #! /usr/bin/env python
 
-# will fix repetitious parser.add_argument() statements at some point with parent/child parsers
-# Will add image processing to demo command
-# will add thread-based frame buffer for video processing
-
 import os
 import argparse
 from darkflow.net.build import TFNet
@@ -47,7 +43,7 @@ class Flow(object):
         parser.add_argument('--gpu', default=0.0, metavar='[0 .. 1.0]', help='amount of GPU to use')
         parser.add_argument('--gpuName', default='/gpu:0', metavar='/gpu:N', help='GPU device name')
         parser.add_argument('-l', '--load', default=-1, metavar='', help='filename of weights or checkpoint to load')
-        parser.add_argument('-m', '--model', default='./cfg/tiny-yolo-4c.cfg', metavar='', help='filename of model to use')
+        parser.add_argument('-m', '--model', default='cfg/tiny-yolo-4c.cfg', metavar='', help='filename of model to use')
         parser.add_argument('--threshold', default=-0.1, metavar='[0.01 .. 0.99]',
                             help='threshold of confidence to record an annotation hit')
         parser.add_argument('--lr', default=1e-5, metavar='N', help='learning rate')
