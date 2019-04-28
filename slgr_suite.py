@@ -1233,6 +1233,8 @@ class MainWindow(QMainWindow, WindowMixin):
         self.importDirImages(targetDirPath)
 
     def impVideo(self, _value=False, dirpath=None):
+        if not self.mayContinue():
+            return
 
         defaultOpenDirPath = dirpath if dirpath else '.'
         if self.lastOpenDir and os.path.exists(self.lastOpenDir):
@@ -1242,17 +1244,17 @@ class MainWindow(QMainWindow, WindowMixin):
 
         formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
         filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
-        targetDirPath = ustr(QFileDialog.getExistingDirectory(self,
-                                                              '%s - Open Directory' % __appname__, defaultOpenDirPath,
-                                                              QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
+        filename = QFileDialog.getOpenFileName(self, '%s - Choose Video file' % __appname__, defaultOpenDirPath, filters)
         target = './data/rawframes/'+os.path.basename(os.path.splitext(filename[0])[0])
         if not os.path.exists(target):
             os.makedirs(target)
-        video = shutil.copy2(targetDirPath, target)
-        frame_capture(video)
-        self.importDirImages(target)
-        if target is not None and len(target) > 1:
-            self.defaultSaveDir = target
+
+        if os.path.exists(filename[0]):
+            video = shutil.copy2(filename[0], target)
+            frame_capture(video)
+            self.importDirImages(target)
+            if target is not None and len(target) > 1:
+                self.defaultSaveDir = target
             # TODO: Get rid of relative path to target
         else:
             pass
