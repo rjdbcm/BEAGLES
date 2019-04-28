@@ -68,7 +68,7 @@ class WindowMixin(object):
         toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         if actions:
             addActions(toolbar, actions)
-        self.addToolBar(Qt.LeftToolBarArea, toolbar)
+        self.addToolBar(Qt.BottomToolBarArea, toolbar)
         return toolbar
 
 
@@ -199,7 +199,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.setCentralWidget(scroll)
         self.addDockWidget(Qt.RightDockWidgetArea, self.dock)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.filedock)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.filedock)
         self.filedock.setFeatures(QDockWidget.DockWidgetFloatable)
 
         self.dockFeatures = QDockWidget.DockWidgetClosable | QDockWidget.DockWidgetFloatable
@@ -423,11 +423,11 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.tools = self.toolbar('Tools')
         self.actions.beginner = (
-            open, opendir, changeSavedir, openNextImg, openPrevImg, verify, save, save_format, None, create, copy, delete, None,
+            open, opendir, changeSavedir, openPrevImg, openNextImg, verify, save, None, create, copy, delete, None,
             zoomIn, zoom, zoomOut, fitWindow, fitWidth)
 
         self.actions.advanced = (
-            open, opendir, impVideo, changeSavedir, openNextImg, openPrevImg, save, save_format, mirrorMode, None,
+            open, opendir, impVideo, changeSavedir, openPrevImg, openNextImg, save, save_format, mirrorMode, None,
             createMode, editMode, commitAnnotatedFrames, trainModel, frameByFrame, demoWebcam, None,
             hideAll, showAll)
 
@@ -1233,8 +1233,6 @@ class MainWindow(QMainWindow, WindowMixin):
         self.importDirImages(targetDirPath)
 
     def impVideo(self, _value=False, dirpath=None):
-        if not self.mayContinue():
-            return
 
         defaultOpenDirPath = dirpath if dirpath else '.'
         if self.lastOpenDir and os.path.exists(self.lastOpenDir):
@@ -1244,17 +1242,17 @@ class MainWindow(QMainWindow, WindowMixin):
 
         formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
         filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
-        filename = QFileDialog.getOpenFileName(self, '%s - Choose Video file' % __appname__, defaultOpenDirPath, filters)
+        targetDirPath = ustr(QFileDialog.getExistingDirectory(self,
+                                                              '%s - Open Directory' % __appname__, defaultOpenDirPath,
+                                                              QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
         target = './data/rawframes/'+os.path.basename(os.path.splitext(filename[0])[0])
         if not os.path.exists(target):
             os.makedirs(target)
-
-        if os.path.exists(filename[0]):
-            video = shutil.copy2(filename[0], target)
-            frame_capture(video)
-            self.importDirImages(target)
-            if target is not None and len(target) > 1:
-                self.defaultSaveDir = target
+        video = shutil.copy2(targetDirPath, target)
+        frame_capture(video)
+        self.importDirImages(target)
+        if target is not None and len(target) > 1:
+            self.defaultSaveDir = target
             # TODO: Get rid of relative path to target
         else:
             pass
@@ -1298,12 +1296,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.process.terminate()
 
     def frameByFrame(self, dirpath=None):
-        defaultOpenDirPath = dirpath if dirpath else '.'
-        if self.lastOpenDir and os.path.exists(self.lastOpenDir):
-            defaultOpenDirPath = self.lastOpenDir
-        else:
-            defaultOpenDirPath = os.path.dirname(self.filePath) if self.filePath else '.'
-
+        path = os.path.dirname(ustr(self.filePath)) if self.filePath else '.'
         formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
         filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
         filename = QFileDialog.getOpenFileName(self, '%s - Choose Video file' % __appname__, defaultOpenDirPath,
