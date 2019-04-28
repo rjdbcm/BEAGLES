@@ -269,7 +269,7 @@ class MainWindow(QMainWindow, WindowMixin):
                       enabled=False)
 
         commitAnnotatedFrames = action(getStr('commitAnnotatedFrames'), self.commitAnnotatedFrames, None, 'commitAnnotatedFrames',
-                               getStr('commitAnnotatedFrames'), enabled=False)
+                                       getStr('commitAnnotatedFrames'), enabled=True)
 
         trainModel = action(getStr('trainModel'), self.trainModel, None, 'trainModel', getStr('trainModelDetail'),
                             enabled=True)
@@ -278,7 +278,7 @@ class MainWindow(QMainWindow, WindowMixin):
                               getStr('frameByFrameDetail'), enabled=True)
 
         demoWebcam = action(getStr('demoWebcam'), self.demoWebcam, None, 'demoWebcam',
-                            getStr('demoWebcamDetail'), enabled=False)
+                            getStr('demoWebcamDetail'), enabled=True)
 
         advancedMode = action(getStr('advancedMode'), self.toggleAdvancedMode,
                               'Ctrl+Shift+A', 'expert', getStr('advancedModeDetail'),
@@ -1264,8 +1264,30 @@ class MainWindow(QMainWindow, WindowMixin):
             print(filename, target)
             pass
 
-    def commitAnnotatedFrames(self):
-        return
+    def commitAnnotatedFrames(self, dirpath=None):
+        defaultOpenDirPath = dirpath if dirpath else '.'
+        if self.lastOpenDir and os.path.exists(self.lastOpenDir):
+            defaultOpenDirPath = self.lastOpenDir
+        else:
+            defaultOpenDirPath = os.path.dirname(self.filePath) if self.filePath else '.'
+
+        filelist = []
+        for file in os.listdir(defaultOpenDirPath):
+            filename = os.fsdecode(file)
+            if filename.endswith(".xml"):
+                print("Moving {0} to data/{0}".format(filename))
+                filename = os.path.join(defaultOpenDirPath, filename)
+                basename = os.path.splitext(filename)[0]
+                filelist.append(filename)
+                filelist.append(basename + '.jpg')
+            else:
+                continue
+
+        for i in filelist:
+            os.rename(i, './data/' + os.path.split(i)[1])
+
+        self.importDirImages(defaultOpenDirPath)
+
 
     def trainModel(self):
         dir = os.path.abspath('./')
@@ -1315,7 +1337,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.libRun("darkflowlib", ["flow", "--fbf", filename[0]])
 
     def demoWebcam(self):
-        return
+        self.libRun("darkflowlib", ["flow", "--demo", "camera"])
 
     def importDirImages(self, dirpath):
         if not self.mayContinue() or not dirpath:
