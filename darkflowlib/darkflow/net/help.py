@@ -214,7 +214,7 @@ def annotate(self):
             gen_annotations(result)
             # Display the resulting frame
             out.write(new_frame)
-            cv2.imshow('frame', new_frame)
+            cv2.imshow(INPUT_VIDEO, new_frame)
             choice = cv2.waitKey(1)
             if choice == 27:
                 break
