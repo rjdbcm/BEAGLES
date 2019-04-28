@@ -1211,7 +1211,10 @@ class MainWindow(QMainWindow, WindowMixin):
             if self.filePath else '.'
         if self.usingPascalVocFormat:
             filters = "Open Annotation XML file (%s)" % ' '.join(['*.xml'])
-            filename = ustr(QFileDialog.getOpenFileName(self,'%s - Choose a xml file' % __appname__, path, filters))
+            options = QFileDialog.Options()
+            options |= QFileDialog.DontUseNativeDialog
+            filename = ustr(QFileDialog.getOpenFileName(self, '%s - Choose a xml file' % __appname__, path, filters,
+                                                        options=options))
             if filename:
                 if isinstance(filename, (tuple, list)):
                     filename = filename[0]
@@ -1239,22 +1242,27 @@ class MainWindow(QMainWindow, WindowMixin):
             defaultOpenDirPath = self.lastOpenDir
         else:
             defaultOpenDirPath = os.path.dirname(self.filePath) if self.filePath else '.'
-
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog  # TODO Check if this fixes the non-native fileOpen issue on linux
         formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
         filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
-        targetDirPath = ustr(QFileDialog.getExistingDirectory(self,
-                                                              '%s - Open Directory' % __appname__, defaultOpenDirPath,
-                                                              QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
+        filename = QFileDialog.getOpenFileName(self, '%s - Choose Image or Label file' % __appname__,
+                                               defaultOpenDirPath,
+                                               filters, options=options)
         target = './data/rawframes/'+os.path.basename(os.path.splitext(filename[0])[0])
+        target = os.path.abspath(target)
         if not os.path.exists(target):
             os.makedirs(target)
-        video = shutil.copy2(targetDirPath, target)
-        frame_capture(video)
-        self.importDirImages(target)
+        if filename[0] != '':
+            if isinstance(filename, (tuple, list)):
+                video = shutil.copy2(filename[0], target)
+                print('Extracting frames from {} to {}'.format(filename, target))
+                frame_capture(video)
+                self.importDirImages(target)
         if target is not None and len(target) > 1:
             self.defaultSaveDir = target
-            # TODO: Get rid of relative path to target
         else:
+            print(filename, target)
             pass
 
     def commitAnnotatedFrames(self):
@@ -1299,8 +1307,10 @@ class MainWindow(QMainWindow, WindowMixin):
         path = os.path.dirname(ustr(self.filePath)) if self.filePath else '.'
         formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
         filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
         filename = QFileDialog.getOpenFileName(self, '%s - Choose Video file' % __appname__, defaultOpenDirPath,
-                                               filters)
+                                               filters, options=options)
         target = './data/rawframes/' + os.path.basename(os.path.splitext(filename[0])[0])
         if os.path.exists(filename[0]):
             self.libRun("darkflowlib", ["flow", "--fbf", filename[0]])
@@ -1397,8 +1407,11 @@ class MainWindow(QMainWindow, WindowMixin):
             return
         path = os.path.dirname(ustr(self.filePath)) if self.filePath else '.'
         formats = ['*.%s' % fmt.data().decode("ascii").lower() for fmt in QImageReader.supportedImageFormats()]
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
         filters = "Image & Label files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
-        filename = QFileDialog.getOpenFileName(self, '%s - Choose Image or Label file' % __appname__, path, filters)
+        filename = QFileDialog.getOpenFileName(self, '%s - Choose Image or Label file' % __appname__, path, filters,
+                                               options=options)
         if filename:
             if isinstance(filename, (tuple, list)):
                 filename = filename[0]
