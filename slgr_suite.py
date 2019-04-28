@@ -7,6 +7,7 @@ import platform
 import re
 import sys
 import shutil
+import signal
 import subprocess
 
 from functools import partial
@@ -90,6 +91,9 @@ class MainWindow(QMainWindow, WindowMixin):
         # Mirror mode default is off
         self.mirrorModeOn = False
         self.mirrorModeOff = True
+
+        self.trainModelOn = False
+        self.trainModelOff = True
 
         # Save as Pascal voc xml
         self.defaultSaveDir = defaultSaveDir
@@ -354,7 +358,8 @@ class MainWindow(QMainWindow, WindowMixin):
         # Store actions for further handling.
         self.actions = struct(save=save, save_format=save_format, saveAs=saveAs, open=open, close=close, resetAll = resetAll,
                               lineColor=color1, create=create, delete=delete, edit=edit, copy=copy, mirrorMode=mirrorMode,
-                              createMode=createMode, editMode=editMode, advancedMode=advancedMode,
+                              trainModel=trainModel, createMode=createMode, editMode=editMode,
+                              advancedMode=advancedMode,
                               shapeLineColor=shapeLineColor, shapeFillColor=shapeFillColor,
                               zoom=zoom, zoomIn=zoomIn, zoomOut=zoomOut, zoomOrg=zoomOrg,
                               fitWindow=fitWindow, fitWidth=fitWidth,
@@ -560,8 +565,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.mirrorModeOff = False
             print(self.mirrorModeOn, self.mirrorModeOff)
 
-
-    def changeMirrorMode(self): # TODO: Fix to work like save_format, set_format, change_format
+    def changeMirrorMode(self):
         if self.mirrorModeOn:
             self.setMirrorMode(False)
         elif self.mirrorModeOff:
@@ -1258,24 +1262,39 @@ class MainWindow(QMainWindow, WindowMixin):
         return
 
     def trainModel(self):
+        dir = os.path.abspath('./')
         if not self.mayContinue():
             return
+        if self.trainModelOff:
+            self.setTrainModel(True)
+            self.libRun('darkflowlib', ["flow", "--train", "-v"])
+        elif self.trainModelOn:
+            self.setTrainModel(False)
+            print("Stopping Training...")
+            self.libStop()
 
-        dir = os.path.abspath('./')
-        darkflowlib = os.path.abspath('darkflowlib')
-        os.chdir(darkflowlib)
-        cmd = sys.executable
-        args = ["flow", "--train", "-v"]
-        process = QProcess(self)
-        process.finished.connect(self.onFinished)
-        process.startDetached(cmd, args)
-        os.chdir('..')
-        print(os.path.abspath)
+    def setTrainModel(self, trainModel):
+        if trainModel == False:
+            self.actions.trainModel.setIcon(newIcon("trainModel"))
+            self.trainModelOn = False
+            self.trainModelOff = True
+        if trainModel == True:
+            self.actions.trainModel.setIcon(newIcon("delete"))
+            self.trainModelOn = True
+            self.trainModelOff = False
 
-    def onFinished(self, exitCode, exitStatus):
-        self.actions.trainModel.setEnabled(True)
+    def libRun(self, lib, args):  # This is useful for loading modules that can also be run standalone like darkflow
+        print("Descending into {}".format(os.path.abspath(lib)))
+        os.chdir(lib)
+        print("Starting Training...")
+        self.process = QProcess(self)
+        # self.process.finished.connect(self.onFinished) pretty sure this isn't necessary
+        self.process.start(sys.executable, args)
         os.chdir('../')
-        return
+        print("Ascending into {}".format(os.getcwd()))
+
+    def libStop(self):
+        self.process.terminate()
 
     def frameByFrame(self):
         return
