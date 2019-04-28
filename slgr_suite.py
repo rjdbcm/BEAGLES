@@ -1308,7 +1308,7 @@ class MainWindow(QMainWindow, WindowMixin):
         filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        filename = QFileDialog.getOpenFileName(self, '%s - Choose Video file' % __appname__, defaultOpenDirPath,
+        filename = QFileDialog.getOpenFileName(self, '%s - Choose Video file' % __appname__, path,
                                                filters, options=options)
         target = './data/rawframes/' + os.path.basename(os.path.splitext(filename[0])[0])
         if os.path.exists(filename[0]):
