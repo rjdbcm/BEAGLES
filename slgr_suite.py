@@ -275,7 +275,7 @@ class MainWindow(QMainWindow, WindowMixin):
                             enabled=True)
 
         frameByFrame = action(getStr('frameByFrame'), self.frameByFrame, None, 'frameByFrame',
-                              getStr('frameByFrameDetail'), enabled=False)
+                              getStr('frameByFrameDetail'), enabled=True)
 
         demoWebcam = action(getStr('demoWebcam'), self.demoWebcam, None, 'demoWebcam',
                             getStr('demoWebcamDetail'), enabled=False)
@@ -358,7 +358,8 @@ class MainWindow(QMainWindow, WindowMixin):
         # Store actions for further handling.
         self.actions = struct(save=save, save_format=save_format, saveAs=saveAs, open=open, close=close, resetAll = resetAll,
                               lineColor=color1, create=create, delete=delete, edit=edit, copy=copy, mirrorMode=mirrorMode,
-                              trainModel=trainModel, createMode=createMode, editMode=editMode,
+                              trainModel=trainModel, frameByFrame=frameByFrame, createMode=createMode,
+                              editMode=editMode,
                               advancedMode=advancedMode,
                               shapeLineColor=shapeLineColor, shapeFillColor=shapeFillColor,
                               zoom=zoom, zoomIn=zoomIn, zoomOut=zoomOut, zoomOrg=zoomOrg,
@@ -1286,18 +1287,30 @@ class MainWindow(QMainWindow, WindowMixin):
     def libRun(self, lib, args):  # This is useful for loading modules that can also be run standalone like darkflow
         print("Descending into {}".format(os.path.abspath(lib)))
         os.chdir(lib)
-        print("Starting Training...")
+        print("Starting {}/{}".format(lib, args))
         self.process = QProcess(self)
         # self.process.finished.connect(self.onFinished) pretty sure this isn't necessary
         self.process.start(sys.executable, args)
         os.chdir('../')
         print("Ascending into {}".format(os.getcwd()))
 
-    def libStop(self):
+    def libStop(self):  # For pesky modules that you can't keyboard interrupt like flow --train
         self.process.terminate()
 
-    def frameByFrame(self):
-        return
+    def frameByFrame(self, dirpath=None):
+        defaultOpenDirPath = dirpath if dirpath else '.'
+        if self.lastOpenDir and os.path.exists(self.lastOpenDir):
+            defaultOpenDirPath = self.lastOpenDir
+        else:
+            defaultOpenDirPath = os.path.dirname(self.filePath) if self.filePath else '.'
+
+        formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
+        filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
+        filename = QFileDialog.getOpenFileName(self, '%s - Choose Video file' % __appname__, defaultOpenDirPath,
+                                               filters)
+        target = './data/rawframes/' + os.path.basename(os.path.splitext(filename[0])[0])
+        if os.path.exists(filename[0]):
+            self.libRun("darkflowlib", ["flow", "--fbf", filename[0]])
 
     def demoWebcam(self):
         return
