@@ -65,7 +65,7 @@ class WindowMixin(object):
         toolbar = ToolBar(title)
         toolbar.setObjectName(u'%sToolBar' % title)
         # toolbar.setOrientation(Qt.Vertical)
-        toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)
         if actions:
             addActions(toolbar, actions)
         self.addToolBar(Qt.BottomToolBarArea, toolbar)
@@ -1287,7 +1287,6 @@ class MainWindow(QMainWindow, WindowMixin):
             os.rename(i, './data/' + os.path.split(i)[1])
 
         self.importDirImages(defaultOpenDirPath)
-
 
     def trainModel(self):
         dir = os.path.abspath('./')
