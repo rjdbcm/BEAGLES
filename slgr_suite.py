@@ -428,8 +428,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.actions.advanced = (
             open, opendir, impVideo, changeSavedir, openPrevImg, openNextImg, save, save_format, mirrorMode, None,
-            createMode, editMode, commitAnnotatedFrames, trainModel, frameByFrame, demoWebcam, None,
-            hideAll, showAll)
+            createMode, editMode, hideAll, showAll, None, commitAnnotatedFrames, trainModel, frameByFrame, demoWebcam,
+            None)
 
         self.statusBar().showMessage('%s started.' % __appname__)
         self.statusBar().show()
@@ -1249,8 +1249,7 @@ class MainWindow(QMainWindow, WindowMixin):
         filename = QFileDialog.getOpenFileName(self, '%s - Choose Image or Label file' % __appname__,
                                                defaultOpenDirPath,
                                                filters, options=options)
-        target = './data/rawframes/'+os.path.basename(os.path.splitext(filename[0])[0])
-        target = os.path.abspath(target)
+        target = os.path.abspath('./data/rawframes/' + os.path.basename(os.path.splitext(filename[0])[0]))
         if not os.path.exists(target):
             os.makedirs(target)
         if filename[0] != '':
