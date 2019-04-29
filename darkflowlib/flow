@@ -36,7 +36,7 @@ class Flow(object):
         parser.add_argument('--keep', default=20, metavar='N', help='number of most recent training results to save')
         parser.add_argument('--batch', default=16, metavar='N', help='batch size')
         parser.add_argument('--epoch', default=1000, metavar='N', help='number of epochs')
-        parser.add_argument('--save', default=2000, metavar='N', help='save a checkpoint ever N training examples')
+        parser.add_argument('--save', default=32000, metavar='N', help='save a checkpoint ever N training examples')
         parser.add_argument('--pbLoad', default='', metavar='*.pb', help='name of protobuf file to load')
         parser.add_argument('--metaLoad', default='', metavar='',
                             help='path to .meta file generated during --savepb that corresponds to .pb file')
