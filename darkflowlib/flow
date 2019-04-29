@@ -65,7 +65,7 @@ class Flow(object):
 
         if FLAGS.gpu > 1.0 or FLAGS.gpu < 0:
             raise ValueError('--gpu should be a number between 0 and 1')
-        if FLAGS.threshold <= 0 or FLAGS.gpu >= 1:
+        if FLAGS.threshold < -0.1 or FLAGS.threshold >= 1:
             raise ValueError('--threshold should be a number between 0 and 1 floating point')
         if not FLAGS.save % FLAGS.batch:
             raise ValueError('--save should be a number divisible by the number --batch ')
