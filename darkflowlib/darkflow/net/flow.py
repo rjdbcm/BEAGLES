@@ -70,7 +70,7 @@ def train(self):
 
         form = 'step {} - loss {} - moving ave loss {}'
         self.say(form.format(step_now, loss, loss_mva))
-        # TODO: Add live plotting with matplotlib
+        # TODO: Add live plotting with matplotlib, keyboard interrupt, and step output suppression, and small box exclusion
         profile += [(loss, loss_mva)]
 
         ckpt = (i+1) % (self.FLAGS.save // self.FLAGS.batch)

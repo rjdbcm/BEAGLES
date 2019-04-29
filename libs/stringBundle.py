@@ -16,6 +16,8 @@ except ImportError:
     from PyQt4.QtCore import *
 
 
+# TODO See if we can get newlines to show up on GUI
+
 class StringBundle:
 
     __create_key = object()
