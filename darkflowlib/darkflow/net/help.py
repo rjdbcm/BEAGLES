@@ -17,7 +17,12 @@ def build_train_op(self):
     self.framework.loss(self.out)
     self.say('Building {} train op'.format(self.meta['model']))
     optimizer = self._TRAINER[self.FLAGS.trainer](self.FLAGS.lr)
-    gradients = optimizer.compute_gradients(self.framework.loss)
+    if self.FLAGS.clip == False:
+        gradients = optimizer.compute_gradients(self.framework.loss)
+    if self.FLAGS.clip == True:
+        # From github.com/thtrieu/darkflow/issues/557#issuecomment-377378352 avoid gradient explosions late in training
+        gradients = [(tf.clip_by_value(grad, -1., 1.), var) for
+                     grad, var in optimizer.compute_gradients(self.framework.loss)]
     self.train_op = optimizer.apply_gradients(gradients)
 
 

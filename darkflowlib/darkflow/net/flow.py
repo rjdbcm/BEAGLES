@@ -65,7 +65,7 @@ def train(self):
 
         form = 'step {} - loss {} - moving ave loss {}'
         self.say(form.format(step_now, loss, loss_mva))
-        # TODO: Add live plotting with matplotlib, keyboard interrupt, and step output suppression, and small box exclusion
+        # TODO: Add pause button
         profile += [(loss, loss_mva)]
 
         ckpt = (i+1) % (self.FLAGS.save // self.FLAGS.batch)
@@ -73,7 +73,6 @@ def train(self):
         if not ckpt: _save_ckpt(self, *args)
 
     if ckpt: _save_ckpt(self, *args)
-
 
 
 def return_predict(self, im):

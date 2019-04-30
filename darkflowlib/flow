@@ -8,49 +8,68 @@ class Flow(object):
 
     def __init__(self):
         parser = argparse.ArgumentParser(
-            description='[dark]flow translates darknet to tensorflow')
-        parser.add_argument('--train', default=False, action='store_true',
+            description='[dark]flow translates darknet to tensorflow', add_help=False)
+        parser._optionals.title = 'Commands for flow (run command bare to annotate images)'
+        main_grp = parser.add_mutually_exclusive_group()
+        main_grp.add_argument('--train', default=False, action='store_true',
                             help='train a model on annotated data')
-        parser.add_argument('--savepb', default=False, action='store_true',
-                            help='freeze the model to a .pb')
-        parser.add_argument('--demo', default='', help='demo model on video or webcam')
-        parser.add_argument('--fbf', default='', help='generate frame-by-frame annotation')
-        parser.add_argument('--lb', '--bbox-size-lower-bound', metavar='[0.01 .. 1.0]', default=0.55,
-                            help='frame-by-frame bounding box fractional size lower bound')
-        parser.add_argument('--saveVideo', default='out.avi', help='filename of video output')
-        parser.add_argument('--queue', default=1, help='batch process demo')
-        parser.add_argument('--json', default=False, action='store_true',
-                            help='output bounding box information in .json')
-        parser.add_argument('--imgdir', default='./sample_img/', metavar='',
-                            help='path to testing directory with images')
-        parser.add_argument('--binary', default='./bin/', metavar='', help='path to .weights directory')
-        parser.add_argument('--config', default='./cfg/', metavar='', help='path to .cfg directory')
-        parser.add_argument('--dataset', default='../data', metavar='',
-                            help='path to dataset directory')
-        parser.add_argument('--backup', default='./ckpt/', metavar='', help='path to checkpoint directory')
-        parser.add_argument('--labels', default='../data/predefined_classes.txt', metavar='', help='path to textfile containing labels')
-        parser.add_argument('--annotation', default='../data', metavar='',
-                            help='path to the annotation directory')
-        parser.add_argument('--summary', default='', help='path to Tensorboard summaries directory')
-        parser.add_argument('--trainer', default='rmsprop', metavar='', help='training algorithm')
-        parser.add_argument('--momentum', default=0.0, metavar='',
+        main_grp.add_argument('--savepb', default=False, action='store_true',
+                              help='freeze the model to a .pb')
+        main_grp.add_argument('--demo', default='', metavar='', help='demo model on video or webcam')
+        main_grp.add_argument('--fbf', default='', metavar='', help='generate frame-by-frame annotation')
+
+        train_grp = parser.add_argument_group('Options for --train')
+        train_grp.add_argument('--trainer', default='rmsprop', metavar='', help='training algorithm')
+        train_grp.add_argument('--momentum', default=0.0, type=float, metavar='',
                             help='applicable for rmsprop and momentum optimizers')
-        parser.add_argument('--keep', default=20, metavar='N', help='number of most recent training results to save')
-        parser.add_argument('--batch', default=16, metavar='N', help='batch size')
-        parser.add_argument('--epoch', default=1000, metavar='N', help='number of epochs')
-        parser.add_argument('--save', default=32000, metavar='N', help='save a checkpoint ever N training examples')
-        parser.add_argument('--pbLoad', default='', metavar='*.pb', help='name of protobuf file to load')
-        parser.add_argument('--metaLoad', default='', metavar='',
+        train_grp.add_argument('--keep', default=20, metavar='N', type=int,
+                               help='number of most recent training results to save')
+        train_grp.add_argument('--batch', default=16, metavar='N', type=int, help='batch size')
+        train_grp.add_argument('--epoch', default=1000, metavar='N', type=int, help='number of epochs')
+        train_grp.add_argument('--save', default=32000, metavar='N', type=int,
+                               help='save a checkpoint ever N training examples')
+        train_grp.add_argument('--lr', default=1e-5, metavar='N', type=float, help='learning rate')
+        train_grp.add_argument('--clip', default=False, action='store_true',
+                               help='turn on gradient clipping to avoid minima overshoot')
+
+        demo_grp = parser.add_argument_group('Options for flow --demo')
+        demo_grp.add_argument('--saveVideo', default='out.avi', metavar='', help='filename of video output')
+        demo_grp.add_argument('--queue', default=1, metavar='', help='batch process demo')
+
+        fbf_grp = parser.add_argument_group('Options for --fbf ')
+        fbf_grp.add_argument('--lb', '--bbox-size-lower-bound', metavar='[0.01 .. 1.0]', type=float, default=0.55,
+                             help='frame-by-frame bounding box fractional size lower bound')
+
+        dirs_grp = parser.add_argument_group('Options that set paths')
+        dirs_grp.add_argument('--imgdir', default='./sample_img/', metavar='',
+                              help='path to testing directory with images')
+        dirs_grp.add_argument('--binary', default='./bin/', metavar='', help='path to .weights directory')
+        dirs_grp.add_argument('--config', default='./cfg/', metavar='', help='path to .cfg directory')
+        dirs_grp.add_argument('--dataset', default='../data', metavar='',
+                              help='path to dataset directory')
+        dirs_grp.add_argument('--backup', default='./ckpt/', metavar='', help='path to checkpoint directory')
+        dirs_grp.add_argument('--labels', default='../data/predefined_classes.txt', metavar='',
+                              help='path to textfile containing labels')
+        dirs_grp.add_argument('--annotation', default='../data', metavar='',
+                              help='path to the annotation directory')
+        dirs_grp.add_argument('--summary', default='', metavar='', help='path to Tensorboard summaries directory')
+        dirs_grp.add_argument('--pbLoad', default='', metavar='*.pb', help='name of protobuf file to load')
+        dirs_grp.add_argument('--metaLoad', default='', metavar='',
                             help='path to .meta file generated during --savepb that corresponds to .pb file')
-        parser.add_argument('--gpu', default=0.0, metavar='[0 .. 1.0]', help='amount of GPU to use')
-        parser.add_argument('--gpuName', default='/gpu:0', metavar='/gpu:N', help='GPU device name')
-        parser.add_argument('-l', '--load', default=-1, metavar='', help='filename of weights or checkpoint to load')
-        parser.add_argument('-m', '--model', default='cfg/tiny-yolo-4c.cfg', metavar='', help='filename of model to use')
-        parser.add_argument('--threshold', default=-0.1, metavar='[0.01 .. 0.99]',
+        dirs_grp.add_argument('-l', '--load', default=-1, metavar='', help='filename of weights or checkpoint to load')
+        dirs_grp.add_argument('-m', '--model', default='cfg/tiny-yolo-4c.cfg', metavar='',
+                              help='filename of model to use')
+
+        opts_grp = parser.add_argument_group('General Options')
+        opts_grp.add_argument('--json', default=False, action='store_true',
+                              help='output bounding box information in .json')
+        opts_grp.add_argument('--gpu', default=0.0, metavar='[0 .. 1.0]', type=float, help='amount of GPU to use')
+        opts_grp.add_argument('--gpuName', default='/gpu:0', metavar='/gpu:N', help='GPU device name')
+        opts_grp.add_argument('--threshold', default=-0.1, type=float, metavar='[0.01 .. 0.99]',
                             help='threshold of confidence to record an annotation hit')
-        parser.add_argument('--lr', default=1e-5, metavar='N', help='learning rate')
-        parser.add_argument('-v', '--verbalise', default=False, action='store_true',
-                            help='show graph structure while building')
+        opts_grp.add_argument('-v', '--verbalise', default=False, action='store_true',
+                              help='show graph structure while building')
+        opts_grp.add_argument('-h', '--help', action='help', help='print this message and exit')
 
         FLAGS = parser.parse_args()
 
