@@ -95,11 +95,11 @@ def camera(self):
     if file == 0:  # camera window
         cv2.namedWindow('', 0)
         _, frame = camera.read()
-        height, width, _ = frame.shape
-        cv2.resizeWindow('', width, height)
+        max_y, max_x, _ = frame.shape
+        cv2.resizeWindow('', max_x, max_y)
     else:
         _, frame = camera.read()
-        height, width, _ = frame.shape
+        max_y, max_x, _ = frame.shape
 
     if SaveVideo:
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -110,7 +110,7 @@ def camera(self):
         else:
             fps = round(camera.get(cv2.CAP_PROP_FPS))
         videoWriter = cv2.VideoWriter(
-            'video.avi', fourcc, fps, (width, height))
+            'video.avi', fourcc, fps, (max_x, max_y))
 
     # buffers for demo in batch
     buffer_inp = list()
@@ -163,31 +163,50 @@ def camera(self):
 
 
 def annotate(self):
+    # TODO: ignore small bounding boxes
+    lb = self.FLAGS.lb
     INPUT_VIDEO = self.FLAGS.fbf
     cap = cv2.VideoCapture(INPUT_VIDEO)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-    height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    max_x = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    max_y = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    max_vol = max_x * max_y
     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-    out = cv2.VideoWriter(os.path.splitext(INPUT_VIDEO)[0] + '_annotated.avi', fourcc, 20.0, (int(width), int(height)))
+    out = cv2.VideoWriter(os.path.splitext(INPUT_VIDEO)[0] + '_annotated.avi', fourcc, 20.0, (int(max_x), int(max_y)))
     self.say('Annotating ' + INPUT_VIDEO + ' press [ESC] to quit')
     def boxing(original_img, predictions):
         newImage = np.copy(original_img)
 
         for result in predictions:
+
             top_x = result['topleft']['x']
             top_y = result['topleft']['y']
 
             btm_x = result['bottomright']['x']
             btm_y = result['bottomright']['y']
 
+            top = np.array([top_x, top_y])
+            btm = np.array([btm_x, btm_y])
+
+            bb_width = np.linalg.norm(0 - top)
+            bb_height = np.linalg.norm(0 - btm)
+
+            bb_vol = bb_width * bb_height
+
+            lb_vol = lb * max_vol
+
+            if bb_vol < lb_vol:
+                print('\nBbox Area: {}\nLower Bound: {}'.format(bb_vol, lb_vol))
+
             confidence = result['confidence']
             label = result['label'] + " " + str(round(confidence, 3))
 
-            if confidence > 0.3:
+            if confidence > 0.3 and not bb_vol < lb_vol:
                 newImage = cv2.rectangle(newImage, (top_x, top_y), (btm_x, btm_y), (255, 0, 0), 3)
                 newImage = cv2.putText(newImage, label, (top_x, top_y - 5), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,
                                        (0, 230, 0), 1, cv2.LINE_AA)
+                gen_annotations(predictions)
+
 
         return newImage
 
@@ -210,9 +229,7 @@ def annotate(self):
         if ret == True:
             frame = np.asarray(frame)
             result = self.return_predict(frame)
-            new_frame = boxing(frame, result)
-            gen_annotations(result)
-            # Display the resulting frame
+            new_frame = boxing(frame, result)  # Display the resulting frame
             out.write(new_frame)
             cv2.imshow(INPUT_VIDEO, new_frame)
             choice = cv2.waitKey(1)

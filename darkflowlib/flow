@@ -15,6 +15,8 @@ class Flow(object):
                             help='freeze the model to a .pb')
         parser.add_argument('--demo', default='', help='demo model on video or webcam')
         parser.add_argument('--fbf', default='', help='generate frame-by-frame annotation')
+        parser.add_argument('--lb', '--bbox-size-lower-bound', metavar='[0.01 .. 1.0]', default=0.55,
+                            help='frame-by-frame bounding box fractional size lower bound')
         parser.add_argument('--saveVideo', default='out.avi', help='filename of video output')
         parser.add_argument('--queue', default=1, help='batch process demo')
         parser.add_argument('--json', default=False, action='store_true',
@@ -67,7 +69,7 @@ class Flow(object):
             raise ValueError('--gpu should be a number between 0 and 1')
         if FLAGS.threshold < -0.1 or FLAGS.threshold >= 1:
             raise ValueError('--threshold should be a number between 0 and 1 floating point')
-        if not FLAGS.save % FLAGS.batch:
+        if not FLAGS.save % FLAGS.batch == 0:
             raise ValueError('--save should be a number divisible by the number --batch ')
         try: # TODO: add constraints on FLAGS.gpu range and except: ValueError also add individual error catching for numbers
             FLAGS.save = int(FLAGS.save)
@@ -80,6 +82,7 @@ class Flow(object):
             print('You should try using numbers instead.')
         try:
             FLAGS.load = int(FLAGS.load)
+
         except Exception:
             pass  # Non-integer passed as filename using bare except
 

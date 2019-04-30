@@ -1,11 +1,6 @@
 import os
 import time
 import numpy as np
-import datetime as dt
-import matplotlib
-matplotlib.use('Qt5Agg')
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 import tensorflow as tf
 import pickle
 from multiprocessing.pool import ThreadPool

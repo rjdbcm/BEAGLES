@@ -9,7 +9,6 @@ from ..dark.darknet import Darknet
 import json
 import os
 
-
 class TFNet(object):
     _TRAINER = dict({
         'rmsprop': tf.train.RMSPropOptimizer,
