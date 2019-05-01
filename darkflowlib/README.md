@@ -10,7 +10,11 @@ See demo below or see on [this imgur](http://i.imgur.com/EyZZKAA.gif)
 
 ## Dependencies
 
-Python3, matplotlib, pyqt5, tensorflow 1.0, numpy, opencv 3.
+* [Python 3](https://www.python.org/)
+* [PyQt5](https://www.riverbankcomputing.com/software/pyqt/intro)
+* [TensorFlow 1.14.1](https://www.tensorflow.org/)
+* [NumPy](https://www.numpy.org/) 
+* [OpenCV 3](https://opencv.org/)
 
 ### Getting started
 
