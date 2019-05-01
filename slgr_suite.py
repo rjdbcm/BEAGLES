@@ -1275,7 +1275,7 @@ class MainWindow(QMainWindow, WindowMixin):
         for file in os.listdir(defaultOpenDirPath):
             filename = os.fsdecode(file)
             if filename.endswith(".xml"):
-                print("Moving {0} to data/{0}".format(filename))
+                print("Moving {0} to data/committedframes/{0}".format(filename))
                 filename = os.path.join(defaultOpenDirPath, filename)
                 basename = os.path.splitext(filename)[0]
                 filelist.append(filename)
@@ -1284,7 +1284,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 continue
 
         for i in filelist:
-            os.rename(i, './data/' + os.path.split(i)[1])
+            os.rename(i, './data/committedframes/' + os.path.split(i)[1])
 
         self.importDirImages(defaultOpenDirPath)
 

@@ -179,7 +179,7 @@ This is used when creating a dataset automatically, the user can then through al
 The difficult field being set to 1 indicates that the object has been annotated as "difficult", for example an object which is clearly visible but difficult to recognize without substantial use of context.
 According to your deep neural network implementation, you can include or exclude difficult objects during training.
 
-# 
+
 
 How to contribute
 -----------------
@@ -188,14 +188,13 @@ Send a pull request
 
 License
 -------
-`Free software: MIT license <https://github.com/rjdbcm/slgr-suite/blob/master/LICENSE>`_
+Free software: [MIT license](https://github.com/rjdbcm/slgr-suite/blob/master/LICENSE)
 
 Based on original code by: Tzutalin. LabelImg. Git code (2015). https://github.com/tzutalin/labelImg
 
 Related
 -------
 
-1. `ImageNet Utils <https://github.com/tzutalin/ImageNet_Utils>`__ to
-   download image, create a label text for machine learning, etc
-2. `Generating the PASCAL VOC TFRecord files <https://github.com/tensorflow/models/blob/4f32535fe7040bb1e429ad0e3c948a492a89482d/research/object_detection/g3doc/preparing_inputs.md#generating-the-pascal-voc-tfrecord-files>`__
+1. [labelImg](https://github.com/tzutalin/labelImg) the original image annotation software SLGR-Suite is forked from
+2. [darkflow](https://github.com/thtrieu/darkflow) the original basis of the machine learning backend
 
