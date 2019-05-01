@@ -19,7 +19,9 @@ class Flow(object):
         main_grp.add_argument('--fbf', default='', metavar='', help='generate frame-by-frame annotation')
 
         train_grp = parser.add_argument_group('Options for --train')
-        train_grp.add_argument('--trainer', default='rmsprop', metavar='', help='training algorithm')
+        train_grp.add_argument('--trainer', default='rmsprop',
+                               choices='rmsprop|adadelta|adagrad|adagradDA|momentum|adam|ftrl|sgd', metavar='',
+                               help='training algorithm')
         train_grp.add_argument('--momentum', default=0.0, type=float, metavar='',
                             help='applicable for rmsprop and momentum optimizers')
         train_grp.add_argument('--keep', default=20, metavar='N', type=int,
