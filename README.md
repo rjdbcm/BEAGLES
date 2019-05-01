@@ -15,15 +15,13 @@ also supports YOLO format
 ### Download prebuilt binaries
 
 
--  macOS. Binaries for macOS are not yet available. Help would be appreciated. At present, it must be `built from source <macos>`__.
+-  Binaries are not yet available but the build isn't *too* hard.
 
 ### Build from source
 
-
-
-Linux/Ubuntu/Mac requires at least `Python
-3.6 <https://www.python.org/getit/>`__ and has been tested with `PyQt
-5.10.1 <https://www.riverbankcomputing.com/software/pyqt/intro>`__.
+Linux/Ubuntu/Mac requires at least [Python
+3.6](https://www.python.org/getit/) and has been tested with [PyQt
+5.10.1](https://www.riverbankcomputing.com/software/pyqt/intro)
 
 
 ### Ubuntu Linux
@@ -77,37 +75,36 @@ in your /Applications folder. You can consider this script: build-tools/build-fo
 ###Windows
 
 
-Install `Python <https://www.python.org/downloads/windows/>`__,
-`PyQt5 <https://www.riverbankcomputing.com/software/pyqt/download5>`__
-and `install lxml <http://lxml.de/installation.html>`__.
+Install:
+* [Python](https://www.python.org/downloads/windows/)
+* [PyQt5](https://www.riverbankcomputing.com/software/pyqt/download5)
+* [lxml](http://lxml.de/installation.html)
 
-Open cmd and go to the `slgr_suite <#slgr_suite>`__ directory
-
-.. code::
+Open cmd and go to the `slgr_suite` directory
+```bash
 
     pyrcc4 -o resources.py resources.qrc
     python labelImg.py
     python labelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
+```
 
 ###Windows + Anaconda
 
 
-Download and install `Anaconda <https://www.anaconda.com/download/#download>`__ (Python 3+)
+Download and install [Anaconda (Python 3+)](https://www.anaconda.com/download/#download) 
 
-Open the Anaconda Prompt and go to the `slgr_suite <#slgr_suite>`__ directory
+Open the Anaconda Prompt and go to the `slgr_suite` directory
 
-.. code::
-
+```bash
     conda install pyqt=5
     pyrcc5 -o resources.py resources.qrc
     python labelImg.py
     python labelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
-
+```
 
 ## Usage
 
 ### Create pre-defined classes
-
 
 Edit the
 [data/predefined_classes.txt](https://github.com/rjdbcm/slgr-suite/blob/master/data/predefined_classes.txt)
@@ -148,8 +145,6 @@ Note:
 - You shouldn't use "default class" function when saving to YOLO format, it will not be referred.
 
 - When saving as YOLO format, "difficult" flag is discarded.
-
-
 
 ## Controls
 |  Hotkey  |                     Action                     |
