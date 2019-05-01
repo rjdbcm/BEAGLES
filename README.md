@@ -24,7 +24,7 @@ Linux/Ubuntu/Mac requires at least [Python
 5.10.1](https://www.riverbankcomputing.com/software/pyqt/intro)
 
 
-### Ubuntu Linux
+#### Ubuntu Linux
 
 * Python 3 + Qt5 (Recommended)
 
@@ -35,7 +35,7 @@ Linux/Ubuntu/Mac requires at least [Python
     python3 labelImg.py
     python3 labelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 ```
-### macOS
+#### macOS
 
 
 * Python 3 + Qt5 (Recommended)
@@ -53,7 +53,7 @@ Linux/Ubuntu/Mac requires at least [Python
     python3 labelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 
 ```
-### Python 3 Virtualenv + Binary
+#### Python 3 Virtualenv + Binary
 
 This can avoid a lot of the QT / Python version issues, and gives you a nice .app file with a new SVG Icon
 in your /Applications folder. You can consider this script: build-tools/build-for-macos.sh
@@ -72,7 +72,7 @@ in your /Applications folder. You can consider this script: build-tools/build-fo
     mv "dist/SLGR-Suite.app" /Applications
 ```
 
-### Windows
+#### Windows
 
 Install:
 * [Python](https://www.python.org/downloads/windows/)
@@ -87,7 +87,7 @@ Open cmd and go to the `slgr_suite` directory
     python labelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 ```
 
-### Windows + Anaconda
+#### Windows + Anaconda
 
 
 Download and install [Anaconda (Python 3+)](https://www.anaconda.com/download/#download) 
