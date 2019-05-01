@@ -72,8 +72,7 @@ in your /Applications folder. You can consider this script: build-tools/build-fo
     mv "dist/SLGR-Suite.app" /Applications
 ```
 
-###Windows
-
+### Windows
 
 Install:
 * [Python](https://www.python.org/downloads/windows/)
@@ -88,7 +87,7 @@ Open cmd and go to the `slgr_suite` directory
     python labelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 ```
 
-###Windows + Anaconda
+### Windows + Anaconda
 
 
 Download and install [Anaconda (Python 3+)](https://www.anaconda.com/download/#download) 
