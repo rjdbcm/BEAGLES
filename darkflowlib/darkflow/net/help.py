@@ -200,18 +200,17 @@ def annotate(self):
 
             lb_vol = lb * max_vol
 
-            if bb_vol < lb_vol:
-                print('\nBbox Area: {}\nLower Bound: {}'.format(bb_vol, lb_vol))
-
             confidence = result['confidence']
             label = result['label'] + " " + str(round(confidence, 3))
+
+            if bb_vol < lb_vol:
+                print('Ignoring\n--------\nDetection: {}\nBbox Area: {}\nLower Bound: {}\n'.format(label, bb_vol, lb_vol))
 
             if confidence > 0.3 and not bb_vol < lb_vol:
                 newImage = cv2.rectangle(newImage, (top_x, top_y), (btm_x, btm_y), (255, 0, 0), 3)
                 newImage = cv2.putText(newImage, label, (top_x, top_y - 5), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,
                                        (0, 230, 0), 1, cv2.LINE_AA)
                 gen_annotations(predictions)
-
 
         return newImage
 

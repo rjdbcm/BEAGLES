@@ -38,7 +38,7 @@ cdef void _softmax_c(float* x, int classes):
         for k in prange(classes):
             arr_max = max(arr_max,x[k])
 
-        for k in range(classes):
+        for k in prange(classes):
             x[k] = exp(x[k]-arr_max)
             sum += x[k]
 
@@ -84,12 +84,11 @@ def box_constructor(meta,np.ndarray[float,ndim=3] net_out_in):
                 #SOFTMAX BLOCK, no more pointer juggling
                 for class_loop in range(C):
                     arr_max=max_c(arr_max,Classes[row,col,box_loop,class_loop])
-                with nogil:
-                    for class_loop in prange(C):
+                    for class_loop in range(C):
                         Classes[row,col,box_loop,class_loop]=exp(Classes[row,col,box_loop,class_loop]-arr_max)
                         sum+=Classes[row,col,box_loop,class_loop]
 
-                    for class_loop in prange(C):
+                    for class_loop in range(C):
                         tempc = Classes[row, col, box_loop, class_loop] * Bbox_pred[row, col, box_loop, 4]/sum
                         if(tempc > threshold):
                             probs[row, col, box_loop, class_loop] = tempc
