@@ -23,9 +23,13 @@ numpy==1.16.2
 
 ### Build from source
 
-Linux/Ubuntu/Mac requires at least [Python
-3.6](https://www.python.org/getit/) and has been tested with [PyQt
+- Linux/Ubuntu has been tested with [Python
+3.6](https://www.python.org/getit/) & [PyQt
 5.10.1](https://www.riverbankcomputing.com/software/pyqt/intro)
+
+- MacOS has been tested with [Python
+3.7](https://www.python.org/getit/) & [PyQt
+5.12.1](https://www.riverbankcomputing.com/software/pyqt/intro) installed using [homebrew](https://brew.sh).
 
 
 #### Ubuntu Linux
@@ -36,8 +40,8 @@ Linux/Ubuntu/Mac requires at least [Python
     sudo apt-get install pyqt5-dev-tools
     sudo pip3 install -r requirements/requirements-linux-python3.txt
     make qt5py3
-    python3 labelImg.py
-    python3 labelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
+    python3 slgr_suite.py
+    python3 slgr_suite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 ```
 #### macOS
 
@@ -48,13 +52,10 @@ Linux/Ubuntu/Mac requires at least [Python
    
     brew install qt  # Install qt-5.x.x by Homebrew
     brew install libxml2
-
-    or
-
     pip3 install pyqt5 lxml # Install qt and lxml by pip
     make qt5py3
-    python3 labelImg.py
-    python3 labelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
+    python3 slgr_suite.py
+    python3 slgr_suite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 
 ```
 #### Python 3 Virtualenv + Binary
@@ -87,8 +88,8 @@ Open cmd and go to the `slgr_suite` directory
 ```bash
 
     pyrcc4 -o resources.py resources.qrc
-    python labelImg.py
-    python labelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
+    python slgr_suite.py
+    python slgr_suite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 ```
 
 #### Windows + Anaconda
@@ -101,8 +102,8 @@ Open the Anaconda Prompt and go to the `slgr_suite` directory
 ```bash
     conda install pyqt=5
     pyrcc5 -o resources.py resources.qrc
-    python labelImg.py
-    python labelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
+    python slgr_suite.py
+    python slgr_suite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 ```
 
 ## Usage
