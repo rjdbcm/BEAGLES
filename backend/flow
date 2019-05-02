@@ -59,7 +59,7 @@ class Flow(object):
         dirs_grp.add_argument('--pbLoad', default='', metavar='*.pb', help='name of protobuf file to load')
         dirs_grp.add_argument('--metaLoad', default='', metavar='',
                             help='path to .meta file generated during --savepb that corresponds to .pb file')
-        dirs_grp.add_argument('-l', '--load', default='-1', metavar='', help='filename of weights or checkpoint to load')
+        dirs_grp.add_argument('-l', '--load', default=-1, metavar='', help='filename of weights or checkpoint to load')
         dirs_grp.add_argument('-m', '--model', default='cfg/tiny-yolo-4c.cfg', metavar='',
                               help='filename of model to use')
 
