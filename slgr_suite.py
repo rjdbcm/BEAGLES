@@ -1309,7 +1309,7 @@ class MainWindow(QMainWindow, WindowMixin):
             return
         if self.trainModelOff:
             self.setTrainModel(True)
-            self.libRun('darkflowlib', ["flow", "--train"])
+            self.libRun('backend', ["flow", "--train"])
         elif self.trainModelOn:
             self.setTrainModel(False)
             print("Stopping Training...")
@@ -1358,10 +1358,10 @@ class MainWindow(QMainWindow, WindowMixin):
                                                filters, options=options)
         target = './data/rawframes/' + os.path.basename(os.path.splitext(filename[0])[0])
         if os.path.exists(filename[0]):
-            self.libRun("darkflowlib", ["flow", "--fbf", filename[0]])
+            self.libRun("backend", ["flow", "--fbf", filename[0]])
 
     def demoWebcam(self):
-        self.libRun("darkflowlib", ["flow", "--demo", "camera"])
+        self.libRun("backend", ["flow", "--demo", "camera"])
 
     def importDirImages(self, dirpath):
         if not self.mayContinue() or not dirpath:

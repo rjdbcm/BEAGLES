@@ -1,5 +1,5 @@
-from darkflowlib.net.build import TFNet
-from darkflowlib.cli import cliHandler
+from backend.net.build import TFNet
+from backend.cli import cliHandler
 import json
 import requests
 import cv2

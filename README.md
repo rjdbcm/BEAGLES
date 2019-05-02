@@ -163,7 +163,20 @@ This is used when creating a dataset automatically, the user can then through al
 The difficult field being set to 1 indicates that the object has been annotated as "difficult", for example an object which is clearly visible but difficult to recognize without substantial use of context.
 According to your deep neural network implementation, you can include or exclude difficult objects during training.
 
+## Important Directories
+* Frames are imported to a folder named for the video filename in ```data/rawframes```.
 
+* When you press Commit Frames images in the open directory with matching annotation files are moved into ```data/committedframes```.
+
+* Tensorboard summaries are found in```data/summaries```
+
+* Training checkpoints are saved in```backend/ckpt```
+
+* Frozen graph files (*.pb, *.meta) output in```backend/built_graph```
+
+* Model configurations are stored in```backend/cfg```
+
+* Pretrained weights should be saved into```backend/bin```
 
 How to contribute
 -----------------
