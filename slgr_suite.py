@@ -3,12 +3,14 @@
 import codecs
 import distutils.spawn
 import os.path
+import time
 import platform
 import re
 import sys
 import shutil
 import signal
 import subprocess
+import webbrowser
 
 from functools import partial
 from collections import defaultdict
@@ -94,6 +96,12 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.trainModelOn = False
         self.trainModelOff = True
+
+        # Only allow visualize to start tensorboard once
+        self._visualizeFirstRun = True
+        self.visualizeTimer = QTimer()
+        self.visualizeTimer.setSingleShot(True)
+        self.tb_process = QProcess(self)
 
         # Save as Pascal voc xml
         self.defaultSaveDir = defaultSaveDir
@@ -274,6 +282,9 @@ class MainWindow(QMainWindow, WindowMixin):
         trainModel = action(getStr('trainModel'), self.trainModel, None, 'trainModel', getStr('trainModelDetail'),
                             enabled=True)
 
+        visualize = action(getStr('visualize'), self.visualize, None, 'visualize', getStr('visualizeDetail'),
+                           enabled=True)
+
         frameByFrame = action(getStr('frameByFrame'), self.frameByFrame, None, 'frameByFrame',
                               getStr('frameByFrameDetail'), enabled=True)
 
@@ -358,7 +369,8 @@ class MainWindow(QMainWindow, WindowMixin):
         # Store actions for further handling.
         self.actions = struct(save=save, save_format=save_format, saveAs=saveAs, open=open, close=close, resetAll = resetAll,
                               lineColor=color1, create=create, delete=delete, edit=edit, copy=copy, mirrorMode=mirrorMode,
-                              trainModel=trainModel, frameByFrame=frameByFrame, createMode=createMode,
+                              trainModel=trainModel, visualize=visualize, frameByFrame=frameByFrame,
+                              createMode=createMode,
                               editMode=editMode,
                               advancedMode=advancedMode,
                               shapeLineColor=shapeLineColor, shapeFillColor=shapeFillColor,
@@ -366,7 +378,8 @@ class MainWindow(QMainWindow, WindowMixin):
                               fitWindow=fitWindow, fitWidth=fitWidth,
                               zoomActions=zoomActions,
                               fileMenuActions=(
-                                  open, opendir, impVideo, save, saveAs, commitAnnotatedFrames, trainModel, frameByFrame, demoWebcam, close, resetAll, quit),
+                                  open, opendir, impVideo, save, saveAs, commitAnnotatedFrames, trainModel, visualize,
+                                  frameByFrame, demoWebcam, close, resetAll, quit),
                               beginner=(), advanced=(),
                               editMenu=(edit, copy, delete,
                                         None, mirrorMode, color1, self.drawSquaresOption),
@@ -428,7 +441,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.actions.advanced = (
             open, opendir, impVideo, changeSavedir, openPrevImg, openNextImg, save, save_format, mirrorMode, None,
-            createMode, editMode, hideAll, showAll, None, commitAnnotatedFrames, trainModel, frameByFrame, demoWebcam,
+            createMode, editMode, hideAll, showAll, None, commitAnnotatedFrames, trainModel, visualize, frameByFrame,
+            demoWebcam,
             None)
 
         self.statusBar().showMessage('%s started.' % __appname__)
@@ -1137,6 +1151,8 @@ class MainWindow(QMainWindow, WindowMixin):
     def closeEvent(self, event):
         if not self.mayContinue():
             event.ignore()
+        if self.tb_process:
+            self.tb_process.terminate()
         settings = self.settings
         # If it loads images from dir, don't load it at the begining
         if self.dirname is None:
@@ -1289,12 +1305,11 @@ class MainWindow(QMainWindow, WindowMixin):
         self.importDirImages(defaultOpenDirPath)
 
     def trainModel(self):
-        dir = os.path.abspath('./')
         if not self.mayContinue():
             return
         if self.trainModelOff:
             self.setTrainModel(True)
-            self.libRun('darkflowlib', ["flow", "--train", "-v"])
+            self.libRun('darkflowlib', ["flow", "--train"])
         elif self.trainModelOn:
             self.setTrainModel(False)
             print("Stopping Training...")
@@ -1310,14 +1325,24 @@ class MainWindow(QMainWindow, WindowMixin):
             self.trainModelOn = True
             self.trainModelOff = False
 
+    def visualize(self):
+        if self._visualizeFirstRun:
+            self.tb_process.start("tensorboard", ["--logdir=data/summaries"])
+            self._visualizeFirstRun = False
+            time.sleep(5)
+            webbrowser.open_new_tab('http://localhost:6006/')
+
+        else:
+            webbrowser.open_new_tab('http://localhost:6006/')
+
     def libRun(self, lib, args):  # This is useful for loading modules that can also be run standalone like darkflow
+        home = os.getcwd()
         print("Descending into {}".format(os.path.abspath(lib)))
         os.chdir(lib)
-        print("Starting {}/{}".format(lib, args))
+        print("Starting {}:{}".format(lib, args))
         self.process = QProcess(self)
-        # self.process.finished.connect(self.onFinished) pretty sure this isn't necessary
         self.process.start(sys.executable, args)
-        os.chdir('../')
+        os.chdir(home)
         print("Ascending into {}".format(os.getcwd()))
 
     def libStop(self):  # For pesky modules that you can't keyboard interrupt like flow --train

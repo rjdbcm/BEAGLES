@@ -21,6 +21,7 @@
 <file alias="mirrormode">resources/icons/mirrormode.png</file>
 <file alias="mirrormode_off">resources/icons/mirrormode_off.png</file>
 <file alias="trainModel">resources/icons/trainModel.png</file>
+    <file alias="visualize">resources/icons/visualize.png</file>
 <file alias="commitAnnotatedFrames">resources/icons/commitAnnotatedFrames.png</file>
 <file alias="frameByFrame">resources/icons/frameByFrame.png</file>
 <file alias="demoWebcam">resources/icons/demoWebcam.png</file>

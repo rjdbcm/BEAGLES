@@ -109,41 +109,31 @@ Edit the
 [data/predefined_classes.txt](https://github.com/rjdbcm/slgr-suite/blob/master/data/predefined_classes.txt)
 to load pre-defined classes of your own.
 
-###Steps (PascalVOC)
+### Steps
 
-
-1. Build and launch using the instructions above.
-2. Click 'Change default saved annotation folder' in Menu/File
-3. Click 'Open Dir'
-4. Click 'Create RectBox'
-5. Click and release left mouse to select a region to annotate the rect
-   box
-6. You can use right mouse to drag the rect box to copy or move it
-
-The annotation will be saved to the folder you specify.
-
-You can refer to the below hotkeys to speed up your workflow.
-
-###Steps (YOLO)
-
-
-1. In ``data/predefined_classes.txt`` define the list of classes that will be used for your training.
+1. In `data/predefined_classes.txt` define the list of classes that will be used for your training.
 
 2. Build and launch using the instructions above.
 
-3. Right below "Save" button in toolbar, click "PascalVOC" button to switch to YOLO format.
+3. Right next to the "Save" button in toolbar you can choose PascalVOC `.xml` or YOLO `.txt` the default is PascalVOC.
 
-4. You may use Open/OpenDIR to process single or multiple images. When finished with single image, click save.
+4. You may use Open/Open Folder to process single or multiple images. You may also use Import Video Frames from advanced mode to import every frame from a selected video file into `data/rawframes`. When finished with single image, click save or you can activate autosave mode.
 
-A txt file of yolo format will be saved in the same folder as your image with same name. A file named "classes.txt" is saved to that folder too. "classes.txt" defines the list of class names that your yolo label refers to.
+    A `.txt` or `.xml` file of the annotations will be saved in the same folder as your image with same name. A file named "classes.txt" is saved to that folder too. "classes.txt" defines the list of class names that your yolo label refers to.
 
-Note:
+5. When finished annotating commit the images and corresponding annotation files to the `data/committedframes` folder by pressing the Commit Frames button on the advanced mode toolbar.
 
-- Your label list shall not change in the middle of processing a list of images. When you save a image, classes.txt will also get updated, while previous annotations will not be updated.
+6. Select a model to train and begin training by pressing Train Model
+
+*Important Notes:*
+
+- Your label list shall not change in the middle of processing a list of images, this includes the order. When you save a image, classes.txt will also get updated, while previous annotations will not be updated.
 
 - You shouldn't use "default class" function when saving to YOLO format, it will not be referred.
 
 - When saving as YOLO format, "difficult" flag is discarded.
+
+- The PascalVOC annotation `.xml` output from SLGR-Suite does not include the `<path>` element.
 
 ## Controls
 |  Hotkey  |                     Action                     |

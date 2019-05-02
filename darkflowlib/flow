@@ -47,14 +47,15 @@ class Flow(object):
                               help='path to testing directory with images')
         dirs_grp.add_argument('--binary', default='./bin/', metavar='', help='path to .weights directory')
         dirs_grp.add_argument('--config', default='./cfg/', metavar='', help='path to .cfg directory')
-        dirs_grp.add_argument('--dataset', default='../data', metavar='',
+        dirs_grp.add_argument('--dataset', default='../data/committedframes', metavar='',
                               help='path to dataset directory')
         dirs_grp.add_argument('--backup', default='./ckpt/', metavar='', help='path to checkpoint directory')
         dirs_grp.add_argument('--labels', default='../data/predefined_classes.txt', metavar='',
                               help='path to textfile containing labels')
-        dirs_grp.add_argument('--annotation', default='../data', metavar='',
+        dirs_grp.add_argument('--annotation', default='../data/committedframes', metavar='',
                               help='path to the annotation directory')
-        dirs_grp.add_argument('--summary', default='', metavar='', help='path to Tensorboard summaries directory')
+        dirs_grp.add_argument('--summary', default='../data/summaries/', metavar='',
+                              help='path to Tensorboard summaries directory')
         dirs_grp.add_argument('--pbLoad', default='', metavar='*.pb', help='name of protobuf file to load')
         dirs_grp.add_argument('--metaLoad', default='', metavar='',
                             help='path to .meta file generated during --savepb that corresponds to .pb file')
