@@ -78,6 +78,7 @@ in your /Applications folder. You can consider this script: build-tools/build-fo
 ```
 
 #### Windows
+__Proceed at your own peril
 
 Install:
 * [Python](https://www.python.org/downloads/windows/)
@@ -86,7 +87,6 @@ Install:
 
 Open cmd and go to the `slgr_suite` directory
 ```bash
-
     pyrcc4 -o resources.py resources.qrc
     python slgr_suite.py
     python slgr_suite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
