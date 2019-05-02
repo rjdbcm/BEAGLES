@@ -1,21 +1,25 @@
 # SLGR-Suite
 
+SLGR-Suite is a graphical image annotation tool forked from [LabelImg] and frontend for a custom fork of [darkflow](https://github.com/thtrieu/darkflow).
 
-SLGR-Suite is a graphical image annotation tool.
-
-It is forked from LabelImg, written in Python, and uses Qt for its graphical interface.
-
-Annotations are saved as XML files in PASCAL VOC format, the format used
-also supports YOLO format
+Written in Python, SLGR-Suite uses Qt for its graphical interface.
+By default annotations are saved as ```.xml``` files in PASCAL VOC format but there is also support for saving YOLO formatted ```.txt``` files.
 
 ## Installation
 
-
-
+### Requirements
+From ```requirements/requirements-linux-python3.txt```:
+```bash
+pyqt5==5.10.1
+lxml==4.2.4
+Cython==0.29.6
+opencv-python==4.0.0.21
+tensorflow>=1.13.1
+numpy==1.16.2
+```
 ### Download prebuilt binaries
 
-
--  Binaries are not yet available but the build isn't *too* hard.
+-  Binaries are not yet available but the build isn't hard.
 
 ### Build from source
 
