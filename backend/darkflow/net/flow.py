@@ -59,11 +59,12 @@ def train(self):
 
         if math.isnan(loss):
             if self.FLAGS.clip:
-                raise FloatingPointError('Looks like you lost the gradient. Try restarting from your last checkpoint')
+                raise FloatingPointError('Looks like the neural net lost the gradient. Try restarting from your last\
+                                            checkpoint.')
             if not self.FLAGS.clip:
-                raise FloatingPointError('Looks like our neural net lost the gradient. Try restarting from the last checkpoint\
-                                           If this keeps happening try using the --clip argument when you restart from\
-                                           the last checkpoint')
+                raise FloatingPointError('Looks like the neural net lost the gradient. Try restarting from the last\
+                                            checkpoint. If this keeps happening try using the --clip argument when you\
+                                             restart from the last checkpoint.')
 
         if loss_mva is None: loss_mva = loss
         loss_mva = .9 * loss_mva + .1 * loss
@@ -86,7 +87,7 @@ def train(self):
 
 def return_predict(self, im):
     assert isinstance(im, np.ndarray), \
-				'Image is not a np.ndarray'
+        'Image is not a np.ndarray'
     h, w, _ = im.shape
     im = self.framework.resize_input(im)
     this_inp = np.expand_dims(im, 0)
@@ -112,7 +113,6 @@ def return_predict(self, im):
         })
     return boxesInfo
 
-import math
 
 def predict(self):
     inp_path = self.FLAGS.imgdir
