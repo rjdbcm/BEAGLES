@@ -34,16 +34,15 @@ class TFNet(object):
     load_from_ckpt = help.load_from_ckpt
 
     def __init__(self, FLAGS, darknet=None):
+
         self.ntrain = 0
 
-        # if isinstance(FLAGS, dict):
-        # 	from ..defaults import argHandler
-        # 	newFLAGS = argHandler()
-        # 	newFLAGS.setDefaults()
-        # 	newFLAGS.update(FLAGS)
-        # 	FLAGS = newFLAGS
-
         self.FLAGS = FLAGS
+        if self.FLAGS.verbalise:
+            pass
+        else:
+            tf.logging.set_verbosity(tf.logging.ERROR)
+
         if self.FLAGS.pbLoad and self.FLAGS.metaLoad:
             self.say('\nLoading from .pb and .meta')
             self.graph = tf.Graph()

@@ -175,7 +175,7 @@ def annotate(self):
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     max_x = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     max_y = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-    max_vol = max_x * max_y
+    max_per = (2 * max_x) + (2 * max_y)
     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
     out = cv2.VideoWriter(os.path.splitext(INPUT_VIDEO)[0] + '_annotated.avi', fourcc, 20.0, (int(max_x), int(max_y)))
     self.say('Annotating ' + INPUT_VIDEO + ' press [ESC] to quit')
@@ -190,23 +190,24 @@ def annotate(self):
             btm_x = result['bottomright']['x']
             btm_y = result['bottomright']['y']
 
-            top = np.array([top_x, top_y])
-            btm = np.array([btm_x, btm_y])
+            bb_width = abs(btm_x - top_x)
+            bb_height = abs(top_y - btm_y)
 
-            bb_width = np.linalg.norm(0 - top)
-            bb_height = np.linalg.norm(0 - btm)
+            bb_per = (2 * bb_width) + (2 * bb_height)
 
-            bb_vol = bb_width * bb_height
+            bb_pct = round((bb_per / max_per) * 100, 0)
 
-            lb_vol = lb * max_vol
+            lb_per = lb * max_per
+
 
             confidence = result['confidence']
-            label = result['label'] + " " + str(round(confidence, 3))
+            label = result['label'] + " " + str(round(confidence, 3)) + " Per: " + str(bb_pct) + "%"
 
-            if bb_vol < lb_vol:
-                print('Ignoring\n--------\nDetection: {}\nBbox Area: {}\nLower Bound: {}\n'.format(label, bb_vol, lb_vol))
+            if bb_per < lb_per:
+                print('Ignoring\n--------\nDetection: {}\nBbox Perimeter: {}\nLower Bound: {}\n'.format(label, bb_per,
+                                                                                                        lb_per))
 
-            if confidence > 0.3 and not bb_vol < lb_vol:
+            if confidence > 0.3 and not bb_per < lb_per:
                 newImage = cv2.rectangle(newImage, (top_x, top_y), (btm_x, btm_y), (255, 0, 0), 3)
                 newImage = cv2.putText(newImage, label, (top_x, top_y - 5), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,
                                        (0, 230, 0), 1, cv2.LINE_AA)

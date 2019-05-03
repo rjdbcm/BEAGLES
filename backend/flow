@@ -39,8 +39,8 @@ class Flow(object):
         demo_grp.add_argument('--queue', default=1, metavar='', help='batch process demo')
 
         fbf_grp = parser.add_argument_group('Options for --fbf ')
-        fbf_grp.add_argument('--lb', '--bbox-size-lower-bound', metavar='[0.01 .. 1.0]', type=float, default=1.0,
-                             help='frame-by-frame bounding box fractional size lower bound')
+        fbf_grp.add_argument('--lb', '--bbox-size-lower-bound', metavar='[0.01 .. 1.0]', type=float, default=0.0,
+                             help='frame-by-frame bounding box perimeter fraction lower bound')
 
         dirs_grp = parser.add_argument_group('Options that set paths')
         dirs_grp.add_argument('--imgdir', default='./sample_img/', metavar='',
@@ -86,7 +86,6 @@ class Flow(object):
         if FLAGS.summary:
             requiredDirectories.append(FLAGS.summary)
         _get_dir(requiredDirectories)
-        print(FLAGS.save % FLAGS.batch)
         if FLAGS.gpu > 1.0 or FLAGS.gpu < 0:
             raise ValueError('--gpu should be a number between 0 and 1')
         if FLAGS.threshold < -0.1 or FLAGS.threshold >= 1:
