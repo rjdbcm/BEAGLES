@@ -15,6 +15,7 @@ train_stats = (
 )
 pool = ThreadPool()
 
+
 def _save_ckpt(self, step, loss_profile):
     file = '{}-{}{}'
     model = self.meta['name']
@@ -28,6 +29,7 @@ def _save_ckpt(self, step, loss_profile):
     ckpt = os.path.join(self.FLAGS.backup, ckpt)
     self.say('Checkpoint at step {}'.format(step))
     self.saver.save(self.sess, ckpt)
+
 
 def train(self):
     loss_ph = self.framework.placeholders
