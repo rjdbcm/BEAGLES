@@ -128,8 +128,9 @@ to load pre-defined classes of your own.
 
 5. When finished annotating commit the images and corresponding annotation files to the `data/committedframes` folder by pressing the Commit Frames button on the advanced mode toolbar.
 
-6. Select a model to train and begin training by pressing Train Model
+6. Download [pretrained weights](https://drive.google.com/drive/folders/0B1tW_VtY7onidEwyQ2FtQVplWEU) for the model configurations provided by [thtrieu](https://github.com/thtrieu) which include yolo-full and yolo-tiny of v1.0, tiny-yolo-v1.1 of v1.1 and yolo, tiny-yolo-voc of v2.
 
+7. TODO: GUI changes will alter these steps
 *Important Notes:*
 
 - Your label list shall not change in the middle of processing a list of images, this includes the order. When you save a image, classes.txt will also get updated, while previous annotations will not be updated.

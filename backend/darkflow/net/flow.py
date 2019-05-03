@@ -1,5 +1,6 @@
 import os
 import time
+import math
 import numpy as np
 import tensorflow as tf
 import pickle
@@ -55,6 +56,14 @@ def train(self):
 
         fetched = self.sess.run(fetches, feed_dict)
         loss = fetched[1]
+
+        if math.isnan(loss):
+            if self.FLAGS.clip:
+                raise FloatingPointError('Looks like you lost the gradient. Try restarting from your last checkpoint')
+            if not self.FLAGS.clip:
+                raise FloatingPointError('Looks like our neural net lost the gradient. Try restarting from the last checkpoint\
+                                           If this keeps happening try using the --clip argument when you restart from\
+                                           the last checkpoint')
 
         if loss_mva is None: loss_mva = loss
         loss_mva = .9 * loss_mva + .1 * loss
