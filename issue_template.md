@@ -4,4 +4,6 @@
 -->
 
 - **OS:**
-- **PyQt version:**
+- **Python Version:**
+- **PyQt Version:**
+- **TensorFlow Version:**
