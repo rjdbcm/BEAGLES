@@ -67,7 +67,7 @@ class WindowMixin(object):
         toolbar = ToolBar(title)
         toolbar.setObjectName(u'%sToolBar' % title)
         # toolbar.setOrientation(Qt.Vertical)
-        toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         if actions:
             addActions(toolbar, actions)
         self.addToolBar(Qt.BottomToolBarArea, toolbar)
@@ -573,19 +573,16 @@ class MainWindow(QMainWindow, WindowMixin):
             self.actions.mirrorMode.setIcon(newIcon("mirrormode"))
             self.mirrorModeOn = False
             self.mirrorModeOff = True
-            print(self.mirrorModeOn, self.mirrorModeOff)
         if mirrorMode == True:
             self.actions.mirrorMode.setIcon(newIcon("mirrormode_off"))
             self.mirrorModeOn = True
             self.mirrorModeOff = False
-            print(self.mirrorModeOn, self.mirrorModeOff)
 
     def changeMirrorMode(self):
         if self.mirrorModeOn:
             self.setMirrorMode(False)
         elif self.mirrorModeOff:
             self.setMirrorMode(True)
-
 
     def populateModeActions(self):
         if self.beginner():

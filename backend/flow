@@ -72,6 +72,7 @@ class Flow(object):
                             help='threshold of confidence to record an annotation hit')
         opts_grp.add_argument('-v', '--verbalise', default=False, action='store_true',
                               help='show graph structure while building')
+        opts_grp.add_argument('files', nargs='*')
         opts_grp.add_argument('-h', '--help', action='help', help='print this message and exit')
 
         FLAGS = parser.parse_args()
