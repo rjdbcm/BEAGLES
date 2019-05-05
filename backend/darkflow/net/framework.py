@@ -44,13 +44,28 @@ class YOLOv2(framework):
     findboxes = yolov2.predict.findboxes
     process_box = yolo.predict.process_box
 
+
+class YOLOv3(framework):
+    constructor = yolo.constructor
+    parse = yolo.data.parse
+    shuffle = yolov2.data.shuffle
+    preprocess = yolo.predict.preprocess
+    loss = yolov3.train.loss  # TODO: yolov3.train
+    is_inp = yolo.misc.is_inp
+    postprocess = yolov3.predict.postprocess  # TODO: yolov3.predict.postprocess
+    _batch = yolov3.data._batch  # TODO: yolov3.data._batch
+    resize_input = yolo.predict.resize_input
+    findboxes = yolov3.predict.findboxes  # TODO: yolov3.predict.findboxes
+    process_box = yolo.predict.process_box
+
 """
 framework factory
 """
 
 types = {
     '[detection]': YOLO,
-    '[region]': YOLOv2
+    '[region]': YOLOv2,
+    '[yolo]': YOLOv3
 }
 
 def create_framework(meta, FLAGS):
