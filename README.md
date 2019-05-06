@@ -1,5 +1,5 @@
 # SLGR-Suite
-SLGR stands for Single-Look Gesture Recognition and is an implementation of the YOLO(You Only Look Once) object classification system used for behavioral analysis and quantification. SLGR-Suite is a graphical image annotation tool forked from [labelImg](https://github.com/tzutalin/labelImg) and frontend for a custom fork of [darkflow](https://github.com/thtrieu/darkflow). 
+SLGR stands for Single-Look Gesture Recognition and is an implementation of the YOLO(You Only Look Once) object classification system extended for behavioral analysis and quantification. SLGR-Suite is a graphical image annotation tool forked from [labelImg](https://github.com/tzutalin/labelImg) and frontend for a custom fork of [darkflow](https://github.com/thtrieu/darkflow). 
 
 Written in Python, SLGR-Suite uses Qt for its graphical interface.
 By default annotations are saved as ```.xml``` files in PASCAL VOC format but there is also support for saving YOLO formatted ```.txt``` files.
