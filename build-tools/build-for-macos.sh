@@ -26,5 +26,5 @@ mv "/tmp/SLGR-SuiteSetup/slgr-suite-master/dist/SLGR-Suite.app" /Applications
 # deactivate python3
 deactivate
 cd ../
-rm -rf /tmp/labelImgSetup
+rm -rf /tmp/SLGR-SuiteSetup
 echo 'DONE'
