@@ -1,13 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-except ImportError:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 
 from libs.utils import distance
 import sys
