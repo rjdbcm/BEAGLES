@@ -1,7 +1,7 @@
 
 from unittest import TestCase
 
-from slgr_suite import get_main_app
+from slgrSuite import get_main_app
 
 
 class TestMainWindow(TestCase):

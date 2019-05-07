@@ -31,7 +31,7 @@ elif _platform == "darwin":
 required_packages = find_packages()
 required_packages.append('slgr_suite')
 
-APP = ['slgr_suite.py']
+APP = ['slgrSuite.py']
 OPTIONS = {
     'argv_emulation': True,
     'iconfile': 'resources/icons/app.icns'
@@ -50,7 +50,7 @@ setup(
     packages=required_packages,
     entry_points={
         'console_scripts': [
-            'SLGR<dash>Suite=slgr<underscore>suite.SLGR<dash>Suite:main'
+            'SLGR-Suite=slgr-suite.slgrSuite:main'
         ]
     },
     include_package_data=True,
