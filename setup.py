@@ -70,7 +70,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
-    package_data={'data/*': ['data/*'],
+    package_data={'data/predefined_classes.txt': ['data/predefined_classes.txt'],
                   'backend/*': ['backend/*']},
     options={'py2app': OPTIONS},
     setup_requires= SET_REQUIRES
