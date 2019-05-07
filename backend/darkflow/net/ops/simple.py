@@ -7,7 +7,7 @@ class route(BaseOp):
 	def forward(self):
 		routes = self.lay.routes
 		routes_out = list()
-		for r in routes:2
+        for r in routes:
 			this = self.inp
 			while this.lay.number != r:
 				this = this.inp
