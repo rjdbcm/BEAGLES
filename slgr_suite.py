@@ -15,8 +15,6 @@ import webbrowser
 from functools import partial
 from collections import defaultdict
 
-# TODO: Make it so we can create mirror images and mirror annotation files automatically in mirror mode
-
 try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
@@ -90,9 +88,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.stringBundle = StringBundle.getBundle()
         getStr = lambda strId: self.stringBundle.getString(strId)
 
-        # Mirror mode default is off
-        self.mirrorModeOn = False
-        self.mirrorModeOff = True
+
 
         self.trainModelOn = False
         self.trainModelOff = True
@@ -263,9 +259,6 @@ class MainWindow(QMainWindow, WindowMixin):
         editMode = action('&Edit\nRectBox', self.setEditMode,
                           'Ctrl+J', 'edit', u'Move and edit Boxs', enabled=False)
 
-        mirrorMode = action(getStr('mirrorMode'), self.changeMirrorMode,
-                          'Ctrl+M', 'mirrormode', getStr('mirrorModeDetail'), enabled=True)
-
         create = action(getStr('crtBox'), self.createShape,
                         'w', 'new', getStr('crtBoxDetail'), enabled=False)
 
@@ -368,7 +361,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         # Store actions for further handling.
         self.actions = struct(save=save, save_format=save_format, saveAs=saveAs, open=open, close=close, resetAll = resetAll,
-                              lineColor=color1, create=create, delete=delete, edit=edit, copy=copy, mirrorMode=mirrorMode,
+                              lineColor=color1, create=create, delete=delete, edit=edit, copy=copy,
                               trainModel=trainModel, visualize=visualize, frameByFrame=frameByFrame,
                               createMode=createMode,
                               editMode=editMode,
@@ -382,9 +375,9 @@ class MainWindow(QMainWindow, WindowMixin):
                                   frameByFrame, demoWebcam, close, resetAll, quit),
                               beginner=(), advanced=(),
                               editMenu=(edit, copy, delete,
-                                        None, mirrorMode, color1, self.drawSquaresOption),
+                                        None, color1, self.drawSquaresOption),
                               beginnerContext=(create, edit, copy, delete),
-                              advancedContext=(createMode, editMode, mirrorMode, edit, copy,
+                              advancedContext=(createMode, editMode, edit, copy,
                                                delete, shapeLineColor, shapeFillColor),
                               onLoadActive=(
                                   close, create, createMode, editMode),
@@ -440,7 +433,7 @@ class MainWindow(QMainWindow, WindowMixin):
             zoomIn, zoom, zoomOut, fitWindow, fitWidth)
 
         self.actions.advanced = (
-            open, opendir, impVideo, changeSavedir, openPrevImg, openNextImg, save, save_format, mirrorMode, None,
+            open, opendir, impVideo, changeSavedir, openPrevImg, openNextImg, save, save_format, None,
             createMode, editMode, hideAll, showAll, None, commitAnnotatedFrames, trainModel, visualize, frameByFrame,
             demoWebcam,
             None)
@@ -567,22 +560,6 @@ class MainWindow(QMainWindow, WindowMixin):
             self.dock.setFeatures(self.dock.features() | self.dockFeatures)
         else:
             self.dock.setFeatures(self.dock.features() ^ self.dockFeatures)
-
-    def setMirrorMode(self, mirrorMode):
-        if mirrorMode == False:
-            self.actions.mirrorMode.setIcon(newIcon("mirrormode"))
-            self.mirrorModeOn = False
-            self.mirrorModeOff = True
-        if mirrorMode == True:
-            self.actions.mirrorMode.setIcon(newIcon("mirrormode_off"))
-            self.mirrorModeOn = True
-            self.mirrorModeOff = False
-
-    def changeMirrorMode(self):
-        if self.mirrorModeOn:
-            self.setMirrorMode(False)
-        elif self.mirrorModeOff:
-            self.setMirrorMode(True)
 
     def populateModeActions(self):
         if self.beginner():
