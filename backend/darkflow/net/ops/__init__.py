@@ -12,6 +12,8 @@ op_types = {
 	'flatten': flatten,
 	'avgpool': avgpool,
 	'softmax': softmax,
+	#'shortcut': shortcut,
+	#'upsample': upsample,
 	'identity': identity,
 	'crop': crop,
 	'local': local,

@@ -7,7 +7,7 @@ class route(BaseOp):
 	def forward(self):
 		routes = self.lay.routes
 		routes_out = list()
-		for r in routes:
+		for r in routes:2
 			this = self.inp
 			while this.lay.number != r:
 				this = this.inp
@@ -126,6 +126,14 @@ class leaky(BaseOp):
 
 	def verbalise(self): pass
 
+# class shortcut(BaseOp):
+# 	def forward(self):
+# 		layer = self.lay
+# 		activation = layer.activation
+# 		index = self.lay.w['from']
+
+
+# class upsample(BaseOp):
 
 class identity(BaseOp):
 	def __init__(self, inp):

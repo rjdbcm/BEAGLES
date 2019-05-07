@@ -8,6 +8,9 @@ class avgpool_layer(Layer):
 class crop_layer(Layer):
     pass
 
+#class shortcut_layer(Layer):
+
+
 class maxpool_layer(Layer):
     def setup(self, ksize, stride, pad):
         self.stride = stride
@@ -42,6 +45,7 @@ darkops = {
     'dropout': dropout_layer,
     'connected': connected_layer,
     'maxpool': maxpool_layer,
+    #'shortcut': shortcut_layer,
     'convolutional': convolutional_layer,
     'avgpool': avgpool_layer,
     'softmax': softmax_layer,
