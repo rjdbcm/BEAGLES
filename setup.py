@@ -46,7 +46,7 @@ setup(
     author="Ross J. Duff",
     author_email='rjdbcm@mail.umkc.edu',
     url='https://github.com/rjdbcm/slgr-suite',
-    package_dir={'slgr-suite': '.'},
+    package_dir={'slgrSuite': '.'},
     packages=required_packages,
     entry_points={
         'console_scripts': [
