@@ -12,7 +12,7 @@ formatted ```.txt``` files.
 
 ### Requirements
 From ```requirements/requirements-linux-python3.txt```:
-```python
+```
 pyqt5==5.10.1
 lxml==4.2.4
 Cython==0.29.6
