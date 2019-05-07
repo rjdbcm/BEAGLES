@@ -12,7 +12,7 @@ unzip slgr-suite.zip
 rm slgr-suite.zip
 
 # setup python3 space
-virtualenv --system-site-packages  -p python3 /tmp/labelImgSetup/slgr-suite-py3
+virtualenv --system-site-packages  -p python3 /tmp/SLGR-SuiteSetup/slgr-suite-py3
 source /tmp/SLGR-SuiteSetup/slgr-suite-py3/bin/activate
 cd slgr-suite-master
 
