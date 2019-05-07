@@ -28,6 +28,7 @@ elif _platform == "darwin":
    # MAC OS X
    SET_REQUIRES.append('py2app')
 
+include_package_data = True
 required_packages = find_packages()
 required_packages.append('slgrSuite')
 
