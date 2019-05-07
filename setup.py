@@ -50,7 +50,7 @@ setup(
     packages=required_packages,
     entry_points={
         'console_scripts': [
-            'SLGR-Suite=slgr-suite.slgrSuite:main'
+            'SLGR-Suite=slgrSuite.slgrSuite:main'
         ]
     },
     include_package_data=True,
