@@ -1304,8 +1304,9 @@ class MainWindow(QMainWindow, WindowMixin):
         home = os.getcwd()
         print("Descending into {}".format(os.path.abspath(lib)))
         os.chdir(lib)
-        print("Starting {}:{}".format(lib, args))
+        print("Starting {}:{} with {}".format(lib, args, sys.executable))
         self.process = QProcess(self)
+
         self.process.start(sys.executable, args)
         os.chdir(home)
         print("Ascending into {}".format(os.getcwd()))
