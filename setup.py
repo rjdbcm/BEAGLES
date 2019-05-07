@@ -29,9 +29,9 @@ elif _platform == "darwin":
    SET_REQUIRES.append('py2app')
 
 required_packages = find_packages()
-required_packages.append('slgr_suite')
+required_packages.append('slgrSuite')
 
-APP = ['slgr_suite.py']
+APP = ['slgrSuite.py']
 OPTIONS = {
     'argv_emulation': True,
     'iconfile': 'resources/icons/app.icns'
@@ -46,11 +46,11 @@ setup(
     author="Ross J. Duff",
     author_email='rjdbcm@mail.umkc.edu',
     url='https://github.com/rjdbcm/slgr-suite',
-    package_dir={'slgr-suite': '.'},
+    package_dir={'slgrSuite': '.'},
     packages=required_packages,
     entry_points={
         'console_scripts': [
-            'slgr_suite=slgr_suite.slgr_suite:main'
+            'SLGR-Suite=slgrSuite.slgrSuite:main'
         ]
     },
     include_package_data=True,
