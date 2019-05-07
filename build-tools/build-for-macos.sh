@@ -7,7 +7,7 @@ pip install --upgrade virtualenv
 rm -rf /tmp/SLGR-SuiteSetup
 mkdir /tmp/SLGR-SuiteSetup
 cd /tmp/SLGR-SuiteSetup
-curl https://codeload.github.com/rjdbcm/slgrSuite/zip/master --output slgrSsuite.zip
+curl https://codeload.github.com/rjdbcm/slgrSuite/zip/master --output slgrSuite.zip
 unzip slgr-suite.zip
 rm slgr-suite.zip
 
