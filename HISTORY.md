@@ -1,13 +1,11 @@
-=======
-History
-=======
+# History
 
 
-slgr-suite 1.0.0 (2019-05-28)
+slgr-suite 1.0.0 "bruchpilot" (2019-05-28)
 ------------------
 
-* Branch rename to Single Look Gesture Recognition Suite
-* Focus on integration as with darkflow
+* Fork rename to Single Look Gesture Recognition Suite
+* Addition of darkflow backend
 
 
 labelImg 1.8.1 (2018-12-02)
