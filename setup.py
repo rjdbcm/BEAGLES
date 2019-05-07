@@ -29,7 +29,7 @@ elif _platform == "darwin":
    SET_REQUIRES.append('py2app')
 
 required_packages = find_packages()
-required_packages.append('slgr_suite')
+required_packages.append('slgrSuite')
 
 APP = ['slgrSuite.py']
 OPTIONS = {
