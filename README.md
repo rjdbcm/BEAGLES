@@ -12,7 +12,7 @@ formatted ```.txt``` files.
 
 ### Requirements
 From ```requirements/requirements-linux-python3.txt```:
-```bash
+```python
 pyqt5==5.10.1
 lxml==4.2.4
 Cython==0.29.6
@@ -81,7 +81,7 @@ in your /Applications folder. You can consider this script: build-tools/build-fo
 ```
 
 #### Windows
-__Proceed at your own peril
+Proceed at your own peril
 
 Install:
 * [Python](https://www.python.org/downloads/windows/)
