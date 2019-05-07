@@ -1,11 +1,12 @@
-include CONTRIBUTING.rst
-include HISTORY.rst
+include CONTRIBUTING.md
+include HISTORY.md
 include LICENSE
 include README.md
 
 include resources.qrc
 
 recursive-include data *
+recursive-include backend *
 recursive-include icons *
 recursive-include libs *
 
