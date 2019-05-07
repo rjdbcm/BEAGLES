@@ -12,7 +12,7 @@ class route(BaseOp):
 			while this.lay.number != r:
 				this = this.inp
 				assert this is not None, \
-				'Routing to non-existence {}'.format(r)
+					'Routing to non-existence {}'.format(r)
 			routes_out += [this.out]
 		self.out = tf.concat(routes_out, 3)
 
@@ -24,9 +24,9 @@ class connected(BaseOp):
 	def forward(self):
 		self.out = tf.nn.xw_plus_b(
 			self.inp.out,
-			self.lay.w['weights'], 
-			self.lay.w['biases'], 
-			name = self.scope)
+			self.lay.w['weights'],
+			self.lay.w['biases'],
+			name=self.scope)
 
 	def speak(self):
 		layer = self.lay
@@ -37,6 +37,7 @@ class connected(BaseOp):
 
 class select(connected):
 	"""a weird connected layer"""
+
 	def speak(self):
 		layer = self.lay
 		args = [layer.inp, layer.out]
@@ -46,6 +47,7 @@ class select(connected):
 
 class extract(connected):
 	"""a weird connected layer"""
+
 	def speak(self):
 		layer = self.lay
 		args = [len(layer.inp), len(layer.out)]
@@ -56,9 +58,9 @@ class extract(connected):
 class flatten(BaseOp):
 	def forward(self):
 		temp = tf.transpose(
-			self.inp.out, [0,3,1,2])
+			self.inp.out, [0, 3, 1, 2])
 		self.out = slim.flatten(
-			temp, scope = self.scope)
+			temp, scope=self.scope)
 
 	def speak(self): return 'flat'
 
@@ -73,8 +75,8 @@ class softmax(BaseOp):
 class avgpool(BaseOp):
 	def forward(self):
 		self.out = tf.reduce_mean(
-			self.inp.out, [1, 2], 
-			name = self.scope
+			self.inp.out, [1, 2],
+			name=self.scope
 		)
 
 	def speak(self): return 'avgpool()'
@@ -85,9 +87,9 @@ class dropout(BaseOp):
 		if self.lay.h['pdrop'] is None:
 			self.lay.h['pdrop'] = 1.0
 		self.out = tf.nn.dropout(
-			self.inp.out, 
-			self.lay.h['pdrop'], 
-			name = self.scope
+			self.inp.out,
+			self.lay.h['pdrop'],
+			name=self.scope
 		)
 
 	def speak(self): return 'drop'
@@ -95,7 +97,7 @@ class dropout(BaseOp):
 
 class crop(BaseOp):
 	def forward(self):
-		self.out =  self.inp.out * 2. - 1.
+		self.out = self.inp.out * 2. - 1.
 
 	def speak(self):
 		return 'scale to (-1, 1)'
@@ -104,12 +106,12 @@ class crop(BaseOp):
 class maxpool(BaseOp):
 	def forward(self):
 		self.out = tf.nn.max_pool(
-			self.inp.out, padding = 'SAME',
-	        ksize = [1] + [self.lay.ksize]*2 + [1], 
-	        strides = [1] + [self.lay.stride]*2 + [1],
-	        name = self.scope
-	    )
-	
+			self.inp.out, padding='SAME',
+			ksize=[1] + [self.lay.ksize] * 2 + [1],
+			strides=[1] + [self.lay.stride] * 2 + [1],
+			name=self.scope
+		)
+
 	def speak(self):
 		l = self.lay
 		return 'maxp {}x{}p{}_{}'.format(
@@ -119,9 +121,9 @@ class maxpool(BaseOp):
 class leaky(BaseOp):
 	def forward(self):
 		self.out = tf.maximum(
-			.1 * self.inp.out, 
-			self.inp.out, 
-			name = self.scope
+			.1 * self.inp.out,
+			self.inp.out,
+			name=self.scope
 		)
 
 	def verbalise(self): pass
