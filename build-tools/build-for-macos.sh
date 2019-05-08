@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# By some voodoo this started giving me a segfault
+
 brew install python@2
 pip install --upgrade virtualenv 
 

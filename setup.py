@@ -35,7 +35,8 @@ required_packages.append('slgrSuite')
 APP = ['slgrSuite.py']
 OPTIONS = {
     'argv_emulation': True,
-    'iconfile': 'resources/icons/app.icns'
+    'iconfile': 'resources/icons/app.icns',
+    'packages': ['certifi']
 }
 
 
