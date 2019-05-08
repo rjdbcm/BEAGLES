@@ -9,7 +9,6 @@ from Cython.Build import cythonize
 import numpy
 import imp
 import os
-
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
@@ -33,7 +32,7 @@ required_packages = find_packages()
 required_packages.append('slgrSuite')
 
 APP = ['slgrSuite.py']
-DATA_FILES = [('', ['data']),
+DATA_FILES = [('', ['data'])
               ('', ['backend'])]
 OPTIONS = {
     'argv_emulation': True,
