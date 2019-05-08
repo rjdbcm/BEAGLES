@@ -1,6 +1,5 @@
 #!/bin/sh
 
-# By some voodoo this started giving me a segfault
 
 brew install python@2
 pip install --upgrade virtualenv 
@@ -28,5 +27,9 @@ mv "/tmp/SLGR-SuiteSetup/slgrSuite-master/dist/SLGR-Suite.app" /Applications
 # deactivate python3
 deactivate
 cd ../
-rm -rf /tmp/SLGR-SuiteSetup
+
+# By some magic this started giving me a segfault I think somehow python gets linked to the framework inside
+# /tmp/SLGR-SuiteSetup causing a segfault when it's deleted
+
+# rm -rf /tmp/SLGR-SuiteSetup
 echo 'DONE'
