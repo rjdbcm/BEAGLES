@@ -1,7 +1,7 @@
 #!/bin/sh
+# TODO: Switch this all to PyInstaller or fman since they actually work unlike py2app
 
-
-brew install python@2
+brew install python@3
 pip install --upgrade virtualenv 
 
 # clone source
@@ -12,24 +12,20 @@ curl https://codeload.github.com/rjdbcm/slgrSuite/zip/master --output slgrSuite.
 unzip slgrSuite.zip
 rm slgrSuite.zip
 
-# setup python3 space
+# setup python3 virtualenv
 virtualenv --system-site-packages  -p python3 /tmp/SLGR-SuiteSetup/slgrSuite-py3
 source /tmp/SLGR-SuiteSetup/slgrSuite-py3/bin/activate
 cd slgrSuite-master
 
 # build labelImg app
-pip install py2app
-pip install PyQt5 lxml tensorflow opencv-python numpy
+pip install pyinstaller
+pip install PyQt5 lxml tensorflow opencv-python-headless numpy sip
 make qt5py3
-rm -rf build dist
-python setup.py py2app -A
+pyinstaller -w slgrSuite.spec
 mv "/tmp/SLGR-SuiteSetup/slgrSuite-master/dist/SLGR-Suite.app" /Applications
-# deactivate python3
+
+# deactivate python3 virtualenv
 deactivate
 cd ../
-
-# By some magic this started giving me a segfault I think somehow python gets linked to the framework inside
-# /tmp/SLGR-SuiteSetup causing a segfault when it's deleted
-
-# rm -rf /tmp/SLGR-SuiteSetup
+rm -rf /tmp/SLGR-SuiteSetup
 echo 'DONE'
