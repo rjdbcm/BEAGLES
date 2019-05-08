@@ -3,7 +3,7 @@
 brew install python@2
 pip install --upgrade virtualenv 
 
-# clonde labelimg source
+# clone source
 rm -rf /tmp/SLGR-SuiteSetup
 mkdir /tmp/SLGR-SuiteSetup
 cd /tmp/SLGR-SuiteSetup
