@@ -33,15 +33,17 @@ required_packages = find_packages()
 required_packages.append('slgrSuite')
 
 APP = ['slgrSuite.py']
+DATA_FILES = [('', ['data']),
+              ('', ['backend'])]
 OPTIONS = {
     'argv_emulation': True,
-    'iconfile': 'resources/icons/app.icns',
-    'packages': ['certifi']
+    'iconfile': 'resources/icons/app.icns'
 }
 
 
 setup(
     app=APP,
+    data_files=DATA_FILES,
     name='SLGR-Suite',
     version=__version__,
     description="SLGR-Suite is a graphical image annotation tool and frontend for machine learning algorithms",
