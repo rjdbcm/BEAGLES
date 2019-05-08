@@ -9,6 +9,7 @@ from Cython.Build import cythonize
 import numpy
 import imp
 import os
+
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
