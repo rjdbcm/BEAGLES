@@ -33,8 +33,7 @@ required_packages = find_packages()
 required_packages.append('slgrSuite')
 
 APP = ['slgrSuite.py']
-DATA_FILES = [('', ['data']),
-              ('', ['backend'])]
+DATA_FILES = [('', ['backend'])]
 OPTIONS = {
     'argv_emulation': True,
     'iconfile': 'resources/icons/app.icns'
