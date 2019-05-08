@@ -32,7 +32,7 @@ required_packages = find_packages()
 required_packages.append('slgrSuite')
 
 APP = ['slgrSuite.py']
-DATA_FILES = [('', ['data'])
+DATA_FILES = [('', ['data']),
               ('', ['backend'])]
 OPTIONS = {
     'argv_emulation': True,

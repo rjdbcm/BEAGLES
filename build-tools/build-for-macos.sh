@@ -18,7 +18,7 @@ cd slgrSuite-master
 
 # build labelImg app
 pip install py2app
-pip install PyQt5 lxml
+pip install PyQt5 lxml tensorflow opencv numpy
 make qt5py3
 rm -rf build dist
 python setup.py py2app -A
