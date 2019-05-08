@@ -35,7 +35,7 @@ APP = ['slgrSuite.py']
 DATA_FILES = [('', ['data']),
               ('', ['backend'])]
 OPTIONS = {
-    'argv_emulation': True,
+    'argv_emulation': False,
     'iconfile': 'resources/icons/app.icns'
 }
 
