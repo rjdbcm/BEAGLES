@@ -432,6 +432,14 @@ class MainWindow(QMainWindow, WindowMixin):
         self.statusBar().showMessage('%s started.' % __appname__)
         self.statusBar().show()
 
+        # Data folders
+        if hasattr(sys, 'frozen'):
+            self.rawframesDataPath = os.path.join(os.path.dirname(sys.executable), 'data/rawframes/')
+            self.committedframesDataPath = os.path.join(os.path.dirname(sys.executable), 'data/committedframes/')
+        else:
+            self.rawframesDataPath = os.path.abspath('./data/rawframes/')
+            self.committedframesDataPath = os.path.abspath('./data/committedframes/')
+
         # Application state.
         self.image = QImage()
         self.filePath = ustr(defaultFilename)
@@ -1230,7 +1238,7 @@ class MainWindow(QMainWindow, WindowMixin):
         filename = QFileDialog.getOpenFileName(self, '%s - Choose Image or Label file' % __appname__,
                                                defaultOpenDirPath,
                                                filters, options=options)
-        target = os.path.abspath('./data/rawframes/' + os.path.basename(os.path.splitext(filename[0])[0]))
+        target = os.path.join(self.rawframesDataPath, os.path.basename(os.path.splitext(filename[0])[0]))
         if not os.path.exists(target):
             os.makedirs(target)
         if filename[0] != '':
@@ -1265,7 +1273,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 continue
 
         for i in filelist:
-            os.rename(i, './data/committedframes/' + os.path.split(i)[1])
+            os.rename(i, self.committedframesDataPath + os.path.split(i)[1])
 
         self.importDirImages(defaultOpenDirPath)
 

@@ -1,31 +1,17 @@
 #!/bin/sh
-# TODO: Switch this all to PyInstaller or fman since they actually work unlike py2app
+# To be run from the build-tools/ directory
 
 brew install python@3
-pip install --upgrade virtualenv 
 
-# clone source
-rm -rf /tmp/SLGR-SuiteSetup
-mkdir /tmp/SLGR-SuiteSetup
-cd /tmp/SLGR-SuiteSetup
-curl https://codeload.github.com/rjdbcm/slgrSuite/zip/master --output slgrSuite.zip
-unzip slgrSuite.zip
-rm slgrSuite.zip
+# clean out any old build files
+cd ../
+rm -rf build
+rm -rf dist
 
-# setup python3 virtualenv
-virtualenv --system-site-packages  -p python3 /tmp/SLGR-SuiteSetup/slgrSuite-py3
-source /tmp/SLGR-SuiteSetup/slgrSuite-py3/bin/activate
-cd slgrSuite-master
-
-# build labelImg app
-pip install pyinstaller
-pip install PyQt5 lxml tensorflow opencv-python-headless numpy sip
+# build SLGR-Suite
+pip install pyinstaller opencv-contrib-python-headless PyQt5 lxml tensorflow numpy
 make qt5py3
 pyinstaller -w slgrSuite.spec
-mv "/tmp/SLGR-SuiteSetup/slgrSuite-master/dist/SLGR-Suite.app" /Applications
+mv "dist/SLGR-Suite.app" /Applications
 
-# deactivate python3 virtualenv
-deactivate
-cd ../
-rm -rf /tmp/SLGR-SuiteSetup
 echo 'DONE'
