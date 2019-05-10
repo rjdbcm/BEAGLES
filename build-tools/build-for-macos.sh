@@ -1,30 +1,17 @@
 #!/bin/sh
+# To be run from the build-tools/ directory
 
-brew install python@2
-pip install --upgrade virtualenv 
+brew install python@3
 
-# clonde labelimg source
-rm -rf /tmp/labelImgSetup
-mkdir /tmp/labelImgSetup
-cd /tmp/labelImgSetup
-curl https://codeload.github.com/tzutalin/labelImg/zip/master --output labelImg.zip
-unzip labelImg.zip
-rm labelImg.zip
-
-# setup python3 space
-virtualenv --system-site-packages  -p python3 /tmp/labelImgSetup/labelImg-py3
-source /tmp/labelImgSetup/labelImg-py3/bin/activate
-cd labelImg-master
-
-# build labelImg app
-pip install py2app
-pip install PyQt5 lxml
-make qt5py3
-rm -rf build dist
-python setup.py py2app -A
-mv "/tmp/labelImgSetup/labelImg-master/dist/labelImg.app" /Applications
-# deactivate python3
-deactivate
+# clean out any old build files
 cd ../
-rm -rf /tmp/labelImgSetup
+rm -rf build
+rm -rf dist
+
+# build SLGR-Suite
+pip install pyinstaller opencv-contrib-python-headless PyQt5 lxml tensorflow numpy
+make qt5py3
+pyinstaller -w slgrSuite.spec
+mv "dist/SLGR-Suite.app" /Applications
+
 echo 'DONE'

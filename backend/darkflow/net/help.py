@@ -44,13 +44,17 @@ def load_from_ckpt(self):
         load_old_graph(self, load_point)
 
 
-def say(self, *msgs):
+def say(self, *msgs, overwrite=False):
     if not self.FLAGS.verbalise:
         return
     msgs = list(msgs)
     for msg in msgs:
-        if msg is None: continue
-        print(msg)
+        if msg is None:
+            continue
+        if overwrite:
+            print(" " + msg, end="\r")
+        else:
+            print(msg)
 
 
 def load_old_graph(self, ckpt):
@@ -171,8 +175,13 @@ def annotate(self):
     # TODO: ignore small bounding boxes
     lb = self.FLAGS.lb
     INPUT_VIDEO = self.FLAGS.fbf
+    FRAME_NUMBER = 0
     cap = cv2.VideoCapture(INPUT_VIDEO)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    annotation_file = os.path.splitext(INPUT_VIDEO)[0] + '_annotations.csv'
+    if os.path.exists(annotation_file):
+        self.say("Overwriting existing annotations")
+        os.remove(annotation_file)
     max_x = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     max_y = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
     max_per = (2 * max_x) + (2 * max_y)
@@ -194,11 +203,9 @@ def annotate(self):
             bb_height = abs(top_y - btm_y)
 
             bb_per = (2 * bb_width) + (2 * bb_height)
-
             bb_pct = round((bb_per / max_per) * 100, 0)
 
             lb_per = lb * max_per
-
 
             confidence = result['confidence']
             label = result['label'] + " " + str(round(confidence, 3)) + " Per: " + str(bb_pct) + "%"
@@ -216,12 +223,12 @@ def annotate(self):
         return newImage
 
     def gen_annotations(predictions):
-        with open(os.path.splitext(INPUT_VIDEO)[0] + '_annotations.csv', mode='a') as file:
+        with open(annotation_file, mode='a') as file:
             file_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             for item in predictions:
-                time_elapsed = ('%.3f' % (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000))
+                time_elapsed = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
                 labels = item['label']
-                conf = ('%.3f' % item['confidence'])
+                conf = item['confidence']
                 top_x = item['topleft']['x']
                 top_y = item['topleft']['y']
                 btm_x = item['bottomright']['x']
@@ -230,8 +237,12 @@ def annotate(self):
 
     while True:
         # Capture frame-by-frame
+        FRAME_NUMBER += 1
         ret, frame = cap.read()
         if ret == True:
+            self.say(
+                "Frame {}/{} [{}%]".format(FRAME_NUMBER, total_frames, round(100 * FRAME_NUMBER / total_frames),
+                                           1), overwrite=True)
             frame = np.asarray(frame)
             result = self.return_predict(frame)
             new_frame = boxing(frame, result)  # Display the resulting frame

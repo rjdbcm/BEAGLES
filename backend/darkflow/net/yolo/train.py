@@ -5,6 +5,7 @@ from .misc import show
 import numpy as np
 import os
 
+
 def loss(self, net_out):
     """
     Takes net.out and placeholders value

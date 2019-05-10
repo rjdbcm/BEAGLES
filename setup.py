@@ -9,10 +9,11 @@ from Cython.Build import cythonize
 import numpy
 import imp
 import os
-with open('README.rst') as readme_file:
+
+with open('README.md') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
+with open('HISTORY.md') as history_file:
     history = history_file.read()
 
 requirements = [
@@ -29,16 +30,20 @@ elif _platform == "darwin":
    SET_REQUIRES.append('py2app')
 
 required_packages = find_packages()
-required_packages.append('slgr_suite')
+required_packages.append('slgrSuite')
 
-APP = ['slgr_suite.py']
+APP = ['slgrSuite.py']
+DATA_FILES = [('', ['data']),
+              ('', ['backend'])]
 OPTIONS = {
     'argv_emulation': True,
     'iconfile': 'resources/icons/app.icns'
 }
 
+
 setup(
     app=APP,
+    data_files=DATA_FILES,
     name='SLGR-Suite',
     version=__version__,
     description="SLGR-Suite is a graphical image annotation tool and frontend for machine learning algorithms",
@@ -46,11 +51,11 @@ setup(
     author="Ross J. Duff",
     author_email='rjdbcm@mail.umkc.edu',
     url='https://github.com/rjdbcm/slgr-suite',
-    package_dir={'slgr-suite': '.'},
+    package_dir={'slgrSuite': '.'},
     packages=required_packages,
     entry_points={
         'console_scripts': [
-            'slgr_suite=slgr_suite.slgr_suite:main'
+            'SLGR-Suite=slgrSuite.slgrSuite:main'
         ]
     },
     include_package_data=True,
@@ -63,16 +68,14 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
-        "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     package_data={'data/predefined_classes.txt': ['data/predefined_classes.txt']},
     options={'py2app': OPTIONS},
-    setup_requires= SET_REQUIRES
+    setup_requires=SET_REQUIRES
 )

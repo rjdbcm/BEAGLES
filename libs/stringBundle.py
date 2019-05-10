@@ -6,15 +6,7 @@ import os
 import sys
 import locale
 from libs.ustr import ustr
-
-try:
-    from PyQt5.QtCore import *
-except ImportError:
-    if sys.version_info.major >= 3:
-        import sip
-        sip.setapi('QVariant', 2)
-    from PyQt4.QtCore import *
-
+from PyQt5.QtCore import *
 
 # TODO See if we can get newlines to show up on GUI
 

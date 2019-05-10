@@ -6,6 +6,7 @@ import numpy as np
 import pickle
 import os
 
+
 def parser(model):
 	"""
 	Read the .cfg file to extract layers into `layers`

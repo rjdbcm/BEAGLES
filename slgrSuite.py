@@ -15,22 +15,11 @@ import webbrowser
 from functools import partial
 from collections import defaultdict
 
-# TODO: Make it so we can create mirror images and mirror annotation files automatically in mirror mode
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except ImportError:
-    # needed for py3+qt4
-    # Ref:
-    # http://pyqt.sourceforge.net/Docs/PyQt4/incompatible_apis.html
-    # http://stackoverflow.com/questions/21217399/pyqt4-qtcore-qvariant-object-instead-of-a-string
-    if sys.version_info.major >= 3:
-        import sip
-        sip.setapi('QVariant', 2)
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+
 
 import resources
 # Add internal libs
@@ -90,9 +79,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.stringBundle = StringBundle.getBundle()
         getStr = lambda strId: self.stringBundle.getString(strId)
 
-        # Mirror mode default is off
-        self.mirrorModeOn = False
-        self.mirrorModeOff = True
+
 
         self.trainModelOn = False
         self.trainModelOff = True
@@ -263,9 +250,6 @@ class MainWindow(QMainWindow, WindowMixin):
         editMode = action('&Edit\nRectBox', self.setEditMode,
                           'Ctrl+J', 'edit', u'Move and edit Boxs', enabled=False)
 
-        mirrorMode = action(getStr('mirrorMode'), self.changeMirrorMode,
-                          'Ctrl+M', 'mirrormode', getStr('mirrorModeDetail'), enabled=True)
-
         create = action(getStr('crtBox'), self.createShape,
                         'w', 'new', getStr('crtBoxDetail'), enabled=False)
 
@@ -368,7 +352,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         # Store actions for further handling.
         self.actions = struct(save=save, save_format=save_format, saveAs=saveAs, open=open, close=close, resetAll = resetAll,
-                              lineColor=color1, create=create, delete=delete, edit=edit, copy=copy, mirrorMode=mirrorMode,
+                              lineColor=color1, create=create, delete=delete, edit=edit, copy=copy,
                               trainModel=trainModel, visualize=visualize, frameByFrame=frameByFrame,
                               createMode=createMode,
                               editMode=editMode,
@@ -382,9 +366,9 @@ class MainWindow(QMainWindow, WindowMixin):
                                   frameByFrame, demoWebcam, close, resetAll, quit),
                               beginner=(), advanced=(),
                               editMenu=(edit, copy, delete,
-                                        None, mirrorMode, color1, self.drawSquaresOption),
+                                        None, color1, self.drawSquaresOption),
                               beginnerContext=(create, edit, copy, delete),
-                              advancedContext=(createMode, editMode, mirrorMode, edit, copy,
+                              advancedContext=(createMode, editMode, edit, copy,
                                                delete, shapeLineColor, shapeFillColor),
                               onLoadActive=(
                                   close, create, createMode, editMode),
@@ -440,13 +424,21 @@ class MainWindow(QMainWindow, WindowMixin):
             zoomIn, zoom, zoomOut, fitWindow, fitWidth)
 
         self.actions.advanced = (
-            open, opendir, impVideo, changeSavedir, openPrevImg, openNextImg, save, save_format, mirrorMode, None,
+            open, opendir, impVideo, changeSavedir, openPrevImg, openNextImg, save, save_format, None,
             createMode, editMode, hideAll, showAll, None, commitAnnotatedFrames, trainModel, visualize, frameByFrame,
             demoWebcam,
             None)
 
         self.statusBar().showMessage('%s started.' % __appname__)
         self.statusBar().show()
+
+        # Data folders
+        if hasattr(sys, 'frozen'):
+            self.rawframesDataPath = os.path.join(os.path.dirname(sys.executable), 'data/rawframes/')
+            self.committedframesDataPath = os.path.join(os.path.dirname(sys.executable), 'data/committedframes/')
+        else:
+            self.rawframesDataPath = os.path.abspath('./data/rawframes/')
+            self.committedframesDataPath = os.path.abspath('./data/committedframes/')
 
         # Application state.
         self.image = QImage()
@@ -567,22 +559,6 @@ class MainWindow(QMainWindow, WindowMixin):
             self.dock.setFeatures(self.dock.features() | self.dockFeatures)
         else:
             self.dock.setFeatures(self.dock.features() ^ self.dockFeatures)
-
-    def setMirrorMode(self, mirrorMode):
-        if mirrorMode == False:
-            self.actions.mirrorMode.setIcon(newIcon("mirrormode"))
-            self.mirrorModeOn = False
-            self.mirrorModeOff = True
-        if mirrorMode == True:
-            self.actions.mirrorMode.setIcon(newIcon("mirrormode_off"))
-            self.mirrorModeOn = True
-            self.mirrorModeOff = False
-
-    def changeMirrorMode(self):
-        if self.mirrorModeOn:
-            self.setMirrorMode(False)
-        elif self.mirrorModeOff:
-            self.setMirrorMode(True)
 
     def populateModeActions(self):
         if self.beginner():
@@ -1262,7 +1238,7 @@ class MainWindow(QMainWindow, WindowMixin):
         filename = QFileDialog.getOpenFileName(self, '%s - Choose Image or Label file' % __appname__,
                                                defaultOpenDirPath,
                                                filters, options=options)
-        target = os.path.abspath('./data/rawframes/' + os.path.basename(os.path.splitext(filename[0])[0]))
+        target = os.path.join(self.rawframesDataPath, os.path.basename(os.path.splitext(filename[0])[0]))
         if not os.path.exists(target):
             os.makedirs(target)
         if filename[0] != '':
@@ -1297,7 +1273,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 continue
 
         for i in filelist:
-            os.rename(i, './data/committedframes/' + os.path.split(i)[1])
+            os.rename(i, self.committedframesDataPath + os.path.split(i)[1])
 
         self.importDirImages(defaultOpenDirPath)
 
@@ -1336,7 +1312,7 @@ class MainWindow(QMainWindow, WindowMixin):
         home = os.getcwd()
         print("Descending into {}".format(os.path.abspath(lib)))
         os.chdir(lib)
-        print("Starting {}:{}".format(lib, args))
+        print("Starting {}:{} with {}".format(lib, args, sys.executable))
         self.process = QProcess(self)
         self.process.start(sys.executable, args)
         os.chdir(home)
@@ -1655,7 +1631,7 @@ def get_main_app(argv=[]):
     app.setApplicationName(__appname__)
     app.setWindowIcon(newIcon("app"))
     # Tzutalin 201705+: Accept extra agruments to change predefined class file
-    # Usage : slgr_suite.py image predefClassFile saveDir
+    # Usage : slgrSuite.py image predefClassFile saveDir
     win = MainWindow(argv[1] if len(argv) >= 2 else None,
                      argv[2] if len(argv) >= 3 else os.path.join(
                          os.path.dirname(sys.argv[0]),

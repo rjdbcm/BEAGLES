@@ -6,8 +6,10 @@ import numpy as np
 import os
 import math
 
+
 def expit_tensor(x):
-	return 1. / (1. + tf.exp(-x))
+    return 1. / (1. + tf.exp(-x))
+
 
 def loss(self, net_out):
     """
@@ -76,7 +78,7 @@ def loss(self, net_out):
 
     # calculate the intersection areas
     intersect_upleft   = tf.maximum(floor, _upleft)
-    intersect_botright = tf.minimum(ceil , _botright)
+    intersect_botright = tf.minimum(ceil, _botright)
     intersect_wh = intersect_botright - intersect_upleft
     intersect_wh = tf.maximum(intersect_wh, 0.0)
     intersect = tf.multiply(intersect_wh[:,:,:,0], intersect_wh[:,:,:,1])
