@@ -19,6 +19,7 @@ pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 
 a.datas += Tree('./data', prefix='data')
+a.datas += Tree('./backend', prefix='backend')
 
 exe = EXE(pyz,
           a.scripts,
