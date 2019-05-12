@@ -27,7 +27,6 @@ pyinstaller -w slgrSuite.spec
 mv "dist/SLGR-Suite.app" /Applications
 
 # symlink the backend and data folders
-# Todo make these symlinks actually work inside SLGR-Suite, images load but annotations don't
 mkdir -p ~/SLGR-Suite
 sudo ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/flow /usr/local/bin/flow
 ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/bin/ ~/SLGR-Suite/bin
