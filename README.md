@@ -11,12 +11,12 @@ formatted ```.txt``` files.
 ## Installation
 
 ### Requirements
-From ```requirements/requirements-linux-python3.txt```:
+From ```requirements/requirements-linux.txt```:
 ```
 pyqt5==5.10.1
 lxml==4.2.4
 Cython==0.29.6
-opencv-contrib-python-headless>=4.0.0.21
+opencv-contrib-python==4.0.0.21
 tensorflow>=1.13.1
 numpy==1.16.2
 ```
