@@ -38,12 +38,13 @@ mv "dist/SLGR-Suite.app" /Applications
 deactivate
 
 # symlink the backend and data folders
-mkdir -p ~/SLGR-Suite
+mkdir -p ~/SLGR-Suite/backend
 sudo ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/flow /usr/local/bin/flow
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/bin/ ~/SLGR-Suite/bin
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/ckpt/ ~/SLGR-Suite/ckpt
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/built_graph/ ~/SLGR-Suite/built_graph
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/cfg/ ~/SLGR-Suite/cfg
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/bin/ ~/SLGR-Suite/backend/bin
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/ckpt/ ~/SLGR-Suite/backend/ckpt
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/built_graph/ ~/SLGR-Suite/backend/built_graph
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/sample_img/ ~/SLGR-Suite/backend/sample_img
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/cfg/ ~/SLGR-Suite/backend/cfg
 ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/ ~/SLGR-Suite/data
 
 echo 'DONE'

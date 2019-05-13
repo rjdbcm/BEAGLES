@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 
+#TODO: Make sure symlinked flow command can find it's resources
+
 import os
 import argparse
 from darkflow.net.build import TFNet
