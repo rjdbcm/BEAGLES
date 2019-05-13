@@ -1,5 +1,6 @@
 #!/bin/bash
-### Ubuntu use pyinstall v3.0
+### Not current TODO: Update this
+
 THIS_SCRIPT_PATH=`readlink -f $0`
 THIS_SCRIPT_DIR=`dirname ${THIS_SCRIPT_PATH}`
 cd pyinstaller

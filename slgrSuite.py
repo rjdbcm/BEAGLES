@@ -432,6 +432,17 @@ class MainWindow(QMainWindow, WindowMixin):
         self.statusBar().showMessage('%s started.' % __appname__)
         self.statusBar().show()
 
+        # Data folders
+        if hasattr(sys, 'frozen'):
+            self.rawframesDataPath = os.path.join(os.path.dirname(sys.executable), 'data/rawframes/')
+            self.committedframesDataPath = os.path.join(os.path.dirname(sys.executable), 'data/committedframes/')
+            self.backendPath = os.path.join(os.path.dirname(sys.executable), 'backend/')
+        else:
+            self.rawframesDataPath = os.path.abspath('./data/rawframes/')
+            self.committedframesDataPath = os.path.abspath('./data/committedframes/')
+            self.backendPath = os.path.abspath('backend/')
+
+
         # Application state.
         self.image = QImage()
         self.filePath = ustr(defaultFilename)
@@ -1230,7 +1241,7 @@ class MainWindow(QMainWindow, WindowMixin):
         filename = QFileDialog.getOpenFileName(self, '%s - Choose Image or Label file' % __appname__,
                                                defaultOpenDirPath,
                                                filters, options=options)
-        target = os.path.abspath('./data/rawframes/' + os.path.basename(os.path.splitext(filename[0])[0]))
+        target = os.path.join(self.rawframesDataPath, os.path.basename(os.path.splitext(filename[0])[0]))
         if not os.path.exists(target):
             os.makedirs(target)
         if filename[0] != '':
@@ -1265,7 +1276,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 continue
 
         for i in filelist:
-            os.rename(i, './data/committedframes/' + os.path.split(i)[1])
+            os.rename(i, self.committedframesDataPath + os.path.split(i)[1])
 
         self.importDirImages(defaultOpenDirPath)
 
@@ -1274,7 +1285,7 @@ class MainWindow(QMainWindow, WindowMixin):
             return
         if self.trainModelOff:
             self.setTrainModel(True)
-            self.libRun('backend', ["flow", "--train"])
+            self.libRun(self.backendPath, ["flow", "--train"])
         elif self.trainModelOn:
             self.setTrainModel(False)
             print("Stopping Training...")
@@ -1294,7 +1305,6 @@ class MainWindow(QMainWindow, WindowMixin):
         if self._visualizeFirstRun:
             self.tb_process.start("tensorboard", ["--logdir=data/summaries"])
             self._visualizeFirstRun = False
-            time.sleep(5)
             webbrowser.open_new_tab('http://localhost:6006/')
 
         else:
@@ -1304,9 +1314,9 @@ class MainWindow(QMainWindow, WindowMixin):
         home = os.getcwd()
         print("Descending into {}".format(os.path.abspath(lib)))
         os.chdir(lib)
-        print("Starting {}:{}".format(lib, args))
+        print("Starting {}:{} with {}".format(lib, args, sys.executable))
         self.process = QProcess(self)
-        self.process.start(sys.executable, args)
+        self.process.start("python3", args)
         os.chdir(home)
         print("Ascending into {}".format(os.getcwd()))
 
@@ -1323,10 +1333,10 @@ class MainWindow(QMainWindow, WindowMixin):
                                                filters, options=options)
         target = './data/rawframes/' + os.path.basename(os.path.splitext(filename[0])[0])
         if os.path.exists(filename[0]):
-            self.libRun("backend", ["flow", "--fbf", filename[0]])
+            self.libRun(self.backendPath, ["flow", "--fbf", filename[0]])
 
     def demoWebcam(self):
-        self.libRun("backend", ["flow", "--demo", "camera"])
+        self.libRun(self.backendPath, ["flow", "--demo", "camera"])
 
     def importDirImages(self, dirpath):
         if not self.mayContinue() or not dirpath:

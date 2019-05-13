@@ -1,30 +1,38 @@
 #!/bin/sh
+# To be run from the build-tools/ directory
+# TODO: Install into a virtualenv so the binary isn't massive
+# Run this script as the super user after running:
 
-brew install python@2
-pip install --upgrade virtualenv 
+which -s brew
+if [[ $? != 0 ]] ; then
+    # Install Homebrew
+    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+fi
 
-# clonde labelimg source
-rm -rf /tmp/SLGR-SuiteSetup
-mkdir /tmp/SLGR-SuiteSetup
-cd /tmp/SLGR-SuiteSetup
-curl https://codeload.github.com/rjdbcm/slgrSuite/zip/master --output slgrSuite.zip
-unzip slgrSuite.zip
-rm slgrSuite.zip
+which -s python3
+if [[ $? != 0 ]] ; then
+    # Install Python3
+    brew install python@3
+fi
 
-# setup python3 space
-virtualenv --system-site-packages  -p python3 /tmp/SLGR-SuiteSetup/slgrSuite-py3
-source /tmp/SLGR-SuiteSetup/slgrSuite-py3/bin/activate
-cd slgrSuite-master
-
-# build labelImg app
-pip install py2app
-pip install PyQt5 lxml
-make qt5py3
-rm -rf build dist
-python setup.py py2app -A
-mv "/tmp/SLGR-SuiteSetup/slgrSuite-master/dist/SLGR-Suite.app" /Applications
-# deactivate python3
-deactivate
+# clean out any old build files
 cd ../
-rm -rf /tmp/SLGR-SuiteSetup
+rm -rf build
+rm -rf dist
+
+# build SLGR-Suite
+pip install pyinstaller opencv-contrib-python-headless PyQt5 lxml tensorflow numpy
+make qt5py3
+pyinstaller -w slgrSuite.spec
+mv "dist/SLGR-Suite.app" /Applications
+
+# symlink the backend and data folders
+mkdir -p ~/SLGR-Suite
+sudo ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/flow /usr/local/bin/flow
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/bin/ ~/SLGR-Suite/bin
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/ckpt/ ~/SLGR-Suite/ckpt
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/built_graph/ ~/SLGR-Suite/built_graph
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/cfg/ ~/SLGR-Suite/cfg
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/ ~/SLGR-Suite/data
+
 echo 'DONE'
