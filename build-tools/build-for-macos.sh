@@ -31,7 +31,7 @@ source /tmp/SLGR-SuiteSetup/slgrSuite-py3/bin/activate
 cd slgrSuite-master
 
 # build SLGR-Suite
-pip install pyinstaller opencv-contrib-python-headless PyQt5 lxml tensorflow numpy Cython
+pip install pyinstaller distutils opencv-contrib-python-headless PyQt5 lxml tensorflow numpy Cython
 make qt5py3
 pyinstaller -w slgrSuite.spec
 mv "dist/SLGR-Suite.app" /Applications
