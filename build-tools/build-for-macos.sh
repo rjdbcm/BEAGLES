@@ -26,7 +26,7 @@ rm slgrSuite.zip
 rm -rf build
 rm -rf dist
 
-virtualenv -p python3 /tmp/SLGR-SuiteSetup/slgrSuite-py3
+virtualenv --system-site-packages -p python3 /tmp/SLGR-SuiteSetup/slgrSuite-py3
 source /tmp/SLGR-SuiteSetup/slgrSuite-py3/bin/activate
 cd slgrSuite-master
 
