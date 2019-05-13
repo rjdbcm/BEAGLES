@@ -4,7 +4,6 @@ block_cipher = None
 
 
 a = Analysis(['slgrSuite.py'],
-             pathex=['/Users/ross/PycharmProjects/slgr-suite'],
              binaries=[],
              datas=[('data/predefined_classes.txt', '.')],
              hiddenimports=[],

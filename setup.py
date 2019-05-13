@@ -46,7 +46,7 @@ setup(
     data_files=DATA_FILES,
     name='SLGR-Suite',
     version=__version__,
-    description="SLGR-Suite is a graphical image annotation tool and frontend for machine learning algorithms",
+    description="SLGR-Suite is a graphical image annotation tool and frontend for darkflow",
     long_description=readme + '\n\n' + history,
     author="Ross J. Duff",
     author_email='rjdbcm@mail.umkc.edu',
