@@ -21,7 +21,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 
-from slgrSuite import resources
+import resources
 # Add internal libs
 from libs.constants import *
 from libs.utils import *
