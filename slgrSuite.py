@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import codecs
+import distutils.spawn
 import os.path
 import time
 import platform
