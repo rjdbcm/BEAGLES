@@ -15,27 +15,17 @@ if [[ $? != 0 ]] ; then
     brew install python@3
 fi
 
-rm -rf /tmp/SLGR-SuiteSetup
-mkdir /tmp/SLGR-SuiteSetup
-cd /tmp/SLGR-SuiteSetup
-curl https://codeload.github.com/rjdbcm/slgrSuite/zip/master --output slgrSuite.zip
-unzip slgrSuite.zip
-rm slgrSuite.zip
 
 # clean out any old build files
+cd ../
 rm -rf build
 rm -rf dist
 
-virtualenv --system-site-packages -p python3 /tmp/SLGR-SuiteSetup/slgrSuite-py3
-source /tmp/SLGR-SuiteSetup/slgrSuite-py3/bin/activate
-cd slgrSuite-master
-
 # build SLGR-Suite
-pip install pyinstaller opencv-contrib-python-headless PyQt5 lxml tensorflow numpy Cython
+pip3 install pyinstaller opencv-contrib-python-headless PyQt5 lxml tensorflow numpy Cython
 make qt5py3
 pyinstaller -w slgrSuite.spec
 mv "dist/SLGR-Suite.app" /Applications
-deactivate
 
 # symlink the backend and data folders
 mkdir -p ~/SLGR-Suite/backend
