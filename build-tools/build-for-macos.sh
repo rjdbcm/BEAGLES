@@ -15,7 +15,6 @@ if [[ $? != 0 ]] ; then
     brew install python@3
 fi
 
-
 # clean out any old build files
 cd ../
 rm -rf build
@@ -24,7 +23,7 @@ rm -rf dist
 # build SLGR-Suite
 pip3 install pyinstaller opencv-contrib-python-headless PyQt5 lxml tensorflow numpy Cython
 make qt5py3
-pyinstaller -w slgrSuite.spec
+pyinstaller -w --add-data ./data:data --add-data ./backend:backend --icon=resources/icons/app.icns -n SLGR-Suite slgrSuite.py
 mv "dist/SLGR-Suite.app" /Applications
 
 # symlink the backend and data folders
