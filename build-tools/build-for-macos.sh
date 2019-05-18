@@ -23,7 +23,14 @@ rm -rf dist
 # build SLGR-Suite
 pip3 install pyinstaller opencv-contrib-python-headless PyQt5 lxml tensorflow numpy Cython
 make qt5py3
-pyinstaller -w --add-data ./data:data --add-data ./backend:backend --icon=resources/icons/app.icns -n SLGR-Suite slgrSuite.py
+pyinstaller -w --hidden-import=xml \
+            --hidden-import=xml.etree \
+            --hidden-import=xml.etree.ElementTree \
+            --hidden-import=lxml.etree \
+            --add-data ./data:data \
+            --add-data ./backend:backend \
+            --icon=resources/icons/app.icns \
+            -n SLGR-Suite slgrSuite.py
 mv "dist/SLGR-Suite.app" /Applications
 
 # symlink the backend and data folders
