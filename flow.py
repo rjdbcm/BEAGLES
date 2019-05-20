@@ -4,7 +4,7 @@
 
 import os
 import argparse
-from darkflow.net.build import TFNet
+from libs.net.build import TFNet
 
 class Flow(object):
 
