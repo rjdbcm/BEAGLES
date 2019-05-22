@@ -60,7 +60,7 @@ class WindowMixin(object):
         toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         if actions:
             addActions(toolbar, actions)
-        self.addToolBar(Qt.BottomToolBarArea, toolbar)
+        self.addToolBar(Qt.LeftToolBarArea, toolbar)
         return toolbar
 
 
@@ -270,12 +270,6 @@ class MainWindow(QMainWindow, WindowMixin):
         visualize = action(getStr('visualize'), self.visualize, None, 'visualize', getStr('visualizeDetail'),
                            enabled=True)
 
-        frameByFrame = action(getStr('frameByFrame'), self.frameByFrame, None, 'frameByFrame',
-                              getStr('frameByFrameDetail'), enabled=True)
-
-        demoWebcam = action(getStr('demoWebcam'), self.demoWebcam, None, 'demoWebcam',
-                            getStr('demoWebcamDetail'), enabled=True)
-
         advancedMode = action(getStr('advancedMode'), self.toggleAdvancedMode,
                               'Ctrl+Shift+A', 'expert', getStr('advancedModeDetail'),
                               checkable=True)
@@ -354,7 +348,7 @@ class MainWindow(QMainWindow, WindowMixin):
         # Store actions for further handling.
         self.actions = struct(save=save, save_format=save_format, saveAs=saveAs, open=open, close=close, resetAll = resetAll,
                               lineColor=color1, create=create, delete=delete, edit=edit, copy=copy,
-                              trainModel=trainModel, visualize=visualize, frameByFrame=frameByFrame,
+                              trainModel=trainModel, visualize=visualize,
                               createMode=createMode,
                               editMode=editMode,
                               advancedMode=advancedMode,
@@ -364,7 +358,7 @@ class MainWindow(QMainWindow, WindowMixin):
                               zoomActions=zoomActions,
                               fileMenuActions=(
                                   open, opendir, impVideo, save, saveAs, commitAnnotatedFrames, trainModel, visualize,
-                                  frameByFrame, demoWebcam, close, resetAll, quit),
+                                  close, resetAll, quit),
                               beginner=(), advanced=(),
                               editMenu=(edit, copy, delete,
                                         None, color1, self.drawSquaresOption),
@@ -426,8 +420,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.actions.advanced = (
             open, opendir, impVideo, changeSavedir, openPrevImg, openNextImg, save, save_format, None,
-            createMode, editMode, hideAll, showAll, None, commitAnnotatedFrames, trainModel, visualize, frameByFrame,
-            demoWebcam,
+            createMode, editMode, hideAll, showAll, None, commitAnnotatedFrames, trainModel, visualize,
             None)
 
         self.statusBar().showMessage('%s started.' % __appname__)
@@ -1294,21 +1287,6 @@ class MainWindow(QMainWindow, WindowMixin):
 
         else:
             webbrowser.open_new_tab('http://localhost:6006/')
-
-    def frameByFrame(self, dirpath=None):
-        path = os.path.dirname(ustr(self.filePath)) if self.filePath else '.'
-        formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
-        filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        filename = QFileDialog.getOpenFileName(self, '%s - Choose Video file' % __appname__, path,
-                                               filters, options=options)
-        target = './data/rawframes/' + os.path.basename(os.path.splitext(filename[0])[0])
-        if os.path.exists(filename[0]):
-            self.libRun(self.backendPath, ["flow", "--fbf", filename[0]])
-
-    def demoWebcam(self):
-        self.libRun(self.backendPath, ["flow", "--demo", "camera"])
 
     def importDirImages(self, dirpath):
         if not self.mayContinue() or not dirpath:

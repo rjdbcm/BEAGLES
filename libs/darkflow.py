@@ -83,7 +83,7 @@ class flowDialog(QDialog):
         mainLayout.addWidget(buttonBox)
         self.setLayout(mainLayout)
 
-        self.setWindowTitle("Train a Model")
+        self.setWindowTitle("SLGR-Suite - Machine Learning Tool")
 
     def createFormGroupBox(self):
         self.formGroupBox = QGroupBox("Select Model and Parameters")
@@ -172,7 +172,8 @@ class flowDialog(QDialog):
             FLAGS.load = int(-1)
 
         if self.flowCmb.currentText() == "Flow":
-            pass
+            tfnet = TFNet(FLAGS)
+            tfnet.predict()
         elif self.flowCmb.currentText() == "Train":
             FLAGS.train = True
             if not FLAGS.save % FLAGS.batch == 0:
