@@ -21,26 +21,28 @@ rm -rf build
 rm -rf dist
 
 # build SLGR-Suite
-pip3 install pyinstaller opencv-contrib-python-headless PyQt5 lxml tensorflow numpy Cython
+pip3 install pyinstaller
+pip3 install -r requirements/requirements-osx-mojave.txt
 make qt5py3
 pyinstaller -w --hidden-import=xml \
             --hidden-import=xml.etree \
             --hidden-import=xml.etree.ElementTree \
             --hidden-import=lxml.etree \
+            -r libs/cython_utils/cy_yolo_findboxes.so \
+            -r libs/cython_utils/cy_yolo2_findboxes.so \
+            -r libs/cython_utils/nms.so \
             --add-data ./data:data \
-            --add-data ./backend:backend \
             --icon=resources/icons/app.icns \
             -n SLGR-Suite slgrSuite.py
 mv "dist/SLGR-Suite.app" /Applications
 
 # symlink the backend and data folders
 mkdir -p ~/SLGR-Suite/backend
-sudo ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/flow /usr/local/bin/flow
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/bin/ ~/SLGR-Suite/backend/bin
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/ckpt/ ~/SLGR-Suite/backend/ckpt
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/built_graph/ ~/SLGR-Suite/backend/built_graph
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/sample_img/ ~/SLGR-Suite/backend/sample_img
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/backend/cfg/ ~/SLGR-Suite/backend/cfg
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/bin/ ~/SLGR-Suite/data/bin
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/ckpt/ ~/SLGR-Suite/data/ckpt
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/built_graph/ ~/SLGR-Suite/data/built_graph
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/sample_img/ ~/SLGR-Suite/data/sample_img
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/cfg/ ~/SLGR-Suite/data/cfg
 ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/ ~/SLGR-Suite/data
 
 echo 'DONE'

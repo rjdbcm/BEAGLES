@@ -1,7 +1,7 @@
 import os
 import sys
 import unittest
-from libs.utils import struct, newAction, newIcon, addActions, fmtShortcut, generateColorByText, natural_sort
+from libs.qtUtils import struct, newAction, newIcon, addActions, fmtShortcut, generateColorByText, natural_sort
 
 class TestUtils(unittest.TestCase):
 

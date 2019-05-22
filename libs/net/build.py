@@ -170,8 +170,8 @@ class TFNet(object):
         name = 'built_graph/{}.pb'.format(self.meta['name'])
         os.makedirs(os.path.dirname(name), exist_ok=True)
         # Save dump of everything in meta
-        with open('built_graph/{}.meta'.format(self.meta['name']), 'w') as fp:
+        with open('./data/built_graph/{}.meta'.format(self.meta['name']), 'w') as fp:
             json.dump(self.meta, fp)
         self.say('Saving const graph def to {}'.format(name))
         graph_def = tfnet_pb.sess.graph_def
-        tf.train.write_graph(graph_def, './', name, False)
+        tf.train.write_graph(graph_def, './data/', name, False)

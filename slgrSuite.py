@@ -24,13 +24,14 @@ from PyQt5.QtWidgets import *
 import resources
 # Add internal libs
 from libs.constants import *
-from libs.utils import *
+from libs.qtUtils import *
 from libs.settings import Settings
 from libs.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
 from libs.stringBundle import StringBundle
 from libs.canvas import Canvas
 from libs.zoomWidget import ZoomWidget
 from libs.labelDialog import LabelDialog
+from libs.darkflow import flowDialog
 from libs.colorDialog import ColorDialog
 from libs.labelFile import LabelFile, LabelFileError
 from libs.toolBar import ToolBar
@@ -79,8 +80,6 @@ class MainWindow(QMainWindow, WindowMixin):
         self.stringBundle = StringBundle.getBundle()
         getStr = lambda strId: self.stringBundle.getString(strId)
 
-
-
         self.trainModelOn = False
         self.trainModelOff = True
 
@@ -114,6 +113,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
         # Main widgets and related state.
         self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist)
+        self.trainDialog = flowDialog(parent=self)
+
 
         self.itemsToShapes = {}
         self.shapesToItems = {}
@@ -263,7 +264,7 @@ class MainWindow(QMainWindow, WindowMixin):
         commitAnnotatedFrames = action(getStr('commitAnnotatedFrames'), self.commitAnnotatedFrames, None, 'commitAnnotatedFrames',
                                        getStr('commitAnnotatedFrames'), enabled=True)
 
-        trainModel = action(getStr('trainModel'), self.trainModel, None, 'trainModel', getStr('trainModelDetail'),
+        trainModel = action(getStr('trainModel'), self.trainModel, 'Ctrl+T', 'trainModel', getStr('trainModelDetail'),
                             enabled=True)
 
         visualize = action(getStr('visualize'), self.visualize, None, 'visualize', getStr('visualizeDetail'),
@@ -399,7 +400,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.displayLabelOption.triggered.connect(self.togglePaintLabelsOption)
 
         addActions(self.menus.file,
-                   (open, opendir, impVideo, changeSavedir, openAnnotation, self.menus.recentFiles, save, save_format, saveAs, close, resetAll, quit))
+                   (open, opendir, impVideo, changeSavedir, openAnnotation, self.menus.recentFiles, save, save_format, saveAs, trainModel, close, resetAll, quit))
         addActions(self.menus.help, (help, showInfo))
         addActions(self.menus.view, (
             self.autoSaving,
@@ -1283,23 +1284,7 @@ class MainWindow(QMainWindow, WindowMixin):
     def trainModel(self):
         if not self.mayContinue():
             return
-        if self.trainModelOff:
-            self.setTrainModel(True)
-            self.libRun(self.backendPath, ["flow", "--train"])
-        elif self.trainModelOn:
-            self.setTrainModel(False)
-            print("Stopping Training...")
-            self.libStop()
-
-    def setTrainModel(self, trainModel):
-        if trainModel == False:
-            self.actions.trainModel.setIcon(newIcon("trainModel"))
-            self.trainModelOn = False
-            self.trainModelOff = True
-        if trainModel == True:
-            self.actions.trainModel.setIcon(newIcon("delete"))
-            self.trainModelOn = True
-            self.trainModelOff = False
+        self.trainDialog.show()
 
     def visualize(self):
         if self._visualizeFirstRun:
@@ -1309,19 +1294,6 @@ class MainWindow(QMainWindow, WindowMixin):
 
         else:
             webbrowser.open_new_tab('http://localhost:6006/')
-
-    def libRun(self, lib, args):  # This is useful for loading modules that can also be run standalone like darkflow
-        home = os.getcwd()
-        print("Descending into {}".format(os.path.abspath(lib)))
-        os.chdir(lib)
-        print("Starting {}:{} with {}".format(lib, args, sys.executable))
-        self.process = QProcess(self)
-        self.process.start("python3", args)
-        os.chdir(home)
-        print("Ascending into {}".format(os.getcwd()))
-
-    def libStop(self):  # For pesky modules that you can't keyboard interrupt like flow --train
-        self.process.terminate()
 
     def frameByFrame(self, dirpath=None):
         path = os.path.dirname(ustr(self.filePath)) if self.filePath else '.'
@@ -1608,19 +1580,16 @@ def read(filename, default=None):
 
 
 def frame_capture(path):
-
     import cv2
     vidObj = cv2.VideoCapture(path)
     count = 1  # Start the frame index at 1 >.>
     success = 1
     name = os.path.splitext(path)[0]
     total_zeros = len(str(int(vidObj.get(cv2.CAP_PROP_FRAME_COUNT))))
-
     while success:
         success, image = vidObj.read()
         fileno = str(count)
-        cv2.imwrite("{}_frame_{}.jpg".format(name, fileno.zfill(total_zeros)),
-                    image)
+        cv2.imwrite("{}_frame_{}.jpg".format(name, fileno.zfill(total_zeros)), image)
         count += 1
 
 
