@@ -45,16 +45,15 @@ def load_from_ckpt(self):
 
 
 def say(self, *msgs, overwrite=False):
-    if not self.FLAGS.verbalise:
-        return
-    msgs = list(msgs)
-    for msg in msgs:
-        if msg is None:
-            continue
-        if overwrite:
-            print(" " + msg, end="\r")
-        else:
-            print(msg)
+    if self.FLAGS.verbalise:
+        msgs = list(msgs)
+        for msg in msgs:
+            if msg is None:
+                continue
+            if overwrite:
+                print(" " + msg, end="\r")
+            else:
+                print(msg)
 
 
 def load_old_graph(self, ckpt):

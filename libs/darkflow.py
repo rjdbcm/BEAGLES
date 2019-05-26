@@ -44,7 +44,7 @@ class Flags(dict):
         self.gpu = 0.0
         self.gpuName = '/gpu:0'
         self.threshold = 0.1
-        self.verbalise = True
+        self.verbalise = False
         self.kill = False
         self.killed = False
         self.done = False
@@ -268,7 +268,7 @@ class flowDialog(QDialog):
                 FLAGS.train = True
         elif self.flowCmb.currentText() == "Freeze":
             FLAGS.savepb = True
-        elif self.flowCmb.currentText() == "Annotate":
+        elif self.flowCmb.currentText() == "Annotate":  # OpenCV does not play nice when called outside a main thread
             formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
             filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
             options = QFileDialog.Options()
@@ -278,7 +278,7 @@ class flowDialog(QDialog):
             FLAGS.fbf = filename[0]
             tfnet = TFNet(FLAGS)
             tfnet.annotate()
-        elif self.flowCmb.currentText() == "Demo":
+        elif self.flowCmb.currentText() == "Demo":  # OpenCV does not play nice when called outside a main thread
             FLAGS.demo = "camera"
             tfnet = TFNet(FLAGS)
             print("zeep")
