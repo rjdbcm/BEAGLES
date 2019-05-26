@@ -7,6 +7,8 @@ import os
 import re
 import time
 
+
+
 class Flags(dict):
     """Allows you to set dict values like attributes"""
     def __init__(self):
