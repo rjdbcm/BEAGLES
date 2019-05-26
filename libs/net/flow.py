@@ -141,9 +141,9 @@ def predict(self):
     # predict in batches
     n_batch = int(math.ceil(len(all_inps) / batch))
     for j in range(n_batch):
+        self.say(range(n_batch))
         from_idx = j * batch
         to_idx = min(from_idx + batch, len(all_inps))
-
         # collect images input in the batch
         this_batch = all_inps[from_idx:to_idx]
         inp_feed = pool.map(lambda inp: (
