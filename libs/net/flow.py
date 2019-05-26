@@ -95,6 +95,7 @@ def train(self):
             _save_ckpt(self, *args)
 
     if ckpt:
+        self.FLAGS.done = True
         _save_ckpt(self, *args)
 
 

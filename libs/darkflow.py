@@ -63,32 +63,43 @@ FLAGS = Flags()
 class flowThread(QThread):
     """Needed so the long-running train ops don't block Qt UI"""
 
-    def __init__(self, parent, tfnet, flags, flowprg):
+    def __init__(self, parent, tfnet, flags):
         super(flowThread, self).__init__(parent)
         self.tfnet = tfnet
         self.flags = flags
-        self.flowprg = flowprg
 
     def __del__(self):
         self.wait()
 
     def stop(self):
-        self.flowprg.setValue(0)
-        self.flowprg.hide()
         self.tfnet.FLAGS.kill = True
 
     def run(self): # CLASHES With tf.run
         self.tfnet = self.tfnet(self.flags)
-        self.flowprg.show()
         if self.flags.train is True:
             self.tfnet.train()
-            while self.tfnet.FLAGS.progress < 100:
-                self.flowprg.setValue(self.tfnet.FLAGS.progress)
-                time.sleep(0.5)
         elif self.flags.savepb is True:
             self.tfnet.savepb()
         else:
             self.tfnet.predict()
+
+class flowPrgThread(QThread):
+
+    def __init__(self, parent, flowprg):
+        super(flowPrgThread, self).__init__(parent)
+        self.flowprg = flowprg
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+        while not FLAGS.killed or FLAGS.done:
+            if FLAGS.progress > self.flowprg.value():
+                self.flowprg.setValue(FLAGS.progress)
+            if self.flowprg.value() > 95:
+                self.flowprg.setValue(0)
+                return
+            time.sleep(0.5)
 
 class flowDialog(QDialog):
 
@@ -102,7 +113,6 @@ class flowDialog(QDialog):
         self.buttonCancel.rejected.connect(self.close)
         self.flowPrg = QProgressBar()
         self.flowPrg.setRange(0, 100)
-        self.flowPrg.hide()
 
         mainLayout = QGridLayout()
         mainLayout.addWidget(self.formGroupBox)
@@ -271,26 +281,29 @@ class flowDialog(QDialog):
         if [self.flowCmb.currentText() == "Flow" or "Train" or "Freeze"]:
             self.buttonOk.setDisabled(True)
             self.buttonOk.update()
-            self.flowthread = flowThread(self, tfnet=TFNet, flags=FLAGS, flowprg=self.flowPrg)
+            self.flowthread = flowThread(self, tfnet=TFNet, flags=FLAGS)
             self.flowthread.setTerminationEnabled(True)
             self.flowthread.finished.connect(self.on_finished)
             self.flowthread.start()
+            self.flowprgthread = flowPrgThread(self, flowprg=self.flowPrg)
+            self.flowprgthread.start()
 
     def closeEvent(self, event):
         try:
             self.flowthread.stop()
+            self.flowprgthread.quit()
         except AttributeError:
             print(help(self))
             pass
         self.buttonOk.setDisabled(False)
+        self.flowPrg.setValue(0)
         return
 
     @pyqtSlot()
     def on_finished(self):
         self.buttonOk.setDisabled(False)
-        self.buttonCancel.setDisabled(False)
         self.flowPrg.setValue(0)
-        self.flowPrg.hide()
+
 
     @pyqtSlot()
     def on_error(self):
