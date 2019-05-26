@@ -95,14 +95,14 @@ def _batch(self, chunk):
 def shuffle(self):
     batch = self.FLAGS.batch
     data = self.parse()
-    size = len(data)
+    self.FLAGS.size = len(data)
 
-    print('Dataset of {} instance(s)'.format(size))
-    if batch > size: self.FLAGS.batch = batch = size
-    batch_per_epoch = int(size / batch)
+    print('Dataset of {} instance(s)'.format(self.FLAGS.size))
+    if batch > self.FLAGS.size: self.FLAGS.batch = batch = self.FLAGS.size
+    batch_per_epoch = int(self.FLAGS.size / batch)
 
     for i in range(self.FLAGS.epoch):
-        shuffle_idx = perm(np.arange(size))
+        shuffle_idx = perm(np.arange(self.FLAGS.size))
         for b in range(batch_per_epoch):
             # yield these
             x_batch = list()

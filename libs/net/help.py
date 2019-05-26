@@ -119,7 +119,7 @@ def camera(self):
         else:
             fps = round(camera.get(cv2.CAP_PROP_FPS))
         videoWriter = cv2.VideoWriter(
-            'video.avi', fourcc, fps, (max_x, max_y))
+            self.FLAGS.saveVideo, fourcc, fps, (max_x, max_y))
 
     # buffers for demo in batch
     buffer_inp = list()
@@ -127,7 +127,6 @@ def camera(self):
 
     elapsed = int()
     start = timer()
-    self.say('Press [ESC] to quit demo')
     # Loop through frames
     while camera.isOpened():
         elapsed += 1
@@ -188,6 +187,7 @@ def annotate(self):
     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
     out = cv2.VideoWriter(os.path.splitext(INPUT_VIDEO)[0] + '_annotated.avi', fourcc, 20.0, (int(max_x), int(max_y)))
     self.say('Annotating ' + INPUT_VIDEO + ' press [ESC] to quit')
+
     def boxing(original_img, predictions):
         newImage = np.copy(original_img)
 
