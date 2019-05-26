@@ -236,7 +236,11 @@ class flowDialog(QDialog):
     def accept(self):
         FLAGS.get_defaults()  # Reset FLAGS to values in DefaultFlags.__init__
         FLAGS.model = os.path.join(FLAGS.config, self.modelCmb.currentText())
-        FLAGS.load = int(self.loadCmb.currentText())
+        try:
+            FLAGS.load = int(self.loadCmb.currentText())
+        except ValueError:
+            FLAGS.load = 0
+            pass
         FLAGS.trainer = self.trainerCmb.currentText()
         FLAGS.threshold = self.thresholdSpd.value()
         FLAGS.clip = bool(self.clipChb.checkState())
