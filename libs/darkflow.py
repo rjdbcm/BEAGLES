@@ -44,7 +44,7 @@ class Flags(dict):
         self.gpu = 0.0
         self.gpuName = '/gpu:0'
         self.threshold = 0.1
-        self.verbalise = False
+        self.verbalise = True
         self.kill = False
         self.killed = False
         self.done = False
@@ -198,22 +198,25 @@ class flowDialog(QDialog):
 
     #  SIGNALS
 
-    def findCkpt(self):  ### THIS neeeds to happen on change of config and init instead
+    def findCkpt(self):
         self.loadCmb.clear()
         checkpoints = self.listFiles(FLAGS.backup)
         _model = os.path.splitext(self.modelCmb.currentText())
-        l = []
-        _regex = re.compile("[0-9]+\.")
+        l = ['0']
+        _regex = re.compile("\-[0-9]+\.")
         for f in checkpoints:
-            print("{}\n{}\n".format(f[:len(_model[0])], _model[0]))
             if f[:len(_model[0])] == _model[0]:
                 _ckpt = re.search(_regex, f)
                 start, end = _ckpt.span()
-                self.loadCmb.addItem(str(f[start:end-1]))
+                n = f[start+1:end-1]
+                l.append(n)
                 self.buttonOk.setDisabled(False)
-                print(f[start:end-1])
             else:
                 self.buttonOk.setDisabled(True)
+        l = list(map(int, l))
+        l.sort(reverse=True)
+        l = list(map(str, l))
+        self.loadCmb.addItems(l)
 
     def trainerSelect(self):
         self.momentumSpd.setDisabled(True)
@@ -281,12 +284,11 @@ class flowDialog(QDialog):
         elif self.flowCmb.currentText() == "Demo":  # OpenCV does not play nice when called outside a main thread
             FLAGS.demo = "camera"
             tfnet = TFNet(FLAGS)
-            print("zeep")
             tfnet.camera()
 
+        self.buttonOk.setEnabled(False)
+
         if [self.flowCmb.currentText() == "Flow" or "Train" or "Freeze"]:
-            self.buttonOk.setDisabled(True)
-            self.buttonOk.update()
             self.flowthread = flowThread(self, tfnet=TFNet, flags=FLAGS)
             self.flowthread.setTerminationEnabled(True)
             self.flowthread.finished.connect(self.on_finished)
@@ -299,7 +301,6 @@ class flowDialog(QDialog):
             self.flowthread.stop()
             self.flowprgthread.quit()
         except AttributeError:
-            print(help(self))
             pass
         self.buttonOk.setDisabled(False)
         self.flowPrg.setValue(0)
@@ -309,7 +310,7 @@ class flowDialog(QDialog):
     def on_finished(self):
         self.buttonOk.setDisabled(False)
         self.flowPrg.setValue(0)
-
+        self.findCkpt()
 
     @pyqtSlot()
     def on_error(self):

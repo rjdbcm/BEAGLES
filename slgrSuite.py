@@ -10,7 +10,6 @@ import sys
 import shutil
 import signal
 import subprocess
-import webbrowser
 
 from functools import partial
 from collections import defaultdict
@@ -1281,12 +1280,12 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def visualize(self):
         if self._visualizeFirstRun:
+
             self.tb_process.start("tensorboard", ["--logdir=data/summaries"])
             self._visualizeFirstRun = False
-            webbrowser.open_new_tab('http://localhost:6006/')
-
+            subprocess.Popen(self.screencastViewer + ['http://localhost:6006/'])
         else:
-            webbrowser.open_new_tab('http://localhost:6006/')
+            subprocess.Popen(self.screencastViewer + ['http://localhost:6006/'])
 
     def importDirImages(self, dirpath):
         if not self.mayContinue() or not dirpath:
