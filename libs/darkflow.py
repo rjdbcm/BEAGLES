@@ -49,6 +49,7 @@ class Flags(dict):
         self.killed = False
         self.done = False
         self.progress = 0.0
+        self.estimate = 0
         self.size = 0
         self.imgdir = './data/sample_img/'
         self.binary = './data/bin/'
@@ -76,7 +77,7 @@ class flowThread(QThread):
     def stop(self):
         self.tfnet.FLAGS.kill = True
 
-    def run(self): # CLASHES With tf.run
+    def run(self):
         self.tfnet = self.tfnet(self.flags)
         if self.flags.train is True:
             self.tfnet.train()
@@ -84,6 +85,7 @@ class flowThread(QThread):
             self.tfnet.savepb()
         else:
             self.tfnet.predict()
+
 
 class flowPrgThread(QThread):
 
@@ -102,6 +104,7 @@ class flowPrgThread(QThread):
                 self.flowprg.setValue(0)
                 return
             time.sleep(0.5)
+
 
 class flowDialog(QDialog):
 

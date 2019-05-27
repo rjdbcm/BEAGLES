@@ -40,7 +40,6 @@ def train(self):
     loss_op = self.framework.loss
 
     for i, (x_batch, datum) in enumerate(batches):
-
         if not i:
             self.say(train_stats.format(
                 self.FLAGS.lr, self.FLAGS.batch,
@@ -80,7 +79,7 @@ def train(self):
 
         count += self.FLAGS.batch
         goal = self.FLAGS.size * self.FLAGS.epoch
-        self.FLAGS.progress = count/goal * 100
+        self.FLAGS.progress = count / goal * 100
 
         if self.FLAGS.summary:
             self.writer.add_summary(fetched[2], step_now)
@@ -91,6 +90,7 @@ def train(self):
 
         ckpt = (i + 1) % (self.FLAGS.save // self.FLAGS.batch)
         args = [step_now, profile]
+
         if not ckpt:
             _save_ckpt(self, *args)
 
@@ -155,7 +155,7 @@ def predict(self):
         self.say('Forwarding {} inputs ...'.format(len(inp_feed)))
         start = time.time()
         out = self.sess.run(self.out, feed_dict)
-        stop = time.time();
+        stop = time.time()
         last = stop - start
         self.say('Total time = {}s / {} inps = {} ips'.format(
             last, len(inp_feed), len(inp_feed) / last))
@@ -167,7 +167,7 @@ def predict(self):
                             self.framework.postprocess(
                                 prediction, os.path.join(inp_path, this_batch[i])))(*p),
                  enumerate(out))
-        stop = time.time();
+        stop = time.time()
         last = stop - start
 
         # Timing
