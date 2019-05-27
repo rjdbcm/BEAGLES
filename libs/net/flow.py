@@ -167,7 +167,7 @@ def predict(self):
                             self.framework.postprocess(
                                 prediction, os.path.join(inp_path, this_batch[i])))(*p),
                  enumerate(out))
-        stop = time.time();
+        stop = time.time()
         last = stop - start
 
         # Timing

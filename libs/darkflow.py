@@ -40,7 +40,7 @@ class Flags(dict):
         self.metaLoad = ''
         self.load = -1
         self.model = ''
-        self.json = False
+        self.json = True
         self.gpu = 0.0
         self.gpuName = '/gpu:0'
         self.threshold = 0.1
@@ -311,11 +311,11 @@ class flowDialog(QDialog):
         self.buttonOk.setDisabled(False)
         self.flowPrg.setValue(0)
         self.findCkpt()
-
-        form = "Training finished after {} images processed"
-        QMessageBox.question(self, 'Success',
-                             form.format((FLAGS.progress / 100) * FLAGS.size * FLAGS.epoch),
-                             QMessageBox.Ok)
+        if FLAGS.train:
+            form = "Training finished after {} images processed"
+            QMessageBox.question(self, 'Success',
+                                 form.format((FLAGS.progress / 100) * FLAGS.size * FLAGS.epoch),
+                                 QMessageBox.Ok)
 
 
     @pyqtSlot()
