@@ -12,11 +12,11 @@ qt4: qt4py3
 qt5: qt5py3
 
 qt4py3:
-	pyrcc4 -py3 -o resources.py resources.qrc
+	pyrcc4 -py3 -o libs/resources.py resources.qrc
 	python3 setup.py build_ext --inplace
 
 qt5py3:
-	pyrcc5 -o resources.py resources.qrc
+	pyrcc5 -o libs/resources.py resources.qrc
 	python3 setup.py build_ext --inplace
 
 clean:
