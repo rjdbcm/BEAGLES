@@ -5,6 +5,7 @@ from ..utils.loader import create_loader
 from time import time as timer
 import tensorflow as tf
 import numpy as np
+from datetime import datetime
 import sys
 import csv
 import cv2
@@ -44,17 +45,18 @@ def load_from_ckpt(self):
         load_old_graph(self, load_point)
 
 
-def say(self, *msgs, overwrite=False):
+def say(self, *msgs):
     if self.FLAGS.verbalise:
-        msgs = list(msgs)
-        for msg in msgs:
-            if msg is None:
-                continue
-            if overwrite:
-                print(" " + msg, end="\r")
-            else:
-                print(msg)
-
+        with open(self.FLAGS.log, 'a') as logfile:
+                msgs = list(msgs)
+                form = "[{}] {}\n"
+                for msg in msgs:
+                    if msg is None:
+                        continue
+                    else:
+                        logfile.write(form.format(datetime.now(), msg))
+        if self.FLAGS.killed or self.FLAGS.done:
+            logfile.close()
 
 def load_old_graph(self, ckpt):
     ckpt_loader = create_loader(ckpt)
@@ -241,7 +243,7 @@ def annotate(self):
         if ret == True:
             self.say(
                 "Frame {}/{} [{}%]".format(FRAME_NUMBER, total_frames, round(100 * FRAME_NUMBER / total_frames),
-                                           1), overwrite=True)
+                                           1))
             frame = np.asarray(frame)
             result = self.return_predict(frame)
             new_frame = boxing(frame, result)  # Display the resulting frame

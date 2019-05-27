@@ -56,9 +56,9 @@ class Flags(dict):
         self.dataset = './data/committedframes/'
         self.backup = './data/ckpt/'
         self.labels = './data/predefined_classes.txt'
+        self.log = './data/logs/flow.log'
         self.annotation = './data/committedframes/'
         self.summary = './data/summaries/'
-
 
 FLAGS = Flags()
 
@@ -98,8 +98,8 @@ class flowPrgThread(QThread):
         while not FLAGS.killed or FLAGS.done:
             if FLAGS.progress > self.flowprg.value():
                 self.flowprg.setValue(FLAGS.progress)
-            if self.flowprg.value() > 95:
-                self.flowprg.setValue(0)
+            if self.flowprg.value() > 99:  # don't really care if the progress flag hits 100 on the nose
+                self.flowprg.setValue(100)
                 return
             time.sleep(0.5)
 
@@ -211,8 +211,8 @@ class flowDialog(QDialog):
                 n = f[start+1:end-1]
                 l.append(n)
                 self.buttonOk.setDisabled(False)
-            else:
-                self.buttonOk.setDisabled(True)
+            # else:
+            #     self.buttonOk.setDisabled(True)
         l = list(map(int, l))
         l.sort(reverse=True)
         l = list(map(str, l))
@@ -311,6 +311,12 @@ class flowDialog(QDialog):
         self.buttonOk.setDisabled(False)
         self.flowPrg.setValue(0)
         self.findCkpt()
+
+        form = "Training finished after {} images processed"
+        QMessageBox.question(self, 'Success',
+                             form.format((FLAGS.progress / 100) * FLAGS.size * FLAGS.epoch),
+                             QMessageBox.Ok)
+
 
     @pyqtSlot()
     def on_error(self):
