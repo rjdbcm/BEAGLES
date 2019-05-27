@@ -20,8 +20,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 
-import resources
 # Add internal libs
+from libs.resources import *
 from libs.constants import *
 from libs.qtUtils import *
 from libs.settings import Settings
