@@ -40,7 +40,7 @@ class Flags(dict):
         self.metaLoad = ''
         self.load = -1
         self.model = ''
-        self.json = True
+        self.json = False
         self.gpu = 0.0
         self.gpuName = '/gpu:0'
         self.threshold = 0.1
@@ -83,8 +83,6 @@ class flowThread(QThread):
             self.tfnet.train()
         elif self.flags.savepb is True:
             self.tfnet.savepb()
-        else:
-            self.tfnet.predict()
 
 
 class flowPrgThread(QThread):
@@ -257,7 +255,8 @@ class flowDialog(QDialog):
         FLAGS.epoch = self.epochSpb.value()
 
         if self.flowCmb.currentText() == "Flow":
-            pass
+            tfnet = TFNet(FLAGS)
+            tfnet.predict()
         elif self.flowCmb.currentText() == "Train":
 
             if not FLAGS.save % FLAGS.batch == 0:
@@ -291,7 +290,7 @@ class flowDialog(QDialog):
 
         self.buttonOk.setEnabled(False)
 
-        if [self.flowCmb.currentText() == "Flow" or "Train" or "Freeze"]:
+        if [self.flowCmb.currentText() == "Train" or "Freeze"]:
             self.flowthread = flowThread(self, tfnet=TFNet, flags=FLAGS)
             self.flowthread.setTerminationEnabled(True)
             self.flowthread.finished.connect(self.on_finished)
