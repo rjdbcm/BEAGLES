@@ -203,7 +203,7 @@ class flowDialog(QDialog):
         checkpoints = self.listFiles(FLAGS.backup)
         _model = os.path.splitext(self.modelCmb.currentText())
         l = ['0']
-        _regex = re.compile("\-[0-9]+\.")
+        _regex = re.compile("\-[0-9]+\.")  # a dash followed by a number or numbers followed by a dot
         for f in checkpoints:
             if f[:len(_model[0])] == _model[0]:
                 _ckpt = re.search(_regex, f)
