@@ -10,16 +10,11 @@ import sys
 import shutil
 import signal
 import subprocess
-
 from functools import partial
 from collections import defaultdict
-
-
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-
-
 # Add internal libs
 from libs.resources import *
 from libs.constants import *
@@ -84,6 +79,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
         # Only allow visualize to start tensorboard once
         self._visualizeFirstRun = True
+        self.visualizeTimer = QTimer()
+        self.visualizeTimer.setSingleShot(True)
         self.tb_process = QProcess(self)
 
         # Save as Pascal voc xml
