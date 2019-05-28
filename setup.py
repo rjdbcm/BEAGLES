@@ -1,81 +1,87 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
-from libs.version import __version__
-from sys import platform as _platform
 from Cython.Build import cythonize
 import numpy
-import imp
+import sys
 import os
+import imp
 
-with open('README.md') as readme_file:
-    readme = readme_file.read()
+VERSION = imp.load_source('version', os.path.join('.', 'libs', 'version.py'))
+VERSION = VERSION.__version__
 
-with open('HISTORY.md') as history_file:
-    history = history_file.read()
 
-requirements = [
-    # TODO: Different OS have different requirements
-]
 
-# OS specific settings
-SET_REQUIRES = []
-if _platform == "linux" or _platform == "linux2":
-   # linux
-   print('linux')
-elif _platform == "darwin":
-   # MAC OS X
-   SET_REQUIRES.append('py2app')
+if os.name =='nt' :
+    ext_modules=[
+        Extension("libs.cython_utils.nms",
+            sources=["libs/cython_utils/nms.pyx"],
+            #libraries=["m"] # Unix-like specific
+            include_dirs=[numpy.get_include()]
+        ),        
+        Extension("libs.cython_utils.cy_yolo2_findboxes",
+            sources=["libs/cython_utils/cy_yolo2_findboxes.pyx"],
+            #libraries=["m"] # Unix-like specific
+            include_dirs=[numpy.get_include()],
+            extra_compile_args=['/fopenmp'],
+            extra_link_args=['/fopenmp']
+        ),
+        Extension("libs.cython_utils.cy_yolo_findboxes",
+            sources=["libs/cython_utils/cy_yolo_findboxes.pyx"],
+            #libraries=["m"] # Unix-like specific
+            include_dirs=[numpy.get_include()]
+        )
+    ]
 
-required_packages = find_packages()
-required_packages.append('slgrSuite')
+elif os.name =='posix' :
+    if sys.platform == 'darwin':
+        compile_args = ''
+        linker_args = ''
+    else:
+        compile_args = ['-fopenmp', '-funroll-loops'] # This gives a significant boost to postprocessing time
+        linker_args = ['-fopenmp']
+    ext_modules=[
+        Extension("libs.cython_utils.nms",
+            sources=["libs/cython_utils/nms.pyx"],
+            libraries=["m"], # Unix-like specific
+            include_dirs=[numpy.get_include()]
+        ),        
+        Extension("libs.cython_utils.cy_yolo2_findboxes",
+                  sources=["libs/cython_utils/cy_yolo2_findboxes.pyx"],
+                  libraries=["m"],  # Unix-like specific
+                  include_dirs=[numpy.get_include()],
+                  extra_compile_args=compile_args,
+                  extra_link_args=linker_args
+                  ),
+        Extension("libs.cython_utils.cy_yolo_findboxes",
+            sources=["libs/cython_utils/cy_yolo_findboxes.pyx"],
+            libraries=["m"], # Unix-like specific
+            include_dirs=[numpy.get_include()]
+        )
+    ]
 
-APP = ['slgrSuite.py']
-DATA_FILES = [('', ['data']),
-              ('', ['backend'])]
-OPTIONS = {
-    'argv_emulation': True,
-    'iconfile': 'resources/icons/app.icns'
-}
-
+else :
+    ext_modules=[
+        Extension("libs.cython_utils.nms",
+            sources=["libs/cython_utils/nms.pyx"],
+            libraries=["m"] # Unix-like specific
+        ),        
+        Extension("libs.cython_utils.cy_yolo2_findboxes",
+            sources=["libs/cython_utils/cy_yolo2_findboxes.pyx"],
+            libraries=["m"] # Unix-like specific
+        ),
+        Extension("libs.cython_utils.cy_yolo_findboxes",
+            sources=["libs/cython_utils/cy_yolo_findboxes.pyx"],
+            libraries=["m"] # Unix-like specific
+        )
+    ]
 
 setup(
-    app=APP,
-    data_files=DATA_FILES,
-    name='SLGR-Suite',
-    version=__version__,
-    description="SLGR-Suite is a graphical image annotation tool and frontend for darkflow",
-    long_description=readme + '\n\n' + history,
-    author="Ross J. Duff",
-    author_email='rjdbcm@mail.umkc.edu',
-    url='https://github.com/rjdbcm/slgr-suite',
-    package_dir={'slgrSuite': '.'},
-    packages=required_packages,
-    entry_points={
-        'console_scripts': [
-            'SLGR-Suite=slgrSuite.slgrSuite:main'
-        ]
-    },
-    include_package_data=True,
-    install_requires=requirements,
-    license="MIT license",
-    zip_safe=False,
-    keywords='YOLO development annotation deeplearning',
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'Natural Language :: English',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-    ],
-    package_data={'data/predefined_classes.txt': ['data/predefined_classes.txt']},
-    options={'py2app': OPTIONS},
-    setup_requires=SET_REQUIRES
+    version=VERSION,
+	name='slgrSuite',
+    description='',
+    license='GPLv3',
+    url='https://github.com/rjdbcm',
+    packages = find_packages(),
+	scripts = ['flow.py'],
+    ext_modules = cythonize(ext_modules)
 )

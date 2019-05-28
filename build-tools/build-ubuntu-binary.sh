@@ -14,7 +14,7 @@ python pyinstaller/pyinstaller.py --hidden-import=xml \
             --hidden-import=xml.etree \
             --hidden-import=xml.etree.ElementTree \
             --hidden-import=lxml.etree \
-             -D -F -n slgr_suite -c "../slgrSuite.py" -p ../libs -p ../
+             -D -n slgr-suite -c "../slgrSuite.py" -p ../libs -p ../
 
 FOLDER=$(git describe --abbrev=0 --tags)
 FOLDER="linux_"$FOLDER
