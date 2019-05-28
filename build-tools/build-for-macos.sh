@@ -36,13 +36,16 @@ pyinstaller -w --hidden-import=xml \
             -n SLGR-Suite slgrSuite.py
 mv "dist/SLGR-Suite.app" /Applications
 
-# symlink the backend and data folders
-mkdir -p ~/SLGR-Suite/backend
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/bin/ ~/SLGR-Suite/data/bin
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/ckpt/ ~/SLGR-Suite/data/ckpt
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/built_graph/ ~/SLGR-Suite/data/built_graph
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/sample_img/ ~/SLGR-Suite/data/sample_img
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/cfg/ ~/SLGR-Suite/data/cfg
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/ ~/SLGR-Suite/data
+# symlink the data folders
+mkdir ~/SLGR-Suite
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/bin/ ~/SLGR-Suite/bin
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/logs/ ~/SLGR-Suite/logs
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/summaries/ ~/SLGR-Suite/summaries
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/ckpt/ ~/SLGR-Suite/ckpt
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/built_graph/ ~/SLGR-Suite/built_graph
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/sample_img/ ~/SLGR-Suite/sample_img
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/sample_img/out/ ~/SLGR-Suite/sample_img/out
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/cfg/ ~/SLGR-Suite/cfg
+ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/predefined_classes.txt ~/SLGR-Suite/data/predefined_classes.txt
 
 echo 'DONE'

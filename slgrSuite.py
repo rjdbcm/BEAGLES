@@ -84,8 +84,6 @@ class MainWindow(QMainWindow, WindowMixin):
 
         # Only allow visualize to start tensorboard once
         self._visualizeFirstRun = True
-        self.visualizeTimer = QTimer()
-        self.visualizeTimer.setSingleShot(True)
         self.tb_process = QProcess(self)
 
         # Save as Pascal voc xml
