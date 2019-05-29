@@ -172,7 +172,6 @@ def camera(self):
 
 
 def annotate(self):
-    # TODO: ignore small bounding boxes
     lb = self.FLAGS.lb
     INPUT_VIDEO = self.FLAGS.fbf
     FRAME_NUMBER = 0
