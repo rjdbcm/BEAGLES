@@ -6,9 +6,10 @@ rm -r build
 rm -r dist
 rm labelImg.spec
 pip3 install pyinstaller
+PYINSTALLER=$(find / -name pyinstaller | grep -v "Permission denied")
 pip3 install -r requirements/requirements-linux.txt
 make all
-pyinstaller --hidden-import=xml \
+${PYINSTALLER} --hidden-import=xml \
             --hidden-import=xml.etree \
             --hidden-import=xml.etree.ElementTree \
             --hidden-import=lxml.etree \
@@ -24,6 +25,5 @@ FOLDER=$(git describe --abbrev=0 --tags)
 FOLDER="linux_"$FOLDER
 rm -rf "$FOLDER"
 mkdir "$FOLDER"
-cp dist/SLGR-Suite $FOLDER
-cp -rf ./data $FOLDER/data
-zip "$FOLDER.zip" -r $FOLDER
+cp -rf dist/SLGR-Suite $FOLDER
+#zip "$FOLDER.zip" -r $FOLDER
