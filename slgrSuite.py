@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import codecs
 import distutils.spawn
@@ -10,16 +10,11 @@ import sys
 import shutil
 import signal
 import subprocess
-
 from functools import partial
 from collections import defaultdict
-
-
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-
-
 # Add internal libs
 from libs.resources import *
 from libs.constants import *
@@ -393,13 +388,14 @@ class MainWindow(QMainWindow, WindowMixin):
         self.displayLabelOption.triggered.connect(self.togglePaintLabelsOption)
 
         addActions(self.menus.file,
-                   (open, opendir, impVideo, changeSavedir, openAnnotation, self.menus.recentFiles, save, save_format, saveAs, trainModel, close, resetAll, quit))
+                   (open, opendir, changeSavedir, impVideo, openAnnotation, self.menus.recentFiles, save, save_format, saveAs, trainModel, close, resetAll, quit))
         addActions(self.menus.help, (help, showInfo))
         addActions(self.menus.view, (
             self.autoSaving,
             self.singleClassMode,
             self.displayLabelOption,
             labels, advancedMode, None,
+            openPrevImg, openNextImg, None,
             hideAll, showAll, None,
             zoomIn, zoomOut, zoomOrg, None,
             fitWindow, fitWidth))
@@ -414,12 +410,11 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.tools = self.toolbar('Tools')
         self.actions.beginner = (
-            open, opendir, changeSavedir, openPrevImg, openNextImg, verify, save, None, create, copy, delete, None,
+            open, opendir, changeSavedir, openPrevImg, openNextImg, save, None, create, copy, delete, None,
             zoomIn, zoom, zoomOut, fitWindow, fitWidth)
 
         self.actions.advanced = (
-            open, opendir, impVideo, changeSavedir, openPrevImg, openNextImg, save, save_format, None,
-            createMode, editMode, hideAll, showAll, None, commitAnnotatedFrames, trainModel, visualize,
+            save_format, impVideo, None, commitAnnotatedFrames, None, trainModel, visualize,
             None)
 
         self.statusBar().showMessage('%s started.' % __appname__)
