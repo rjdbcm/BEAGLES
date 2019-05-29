@@ -194,7 +194,7 @@ Send a pull request
 
 License
 -------
-Free software: [MIT license](https://github.com/rjdbcm/slgr-suite/blob/master/LICENSE)
+Free software: [GPL](https://github.com/rjdbcm/slgr-suite/blob/master/LICENSE)
 
 Based on original code by: Tzutalin. LabelImg. Git code (2015). https://github.com/tzutalin/labelImg
 
