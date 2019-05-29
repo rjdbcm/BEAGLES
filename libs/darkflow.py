@@ -6,60 +6,7 @@ from .labelFile import LabelFile
 import os
 import re
 import time
-
-
-
-class Flags(dict):
-    """Allows you to set dict values like attributes"""
-    def __init__(self):
-        self.get_defaults()
-
-    def __getattr__(self, attr):
-        return self[attr]
-
-    def __setattr__(self, attr, value):
-        self[attr] = value
-
-    def get_defaults(self):
-        self.train = False
-        self.savepb = False
-        self.demo = ''
-        self.fbf = ''
-        self.trainer = ''
-        self.momentum = 0.0
-        self.keep = 20
-        self.batch = 16
-        self.epoch = 64
-        self.save = 16000
-        self.lr = 1e-5
-        self.clip = False
-        self.saveVideo = './data/sample_img/out.avi'
-        self.queue = 1
-        self.lb = 0.0
-        self.pbLoad = ''
-        self.metaLoad = ''
-        self.load = -1
-        self.model = ''
-        self.json = False
-        self.gpu = 0.0
-        self.gpuName = '/gpu:0'
-        self.threshold = 0.1
-        self.verbalise = True
-        self.kill = False
-        self.killed = False
-        self.done = False
-        self.progress = 0.0
-        self.estimate = 0
-        self.size = 0
-        self.imgdir = './data/sample_img/'
-        self.binary = './data/bin/'
-        self.config = './data/cfg/'
-        self.dataset = './data/committedframes/'
-        self.backup = './data/ckpt/'
-        self.labels = './data/predefined_classes.txt'
-        self.log = './data/logs/flow.log'
-        self.annotation = './data/committedframes/'
-        self.summary = './data/summaries/'
+from .flags import Flags
 
 FLAGS = Flags()
 
@@ -95,13 +42,13 @@ class flowPrgThread(QThread):
         self.wait()
 
     def run(self):
-        while not FLAGS.killed or FLAGS.done:
-            if FLAGS.progress > self.flowprg.value():
+        while FLAGS.killed is not True and FLAGS.done is not True:
+            if round(FLAGS.progress)-1 > self.flowprg.value():
                 self.flowprg.setValue(FLAGS.progress)
-            if self.flowprg.value() > 99:  # don't really care if the progress flag hits 100 on the nose
-                self.flowprg.setValue(100)
-                return
             time.sleep(0.5)
+        if FLAGS.killed is True or FLAGS.done is True:
+            self.flowprg.reset()
+            return
 
 
 class flowDialog(QDialog):
@@ -153,6 +100,9 @@ class flowDialog(QDialog):
         self.thresholdSpd.setSingleStep(0.01)
         self.thresholdSpd.setValue(FLAGS.threshold)
         layout.addRow(QLabel("Confidence Threshold"), self.thresholdSpd)
+
+        self.verbaliseChb = QCheckBox()
+        layout.addRow(QLabel("Verbose Logging"), self.verbaliseChb)
 
         self.formGroupBox.setLayout(layout)
 
@@ -248,6 +198,7 @@ class flowDialog(QDialog):
         FLAGS.trainer = self.trainerCmb.currentText()
         FLAGS.threshold = self.thresholdSpd.value()
         FLAGS.clip = bool(self.clipChb.checkState())
+        FLAGS.verbalise = bool(self.verbaliseChb.checkState())
         FLAGS.momentum = self.momentumSpd.value()
         FLAGS.keep = self.keepSpb.value()
         FLAGS.batch = self.batchSpb.value()
@@ -298,23 +249,21 @@ class flowDialog(QDialog):
             self.flowprgthread = flowPrgThread(self, flowprg=self.flowPrg)
             self.flowprgthread.start()
 
+    @pyqtSlot()
     def closeEvent(self, event):
         try:
             self.flowthread.stop()
-            self.flowprgthread.quit()
         except AttributeError:
             pass
         self.buttonOk.setDisabled(False)
-        self.flowPrg.setValue(0)
         return
 
     @pyqtSlot()
     def on_finished(self):
         self.buttonOk.setDisabled(False)
-        self.flowPrg.setValue(0)
         self.findCkpt()
         if FLAGS.train:
-            form = "Training finished after {} images processed"
+            form = "Training stopped after {} images processed"
             QMessageBox.question(self, 'Success',
                                  form.format((FLAGS.progress / 100) * FLAGS.size * FLAGS.epoch),
                                  QMessageBox.Ok)
