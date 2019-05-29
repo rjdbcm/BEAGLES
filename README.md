@@ -196,6 +196,7 @@ License
 -------
 Free software: [GPL](https://github.com/rjdbcm/slgr-suite/blob/master/LICENSE)
 
+[NOTICE](https://github.com/rjdbcm/slgr-suite/blow/master/NOTICE):
 Based on original code by: Tzutalin. LabelImg. Git code (2015). https://github.com/tzutalin/labelImg
 
 Related
