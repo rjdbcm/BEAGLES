@@ -17,11 +17,11 @@ def parser(model):
 
 	with open(model, 'rb') as f:
 		lines = f.readlines()
-
-	lines = [line.decode() for line in lines]	
-	
-	meta = dict(); layers = list() # will contains layers' info
-	h, w, c = [int()] * 3; layer = dict()
+	lines = [line.decode() for line in lines]
+	meta = dict()
+	layers = list()  # will contains layers' info
+	h, w, c = [int()] * 3
+	layer = dict()
 	for line in lines:
 		line = line.strip()
 		line = line.split('#')[0]
@@ -39,24 +39,25 @@ def parser(model):
 					layers += [layer]				
 			layer = {'type': line}
 		else:
-			try:
+			try: #TODO: Oh good heavens this has got to be fixed
 				i = float(_parse(line))
 				if i == int(i): i = int(i)
 				layer[line.split('=')[0].strip()] = i
-			except:
+			except (Exception, KeyboardInterrupt) as exc:
+				print(exc)
 				try:
 					key = _parse(line, 0)
 					val = _parse(line, 1)
 					layer[key] = val
-				except:
-					'banana ninja yadayada'
+				except (Exception, KeyboardInterrupt) as exc:
+					print(exc)
 
 	meta.update(layer) # last layer contains meta info
 	if 'anchors' in meta:
 		splits = meta['anchors'].split(',')
 		anchors = [float(x.strip()) for x in splits]
 		meta['anchors'] = anchors
-	meta['model'] = model # path to cfg, not model name
+	meta['model'] = model  # path to cfg, not model name
 	meta['inp_size'] = [h, w, c]
 	return layers, meta
 
@@ -83,9 +84,9 @@ def cfg_yielder(model, binary):
 			activation = d.get('activation', 'logistic')
 			w_ = (w - 1 - (1 - pad) * (size - 1)) // stride + 1
 			h_ = (h - 1 - (1 - pad) * (size - 1)) // stride + 1
-			yield ['local', i, size, c, n, stride, 
-					pad, w_, h_, activation]
-			if activation != 'linear': yield [activation, i]
+			yield ['local', i, size, c, n, stride, pad, w_, h_, activation]
+			if activation != 'linear':
+				yield [activation, i]
 			w, h, c = w_, h_, n
 			l = w * h * c
 		#-----------------------------------------------------
@@ -95,13 +96,13 @@ def cfg_yielder(model, binary):
 			stride = d.get('stride', 1)
 			pad = d.get('pad', 0)
 			padding = d.get('padding', 0)
-			if pad: padding = size // 2
+			if pad:
+				padding = size // 2
 			activation = d.get('activation', 'logistic')
 			batch_norm = d.get('batch_normalize', 0) or conv
-			yield ['convolutional', i, size, c, n, 
-				   stride, padding, batch_norm,
-				   activation]
-			if activation != 'linear': yield [activation, i]
+			yield ['convolutional', i, size, c, n, stride, padding, batch_norm, activation]
+			if activation != 'linear':
+				yield [activation, i]
 			w_ = (w + 2 * padding - size) // stride + 1
 			h_ = (h + 2 * padding - size) // stride + 1
 			w, h, c = w_, h_, n
@@ -118,7 +119,8 @@ def cfg_yielder(model, binary):
 			l = w * h * c
 		#-----------------------------------------------------
 		elif d['type'] == '[avgpool]':
-			flat = True; l = c
+			flat = True
+			l = c
 			yield ['avgpool', i]
 		#-----------------------------------------------------
 		elif d['type'] == '[softmax]':
@@ -130,7 +132,8 @@ def cfg_yielder(model, binary):
 				flat = True
 			activation = d.get('activation', 'logistic')
 			yield ['connected', i, l, d['output'], activation]
-			if activation != 'linear': yield [activation, i]
+			if activation != 'linear':
+				yield [activation, i]
 			l = d['output']
 		#-----------------------------------------------------
 		elif d['type'] == '[dropout]': 
@@ -147,7 +150,8 @@ def cfg_yielder(model, binary):
 				with open(file, 'rb') as f:
 					profiles = pickle.load(f, encoding = 'latin1')[0]
 				layer = profiles[layer_num]
-			else: layer = inp
+			else:
+				layer = inp
 			activation = d.get('activation', 'logistic')
 			d['keep'] = d['keep'].split('/')
 			classes = int(d['keep'][-1])
@@ -162,15 +166,15 @@ def cfg_yielder(model, binary):
 				k += 1
 				if i-k < 0:
 					break
-			if i-k < 0: l_ = l
+			if i-k < 0:
+				l_ = l
 			elif layers[i-k]['type'] == 'connected':
 				l_ = layers[i-k]['output']
 			else:
 				l_ = layers[i-k].get('old',[l])[-1]
-			yield ['select', i, l_, d['old_output'],
-				   activation, layer, d['output'], 
-				   keep, train_from]
-			if activation != 'linear': yield [activation, i]
+			yield ['select', i, l_, d['old_output'], activation, layer, d['output'], keep, train_from]
+			if activation != 'linear':
+				yield [activation, i]
 			l = d['output']
 		#-----------------------------------------------------
 		elif d['type'] == '[conv-select]':
@@ -179,7 +183,8 @@ def cfg_yielder(model, binary):
 			stride = d.get('stride', 1)
 			pad = d.get('pad', 0)
 			padding = d.get('padding', 0)
-			if pad: padding = size // 2
+			if pad:
+				padding = size // 2
 			activation = d.get('activation', 'logistic')
 			batch_norm = d.get('batch_normalize', 0) or conv
 			d['keep'] = d['keep'].split('/')
@@ -200,9 +205,7 @@ def cfg_yielder(model, binary):
 			w_ = (w + 2 * padding - size) // stride + 1
 			h_ = (h + 2 * padding - size) // stride + 1
 			c_ = len(keep_idx)
-			yield ['conv-select', i, size, c, n, 
-				   stride, padding, batch_norm,
-				   activation, keep_idx, c_]
+			yield ['conv-select', i, size, c, n, stride, padding, batch_norm, activation, keep_idx, c_]
 			w, h, c = w_, h_, c_
 			l = w * h * c
 		#-----------------------------------------------------
@@ -226,7 +229,8 @@ def cfg_yielder(model, binary):
 			stride = d.get('stride', 1)
 			pad = d.get('pad', 0)
 			padding = d.get('padding', 0)
-			if pad: padding = size // 2
+			if pad:
+				padding = size // 2
 			activation = d.get('activation', 'logistic')
 			batch_norm = d.get('batch_normalize', 0) or conv
 			
@@ -282,7 +286,8 @@ def cfg_yielder(model, binary):
 				'Extract does not match input dimension'
 			d['old'] = old
 			yield ['extract', i] + old + [activation] + [inp_layer, out_layer]
-			if activation != 'linear': yield [activation, i]
+			if activation != 'linear':
+				yield [activation, i]
 			l = len(out_layer)
 		#-----------------------------------------------------
 		elif d['type'] == '[route]': # add new layer here
