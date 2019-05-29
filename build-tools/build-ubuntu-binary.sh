@@ -1,25 +1,29 @@
-#!/bin/bash
+#!/bin/sh
 ### Not current TODO: Update this
 
-THIS_SCRIPT_PATH=`readlink -f $0`
-THIS_SCRIPT_DIR=`dirname ${THIS_SCRIPT_PATH}`
-cd pyinstaller
-git checkout v3.2
-cd ${THIS_SCRIPT_DIR}
-
+cd ..
 rm -r build
 rm -r dist
 rm labelImg.spec
-python pyinstaller/pyinstaller.py --hidden-import=xml \
+pip3 install pyinstaller
+pip3 install -r requirements/requirements-linux.txt
+make all
+pyinstaller --hidden-import=xml \
             --hidden-import=xml.etree \
             --hidden-import=xml.etree.ElementTree \
             --hidden-import=lxml.etree \
-             -D -n slgr-suite -c "../slgrSuite.py" -p ../libs -p ../
+            -r libs/cython_utils/cy_yolo_findboxes.so \
+            -r libs/cython_utils/cy_yolo2_findboxes.so \
+            -r libs/cython_utils/nms.so \
+            --add-data ./data:data \
+            --icon=resources/icons/app.icns \
+            -n SLGR-Suite slgrSuite.py \
+            -D -p ./libs -p ./
 
 FOLDER=$(git describe --abbrev=0 --tags)
 FOLDER="linux_"$FOLDER
 rm -rf "$FOLDER"
 mkdir "$FOLDER"
-cp dist/labelImg $FOLDER
-cp -rf ../data $FOLDER/data
+cp dist/SLGR-Suite $FOLDER
+cp -rf ./data $FOLDER/data
 zip "$FOLDER.zip" -r $FOLDER

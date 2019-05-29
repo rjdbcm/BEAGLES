@@ -1,7 +1,7 @@
 import os
 import sys
 import unittest
-from libs.lib import struct, newAction, newIcon, addActions, fmtShortcut, generateColorByText
+from libs.qtUtils import struct, newAction, newIcon, addActions, fmtShortcut, generateColorByText
 
 class TestLib(unittest.TestCase):
 

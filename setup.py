@@ -10,7 +10,6 @@ VERSION = imp.load_source('version', os.path.join('.', 'libs', 'version.py'))
 VERSION = VERSION.__version__
 
 
-
 if os.name =='nt' :
     ext_modules=[
         Extension("libs.cython_utils.nms",
@@ -77,11 +76,11 @@ else :
 
 setup(
     version=VERSION,
-	name='slgrSuite',
+	name='SLGR-Suite',
     description='',
     license='GPLv3',
     url='https://github.com/rjdbcm',
     packages = find_packages(),
-	scripts = ['flow.py'],
+	scripts = ['slgrSuite.py'],
     ext_modules = cythonize(ext_modules)
 )
