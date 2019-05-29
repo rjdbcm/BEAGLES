@@ -39,18 +39,17 @@ def parser(model):
 					layers += [layer]				
 			layer = {'type': line}
 		else:
-			try: #TODO: Oh good heavens this has got to be fixed
+			try:
 				i = float(_parse(line))
 				if i == int(i): i = int(i)
 				layer[line.split('=')[0].strip()] = i
-			except (Exception, KeyboardInterrupt) as exc:
-				print(exc)
+			except (IndexError, ValueError):
 				try:
 					key = _parse(line, 0)
 					val = _parse(line, 1)
 					layer[key] = val
-				except (Exception, KeyboardInterrupt) as exc:
-					print(exc)
+				except IndexError:
+					pass
 
 	meta.update(layer) # last layer contains meta info
 	if 'anchors' in meta:
