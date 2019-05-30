@@ -1,6 +1,7 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
-
+<!-- TODO: add strings and translations for libs/darkflow.py -->
+<!-- resource and locale-specific resource paths -->
 <file alias="help">resources/icons/help.png</file>
 <file alias="app">resources/icons/app.png</file>
 <file alias="expert">resources/icons/expert2.png</file>
