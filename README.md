@@ -11,20 +11,47 @@ formatted ```.txt``` files.
 ## Installation
 
 ### Requirements
-From ```requirements/requirements-linux.txt```:
-```
-pyqt5==5.10.1
+#### Linux
+
+* libomp-dev 
+
+* Python 3.6 or above
+
+* The following PyPi packages from ```requirements/requirements-linux.txt```:
+```python
+pyqt5>=5.10.1
 lxml==4.2.4
 Cython==0.29.6
 opencv-contrib-python==4.0.0.21
-tensorflow>=1.13.1
+tensorflow==1.13.1
 numpy==1.16.2
 ```
+
+#### MacOS
+* [Homebrew](https://brew.sh)
+
+* qt
+
+* libxml2
+
+* Python 3.6 or above
+
+* The following PyPi packages from ```requirements/requirements-osx-mojave.txt```
+```python
+pyqt5>=5.12
+lxml==4.2.4
+Cython==0.29.6
+opencv-contrib-python-headless==4.0.0.21
+tensorflow==1.13.1
+numpy==1.16.2
+```
+
+
 ### Download prebuilt binaries
 
 -  Binaries are not yet available but the build isn't hard.
 
-### Build from source
+### Build from and run as a source distribution
 
 - Linux/Ubuntu has been tested with [Python
 3.6](https://www.python.org/getit/) & [PyQt
@@ -32,7 +59,7 @@ numpy==1.16.2
 
 - MacOS has been tested with [Python
 3.7](https://www.python.org/getit/) & [PyQt
-5.12.1](https://www.riverbankcomputing.com/software/pyqt/intro) installed using [homebrew](https://brew.sh).
+5.12](https://www.riverbankcomputing.com/software/pyqt/intro) installed using [homebrew](https://brew.sh).
 
 
 #### Ubuntu Linux
@@ -41,6 +68,7 @@ numpy==1.16.2
 
 ```bash
     sudo apt-get install pyqt5-dev-tools
+    sudo apt-get install libomp-dev
     sudo pip3 install -r requirements/requirements-linux-python3.txt
     make qt5py3
     python3 slgr_suite.py
@@ -52,15 +80,20 @@ numpy==1.16.2
 * Python 3 + Qt5 (Recommended)
 
 ```bash
-   
     brew install qt  # Install qt-5.x.x by Homebrew
     brew install libxml2
-    pip3 install pyqt5 lxml # Install qt and lxml by pip
+    pip3 install -r requirements/requirements-osx-mojave.txt
     make qt5py3
-    python3 slgr_suite.py
-    python3 slgr_suite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
-
+    python3 slgrSuite.py
+    python3 slgrSuite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 ```
+
+* Build Binary
+```bash
+    cd build_tools
+    ./build_for_macos.sh
+```
+
 #### Python 3 Virtualenv + Binary
 
 This can avoid a lot of the QT / Python version issues, and gives you a nice .app file with a new SVG Icon
@@ -79,36 +112,6 @@ in your /Applications folder. You can consider this script: build-tools/build-fo
     python setup.py py2app -A
     mv "dist/SLGR-Suite.app" /Applications
 ```
-
-#### Windows
-Proceed at your own peril
-
-Install:
-* [Python](https://www.python.org/downloads/windows/)
-* [PyQt5](https://www.riverbankcomputing.com/software/pyqt/download5)
-* [lxml](http://lxml.de/installation.html)
-
-Open cmd and go to the `slgr_suite` directory
-```bash
-    pyrcc4 -o resources.py resources.qrc
-    python slgr_suite.py
-    python slgr_suite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
-```
-
-#### Windows + Anaconda
-
-
-Download and install [Anaconda (Python 3+)](https://www.anaconda.com/download/#download) 
-
-Open the Anaconda Prompt and go to the `slgr_suite` directory
-
-```bash
-    conda install pyqt=5
-    pyrcc5 -o resources.py resources.qrc
-    python slgr_suite.py
-    python slgr_suite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
-```
-
 ## Usage
 
 ### Create pre-defined classes
@@ -134,6 +137,7 @@ to load pre-defined classes of your own.
 6. Download [pretrained weights](https://drive.google.com/drive/folders/0B1tW_VtY7onidEwyQ2FtQVplWEU) for the model configurations provided by [thtrieu](https://github.com/thtrieu) which include yolo-full and yolo-tiny of v1.0, tiny-yolo-v1.1 of v1.1 and yolo, tiny-yolo-voc of v2.
 
 7. TODO: GUI changes will alter these steps
+
 *Important Notes:*
 
 - Your label list shall not change in the middle of processing a list of images, this includes the order. When you save a image, classes.txt will also get updated, while previous annotations will not be updated.
@@ -179,13 +183,18 @@ According to your deep neural network implementation, you can include or exclude
 
 * Tensorboard summaries are found in```data/summaries```
 
-* Training checkpoints are saved in```backend/ckpt```
+* Training checkpoints are saved in```data/ckpt```
 
-* Frozen graph files (*.pb, *.meta) output in```backend/built_graph```
+* Frozen graph files (*.pb, *.meta) output in```data/built_graph```
 
-* Model configurations are stored in```backend/cfg```
+* Model configurations are stored in```data/cfg```
 
-* Pretrained weights should be saved into```backend/bin```
+* Pretrained weights should be saved into```data/bin```
+
+* Text-based log files are in ```data/logs```
+
+* Image sets to annotate are stored in ```data/sample_img```
+
 
 How to contribute
 -----------------
@@ -194,7 +203,7 @@ Send a pull request
 
 License
 -------
-Free software: [GPL](https://github.com/rjdbcm/slgrSuite/blob/master/LICENSE)
+Free software: [GPLv3](https://github.com/rjdbcm/slgrSuite/blob/master/LICENSE)
 
 [NOTICE](https://github.com/rjdbcm/slgrSuite/blob/master/NOTICE):
 Based on original code by: Tzutalin. LabelImg. Git code (2015). https://github.com/tzutalin/labelImg

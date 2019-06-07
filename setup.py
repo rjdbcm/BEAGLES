@@ -9,9 +9,11 @@ import imp
 VERSION = imp.load_source('version', os.path.join('.', 'libs', 'version.py'))
 VERSION = VERSION.__version__
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
-if os.name =='nt' :
-    ext_modules=[
+if os.name == 'nt':
+    ext_modules = [
         Extension("libs.cython_utils.nms",
             sources=["libs/cython_utils/nms.pyx"],
             #libraries=["m"] # Unix-like specific
@@ -30,15 +32,14 @@ if os.name =='nt' :
             include_dirs=[numpy.get_include()]
         )
     ]
-
-elif os.name =='posix' :
+elif os.name == 'posix':
     if sys.platform == 'darwin':
         compile_args = ''
         linker_args = ''
     else:
         compile_args = ['-fopenmp', '-funroll-loops'] # This gives a significant boost to postprocessing time
         linker_args = ['-fopenmp']
-    ext_modules=[
+    ext_modules = [
         Extension("libs.cython_utils.nms",
             sources=["libs/cython_utils/nms.pyx"],
             libraries=["m"], # Unix-like specific
@@ -57,30 +58,37 @@ elif os.name =='posix' :
             include_dirs=[numpy.get_include()]
         )
     ]
-
-else :
-    ext_modules=[
+else:
+    ext_modules = [
         Extension("libs.cython_utils.nms",
             sources=["libs/cython_utils/nms.pyx"],
-            libraries=["m"] # Unix-like specific
-        ),        
+            libraries=["m"]  # Unix-like specific
+        ),
         Extension("libs.cython_utils.cy_yolo2_findboxes",
             sources=["libs/cython_utils/cy_yolo2_findboxes.pyx"],
-            libraries=["m"] # Unix-like specific
+            libraries=["m"]  # Unix-like specific
         ),
         Extension("libs.cython_utils.cy_yolo_findboxes",
             sources=["libs/cython_utils/cy_yolo_findboxes.pyx"],
-            libraries=["m"] # Unix-like specific
+            libraries=["m"]  # Unix-like specific
         )
     ]
 
 setup(
     version=VERSION,
-	name='SLGR-Suite',
+    name='SLGR-Suite',
     description='',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     license='GPLv3',
-    url='https://github.com/rjdbcm',
+    url='https://github.com/rjdbcm/SLGR-Suite',
     packages = find_packages(),
-	scripts = ['slgrSuite.py'],
-    ext_modules = cythonize(ext_modules)
+    scripts=['slgrSuite.py'],
+    ext_modules=cythonize(ext_modules),
+    classifiers=["Programming Language :: Cython",
+                 "Programming Language :: Python :: 3",
+                 "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+                 "Topic :: Scientific/Engineering :: Bio-Informatics",
+                 "Intended Audience :: Science/Research",
+                 "Development Status :: 2 - Pre-Alpha"],
 )

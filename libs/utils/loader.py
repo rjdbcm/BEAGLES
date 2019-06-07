@@ -96,6 +96,7 @@ class checkpoint_loader(loader):
                     self.src_key += [packet]
                     self.vals += [var.eval(sess)]
 
+
 def create_loader(path, cfg = None):
     if path is None:
         load_type = weights_loader
@@ -106,33 +107,29 @@ def create_loader(path, cfg = None):
     
     return load_type(path, cfg)
 
+
 class weights_walker(object):
     """incremental reader of float32 binary files"""
     def __init__(self, path):
-        self.eof = False # end of file
+        self.eof = False  # end of file
         self.path = path  # current pos
         if path is None: 
             self.eof = True
             return
         else: 
             self.size = os.path.getsize(path)# save the path
-            major, minor, revision, seen = np.memmap(path,
-                shape = (), mode = 'r', offset = 0,
-                dtype = '({})i4,'.format(4))
+            major, minor, revision, seen = np.memmap(path, shape=(), mode='r', offset=0, dtype='({})i4,'.format(4))
             self.transpose = major > 1000 or minor > 1000
             self.offset = 16
 
     def walk(self, size):
-        if self.eof: return None
+        if self.eof:
+            return None
         end_point = self.offset + 4 * size
         assert end_point <= self.size, \
-        'Over-read {}'.format(self.path)
-
-        float32_1D_array = np.memmap(
-            self.path, shape = (), mode = 'r', 
-            offset = self.offset,
-            dtype='({})float32,'.format(size)
-        )
+            'Over-read {}'.format(self.path)
+        float32_1D_array = np.memmap(self.path, shape=(), mode='r', offset=self.offset,
+                                     dtype='({})float32,'.format(size))
 
         self.offset = end_point
         if end_point == self.size: 
@@ -143,11 +140,11 @@ class weights_walker(object):
 def model_name(file_path):
     file_name = basename(file_path)
     ext = str()
-    if '.' in file_name: # exclude extension
+    if '.' in file_name:  # exclude extension
         file_name = file_name.split('.')
         ext = file_name[-1]
         file_name = '.'.join(file_name[:-1])
-    if ext == str() or ext == 'meta': # ckpt file
+    if ext == str() or ext == 'meta':  # ckpt file
         file_name = file_name.split('-')
         num = int(file_name[-1])
         return '-'.join(file_name[:-1])

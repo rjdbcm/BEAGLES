@@ -19,7 +19,7 @@ def constructor(self, meta, FLAGS):
 	if 'labels' not in meta:
 		misc.labels(meta, FLAGS) #We're not loading from a .pb so we do need to load the labels
 	assert len(meta['labels']) == meta['classes'], (
-		'labels.txt and {} indicate' + ' '
+		'labels.txt and {} indicate' + ' '  # TODO: Add error handling for empty classes file
 		'inconsistent class numbers'
 	).format(meta['model'])
 
