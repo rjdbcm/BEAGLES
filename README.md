@@ -53,9 +53,7 @@ numpy==1.16.2
 
 ### Build from and run as a source distribution
 
-- Linux/Ubuntu has been tested with [Python
-3.6](https://www.python.org/getit/) & [PyQt
-5.10.1](https://www.riverbankcomputing.com/software/pyqt/intro)
+- Linux/Ubuntu has been tested with [Python 3.6](https://www.python.org/getit/) & [PyQt 5.10.1](https://www.riverbankcomputing.com/software/pyqt/intro)
 
 - MacOS has been tested with [Python
 3.7](https://www.python.org/getit/) & [PyQt
@@ -64,54 +62,44 @@ numpy==1.16.2
 
 #### Ubuntu Linux
 
-* Python 3 + Qt5 (Recommended)
+* Run as a source distribution:
 
 ```bash
-    sudo apt-get install pyqt5-dev-tools
-    sudo apt-get install libomp-dev
-    sudo pip3 install -r requirements/requirements-linux-python3.txt
-    make qt5py3
-    python3 slgr_suite.py
-    python3 slgr_suite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
+sudo apt-get install pyqt5-dev-tools
+sudo apt-get install libomp-dev
+sudo pip3 install -r requirements/requirements-linux-python3.txt
+make qt5py3
+python3 slgrSuite.py
+python3 slgrSuite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 ```
+
+* Build Binary
+
+```bash
+cd build_tools
+./build_for_macos.sh
+```
+
 #### macOS
 
 
 * Python 3 + Qt5 (Recommended)
 
 ```bash
-    brew install qt  # Install qt-5.x.x by Homebrew
-    brew install libxml2
-    pip3 install -r requirements/requirements-osx-mojave.txt
-    make qt5py3
-    python3 slgrSuite.py
-    python3 slgrSuite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
+brew install qt  # Install qt-5.x.x by Homebrew
+brew install libxml2
+pip3 install -r requirements/requirements-osx-mojave.txt
+make qt5py3
+python3 slgrSuite.py
+python3 slgrSuite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
 ```
 
 * Build Binary
 ```bash
-    cd build_tools
-    ./build_for_macos.sh
+cd build_tools
+./build_for_macos.sh
 ```
 
-#### Python 3 Virtualenv + Binary
-
-This can avoid a lot of the QT / Python version issues, and gives you a nice .app file with a new SVG Icon
-in your /Applications folder. You can consider this script: build-tools/build-for-macos.sh
-
-```bash
-
-    brew install python3
-    pip install pipenv
-    pipenv --three
-    pipenv shell
-    pip install py2app
-    pip install PyQt5 lxml
-    make qt5py3
-    rm -rf build dist
-    python setup.py py2app -A
-    mv "dist/SLGR-Suite.app" /Applications
-```
 ## Usage
 
 ### Create pre-defined classes
@@ -134,9 +122,13 @@ to load pre-defined classes of your own.
 
 5. When finished annotating commit the images and corresponding annotation files to the `data/committedframes` folder by pressing the Commit Frames button on the advanced mode toolbar.
 
-6. Download [pretrained weights](https://drive.google.com/drive/folders/0B1tW_VtY7onidEwyQ2FtQVplWEU) for the model configurations provided by [thtrieu](https://github.com/thtrieu) which include yolo-full and yolo-tiny of v1.0, tiny-yolo-v1.1 of v1.1 and yolo, tiny-yolo-voc of v2.
+6. (OPTIONAL) Download [pretrained weights](https://drive.google.com/drive/folders/0B1tW_VtY7onidEwyQ2FtQVplWEU) for the model configurations provided by [thtrieu](https://github.com/thtrieu) which include yolo-full and yolo-tiny of v1.0, tiny-yolo-v1.1 of v1.1 and yolo, tiny-yolo-voc of v2.
 
-7. TODO: GUI changes will alter these steps
+7. Press Ctrl+T (&#8984;T) to start the machine learning interface.
+
+8. Enter parameters and start training a model.
+
+9. Annotate video files using your trained model.
 
 *Important Notes:*
 
@@ -158,7 +150,8 @@ to load pre-defined classes of your own.
 | Ctrl u   | Choose a directory to load images from         |
 | Ctrl r   | Change the default annotation directory        |
 | Ctrl s   | Save                                           |
-| Crtl d   | Copy the selected label and bounding box       |
+| Crtl d   | Duplicate the selected label and bounding box  |
+| Ctrl t   | Open machine learning interface                |
 | Space    | Flag the current image as verified             |
 | w        | Create a new bounding box                      |
 | d        | Next image                                     |
