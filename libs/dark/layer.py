@@ -1,8 +1,9 @@
 from ..utils import loader
 import numpy as np
 
-class Layer(object):
 
+class Layer(object):
+    """Parent class for all darknet layers (darkop.py)"""
     def __init__(self, *args):
         self._signature = list(args)
         self.type = list(args)[0]
@@ -21,7 +22,8 @@ class Layer(object):
 
     def load(self, src_loader):
         var_lay = src_loader.VAR_LAYER
-        if self.type not in var_lay: return
+        if self.type not in var_lay:
+            return
 
         src_type = type(src_loader)
         if src_type is loader.weights_loader:
@@ -33,8 +35,10 @@ class Layer(object):
 
     def load_weights(self, src_loader):
         val = src_loader([self.presenter])
-        if val is None: return None
-        else: return val.w
+        if val is None:
+            return None
+        else:
+            return val.w
 
     def load_ckpt(self, src_loader):
         result = dict()
@@ -54,6 +58,7 @@ class Layer(object):
     # For comparing two layers
     def __eq__(self, other):
         return self.signature == other.signature
+
     def __ne__(self, other):
         return not self.__eq__(other)
 
@@ -65,7 +70,14 @@ class Layer(object):
         sig += '/' + var
         return sig
 
-    def recollect(self, w): self.w = w
-    def present(self): self.presenter = self
-    def setup(self, *args): pass
-    def finalize(self): pass 
+    def recollect(self, w):
+        self.w = w
+
+    def present(self):
+        self.presenter = self
+
+    def setup(self, *args):
+        pass
+
+    def finalize(self):
+        pass

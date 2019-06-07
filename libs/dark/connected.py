@@ -4,7 +4,8 @@ import numpy as np
 class extract_layer(Layer):
     def setup(self, old_inp, old_out,
               activation, inp, out):
-        if inp is None: inp = range(old_inp)
+        if inp is None:
+            inp = range(old_inp)
         self.activation = activation
         self.old_inp = old_inp
         self.old_out = old_out
@@ -34,9 +35,7 @@ class extract_layer(Layer):
         b = np.take(b, self.out)
         assert1 = w.shape == tuple(self.wshape['weights'])
         assert2 = b.shape == tuple(self.wshape['biases'])
-        assert assert1 and assert2, \
-        'Dimension does not match in {} recollect'.format(
-            self._signature)
+        assert assert1 and assert2, 'Dimension does not match in {} recollect'.format(self._signature)
         
         self.w['weights'] = w
         self.w['biases'] = b
@@ -83,10 +82,8 @@ class select_layer(Layer):
         keep_w = np.take(w, self.keep, 1)
         train_b = b[self.train:]
         train_w = w[:, self.train:]
-        self.w['biases'] = np.concatenate(
-            (keep_b, train_b), axis = 0)
-        self.w['weights'] = np.concatenate(
-            (keep_w, train_w), axis = 1)
+        self.w['biases'] = np.concatenate((keep_b, train_b), axis=0)
+        self.w['weights'] = np.concatenate((keep_w, train_w), axis=1)
 
 
 class connected_layer(Layer):
@@ -102,10 +99,12 @@ class connected_layer(Layer):
 
     def finalize(self, transpose):
         weights = self.w['weights']
-        if weights is None: return
+        if weights is None:
+            return
         shp = self.wshape['weights']
         if not transpose:
             weights = weights.reshape(shp[::-1])
             weights = weights.transpose([1,0])
-        else: weights = weights.reshape(shp)
+        else:
+            weights = weights.reshape(shp)
         self.w['weights'] = weights

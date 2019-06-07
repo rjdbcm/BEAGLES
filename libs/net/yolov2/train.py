@@ -25,7 +25,7 @@ def loss(self, net_out):
     scoor = float(m['coord_scale'])
     H, W, _ = m['out_size']
     B, C = m['num'], m['classes']
-    HW = H * W # number of grid cells
+    HW = H * W  # number of grid cells
     anchors = m['anchors']
 
     print('{} loss hyper-parameters:'.format(m['model']))
@@ -50,16 +50,16 @@ def loss(self, net_out):
     _botright = tf.placeholder(tf.float32, size2 + [2])
 
     self.placeholders = {
-        'probs':_probs, 'confs':_confs, 'coord':_coord, 'proid':_proid,
-        'areas':_areas, 'upleft':_upleft, 'botright':_botright
+        'probs': _probs, 'confs': _confs, 'coord': _coord, 'proid': _proid,
+        'areas': _areas, 'upleft': _upleft, 'botright': _botright
     }
 
     # Extract the coordinate prediction from net.out
     net_out_reshape = tf.reshape(net_out, [-1, H, W, B, (4 + 1 + C)])
     coords = net_out_reshape[:, :, :, :, :4]
     coords = tf.reshape(coords, [-1, H*W, B, 4])
-    adjusted_coords_xy = expit_tensor(coords[:,:,:,0:2])
-    adjusted_coords_wh = tf.sqrt(tf.exp(coords[:,:,:,2:4]) * np.reshape(anchors, [1, 1, B, 2]) / np.reshape([W, H], [1, 1, 1, 2]))
+    adjusted_coords_xy = expit_tensor(coords[:, :, :, 0:2])
+    adjusted_coords_wh = tf.sqrt(tf.exp(coords[:, :, :, 2:4]) * np.reshape(anchors, [1, 1, B, 2]) / np.reshape([W, H], [1, 1, 1, 2]))
     coords = tf.concat([adjusted_coords_xy, adjusted_coords_wh], 3)
 
     adjusted_c = expit_tensor(net_out_reshape[:, :, :, :, 4])
@@ -70,9 +70,9 @@ def loss(self, net_out):
 
     adjusted_net_out = tf.concat([adjusted_coords_xy, adjusted_coords_wh, adjusted_c, adjusted_prob], 3)
 
-    wh = tf.pow(coords[:,:,:,2:4], 2) * np.reshape([W, H], [1, 1, 1, 2])
-    area_pred = wh[:,:,:,0] * wh[:,:,:,1]
-    centers = coords[:,:,:,0:2]
+    wh = tf.pow(coords[:, :, :, 2:4], 2) * np.reshape([W, H], [1, 1, 1, 2])
+    area_pred = wh[:, :, :, 0] * wh[:, :, :, 1]
+    centers = coords[:, :, :, 0:2]
     floor = centers - (wh * .5)
     ceil  = centers + (wh * .5)
 
@@ -81,7 +81,7 @@ def loss(self, net_out):
     intersect_botright = tf.minimum(ceil, _botright)
     intersect_wh = intersect_botright - intersect_upleft
     intersect_wh = tf.maximum(intersect_wh, 0.0)
-    intersect = tf.multiply(intersect_wh[:,:,:,0], intersect_wh[:,:,:,1])
+    intersect = tf.multiply(intersect_wh[:, :, :, 0], intersect_wh[:, :, :, 1])
 
     # calculate the best IOU, set 0.0 confidence for worse boxes
     iou = tf.truediv(intersect, _areas + area_pred - intersect)
@@ -97,8 +97,8 @@ def loss(self, net_out):
     proid = sprob * weight_pro
 
     self.fetch += [_probs, confs, conid, cooid, proid]
-    true = tf.concat([_coord, tf.expand_dims(confs, 3), _probs ], 3)
-    wght = tf.concat([cooid, tf.expand_dims(conid, 3), proid ], 3)
+    true = tf.concat([_coord, tf.expand_dims(confs, 3), _probs], 3)
+    wght = tf.concat([cooid, tf.expand_dims(conid, 3), proid], 3)
 
     print('Building {} loss'.format(m['model']))
     loss = tf.pow(adjusted_net_out - true, 2)

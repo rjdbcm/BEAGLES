@@ -218,47 +218,39 @@ def annotate(self):
                 newImage = cv2.rectangle(newImage, (top_x, top_y), (btm_x, btm_y), (255, 0, 0), 3)
                 newImage = cv2.putText(newImage, label, (top_x, top_y - 5), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,
                                        (0, 230, 0), 1, cv2.LINE_AA)
-                gen_annotations(predictions)
-
+                with open(annotation_file, mode='a') as file:
+                    file_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    for item in predictions:
+                        time_elapsed = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
+                        labels = item['label']
+                        conf = item['confidence']
+                        top_x = item['topleft']['x']
+                        top_y = item['topleft']['y']
+                        btm_x = item['bottomright']['x']
+                        btm_y = item['bottomright']['y']
+                        file_writer.writerow([time_elapsed, labels, conf, top_x, top_y, btm_x, btm_y])
         return newImage
-
-    def gen_annotations(predictions):
-        with open(annotation_file, mode='a') as file:
-            file_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            for item in predictions:
-                time_elapsed = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
-                labels = item['label']
-                conf = item['confidence']
-                top_x = item['topleft']['x']
-                top_y = item['topleft']['y']
-                btm_x = item['bottomright']['x']
-                btm_y = item['bottomright']['y']
-                file_writer.writerow([time_elapsed, labels, conf, top_x, top_y, btm_x, btm_y])
-
-    while True:
-        # Capture frame-by-frame
+    while True:  # Capture frame-by-frame
         FRAME_NUMBER += 1
         ret, frame = cap.read()
         if ret == True:
-            self.say(
+            self.FLAGS.progress = round((100 * FRAME_NUMBER / total_frames), 0)
+            self.say = (
                 "Frame {}/{} [{}%]".format(FRAME_NUMBER, total_frames, round(100 * FRAME_NUMBER / total_frames),
                                            1))
             frame = np.asarray(frame)
             result = self.return_predict(frame)
             new_frame = boxing(frame, result)  # Display the resulting frame
             out.write(new_frame)
-            cv2.imshow(INPUT_VIDEO, new_frame)
-            choice = cv2.waitKey(1)
-            if choice == 27:
+            if self.FLAGS.kill:
+                self.FLAGS.killed = True
                 break
         else:
             break
-
+    self.FLAGS.done = True
     # When everything done, release the capture
     cap.release()
     out.release()
-    cv2.destroyAllWindows()
-
 
 def to_darknet(self):
     darknet_ckpt = self.darknet

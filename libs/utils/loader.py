@@ -4,6 +4,7 @@ from .. import dark
 import numpy as np
 from os.path import basename
 
+
 class loader(object):
     """
     interface to work with both .weights and .ckpt files
@@ -37,6 +38,7 @@ class loader(object):
         temp = self.vals[idx]
         del self.vals[idx]
         return temp
+
 
 class weights_loader(loader):
     """one who understands .weights files"""
@@ -136,6 +138,7 @@ class weights_walker(object):
         if end_point == self.size: 
             self.eof = True
         return float32_1D_array
+
 
 def model_name(file_path):
     file_name = basename(file_path)

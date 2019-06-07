@@ -19,7 +19,8 @@ class local_layer(Layer):
 
     def finalize(self, _):
         weights = self.w['kernels']
-        if weights is None: return
+        if weights is None:
+            return
         weights = weights.reshape(self.dnshape)
         weights = weights.transpose([0,3,4,2,1])
         self.w['kernels'] = weights
@@ -62,9 +63,7 @@ class conv_extract_layer(Layer):
         b = np.take(b, self.out)
         assert1 = k.shape == tuple(self.wshape['kernel'])
         assert2 = b.shape == tuple(self.wshape['biases'])
-        assert assert1 and assert2, \
-        'Dimension not matching in {} recollect'.format(
-            self._signature)
+        assert assert1 and assert2, 'Dimension not matching in {} recollect'.format(self._signature)
         self.w['kernel'] = k
         self.w['biases'] = b
 
@@ -85,9 +84,9 @@ class conv_select_layer(Layer):
         })
         if self.batch_norm:
             self.wshape.update({
-                'moving_variance'  : [real_n], 
+                'moving_variance': [real_n],
                 'moving_mean': [real_n], 
-                'gamma' : [real_n]
+                'gamma': [real_n]
             })
             self.h['is_training'] = {
                 'shape': (),
@@ -137,9 +136,9 @@ class convolutional_layer(Layer):
         })
         if self.batch_norm:
             self.wshape.update({
-                'moving_variance'  : [n], 
+                'moving_variance': [n],
                 'moving_mean': [n], 
-                'gamma' : [n]
+                'gamma': [n]
             })
             self.h['is_training'] = {
                 'feed': True,
@@ -150,7 +149,8 @@ class convolutional_layer(Layer):
     def finalize(self, _):
         """deal with darknet"""
         kernel = self.w['kernel']
-        if kernel is None: return
+        if kernel is None:
+            return
         kernel = kernel.reshape(self.dnshape)
         kernel = kernel.transpose([2,3,1,0])
         self.w['kernel'] = kernel

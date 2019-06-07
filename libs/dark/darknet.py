@@ -37,7 +37,8 @@ class Darknet(object):
         self.src_bin = os.path.abspath(self.src_bin)
         exist = os.path.isfile(self.src_bin)
 
-        if FLAGS.load == str(): FLAGS.load = int()
+        if FLAGS.load == str():
+            FLAGS.load = int()
         if type(FLAGS.load) is int:
             self.src_cfg = FLAGS.model
             if FLAGS.load:
@@ -45,8 +46,7 @@ class Darknet(object):
             elif not exist:
                 self.src_bin = None
         else:
-            assert os.path.isfile(FLAGS.load), \
-                '{} not found'.format(FLAGS.load)
+            assert os.path.isfile(FLAGS.load), '{} not found'.format(FLAGS.load)
             self.src_bin = FLAGS.load
             name = loader.model_name(FLAGS.load)
             cfg_path = os.path.join(FLAGS.config, name + '.cfg')
@@ -84,7 +84,8 @@ class Darknet(object):
 
         args = [self.src_bin, self.src_layers]
         wgts_loader = loader.create_loader(*args)
-        for layer in self.layers: layer.load(wgts_loader)
+        for layer in self.layers:
+            layer.load(wgts_loader)
 
         stop = time.time()
         print('Finished in {}s'.format(stop - start))

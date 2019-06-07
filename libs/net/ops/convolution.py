@@ -3,6 +3,7 @@ from .baseop import BaseOp
 import tensorflow as tf
 import numpy as np
 
+
 class reorg(BaseOp):
     def _forward(self):
         inp = self.inp.out
@@ -63,6 +64,7 @@ class local(BaseOp):
         msg = 'loca {}x{}p{}_{}  {}'.format(*args)
         return msg
 
+
 class convolutional(BaseOp):
     def forward(self):
         pad = [[self.lay.pad, self.lay.pad]] * 2;
@@ -97,6 +99,7 @@ class convolutional(BaseOp):
         msg = 'conv {}x{}p{}_{}  {}  {}'.format(*args)
         return msg
 
+
 class conv_select(convolutional):
     def speak(self):
         l = self.lay
@@ -105,6 +108,7 @@ class conv_select(convolutional):
         args += [l.activation]
         msg = 'sele {}x{}p{}_{}  {}  {}'.format(*args)
         return msg
+
 
 class conv_extract(convolutional):
     def speak(self):

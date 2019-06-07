@@ -4,13 +4,14 @@ import numpy as np
 FORM = '{:>6} | {:>6} | {:<32} | {}'
 FORM_ = '{}+{}+{}+{}'
 LINE = FORM_.format('-'*7, '-'*8, '-'*34, '-'*15) 
-HEADER = FORM.format(
-    'Source', 'Train?','Layer description', 'Output size')
+HEADER = FORM.format('Source', 'Train?','Layer description', 'Output size')
 
-def _shape(tensor): # work for both tf.Tensor & np.ndarray
+
+def _shape(tensor):  # work for both tf.Tensor & np.ndarray
     if type(tensor) in [tf.Variable, tf.Tensor]: 
         return tensor.get_shape()
     else: return tensor.shape
+
 
 def _name(tensor):
     return tensor.name.split(':')[0]
@@ -85,7 +86,7 @@ class BaseOp(object):
             val['dfault'], val['shape'], name = sig)
         feed[self.lay.h[ph]] = val['feed']
 
-    def verbalise(self): # console speaker
+    def verbalise(self):  # console speaker
         msg = str()
         inp = _name(self.inp.out)
         if inp == 'input': \
@@ -97,4 +98,5 @@ class BaseOp(object):
             self.act, self.train_msg, 
             self.speak(), _shape(self.out))
     
-    def speak(self): pass
+    def speak(self):
+        pass

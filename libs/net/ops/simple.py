@@ -2,6 +2,7 @@ import tensorflow.contrib.slim as slim
 from .baseop import BaseOp
 import tensorflow as tf
 
+
 class route(BaseOp):
     def forward(self):
         routes = self.lay.routes
@@ -19,6 +20,7 @@ class route(BaseOp):
         msg = 'concat {}'
         return msg.format(self.lay.routes)
 
+
 class connected(BaseOp):
     def forward(self):
         self.out = tf.nn.xw_plus_b(
@@ -34,6 +36,7 @@ class connected(BaseOp):
         msg = 'full {} x {}  {}'
         return msg.format(*args)
 
+
 class select(connected):
     """a weird connected layer"""
 
@@ -44,6 +47,7 @@ class select(connected):
         msg = 'sele {} x {}  {}'
         return msg.format(*args)
 
+
 class extract(connected):
     """a weird connected layer"""
 
@@ -53,6 +57,7 @@ class extract(connected):
         args += [layer.activation]
         msg = 'extr {} x {}  {}'
         return msg.format(*args)
+
 
 class flatten(BaseOp):
     def forward(self):

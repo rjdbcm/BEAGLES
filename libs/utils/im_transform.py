@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 
+
 def imcv2_recolor(im, a = .1):
 	t = [np.random.uniform()]
 	t += [np.random.uniform()]
@@ -14,6 +15,7 @@ def imcv2_recolor(im, a = .1):
 # 	im = np.power(im/mx, 1. + up * .5)
 	im = cv2.pow(im/mx, 1. + up * .5)
 	return np.array(im * 255., np.uint8)
+
 
 def imcv2_affine_trans(im):
 	# Scale and translate

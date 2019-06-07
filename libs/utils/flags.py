@@ -1,5 +1,5 @@
 class Flags(dict):
-    """Allows you to set dict values like attributes"""
+    """Allows you to set and get {key, value} pairs like attributes"""
     def __init__(self, defaults=True):
         if defaults:
             self.get_defaults()
@@ -10,7 +10,7 @@ class Flags(dict):
     def __setattr__(self, attr, value):
         self[attr] = value
 
-    def get_defaults(self):
+    def get_defaults(self, **kwargs):
         self.train = False
         self.savepb = False
         self.demo = ''
@@ -38,6 +38,7 @@ class Flags(dict):
         self.kill = False
         self.killed = False
         self.done = False
+        self.error = "An error occurred"
         self.progress = 0.0
         self.estimate = 0
         self.size = 0

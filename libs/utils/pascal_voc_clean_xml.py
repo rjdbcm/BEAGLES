@@ -8,8 +8,10 @@ import xml.etree.ElementTree as ET
 import glob
 
 
-def _pp(l): # pretty printing 
-    for i in l: print('{}: {}'.format(i,l[i]))
+def _pp(l):  # pretty printing
+    for i in l:
+        print('{}: {}'.format(i, l[i]))
+
 
 def pascal_voc_clean_xml(ANN, pick, exclusive = False):
     print('Parsing for {} {}'.format(

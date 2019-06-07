@@ -3,12 +3,13 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from .net.build import TFNet
 from .labelFile import LabelFile
+from .utils.flags import Flags
 import os
 import re
 import time
-from .flags import Flags
 
 FLAGS = Flags()
+
 
 class flowThread(QThread):
     """Needed so the long-running train ops don't block Qt UI"""
@@ -26,10 +27,12 @@ class flowThread(QThread):
 
     def run(self):
         self.tfnet = self.tfnet(self.flags)
-        if self.flags.train is True:
+        if self.flags.train:
             self.tfnet.train()
-        elif self.flags.savepb is True:
+        elif self.flags.savepb:
             self.tfnet.savepb()
+        elif not self.flags.fbf == "":
+            self.tfnet.annotate()
 
 
 class flowPrgThread(QThread):
@@ -147,8 +150,6 @@ class flowDialog(QDialog):
 
         self.trainGroupBox.setLayout(layout2)
 
-    #  SIGNALS
-
     def findCkpt(self):
         self.loadCmb.clear()
         checkpoints = self.listFiles(FLAGS.backup)
@@ -188,7 +189,7 @@ class flowDialog(QDialog):
             self.thresholdSpd.setDisabled(False)
 
     def accept(self):
-        FLAGS.get_defaults()  # Reset FLAGS to values in DefaultFlags.__init__
+        FLAGS.get_defaults()  # Reset FLAGS
         FLAGS.model = os.path.join(FLAGS.config, self.modelCmb.currentText())
         try:
             FLAGS.load = int(self.loadCmb.currentText())
@@ -209,16 +210,13 @@ class flowDialog(QDialog):
             tfnet = TFNet(FLAGS)
             tfnet.predict()
         elif self.flowCmb.currentText() == "Train":
-
             if not FLAGS.save % FLAGS.batch == 0:
                 QMessageBox.question(self, 'Error',
                                      "The value of 'Save Every' should be divisible by the value of 'Batch Size'",
                                      QMessageBox.Ok)
                 return
             if not os.listdir(FLAGS.dataset):
-                QMessageBox.question(self, 'Error',
-                                     "No committed frames found",
-                                     QMessageBox.Ok)
+                QMessageBox.question(self, 'Error', "No committed frames found", QMessageBox.Ok)
                 return
             else:
                 FLAGS.train = True
@@ -233,14 +231,11 @@ class flowDialog(QDialog):
                                                    filters, options=options)
             FLAGS.fbf = filename[0]
             tfnet = TFNet(FLAGS)
-            tfnet.annotate()
         elif self.flowCmb.currentText() == "Demo":  # OpenCV does not play nice when called outside a main thread
             FLAGS.demo = "camera"
             tfnet = TFNet(FLAGS)
             tfnet.camera()
-
         self.buttonOk.setEnabled(False)
-
         if [self.flowCmb.currentText() == "Train" or "Freeze"]:
             self.flowthread = flowThread(self, tfnet=TFNet, flags=FLAGS)
             self.flowthread.setTerminationEnabled(True)
@@ -262,19 +257,11 @@ class flowDialog(QDialog):
     def on_finished(self):
         self.buttonOk.setDisabled(False)
         self.findCkpt()
-        if FLAGS.train:
-            form = "Training stopped after {} images processed"
+        if FLAGS.train and FLAGS.done:
+            form = "Training finished after {} images processed"
             QMessageBox.question(self, 'Success',
                                  form.format((FLAGS.progress / 100) * FLAGS.size * FLAGS.epoch),
                                  QMessageBox.Ok)
-
-
-    @pyqtSlot()
-    def on_error(self):
-        self.buttonOk.setDisabled(False)
-        QMessageBox.question(self, 'Error',
-                             "An Error Occurred:\n{}".format(FLAGS),
-                             QMessageBox.Ok)
 
     # HELPERS
     def listFiles(self, dir):

@@ -1123,7 +1123,6 @@ class MainWindow(QMainWindow, WindowMixin):
             settings[SETTING_FILENAME] = self.filePath if self.filePath else ''
         else:
             settings[SETTING_FILENAME] = ''
-
         settings[SETTING_WIN_SIZE] = self.size()
         settings[SETTING_WIN_POSE] = self.pos()
         settings[SETTING_WIN_STATE] = self.saveState()

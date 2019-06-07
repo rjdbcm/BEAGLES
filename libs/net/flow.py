@@ -66,12 +66,12 @@ def train(self):
 
         if math.isnan(loss):
             if self.FLAGS.clip:
-                raise FloatingPointError('''\nLooks like the neural net lost the gradient. Try restarting from your last
-                                            checkpoint.''')
+                self.FLAGS.error = "Looks like the neural net lost the gradient. Try restarting from your last " \
+                                   "checkpoint."
             if not self.FLAGS.clip:
-                raise FloatingPointError('''\nLooks like the neural net lost the gradient. Try restarting from the last
-                                            checkpoint. If this keeps happening try using the --clip argument when you
-                                            restart from the last checkpoint.''')
+                self.FLAGS.error = "Looks like the neural net lost the gradient. Try restarting from the last " \
+                                   "checkpoint. If this keeps happening try using the --clip argument when you " \
+                                   "restart from the last checkpoint."
 
         if loss_mva is None: loss_mva = loss
         loss_mva = .9 * loss_mva + .1 * loss
@@ -149,7 +149,7 @@ def predict(self):
         inp_feed = pool.map(lambda inp: (
             np.expand_dims(self.framework.preprocess(
                 os.path.join(inp_path, inp)), 0)), this_batch)
-
+        self.FLAGS.progress = 25
         # Feed to the net
         feed_dict = {self.inp: np.concatenate(inp_feed, 0)}
         self.say('Forwarding {} inputs ...'.format(len(inp_feed)))
@@ -159,7 +159,7 @@ def predict(self):
         last = stop - start
         self.say('Total time = {}s / {} inps = {} ips'.format(
             last, len(inp_feed), len(inp_feed) / last))
-
+        self.FLAGS.progress = 50
         # Post processing
         self.say('Post processing {} inputs ...'.format(len(inp_feed)))
         start = time.time()
@@ -169,7 +169,9 @@ def predict(self):
                  enumerate(out))
         stop = time.time()
         last = stop - start
-
+        self.FLAGS.progress = 75
         # Timing
         self.say('Total time = {}s / {} inps = {} ips'.format(
             last, len(inp_feed), len(inp_feed) / last))
+        self.FLAGS.progress = 100
+        self.FLAGS.done = True

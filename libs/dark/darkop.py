@@ -9,7 +9,7 @@ class crop_layer(Layer):
     pass
 
 #class shortcut_layer(Layer):
-
+#    pass
 
 class maxpool_layer(Layer):
     def setup(self, ksize, stride, pad):
