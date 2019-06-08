@@ -10,10 +10,14 @@ formatted ```.txt``` files.
 
 ## Installation
 
-### Requirements
-#### Linux
+### Binary Build Requirements
+#### Ubuntu Linux
 
 * libomp-dev 
+
+* pyqt5-dev-tools
+
+* python3-pip
 
 * Python 3.6 or above
 
@@ -25,6 +29,11 @@ Cython==0.29.6
 opencv-contrib-python==4.0.0.21
 tensorflow==1.13.1
 numpy==1.16.2
+```
+##### Build Binary:
+```bash
+cd build_tools
+./build_ubuntu_binary.sh
 ```
 
 #### MacOS
@@ -45,7 +54,11 @@ opencv-contrib-python-headless==4.0.0.21
 tensorflow==1.13.1
 numpy==1.16.2
 ```
-
+##### Build Binary: (NOT WORKING)
+```bash
+cd build_tools
+./build_for_macos.sh
+```
 
 ### Download prebuilt binaries
 
@@ -65,19 +78,13 @@ numpy==1.16.2
 * Run as a source distribution:
 
 ```bash
+sudo apt-get install python3-pip
 sudo apt-get install pyqt5-dev-tools
 sudo apt-get install libomp-dev
 sudo pip3 install -r requirements/requirements-linux-python3.txt
 make qt5py3
 python3 slgrSuite.py
 python3 slgrSuite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
-```
-
-* Build Binary
-
-```bash
-cd build_tools
-./build_for_macos.sh
 ```
 
 #### macOS
@@ -92,12 +99,6 @@ pip3 install -r requirements/requirements-osx-mojave.txt
 make qt5py3
 python3 slgrSuite.py
 python3 slgrSuite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
-```
-
-* Build Binary
-```bash
-cd build_tools
-./build_for_macos.sh
 ```
 
 ## Usage

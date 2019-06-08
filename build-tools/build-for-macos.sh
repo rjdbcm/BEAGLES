@@ -1,7 +1,5 @@
 #!/bin/sh
 # To be run from the build-tools/ directory
-# TODO: Install into a virtualenv so the binary isn't massive
-# Run this script as the super user after running:
 
 which -s brew
 if [[ $? != 0 ]] ; then
