@@ -9,7 +9,9 @@ from ..dark.darknet import Darknet
 import json
 import os
 
+
 class TFNet(object):
+
     _TRAINER = dict({
         'rmsprop': tf.train.RMSPropOptimizer,
         'adadelta': tf.train.AdadeltaOptimizer,
@@ -145,9 +147,9 @@ class TFNet(object):
         self.sess.run(tf.global_variables_initializer())
 
         if not self.ntrain: return
-        self.saver = tf.train.Saver(tf.global_variables(),
-                                    max_to_keep=self.FLAGS.keep)
-        if self.FLAGS.load != 0: self.load_from_ckpt()
+        self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=self.FLAGS.keep)
+        if self.FLAGS.load != 0:
+            self.load_from_ckpt()
 
         if self.FLAGS.summary:
             self.writer.add_graph(self.sess.graph)
@@ -173,6 +175,7 @@ class TFNet(object):
         # Save dump of everything in meta
         with open('./data/built_graph/{}.meta'.format(self.meta['name']), 'w') as fp:
             json.dump(self.meta, fp)
+        fp.close()
         self.say('Saving const graph def to {}'.format(name))
         graph_def = tfnet_pb.sess.graph_def
         tf.train.write_graph(graph_def, './data/', name, False)

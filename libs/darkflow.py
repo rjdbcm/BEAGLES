@@ -4,12 +4,16 @@ from PyQt5.QtWidgets import *
 from .net.build import TFNet
 from .labelFile import LabelFile
 from .utils.flags import Flags
+import multiprocessing
 import os
 import re
 import time
 
 FLAGS = Flags()
 
+
+# TODO Build TFNet in a separate process as memory allocated to tf.Session cannot be freed without exit()ing
+# TODO Use subprocess.Popen and pass FLAGS
 
 class flowThread(QThread):
     """Needed so the long-running train ops don't block Qt UI"""
@@ -19,9 +23,6 @@ class flowThread(QThread):
         self.tfnet = tfnet
         self.flags = flags
 
-    def __del__(self):
-        self.wait()
-
     def stop(self):
         self.tfnet.FLAGS.kill = True
 
@@ -29,20 +30,16 @@ class flowThread(QThread):
         self.tfnet = self.tfnet(self.flags)
         if self.flags.train:
             self.tfnet.train()
-        elif self.flags.savepb:
+        if self.flags.savepb:
             self.tfnet.savepb()
-        elif not self.flags.fbf == "":
+        if not self.flags.fbf == "":
             self.tfnet.annotate()
-
 
 class flowPrgThread(QThread):
 
     def __init__(self, parent, flowprg):
         super(flowPrgThread, self).__init__(parent)
         self.flowprg = flowprg
-
-    def __del__(self):
-        self.wait()
 
     def run(self):
         while FLAGS.killed is not True and FLAGS.done is not True:
@@ -206,10 +203,10 @@ class flowDialog(QDialog):
         FLAGS.save = self.saveSpb.value()
         FLAGS.epoch = self.epochSpb.value()
 
-        if self.flowCmb.currentText() == "Flow":
+        if self.flowCmb.currentText() == "Flow":  # predict method uses ThreadPool
             tfnet = TFNet(FLAGS)
             tfnet.predict()
-        elif self.flowCmb.currentText() == "Train":
+        if self.flowCmb.currentText() == "Train":
             if not FLAGS.save % FLAGS.batch == 0:
                 QMessageBox.question(self, 'Error',
                                      "The value of 'Save Every' should be divisible by the value of 'Batch Size'",
@@ -220,9 +217,9 @@ class flowDialog(QDialog):
                 return
             else:
                 FLAGS.train = True
-        elif self.flowCmb.currentText() == "Freeze":
+        if self.flowCmb.currentText() == "Freeze":
             FLAGS.savepb = True
-        elif self.flowCmb.currentText() == "Annotate":  # OpenCV does not play nice when called outside a main thread
+        if self.flowCmb.currentText() == "Annotate":  # OpenCV does not play nice when called outside a main thread
             formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
             filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
             options = QFileDialog.Options()
@@ -231,7 +228,7 @@ class flowDialog(QDialog):
                                                    filters, options=options)
             FLAGS.fbf = filename[0]
             tfnet = TFNet(FLAGS)
-        elif self.flowCmb.currentText() == "Demo":  # OpenCV does not play nice when called outside a main thread
+        if self.flowCmb.currentText() == "Demo":  # OpenCV does not play nice when called outside a main thread
             FLAGS.demo = "camera"
             tfnet = TFNet(FLAGS)
             tfnet.camera()
@@ -240,9 +237,9 @@ class flowDialog(QDialog):
             self.flowthread = flowThread(self, tfnet=TFNet, flags=FLAGS)
             self.flowthread.setTerminationEnabled(True)
             self.flowthread.finished.connect(self.on_finished)
-            self.flowthread.start()
+            self.flowthread.start(priority=5)
             self.flowprgthread = flowPrgThread(self, flowprg=self.flowPrg)
-            self.flowprgthread.start()
+            self.flowprgthread.start(priority=5)
 
     @pyqtSlot()
     def closeEvent(self, event):

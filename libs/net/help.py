@@ -55,8 +55,7 @@ def say(self, *msgs):
                         continue
                     else:
                         logfile.write(form.format(datetime.now(), msg))
-        if self.FLAGS.killed or self.FLAGS.done:
-            logfile.close()
+        logfile.close()
 
 def load_old_graph(self, ckpt):
     ckpt_loader = create_loader(ckpt)

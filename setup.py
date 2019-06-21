@@ -65,7 +65,7 @@ else:
             libraries=["m"]  # Unix-like specific
         ),
         Extension("libs.cython_utils.cy_yolo2_findboxes",
-            sources=["libs/cython_utils/cy_yolo2_findboxes.pyx"],
+            sources=["libs/cython_utils/cy_yolo24findboxes.pyx"],
             libraries=["m"]  # Unix-like specific
         ),
         Extension("libs.cython_utils.cy_yolo_findboxes",
@@ -82,7 +82,7 @@ setup(
     long_description_content_type="text/markdown",
     license='GPLv3',
     url='https://github.com/rjdbcm/SLGR-Suite',
-    packages = find_packages(),
+    packages=find_packages(),
     scripts=['slgrSuite.py'],
     ext_modules=cythonize(ext_modules),
     classifiers=["Programming Language :: Cython",

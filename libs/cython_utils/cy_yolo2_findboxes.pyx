@@ -35,14 +35,14 @@ cdef void _softmax_c(float* x, int classes):
         np.intp_t k
         float arr_max = 0
     with nogil, parallel():
-        for k in prange(classes):
+        for k in prange(classes, schedule='guided'):
             arr_max = max(arr_max,x[k])
 
-        for k in prange(classes):
+        for k in prange(classes, schedule='guided'):
             x[k] = exp(x[k]-arr_max)
             sum += x[k]
 
-        for k in prange(classes):
+        for k in prange(classes, schedule='guided'):
             x[k] = x[k]/sum
 """
         
