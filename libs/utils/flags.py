@@ -1,4 +1,5 @@
 from datetime import datetime
+from libs.net.help import say
 import pickle
 import sys
 import time
@@ -17,8 +18,20 @@ class FlagIO(object):
             except FileNotFoundError:
                 time.sleep(1)
 
+    def debug_log(self, *msgs):
+        with open(self.flags.log, 'a') as logfile:
+            msg = list(msgs)
+            form = "[{}] {}\n"
+            for msg in msgs:
+                if msg is None:
+                    continue
+                else:
+                    logfile.write(form.format(datetime.now(), msg))
+        logfile.close()
+
+
     def send_flags(self):
-        print("[{}] {} Flags Send: {}".format(datetime.now(), type(self).__name__, self.flags), file=sys.stderr)
+        self.debug_log("{} Flags Send: {}".format(type(self).__name__, self.flags))
         with open(r"{}".format(self.flagpath), "wb") as outfile:
             pickle.dump(self.flags, outfile)
 
@@ -33,12 +46,10 @@ class FlagIO(object):
                         time.sleep(self.delay)
                         flags = pickle.load(inpfile)
                     except EOFError:
-                        print("[{}] {} Flags Busy: Reusing old".format(datetime.now(), type(self).__name__),
-                              file=sys.stderr)
+                        self.debug_log("{} Flags Busy: Reusing old".format(type(self).__name__))
                         flags = self.flags
                     self.flags = flags
-                    print("[{}] {} Flags Read: {}".format(datetime.now(), type(self).__name__, self.flags),
-                          file=sys.stderr)
+                    self.debug_log("{} Flags Read: {}".format(type(self).__name__, self.flags))
                     return self.flags
             except FileNotFoundError:
                 if count > 10:

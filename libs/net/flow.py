@@ -8,11 +8,11 @@ import pickle
 from multiprocessing.pool import ThreadPool
 
 train_stats = (
-    'Training statistics: \n'
-    '\tLearning rate : {}\n'
-    '\tBatch size    : {}\n'
-    '\tEpoch number  : {}\n'
-    '\tBackup every  : {}'
+    'Training statistics - '
+    'Learning rate: {} '
+    'Batch size: {}    '
+    'Epoch number: {}  '
+    'Backup every: {}  '
 )
 pool = ThreadPool()
 

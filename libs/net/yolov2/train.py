@@ -86,7 +86,7 @@ def loss(self, net_out):
     # calculate the best IOU, set 0.0 confidence for worse boxes
     iou = tf.truediv(intersect, _areas + area_pred - intersect)
     best_box = tf.equal(iou, tf.reduce_max(iou, [2], True))
-    best_box = tf.to_float(best_box)
+    best_box = tf.cast(best_box, tf.float32)
     confs = tf.multiply(best_box, _confs)
 
     # take care of the weight terms

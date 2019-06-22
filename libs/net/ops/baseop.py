@@ -1,4 +1,5 @@
 import tensorflow as tf
+from datetime import datetime
 import numpy as np
 
 FORM = '{:>6} | {:>6} | {:<32} | {}'
@@ -38,8 +39,10 @@ class BaseOp(object):
         self.var = not self.gap > 0
         self.act = 'Load '
         self.convert(feed)
-        if self.var: self.train_msg = 'Yep! '
-        else: self.train_msg = 'Nope '
+        if self.var:
+            self.train_msg = 'Yep! '
+        else:
+            self.train_msg = 'Nope '
         self.forward()
 
     def convert(self, feed):
@@ -92,7 +95,7 @@ class BaseOp(object):
         if inp == 'input': \
         msg = FORM.format(
             '', '', 'input',
-            _shape(self.inp.out)) + '\n'
+            _shape(self.inp.out)) + '\n' + "[{}] ".format(str(datetime.now()))
         if not self.act: return msg
         return msg + FORM.format(
             self.act, self.train_msg, 

@@ -1,14 +1,27 @@
 import os
-import argparse
-from libs.net.build import TFNet
-from libs.utils.flags import Flags, FlagIO  # Move to the toplevel folder since flag paths are relative to slgrSuite.py
 import sys
+import argparse
+
+EXEC_PATH = os.path.abspath("../../")
+try:
+    from libs.net.build import TFNet
+    from libs.utils.flags import Flags, FlagIO  # Move to the toplevel folder since flag paths are relative to slgrSuite.py
+except ModuleNotFoundError:
+    sys.path.append(EXEC_PATH)
+finally:
+    from libs.net.build import TFNet
+    from libs.utils.flags import Flags, FlagIO
+    os.chdir(EXEC_PATH)
+
 
 class DarkWrapper(FlagIO):
     def __init__(self):
         FlagIO.__init__(self, subprogram=True)
-        if sys.argv[1]:
-            os.chdir("../../")
+        try:
+            argv = sys.argv[1]
+        except ValueError:
+            argv = False
+        if argv:
             FLAGS = Flags()
             parser = argparse.ArgumentParser(
                 description='[dark]flow translates darknet to tensorflow')
@@ -40,7 +53,7 @@ class DarkWrapper(FlagIO):
             parser.add_argument('--keep', default=FLAGS.keep, metavar='N',
                                 help='number of most recent training results to save')
             parser.add_argument('--batch', default=FLAGS.batch, metavar='N', help='batch size')
-            parser.add_argument('--epoch', default=FLAGS.epoch, metavar='N', help='number of epochs')
+            parser.add_argument('--epoch', default=FLAGS.epoch, type=int, metavar='N', help='number of epochs')
             parser.add_argument('--save', default=FLAGS.save, metavar='N',
                                 help='save a checkpoint ever N training examples')
             parser.add_argument('--pbLoad', default=FLAGS.pbLoad, metavar='*.pb', help='name of protobuf file to load')

@@ -48,7 +48,7 @@ class TFNet(FlagIO):
             tf.logging.set_verbosity(tf.logging.FATAL)
 
         if self.FLAGS.pbLoad and self.FLAGS.metaLoad:
-            self.say('\nLoading from .pb and .meta')
+            self.say('Loading from .pb and .meta')
             self.graph = tf.Graph()
             device_name = FLAGS.gpuName \
                 if FLAGS.gpu > 0.0 else None
@@ -68,7 +68,7 @@ class TFNet(FlagIO):
 
         self.meta = darknet.meta
 
-        self.say('\nBuilding net ...')
+        self.say('Building net ...')
         start = time.time()
         self.graph = tf.Graph()
         device_name = FLAGS.gpuName \
@@ -111,7 +111,8 @@ class TFNet(FlagIO):
         # Build the forward pass
         state = identity(self.inp)
         roof = self.num_layer - self.ntrain
-        self.say(HEADER, LINE)
+        self.say(HEADER)
+        self.say(LINE)
         for i, layer in enumerate(self.darknet.layers):
             scope = '{}-{}'.format(str(i), layer.type)
             args = [layer, state, i, roof, self.feed]
