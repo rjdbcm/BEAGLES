@@ -39,7 +39,6 @@ from libs.hashableQListWidgetItem import HashableQListWidgetItem
 
 __appname__ = 'SLGR-Suite'
 
-
 class WindowMixin(object):
 
     def menu(self, title, actions=None):

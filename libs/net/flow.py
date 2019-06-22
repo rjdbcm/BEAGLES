@@ -41,7 +41,6 @@ def train(self):
     batches = self.framework.shuffle()
     loss_op = self.framework.loss
     for i, (x_batch, datum) in enumerate(batches):
-        print("!!!", file=sys.stderr)
         self.FLAGS = self.read_flags()
         if not i:
             self.say(train_stats.format(
@@ -50,6 +49,8 @@ def train(self):
             ))
             count = 0
         if self.FLAGS.kill:
+            self.FLAGS.killed = True
+            self.send_flags()
             self.say("Train op killed")
             return
         feed_dict = {
@@ -81,7 +82,6 @@ def train(self):
 
         count += self.FLAGS.batch
         goal = self.FLAGS.size * self.FLAGS.epoch
-        print(goal, file=sys.stderr)
         self.FLAGS.progress = count / goal * 100
         self.io_flags()
 
@@ -132,6 +132,7 @@ def return_predict(self, im):
 
 
 def predict(self):
+    self.FLAGS = self.read_flags()
     inp_path = self.FLAGS.imgdir
     all_inps = os.listdir(inp_path)
     all_inps = [i for i in all_inps if self.framework.is_inp(i)]
@@ -147,12 +148,13 @@ def predict(self):
         self.say(range(n_batch))
         from_idx = j * batch
         to_idx = min(from_idx + batch, len(all_inps))
+
         # collect images input in the batch
         this_batch = all_inps[from_idx:to_idx]
         inp_feed = pool.map(lambda inp: (
             np.expand_dims(self.framework.preprocess(
                 os.path.join(inp_path, inp)), 0)), this_batch)
-        self.FLAGS.progress = 25
+
         # Feed to the net
         feed_dict = {self.inp: np.concatenate(inp_feed, 0)}
         self.say('Forwarding {} inputs ...'.format(len(inp_feed)))
@@ -162,7 +164,7 @@ def predict(self):
         last = stop - start
         self.say('Total time = {}s / {} inps = {} ips'.format(
             last, len(inp_feed), len(inp_feed) / last))
-        self.FLAGS.progress = 50
+
         # Post processing
         self.say('Post processing {} inputs ...'.format(len(inp_feed)))
         start = time.time()
@@ -172,9 +174,7 @@ def predict(self):
                  enumerate(out))
         stop = time.time()
         last = stop - start
-        self.FLAGS.progress = 75
+
         # Timing
         self.say('Total time = {}s / {} inps = {} ips'.format(
             last, len(inp_feed), len(inp_feed) / last))
-        self.FLAGS.progress = 100
-        self.FLAGS.done = True

@@ -43,9 +43,9 @@ class TFNet(FlagIO):
         self.FLAGS = self.read_flags()
         self.io_flags()
         if self.FLAGS.verbalise:
-            pass
+            tf.logging.set_verbosity(tf.logging.DEBUG)
         else:
-            tf.logging.set_verbosity(tf.logging.ERROR)
+            tf.logging.set_verbosity(tf.logging.FATAL)
 
         if self.FLAGS.pbLoad and self.FLAGS.metaLoad:
             self.say('\nLoading from .pb and .meta')

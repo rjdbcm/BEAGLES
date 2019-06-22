@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import sys
 import cv2
 import os
 import json
@@ -37,7 +38,8 @@ def postprocess(self, net_out, im, save = True):
 	labels = meta['labels']
 	if type(im) is not np.ndarray:
 		imgcv = cv2.imread(im)
-	else: imgcv = im
+	else:
+		imgcv = im
 	h, w, _ = imgcv.shape
 	
 	resultsForJSON = []
@@ -58,10 +60,11 @@ def postprocess(self, net_out, im, save = True):
 
 	outfolder = os.path.abspath(os.path.join(self.FLAGS.imgdir, 'out'))
 	img_name = os.path.join(outfolder, os.path.basename(im))
+	cv2.imwrite(img_name, imgcv)
 	if self.FLAGS.json:
 		textJSON = json.dumps(resultsForJSON)
 		textFile = os.path.splitext(img_name)[0] + ".json"
-		with open(textFile, 'w') as f:
+		with open(textFile, 'w+') as f:
 			f.write(textJSON)
 		return
-	ret = cv2.imwrite(img_name, imgcv)
+

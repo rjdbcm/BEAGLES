@@ -9,6 +9,8 @@ from libs.net.build import TFNet
 class Flow(object):
 
     def __init__(self):
+        os.chdir("../../../")
+        print(os.getcwd())
         parser = argparse.ArgumentParser(
             description='[dark]flow translates darknet to tensorflow')
         parser.add_argument('--train', default=False, action='store_true',

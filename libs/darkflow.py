@@ -1,7 +1,6 @@
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from .net.build import TFNet
 from .labelFile import LabelFile
 from .utils.flags import Flags, FlagIO
 import subprocess
@@ -31,6 +30,7 @@ class flowThread(QThread, FlagIO):
     def stop(self):
         self.flags.kill = True
         self.send_flags()
+        self.pbar.reset()
         self.proc.kill()
 
     def run(self):
