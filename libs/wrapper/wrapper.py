@@ -12,7 +12,6 @@ class DarkWrapper(FlagIO):
         self.io_flags()
         FLAGS = self.flags
         if FLAGS.train:
-            print("TRIANING", file=sys.stderr)
             TFNet(FLAGS).train()
             self.read_flags()
             self.flags.progress = 100
@@ -21,7 +20,11 @@ class DarkWrapper(FlagIO):
             exit(0)
         elif FLAGS.savepb:
             print('[INFO] Freezing graph of {} at {} to a protobuf file...'.format(FLAGS.model, FLAGS.load))
-            tfnet.savepb()
+            TFNet(FLAGS).savepb()
+            self.read_flags()
+            self.flags.progress = 100
+            self.flags.done = True
+            self.io_flags()
             exit('[INFO] Done')
         elif FLAGS.demo != '':
             tfnet.camera()
