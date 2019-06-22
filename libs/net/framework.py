@@ -1,6 +1,7 @@
 from . import yolo
 from . import yolov2
 from . import vanilla
+from ..utils.flags import FlagIO
 from os.path import basename
 
 
@@ -12,7 +13,7 @@ class framework(object):
         model = basename(meta['model'])
         model = '.'.join(model.split('.')[:-1])
         meta['name'] = model
-        
+        self.meta = meta
         self.constructor(meta, FLAGS)
 
     def is_inp(self, file_name):
@@ -34,7 +35,7 @@ class YOLO(framework):
     process_box = yolo.predict.process_box
 
 
-class YOLOv2(framework):
+class YOLOv2(framework, FlagIO):
     constructor = yolo.constructor
     parse = yolo.data.parse
     shuffle = yolov2.data.shuffle

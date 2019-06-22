@@ -7,10 +7,11 @@ from .ops import HEADER, LINE
 from .framework import create_framework
 from ..dark.darknet import Darknet
 import json
+from ..utils.flags import FlagIO
 import os
 
 
-class TFNet(object):
+class TFNet(FlagIO):
 
     _TRAINER = dict({
         'rmsprop': tf.train.RMSPropOptimizer,
@@ -36,10 +37,11 @@ class TFNet(object):
     load_from_ckpt = help.load_from_ckpt
 
     def __init__(self, FLAGS, darknet=None):
-
+        FlagIO.__init__(self, subprogram=True)
         self.ntrain = 0
 
-        self.FLAGS = FLAGS
+        self.FLAGS = self.read_flags()
+        self.io_flags()
         if self.FLAGS.verbalise:
             pass
         else:

@@ -2,13 +2,14 @@ from . import train
 from . import predict
 from . import data
 from . import misc
+from ...utils.flags import FlagIO
 import numpy as np
 
 
 """ YOLO framework __init__ equivalent"""
 
 def constructor(self, meta, FLAGS):
-
+	FlagIO.__init__(self, delay=0.5, subprogram=True)
 	def _to_color(indx, base):
 		""" return (b, r, g) tuple"""
 		base2 = base * base
@@ -31,6 +32,7 @@ def constructor(self, meta, FLAGS):
 	meta['colors'] = colors
 	self.fetch = list()
 	self.meta, self.FLAGS = meta, FLAGS
+	self.flags = self.FLAGS
 
 	# over-ride the threshold in meta if FLAGS has it.
 	if FLAGS.threshold > 0.0:

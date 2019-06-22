@@ -17,10 +17,10 @@ old_graph_msg = 'Resolving old graph def {} (no guarantee)'
 def build_train_op(self):
     self.framework.loss(self.out)
     self.say('Building {} train op'.format(self.meta['model']))
-    optimizer = self._TRAINER[self.FLAGS.trainer](self.FLAGS.lr)
-    if self.FLAGS.clip == False:
+    optimizer = self._TRAINER[self.flags.trainer](self.flags.lr)
+    if self.flags.clip == False:
         gradients = optimizer.compute_gradients(self.framework.loss)
-    if self.FLAGS.clip == True:
+    if self.flags.clip == True:
         # From github.com/thtrieu/darkflow/issues/557#issuecomment-377378352 avoid gradient explosions late in training
         gradients = [(tf.clip_by_value(grad, -1., 1.), var) for
                      grad, var in optimizer.compute_gradients(self.framework.loss)]
@@ -28,16 +28,16 @@ def build_train_op(self):
 
 
 def load_from_ckpt(self):
-    if self.FLAGS.load < 0:  # load lastest ckpt
-        with open(os.path.join(self.FLAGS.backup, 'checkpoint'), 'r') as f:
+    if self.flags.load < 0:  # load lastest ckpt
+        with open(os.path.join(self.flags.backup, 'checkpoint'), 'r') as f:
             last = f.readlines()[-1].strip()
             load_point = last.split(' ')[1]
             load_point = load_point.split('"')[1]
             load_point = load_point.split('-')[-1]
-            self.FLAGS.load = int(load_point)
+            self.flags.load = int(load_point)
 
-    load_point = os.path.join(self.FLAGS.backup, self.meta['name'])
-    load_point = '{}-{}'.format(load_point, self.FLAGS.load)
+    load_point = os.path.join(self.flags.backup, self.meta['name'])
+    load_point = '{}-{}'.format(load_point, self.flags.load)
     self.say('Loading from {}'.format(load_point))
     try:
         self.saver.restore(self.sess, load_point)
@@ -46,8 +46,8 @@ def load_from_ckpt(self):
 
 
 def say(self, *msgs):
-    if self.FLAGS.verbalise:
-        with open(self.FLAGS.log, 'a') as logfile:
+    if self.flags.verbalise:
+        with open(self.flags.log, 'a') as logfile:
                 msgs = list(msgs)
                 form = "[{}] {}\n"
                 for msg in msgs:
@@ -84,8 +84,8 @@ def _get_fps(self, frame):
 
 
 def camera(self):
-    file = self.FLAGS.demo  # TODO add asynchronous capture
-    SaveVideo = self.FLAGS.saveVideo
+    file = self.flags.demo  # TODO add asynchronous capture
+    SaveVideo = self.flags.saveVideo
 
     if file == 'camera':
         file = 0
@@ -119,7 +119,7 @@ def camera(self):
         else:
             fps = round(camera.get(cv2.CAP_PROP_FPS))
         videoWriter = cv2.VideoWriter(
-            self.FLAGS.saveVideo, fourcc, fps, (max_x, max_y))
+            self.flags.saveVideo, fourcc, fps, (max_x, max_y))
 
     # buffers for demo in batch
     buffer_inp = list()
@@ -139,7 +139,7 @@ def camera(self):
         buffer_pre.append(preprocessed)
 
         # Only process and imshow when queue is full
-        if elapsed % self.FLAGS.queue == 0:
+        if elapsed % self.flags.queue == 0:
             feed_dict = {self.inp: buffer_pre}
             net_out = self.sess.run(self.out, feed_dict)
             for img, single_out in zip(buffer_inp, net_out):
@@ -171,8 +171,8 @@ def camera(self):
 
 
 def annotate(self):
-    lb = self.FLAGS.lb
-    INPUT_VIDEO = self.FLAGS.fbf
+    lb = self.flags.lb
+    INPUT_VIDEO = self.flags.fbf
     FRAME_NUMBER = 0
     cap = cv2.VideoCapture(INPUT_VIDEO)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -233,7 +233,7 @@ def annotate(self):
         FRAME_NUMBER += 1
         ret, frame = cap.read()
         if ret == True:
-            self.FLAGS.progress = round((100 * FRAME_NUMBER / total_frames), 0)
+            self.flags.progress = round((100 * FRAME_NUMBER / total_frames), 0)
             self.say = (
                 "Frame {}/{} [{}%]".format(FRAME_NUMBER, total_frames, round(100 * FRAME_NUMBER / total_frames),
                                            1))
@@ -241,12 +241,12 @@ def annotate(self):
             result = self.return_predict(frame)
             new_frame = boxing(frame, result)  # Display the resulting frame
             out.write(new_frame)
-            if self.FLAGS.kill:
-                self.FLAGS.killed = True
+            if self.flags.kill:
+                self.flags.killed = True
                 break
         else:
             break
-    self.FLAGS.done = True
+    self.flags.done = True
     # When everything done, release the capture
     cap.release()
     out.release()

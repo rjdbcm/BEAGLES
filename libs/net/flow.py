@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import math
 import numpy as np
@@ -32,14 +33,16 @@ def _save_ckpt(self, step, loss_profile):
 
 
 def train(self):
+    self.io_flags()
     loss_ph = self.framework.placeholders
     loss_mva = None;
     profile = list()
 
     batches = self.framework.shuffle()
     loss_op = self.framework.loss
-
     for i, (x_batch, datum) in enumerate(batches):
+        print("!!!", file=sys.stderr)
+        self.FLAGS = self.read_flags()
         if not i:
             self.say(train_stats.format(
                 self.FLAGS.lr, self.FLAGS.batch,
@@ -48,7 +51,6 @@ def train(self):
             count = 0
         if self.FLAGS.kill:
             self.say("Train op killed")
-            self.FLAGS.killed = True
             return
         feed_dict = {
             loss_ph[key]: datum[key]
@@ -79,7 +81,9 @@ def train(self):
 
         count += self.FLAGS.batch
         goal = self.FLAGS.size * self.FLAGS.epoch
+        print(goal, file=sys.stderr)
         self.FLAGS.progress = count / goal * 100
+        self.io_flags()
 
         if self.FLAGS.summary:
             self.writer.add_summary(fetched[2], step_now)
@@ -95,7 +99,6 @@ def train(self):
             _save_ckpt(self, *args)
 
     if ckpt:
-        self.FLAGS.done = True
         _save_ckpt(self, *args)
 
 

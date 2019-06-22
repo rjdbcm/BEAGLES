@@ -3,8 +3,9 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from .net.build import TFNet
 from .labelFile import LabelFile
-from .utils.flags import Flags
-import multiprocessing
+from .utils.flags import Flags, FlagIO
+import subprocess
+import sys
 import os
 import re
 import time
@@ -15,40 +16,32 @@ FLAGS = Flags()
 # TODO Build TFNet in a separate process as memory allocated to tf.Session cannot be freed without exit()ing
 # TODO Use subprocess.Popen and pass FLAGS
 
-class flowThread(QThread):
+class flowThread(QThread, FlagIO):
     """Needed so the long-running train ops don't block Qt UI"""
 
-    def __init__(self, parent, tfnet, flags):
+    def __init__(self, parent, proc, flags, pbar, timeout, rate=1):
         super(flowThread, self).__init__(parent)
-        self.tfnet = tfnet
+        self.pbar = pbar
+        self.rate = rate
+        self.proc = proc
         self.flags = flags
+        self.send_flags()
+        time.sleep(1)
 
     def stop(self):
-        self.tfnet.FLAGS.kill = True
+        self.flags.kill = True
+        self.send_flags()
+        self.proc.kill()
 
     def run(self):
-        self.tfnet = self.tfnet(self.flags)
-        if self.flags.train:
-            self.tfnet.train()
-        if self.flags.savepb:
-            self.tfnet.savepb()
-        if not self.flags.fbf == "":
-            self.tfnet.annotate()
+        while self.proc.poll() is None:
+            if round(self.flags.progress-1) > self.pbar.value():
+                self.pbar.setValue(self.flags.progress)
+            time.sleep(self.rate)
+            self.read_flags()
+            if self.read_flags().done:
+                self.pbar.reset()
 
-class flowPrgThread(QThread):
-
-    def __init__(self, parent, flowprg):
-        super(flowPrgThread, self).__init__(parent)
-        self.flowprg = flowprg
-
-    def run(self):
-        while FLAGS.killed is not True and FLAGS.done is not True:
-            if round(FLAGS.progress)-1 > self.flowprg.value():
-                self.flowprg.setValue(FLAGS.progress)
-            time.sleep(0.5)
-        if FLAGS.killed is True or FLAGS.done is True:
-            self.flowprg.reset()
-            return
 
 
 class flowDialog(QDialog):
@@ -203,9 +196,8 @@ class flowDialog(QDialog):
         FLAGS.save = self.saveSpb.value()
         FLAGS.epoch = self.epochSpb.value()
 
-        if self.flowCmb.currentText() == "Flow":  # predict method uses ThreadPool
-            tfnet = TFNet(FLAGS)
-            tfnet.predict()
+        if self.flowCmb.currentText() == "Flow":
+            pass
         if self.flowCmb.currentText() == "Train":
             if not FLAGS.save % FLAGS.batch == 0:
                 QMessageBox.question(self, 'Error',
@@ -227,19 +219,16 @@ class flowDialog(QDialog):
             filename = QFileDialog.getOpenFileName(self, 'SLGR-Suite Annotate - Choose Video file', os.getcwd(),
                                                    filters, options=options)
             FLAGS.fbf = filename[0]
-            tfnet = TFNet(FLAGS)
         if self.flowCmb.currentText() == "Demo":  # OpenCV does not play nice when called outside a main thread
             FLAGS.demo = "camera"
-            tfnet = TFNet(FLAGS)
-            tfnet.camera()
         self.buttonOk.setEnabled(False)
         if [self.flowCmb.currentText() == "Train" or "Freeze"]:
-            self.flowthread = flowThread(self, tfnet=TFNet, flags=FLAGS)
+            proc = subprocess.Popen([sys.executable, os.path.join(os.getcwd(), "libs/wrapper/wrapper.py")], stdout=subprocess.PIPE, shell=False)
+            self.flowthread = flowThread(self, proc=proc, flags=FLAGS, pbar=self.flowPrg, timeout=10000)
             self.flowthread.setTerminationEnabled(True)
             self.flowthread.finished.connect(self.on_finished)
             self.flowthread.start(priority=5)
-            self.flowprgthread = flowPrgThread(self, flowprg=self.flowPrg)
-            self.flowprgthread.start(priority=5)
+
 
     @pyqtSlot()
     def closeEvent(self, event):

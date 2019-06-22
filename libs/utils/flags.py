@@ -40,12 +40,13 @@ class Flags(dict):
         self.load = -1
         self.model = ''
         self.json = False
-        self.gpu = 1.0
+        self.gpu = 0.0
         self.gpuName = '/gpu:0'
         self.threshold = 0.1
         self.verbalise = True
         self.kill = False
         self.killed = False
+        self.started = False
         self.done = False
         self.error = "An error occurred"
         self.progress = 0.0
@@ -76,7 +77,7 @@ class FlagIO(object):
                 time.sleep(1)
 
     def send_flags(self):
-        # print("[{}] {} Flags Send: {}".format(datetime.now(), type(self).__name__, self.flags))
+        print("[{}] {} Flags Send: {}".format(datetime.now(), type(self).__name__, self.flags), file=sys.stderr)
         with open(r"{}".format(self.flagpath), "wb") as outfile:
             pickle.dump(self.flags, outfile)
 
@@ -88,12 +89,14 @@ class FlagIO(object):
             try:
                 with open(r"{}".format(self.flagpath), "rb") as inpfile:
                     try:
-                        FLAGS = pickle.load(inpfile)
-                    except EOFError:
                         time.sleep(self.delay)
-                        # print("[{}] {} Flags Busy: Reusing old".format(datetime.now(), type(self).__name__))
-                        FLAGS = self.flags
-                    self.flags = FLAGS
+                        flags = pickle.load(inpfile)
+                    except EOFError:
+                        print("[{}] {} Flags Busy: Reusing old".format(datetime.now(), type(self).__name__), file=sys.stderr)
+                        flags = self.flags
+                    self.flags = flags
+                    print("[{}] {} Flags Read: {}".format(datetime.now(), type(self).__name__, self.flags),
+                          file=sys.stderr)
                     return self.flags
             except FileNotFoundError:
                 if count > 10:
