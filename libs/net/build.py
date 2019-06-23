@@ -50,8 +50,10 @@ class TFNet(FlagIO):
         if self.FLAGS.pbLoad and self.FLAGS.metaLoad:
             self.say('Loading from .pb and .meta')
             self.graph = tf.Graph()
-            device_name = FLAGS.gpuName \
-                if FLAGS.gpu > 0.0 else None
+            if FLAGS.gpu > 0.0:
+                device_name = FLAGS.gpuName
+            else:
+                device_name = None
             with tf.device(device_name):
                 with self.graph.as_default() as g:
                     self.build_from_pb()
@@ -71,8 +73,10 @@ class TFNet(FlagIO):
         self.say('Building net ...')
         start = time.time()
         self.graph = tf.Graph()
-        device_name = FLAGS.gpuName \
-            if FLAGS.gpu > 0.0 else None
+        if FLAGS.gpu > 0.0:
+            device_name = FLAGS.gpuName
+        else:
+            device_name = None
         with tf.device(device_name):
             with self.graph.as_default() as g:
                 self.build_forward()
