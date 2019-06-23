@@ -1,8 +1,4 @@
 #! /bin/sh
-if [[ ! -d /Volumes ]]; then
-    >&2 echo Error: This script is designed for a Mac
-    exit 1
-fi
 VOLUMEPATH="/Volumes"
 NAME="RAMDisk"
 
