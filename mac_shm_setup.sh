@@ -3,7 +3,9 @@
 NAME="RAMDisk"
 
 function RAMDisk_mount() {
-    diskutil eraseVolume HFS+ $NAME `hdiutil attach -nomount ram://$((2048 * 2))`
+    if [[ ! -d "Volumes/$NAME" ]]; then
+        diskutil eraseVolume HFS+ $NAME `hdiutil attach -nomount ram://$((2048 * 2))`
+    fi
 }
 
 function RAMDisk_unmount() {
