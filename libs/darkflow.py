@@ -11,10 +11,6 @@ import time
 
 FLAGS = Flags()
 
-
-# TODO Build TFNet in a separate process as memory allocated to tf.Session cannot be freed without exit()ing
-# TODO Use subprocess.Popen and pass FLAGS
-
 class flowThread(QThread, FlagIO):
     """Needed so the long-running train ops don't block Qt UI"""
 
@@ -29,9 +25,14 @@ class flowThread(QThread, FlagIO):
 
     def stop(self):
         self.flags.kill = True
-        self.send_flags()
+        self.io_flags()
+        self.return_flags()
         self.pbar.reset()
         self.proc.kill()
+        self.cleanup_ramdisk()
+
+    def return_flags(self):
+        FLAGS = self.flags
 
     def run(self):
         while self.proc.poll() is None:
@@ -39,8 +40,11 @@ class flowThread(QThread, FlagIO):
                 self.pbar.setValue(self.flags.progress)
             time.sleep(self.rate)
             self.read_flags()
-            if self.read_flags().done:
+            if self.flags.done:
+                self.return_flags()
+                self.cleanup_ramdisk()
                 self.pbar.reset()
+
 
 
 
@@ -95,7 +99,7 @@ class flowDialog(QDialog):
         layout.addRow(QLabel("Confidence Threshold"), self.thresholdSpd)
 
         self.verbaliseChb = QCheckBox()
-        layout.addRow(QLabel("Verbose Logging"), self.verbaliseChb)
+        layout.addRow(QLabel("Verbose Messages & Log"), self.verbaliseChb)
 
         self.formGroupBox.setLayout(layout)
 
@@ -227,7 +231,7 @@ class flowDialog(QDialog):
             self.flowthread = flowThread(self, proc=proc, flags=FLAGS, pbar=self.flowPrg, timeout=10000)
             self.flowthread.setTerminationEnabled(True)
             self.flowthread.finished.connect(self.on_finished)
-            self.flowthread.start(priority=5)
+            self.flowthread.start()
 
 
     @pyqtSlot()
@@ -241,13 +245,11 @@ class flowDialog(QDialog):
 
     @pyqtSlot()
     def on_finished(self):
+        if FLAGS.verbalise:
+            QMessageBox.question(self, "Success", "Process Stopped:\n" + "\n".join('{}: {}'.format(k, v) for k, v in FLAGS.items()),
+                                 QMessageBox.Ok)
         self.buttonOk.setDisabled(False)
         self.findCkpt()
-        if FLAGS.train and FLAGS.done:
-            form = "Training finished after {} images processed"
-            QMessageBox.question(self, 'Success',
-                                 form.format((FLAGS.progress / 100) * FLAGS.size * FLAGS.epoch),
-                                 QMessageBox.Ok)
 
     # HELPERS
     def listFiles(self, dir):
