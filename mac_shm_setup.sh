@@ -3,7 +3,7 @@
 NAME="RAMDisk"
 
 function RAMDisk_mount() {
-    diskutil quiet eraseVolume HFS+ $NAME `hdiutil attach -nomount ram://$((2048 * 2))`
+    diskutil eraseVolume HFS+ $NAME `hdiutil attach -nomount ram://$((2048 * 2))`
 }
 
 function RAMDisk_unmount() {
@@ -15,7 +15,7 @@ function RAMDisk_unmount() {
         then
             exit
         else
-            hdiutil detach -quiet $CURDISK
+            hdiutil detach $CURDISK
         fi
     done
 }
