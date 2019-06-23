@@ -1,8 +1,14 @@
 import os
 import sys
 import argparse
-
-EXEC_PATH = os.path.abspath("../../")
+try:
+    argv = sys.argv[1]
+except IndexError:
+    argv = []
+if argv:
+    EXEC_PATH = os.path.abspath("../../")
+else:
+    EXEC_PATH = os.getcwd()
 try:
     from libs.net.build import TFNet
     from libs.utils.flags import Flags, FlagIO  # Move to the toplevel folder since flag paths are relative to slgrSuite.py
@@ -14,15 +20,16 @@ finally:
     os.chdir(EXEC_PATH)
 
 
+
 class DarkWrapper(FlagIO):
     def __init__(self):
         FlagIO.__init__(self, subprogram=True)
+        FLAGS = Flags()
         try:
             argv = sys.argv[1]
-        except ValueError:
+        except IndexError:
             argv = False
         if argv:
-            FLAGS = Flags()
             parser = argparse.ArgumentParser(
                 description='[dark]flow translates darknet to tensorflow')
             parser.add_argument('--train', default=FLAGS.train, action='store_true',
@@ -77,6 +84,7 @@ class DarkWrapper(FlagIO):
             self.send_flags()
         self.flags = self.read_flags()
         self.flags.started = True
+        print(os.getcwd(), file=sys.stderr)
         self.io_flags()
         FLAGS = self.flags
         if FLAGS.train:
