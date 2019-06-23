@@ -23,8 +23,8 @@ function RAMDisk_unmount() {
 eval ${NAME}_${1}
 #if [[ "$1" = "mount" ]]; then
 #    RAMDisk_mount
-#fi
-#
-#if [[ "$1" = "unmount" ]]; then
+#elif [[ "$1" = "unmount" ]]; then
 #    RAMDisk_unmount
+#else
+#    >&2 echo "line $LINENO: $NAME_$1: command not found"
 #fi
