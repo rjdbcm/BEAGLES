@@ -24,12 +24,17 @@ class flowThread(QThread, FlagIO):
         self.send_flags()
         time.sleep(1)
 
+    def return_flags(self):
+        global FLAGS
+        FLAGS = self.read_flags()
+
     def stop(self):
         if not self.flags.done:
             self.flags.kill = True
             self.io_flags()
         self.read_flags()
         self.pbar.reset()
+        self.return_flags()
         self.proc.kill()
         self.cleanup_ramdisk()
 
@@ -41,6 +46,7 @@ class flowThread(QThread, FlagIO):
             self.read_flags()
             if self.flags.done:
                 self.read_flags()
+                self.return_flags()
                 self.cleanup_ramdisk()
                 self.pbar.reset()
 
@@ -235,7 +241,6 @@ class flowDialog(QDialog):
 
     @pyqtSlot()
     def closeEvent(self, event):
-
         if self.flowthread.isRunning():
             msg = "Are you sure you want to close this dialog? This will kill any running processes."
             reply = QMessageBox.question(self, 'Message', msg, QMessageBox.Yes, QMessageBox.No)
@@ -256,7 +261,7 @@ class flowDialog(QDialog):
     @pyqtSlot()
     def on_finished(self):
         if FLAGS.verbalise:
-            QMessageBox.question(self, "Success", "Process Stopped:\n" + "\n".join('{}: {}'.format(k, v) for k, v in FLAGS.items()),
+            QMessageBox.question(self, "Debug Message", "Process Stopped:\n" + "\n".join('{}: {}'.format(k, v) for k, v in FLAGS.items()),
                                  QMessageBox.Ok)
         self.buttonOk.setDisabled(False)
         self.findCkpt()

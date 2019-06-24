@@ -20,7 +20,6 @@ finally:
     os.chdir(EXEC_PATH)
 
 
-
 class DarkWrapper(FlagIO):
     def __init__(self):
         FlagIO.__init__(self, subprogram=True)
@@ -104,6 +103,7 @@ class DarkWrapper(FlagIO):
         self.flags.done = True
         self.io_flags()
         exit(0)
+
 
 if __name__ == '__main__':
     DarkWrapper()

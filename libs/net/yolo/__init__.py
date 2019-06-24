@@ -22,7 +22,7 @@ def constructor(self, meta, FLAGS):
     if 'labels' not in meta:
         misc.labels(meta, FLAGS)  # We're not loading from a .pb so we do need to load the labels
     assert len(meta['labels']) == meta['classes'], (
-            '{} and {} indicate inconsistent class numbers').format(meta['labels'], meta['model'])
+            '{} and {} indicate inconsistent class numbers').format(FLAGS.labels, meta['model'])
 
     # assign a color for each label
     colors = list()
