@@ -11,10 +11,11 @@ import time
 
 FLAGS = Flags()
 
+
 class flowThread(QThread, FlagIO):
     """Needed so the long-running train ops don't block Qt UI"""
 
-    def __init__(self, parent, proc, flags, pbar, timeout, rate=1):
+    def __init__(self, parent, proc, flags, pbar, rate=1):
         super(flowThread, self).__init__(parent)
         self.pbar = pbar
         self.rate = rate
@@ -27,13 +28,10 @@ class flowThread(QThread, FlagIO):
         if not self.flags.done:
             self.flags.kill = True
             self.io_flags()
-        self.return_flags()
+        self.read_flags()
         self.pbar.reset()
         self.proc.kill()
         self.cleanup_ramdisk()
-
-    def return_flags(self):
-        FLAGS = self.flags
 
     def run(self):
         while self.proc.poll() is None:
@@ -42,17 +40,16 @@ class flowThread(QThread, FlagIO):
             time.sleep(self.rate)
             self.read_flags()
             if self.flags.done:
-                self.return_flags()
+                self.read_flags()
                 self.cleanup_ramdisk()
                 self.pbar.reset()
 
 
-
-
 class flowDialog(QDialog):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, labelfile=None):
         super(flowDialog, self).__init__(parent)
+        self.labelfile = labelfile
         self.createFormGroupBox()
 
         self.buttonOk = QDialogButtonBox(QDialogButtonBox.Ok)
@@ -200,6 +197,7 @@ class flowDialog(QDialog):
         FLAGS.batch = self.batchSpb.value()
         FLAGS.save = self.saveSpb.value()
         FLAGS.epoch = self.epochSpb.value()
+        FLAGS.labels = self.labelfile
 
         if self.flowCmb.currentText() == "Flow":
             pass
@@ -229,7 +227,7 @@ class flowDialog(QDialog):
         self.buttonOk.setEnabled(False)
         if [self.flowCmb.currentText() == "Train" or "Freeze"]:
             proc = subprocess.Popen([sys.executable, os.path.join(os.getcwd(), "libs/wrapper/wrapper.py")], stdout=subprocess.PIPE, shell=False)
-            self.flowthread = flowThread(self, proc=proc, flags=FLAGS, pbar=self.flowPrg, timeout=10000)
+            self.flowthread = flowThread(self, proc=proc, flags=FLAGS, pbar=self.flowPrg)
             self.flowthread.setTerminationEnabled(True)
             self.flowthread.finished.connect(self.on_finished)
             self.flowthread.start()
@@ -237,12 +235,23 @@ class flowDialog(QDialog):
 
     @pyqtSlot()
     def closeEvent(self, event):
-        try:
-            self.flowthread.stop()
-        except AttributeError:
-            pass
-        self.buttonOk.setDisabled(False)
-        return
+
+        if self.flowthread.isRunning():
+            msg = "Are you sure you want to close this dialog? This will kill any running processes."
+            reply = QMessageBox.question(self, 'Message', msg, QMessageBox.Yes, QMessageBox.No)
+            if reply == QMessageBox.No:
+                event.ignore()
+            else:
+                try:
+                    self.flowthread.stop()
+                except AttributeError:
+                    pass
+                self.buttonOk.setDisabled(False)
+                event.accept()
+        else:
+            self.buttonOk.setDisabled(False)
+            event.accept()
+
 
     @pyqtSlot()
     def on_finished(self):

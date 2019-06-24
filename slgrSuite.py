@@ -104,7 +104,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         # Main widgets and related state.
         self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist)
-        self.trainDialog = flowDialog(parent=self)
+        self.trainDialog = flowDialog(parent=self, labelfile=defaultPrefdefClassFile)
 
         self.itemsToShapes = {}
         self.shapesToItems = {}
