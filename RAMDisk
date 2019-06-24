@@ -18,7 +18,7 @@ function RAMDisk_mount {
 function RAMDisk_unmount {
     while true
     do
-        CURDISK=$(diskutil info $NAME 2| grep -o '/dev/disk[1-99]')
+        CURDISK=$(diskutil info $NAME | grep -o '/dev/disk[1-99]')
         if [ "$CURDISK" = "" ]; then
             exit
         else
