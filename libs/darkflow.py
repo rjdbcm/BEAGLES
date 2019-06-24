@@ -12,11 +12,11 @@ import time
 FLAGS = Flags()
 
 
-class flowThread(QThread, FlagIO):
+class FlowThread(QThread, FlagIO):
     """Needed so the long-running train ops don't block Qt UI"""
 
     def __init__(self, parent, proc, flags, pbar, rate=1):
-        super(flowThread, self).__init__(parent)
+        super(FlowThread, self).__init__(parent)
         self.pbar = pbar
         self.rate = rate
         self.proc = proc
@@ -51,10 +51,10 @@ class flowThread(QThread, FlagIO):
                 self.pbar.reset()
 
 
-class flowDialog(QDialog):
+class FlowDialog(QDialog):
 
     def __init__(self, parent=None, labelfile=None):
-        super(flowDialog, self).__init__(parent)
+        super(FlowDialog, self).__init__(parent)
         self.labelfile = labelfile
         self.createFormGroupBox()
 
@@ -233,7 +233,7 @@ class flowDialog(QDialog):
         self.buttonOk.setEnabled(False)
         if [self.flowCmb.currentText() == "Train" or "Freeze"]:
             proc = subprocess.Popen([sys.executable, os.path.join(os.getcwd(), "libs/wrapper/wrapper.py")], stdout=subprocess.PIPE, shell=False)
-            self.flowthread = flowThread(self, proc=proc, flags=FLAGS, pbar=self.flowPrg)
+            self.flowthread = FlowThread(self, proc=proc, flags=FLAGS, pbar=self.flowPrg)
             self.flowthread.setTerminationEnabled(True)
             self.flowthread.finished.connect(self.on_finished)
             self.flowthread.start()
