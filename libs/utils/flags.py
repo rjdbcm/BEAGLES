@@ -66,7 +66,7 @@ class FlagIO(object):
         if sys.platform == "darwin":
             ramdisk = "/Volumes/RAMDisk"
             if not self.subprogram:
-                os.system("./mac_shm_setup.sh mount")
+                os.system("./RAMDisk mount")
                 time.sleep(self.delay)  # Give the OS time to finish
         else:
             ramdisk = "/dev/shm"
@@ -75,7 +75,7 @@ class FlagIO(object):
 
     def cleanup_ramdisk(self):
         if sys.platform == "darwin":
-            os.system("./mac_shm_setup.sh unmount")
+            os.system("./RAMDisk unmount")
         else:
             pass
 

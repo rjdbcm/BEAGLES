@@ -24,8 +24,9 @@ class flowThread(QThread, FlagIO):
         time.sleep(1)
 
     def stop(self):
-        self.flags.kill = True
-        self.io_flags()
+        if not self.flags.done:
+            self.flags.kill = True
+            self.io_flags()
         self.return_flags()
         self.pbar.reset()
         self.proc.kill()
