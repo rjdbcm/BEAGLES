@@ -5,6 +5,7 @@ import sys
 import time
 import os
 
+
 class FlagIO(object):
     def __init__(self, subprogram=False, delay=0.1):
         self.READ_MSG = "[{}] {} Flags Read: {}"
