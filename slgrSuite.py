@@ -25,7 +25,7 @@ from libs.stringBundle import StringBundle
 from libs.canvas import Canvas
 from libs.zoomWidget import ZoomWidget
 from libs.labelDialog import LabelDialog
-from libs.darkflow import flowDialog
+from libs.darkflow import FlowDialog
 from libs.colorDialog import ColorDialog
 from libs.labelFile import LabelFile, LabelFileError
 from libs.toolBar import ToolBar
@@ -104,7 +104,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         # Main widgets and related state.
         self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist)
-        self.trainDialog = flowDialog(parent=self, labelfile=defaultPrefdefClassFile)
+        self.trainDialog = FlowDialog(parent=self, labelfile=defaultPrefdefClassFile)
 
         self.itemsToShapes = {}
         self.shapesToItems = {}
@@ -1116,8 +1116,8 @@ class MainWindow(QMainWindow, WindowMixin):
     def closeEvent(self, event):
         if not self.mayContinue():
             event.ignore()
-        if self.tb_process:
-            self.tb_process.terminate()
+        if self.tb_process.pid() > 0:
+            self.tb_process.kill()
         settings = self.settings
         # If it loads images from dir, don't load it at the begining
         if self.dirname is None:
@@ -1276,7 +1276,6 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def visualize(self):
         if self._visualizeFirstRun:
-
             self.tb_process.start("tensorboard", ["--logdir=data/summaries"])
             self._visualizeFirstRun = False
             subprocess.Popen(self.screencastViewer + ['http://localhost:6006/'])
