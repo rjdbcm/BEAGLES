@@ -66,7 +66,7 @@ class FlagIO(object):
         if sys.platform == "darwin":
             ramdisk = "/Volumes/RAMDisk"
             if not self.subprogram:
-                os.system("./RAMDisk mount")
+                os.system("./libs/scripts/RAMDisk mount")
                 time.sleep(self.delay)  # Give the OS time to finish
         else:
             ramdisk = "/dev/shm"
@@ -75,9 +75,10 @@ class FlagIO(object):
 
     def cleanup_ramdisk(self):
         if sys.platform == "darwin":
-            os.system("./RAMDisk unmount")
+            os.system("./libs/scripts/RAMDisk unmount")
         else:
             pass
+
 
 class Flags(dict):
     """Allows you to set and get {key, value} pairs like attributes"""

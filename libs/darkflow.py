@@ -112,14 +112,17 @@ class FlowDialog(QDialog):
         layout2 = QFormLayout()
 
         self.trainerCmb = QComboBox()
-        self.trainerCmb.addItems(["rmsprop", "adadelta", "adagrad", "adagradDA", "momentum", "adam", "ftrl", "sgd"])
+        self.trainerCmb.addItems(["rmsprop", "adadelta", "adagrad",
+                                  "adagradDA", "momentum", "adam",
+                                  "ftrl", "sgd"])
         self.trainerCmb.currentIndexChanged.connect(self.trainerSelect)
         layout2.addRow(QLabel("Training Algorithm"), self.trainerCmb)
 
         self.momentumSpd = QDoubleSpinBox()
         self.momentumSpd.setRange(0.0, .99)
         self.momentumSpd.setSingleStep(0.01)
-        self.momentumSpd.setToolTip("Momentum setting for momentum and rmsprop optimizers")
+        self.momentumSpd.setToolTip("Momentum setting for momentum and "
+                                    "rmsprop optimizers")
         layout2.addRow(QLabel("Momentum"), self.momentumSpd)
 
         self.keepSpb = QSpinBox()
@@ -153,7 +156,8 @@ class FlowDialog(QDialog):
         checkpoints = self.listFiles(FLAGS.backup)
         _model = os.path.splitext(self.modelCmb.currentText())
         l = ['0']
-        _regex = re.compile("\-[0-9]+\.")  # a dash followed by a number or numbers followed by a dot
+        # a dash followed by a number or numbers followed by a dot
+        _regex = re.compile("\-[0-9]+\.")
         for f in checkpoints:
             if f[:len(_model[0])] == _model[0]:
                 _ckpt = re.search(_regex, f)
@@ -210,40 +214,58 @@ class FlowDialog(QDialog):
         if self.flowCmb.currentText() == "Train":
             if not FLAGS.save % FLAGS.batch == 0:
                 QMessageBox.question(self, 'Error',
-                                     "The value of 'Save Every' should be divisible by the value of 'Batch Size'",
+                                     "The value of 'Save Every' should be "
+                                     "divisible by the value of 'Batch Size'",
                                      QMessageBox.Ok)
                 return
             if not os.listdir(FLAGS.dataset):
-                QMessageBox.question(self, 'Error', "No committed frames found", QMessageBox.Ok)
+                QMessageBox.question(self, 'Error',
+                                     "No committed frames found",
+                                     QMessageBox.Ok)
                 return
             else:
                 FLAGS.train = True
         if self.flowCmb.currentText() == "Freeze":
             FLAGS.savepb = True
-        if self.flowCmb.currentText() == "Annotate":  # OpenCV does not play nice when called outside a main thread
+        if self.flowCmb.currentText() == "Annotate":
             formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
-            filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
+            filters = "Video Files (%s)" % ' '.join(
+                formats + ['*%s' % LabelFile.suffix])
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
-            filename = QFileDialog.getOpenFileName(self, 'SLGR-Suite Annotate - Choose Video file', os.getcwd(),
+            filename = QFileDialog.getOpenFileName(self,
+                                                   'SLGR-Suite Annotate - '
+                                                   'Choose Video file',
+                                                   os.getcwd(),
                                                    filters, options=options)
             FLAGS.fbf = filename[0]
-        if self.flowCmb.currentText() == "Demo":  # OpenCV does not play nice when called outside a main thread
+        if self.flowCmb.currentText() == "Demo":
             FLAGS.demo = "camera"
-        self.buttonOk.setEnabled(False)
         if [self.flowCmb.currentText() == "Train" or "Freeze"]:
-            proc = subprocess.Popen([sys.executable, os.path.join(os.getcwd(), "libs/wrapper/wrapper.py")], stdout=subprocess.PIPE, shell=False)
-            self.flowthread = FlowThread(self, proc=proc, flags=FLAGS, pbar=self.flowPrg)
+            proc = subprocess.Popen([sys.executable, os.path.join(
+                os.getcwd(), "libs/scripts/wrapper.py")],
+                                    stdout=subprocess.PIPE, shell=False)
+            self.flowthread = FlowThread(self, proc=proc, flags=FLAGS,
+                                         pbar=self.flowPrg)
             self.flowthread.setTerminationEnabled(True)
             self.flowthread.finished.connect(self.on_finished)
             self.flowthread.start()
+        self.buttonOk.setEnabled(False)
+        self.formGroupBox.setEnabled(False)
+        self.trainGroupBox.setEnabled(False)
 
 
     @pyqtSlot()
     def closeEvent(self, event):
-        if self.flowthread.isRunning():
-            msg = "Are you sure you want to close this dialog? This will kill any running processes."
-            reply = QMessageBox.question(self, 'Message', msg, QMessageBox.Yes, QMessageBox.No)
+        try:
+            thread_running = self.flowthread.isRunning()
+        except AttributeError:
+            thread_running = False
+        if thread_running:
+            msg = "Are you sure you want to close this dialog? " \
+                  "This will kill any running processes."
+            reply = QMessageBox.question(self, 'Message', msg, QMessageBox.Yes,
+                                         QMessageBox.No)
             if reply == QMessageBox.No:
                 event.ignore()
             else:
@@ -252,17 +274,26 @@ class FlowDialog(QDialog):
                 except AttributeError:
                     pass
                 self.buttonOk.setDisabled(False)
+                self.trainGroupBox.setEnabled(True)
+                self.formGroupBox.setEnabled(True)
                 event.accept()
         else:
             self.buttonOk.setDisabled(False)
+            self.trainGroupBox.setEnabled(True)
+            self.formGroupBox.setEnabled(True)
             event.accept()
 
 
     @pyqtSlot()
     def on_finished(self):
         if FLAGS.verbalise:
-            QMessageBox.question(self, "Debug Message", "Process Stopped:\n" + "\n".join('{}: {}'.format(k, v) for k, v in FLAGS.items()),
+            QMessageBox.question(self, "Debug Message",
+                                 "Process Stopped:\n" +
+                                 "\n".join('{}: {}'.format(k, v)
+                                           for k, v in FLAGS.items()),
                                  QMessageBox.Ok)
+        self.trainGroupBox.setEnabled(True)
+        self.formGroupBox.setEnabled(True)
         self.buttonOk.setDisabled(False)
         self.findCkpt()
 
