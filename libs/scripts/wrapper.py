@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import argparse
 try:
     argv = sys.argv[1]
@@ -94,10 +95,12 @@ class DarkWrapper(FlagIO):
         elif self.flags.fbf != '':
             TFNet(self.flags).annotate()
         else:
-            TFNet(self.flags).predict()
+            tfnet = TFNet(self.flags)
+            tfnet.predict()
         self.done()
 
     def done(self):
+        time.sleep(5)
         self.read_flags()
         self.flags.progress = 100
         self.flags.done = True

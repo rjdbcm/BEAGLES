@@ -55,41 +55,20 @@ class FlowDialog(QDialog):
 
     def __init__(self, parent=None, labelfile=None):
         super(FlowDialog, self).__init__(parent)
-        self.labelfile = labelfile
-        self.createFormGroupBox()
 
-        self.buttonOk = QDialogButtonBox(QDialogButtonBox.Ok)
-        self.buttonCancel = QDialogButtonBox(QDialogButtonBox.Cancel)
-        self.buttonOk.accepted.connect(self.accept)
-        self.buttonCancel.rejected.connect(self.close)
-        self.flowPrg = QProgressBar()
-        self.flowPrg.setRange(0, 100)
-
-        mainLayout = QGridLayout()
-        mainLayout.addWidget(self.formGroupBox)
-        mainLayout.addWidget(self.trainGroupBox)
-        mainLayout.setSizeConstraint(QLayout.SetFixedSize)
-        mainLayout.addWidget(self.buttonOk, 2, 0, Qt.AlignRight)
-        mainLayout.addWidget(self.buttonCancel, 2, 0, Qt.AlignLeft)
-        mainLayout.addWidget(self.flowPrg, 2, 0, Qt.AlignCenter)
-        self.setLayout(mainLayout)
-
-        self.setWindowTitle("SLGR-Suite - Machine Learning Tool")
-        self.findCkpt()
-
-    def createFormGroupBox(self):
         self.formGroupBox = QGroupBox("Select Model and Checkpoint")
         layout = QFormLayout()
 
         self.flowCmb = QComboBox()
-        self.flowCmb.addItems(["Train", "Flow", "Freeze", "Demo", "Annotate"])
-        self.flowCmb.currentIndexChanged.connect(self.flowSelect)
+        self.flowCmb.addItems(
+            ["Train", "Flow", "Freeze", "Demo", "Annotate"])
+        self.flowCmb.currentIndexChanged.connect(self.flow_select)
         layout.addRow(QLabel("Select Mode"), self.flowCmb)
 
         self.modelCmb = QComboBox()
-        self.modelCmb.addItems(self.listFiles(FLAGS.config))
+        self.modelCmb.addItems(self.list_files(FLAGS.config))
         self.modelCmb.setToolTip("Choose a model configuration")
-        self.modelCmb.currentIndexChanged.connect(self.findCkpt)
+        self.modelCmb.currentIndexChanged.connect(self.find_ckpt)
         layout.addRow(QLabel("Model"), self.modelCmb)
 
         self.loadCmb = QComboBox()
@@ -107,53 +86,86 @@ class FlowDialog(QDialog):
 
         self.formGroupBox.setLayout(layout)
 
-        self.trainGroupBox = QGroupBox("Select Training Parameters")
+        self.flowGroupBox = QGroupBox("Select Flow Parameters")
 
         layout2 = QFormLayout()
+
+        self.jsonChb = QCheckBox()
+
+        layout2.addRow(QLabel("Output JSON Annotations"), self.jsonChb)
+
+        self.flowGroupBox.setLayout(layout2)
+        self.flowGroupBox.hide()
+
+        self.trainGroupBox = QGroupBox("Select Training Parameters")
+
+        layout3 = QFormLayout()
 
         self.trainerCmb = QComboBox()
         self.trainerCmb.addItems(["rmsprop", "adadelta", "adagrad",
                                   "adagradDA", "momentum", "adam",
                                   "ftrl", "sgd"])
-        self.trainerCmb.currentIndexChanged.connect(self.trainerSelect)
-        layout2.addRow(QLabel("Training Algorithm"), self.trainerCmb)
+        self.trainerCmb.currentIndexChanged.connect(self.trainer_select)
+        layout3.addRow(QLabel("Training Algorithm"), self.trainerCmb)
 
         self.momentumSpd = QDoubleSpinBox()
         self.momentumSpd.setRange(0.0, .99)
         self.momentumSpd.setSingleStep(0.01)
         self.momentumSpd.setToolTip("Momentum setting for momentum and "
                                     "rmsprop optimizers")
-        layout2.addRow(QLabel("Momentum"), self.momentumSpd)
+        layout3.addRow(QLabel("Momentum"), self.momentumSpd)
 
         self.keepSpb = QSpinBox()
         self.keepSpb.setValue(FLAGS.keep)
         self.keepSpb.setRange(1, 256)
-        layout2.addRow(QLabel("Checkpoints to Keep"), self.keepSpb)
+        layout3.addRow(QLabel("Checkpoints to Keep"), self.keepSpb)
 
         self.batchSpb = QSpinBox()
         self.batchSpb.setRange(2, 256)
         self.batchSpb.setValue(int(FLAGS.batch))
         self.batchSpb.setSingleStep(2)
-        layout2.addRow(QLabel("Batch Size"), self.batchSpb)
+        layout3.addRow(QLabel("Batch Size"), self.batchSpb)
 
         self.epochSpb = QSpinBox()
         self.epochSpb.setRange(1, 256)
         self.epochSpb.setValue(int(FLAGS.epoch))
-        layout2.addRow(QLabel("Epochs to Run"), self.epochSpb)
+        layout3.addRow(QLabel("Epochs to Run"), self.epochSpb)
 
         self.saveSpb = QSpinBox()
         self.saveSpb.setRange(1, 65536)
         self.saveSpb.setValue(FLAGS.save)
-        layout2.addRow(QLabel("Save Every"), self.saveSpb)
+        layout3.addRow(QLabel("Save Every"), self.saveSpb)
 
         self.clipChb = QCheckBox()
-        layout2.addRow(QLabel("Clip Gradients"), self.clipChb)
+        layout3.addRow(QLabel("Clip Gradients"), self.clipChb)
 
-        self.trainGroupBox.setLayout(layout2)
+        self.trainGroupBox.setLayout(layout3)
 
-    def findCkpt(self):
+        self.labelfile = labelfile
+
+        self.buttonOk = QDialogButtonBox(QDialogButtonBox.Ok)
+        self.buttonCancel = QDialogButtonBox(QDialogButtonBox.Cancel)
+        self.buttonOk.accepted.connect(self.accept)
+        self.buttonCancel.rejected.connect(self.close)
+        self.flowPrg = QProgressBar()
+        self.flowPrg.setRange(0, 100)
+
+        main_layout = QGridLayout()
+        main_layout.addWidget(self.formGroupBox, 0, 0)
+        main_layout.addWidget(self.flowGroupBox, 1, 0)
+        main_layout.addWidget(self.trainGroupBox, 2, 0)
+        main_layout.setSizeConstraint(QLayout.SetFixedSize)
+        main_layout.addWidget(self.buttonOk, 3, 0, Qt.AlignRight)
+        main_layout.addWidget(self.buttonCancel, 3, 0, Qt.AlignLeft)
+        main_layout.addWidget(self.flowPrg, 3, 0, Qt.AlignCenter)
+        self.setLayout(main_layout)
+
+        self.setWindowTitle("SLGR-Suite - Machine Learning Tool")
+        self.find_ckpt()
+
+    def find_ckpt(self):
         self.loadCmb.clear()
-        checkpoints = self.listFiles(FLAGS.backup)
+        checkpoints = self.list_files(FLAGS.backup)
         _model = os.path.splitext(self.modelCmb.currentText())
         l = ['0']
         # a dash followed by a number or numbers followed by a dot
@@ -172,13 +184,18 @@ class FlowDialog(QDialog):
         l = list(map(str, l))
         self.loadCmb.addItems(l)
 
-    def trainerSelect(self):
+    def trainer_select(self):
         self.momentumSpd.setDisabled(True)
         for trainer in ("rmsprop", "momentum"):
             if self.trainerCmb.currentText() == trainer:
                 self.momentumSpd.setDisabled(False)
 
-    def flowSelect(self):
+    def flow_select(self):
+        if self.flowCmb.currentText() == "Flow":
+            self.flowGroupBox.show()
+        else:
+            self.flowGroupBox.hide()
+
         if not self.flowCmb.currentText() == "Train":
             self.trainGroupBox.hide()
             self.loadCmb.setCurrentIndex(0)
@@ -208,6 +225,8 @@ class FlowDialog(QDialog):
         FLAGS.save = self.saveSpb.value()
         FLAGS.epoch = self.epochSpb.value()
         FLAGS.labels = self.labelfile
+        FLAGS.json = bool(self.jsonChb.checkState()) if \
+            self.flowGroupBox.isEnabled() else FLAGS.json
 
         if self.flowCmb.currentText() == "Flow":
             pass
@@ -254,7 +273,6 @@ class FlowDialog(QDialog):
         self.formGroupBox.setEnabled(False)
         self.trainGroupBox.setEnabled(False)
 
-
     @pyqtSlot()
     def closeEvent(self, event):
         try:
@@ -283,7 +301,6 @@ class FlowDialog(QDialog):
             self.formGroupBox.setEnabled(True)
             event.accept()
 
-
     @pyqtSlot()
     def on_finished(self):
         if FLAGS.verbalise:
@@ -295,10 +312,10 @@ class FlowDialog(QDialog):
         self.trainGroupBox.setEnabled(True)
         self.formGroupBox.setEnabled(True)
         self.buttonOk.setDisabled(False)
-        self.findCkpt()
+        self.find_ckpt()
 
     # HELPERS
-    def listFiles(self, dir):
+    def list_files(self, dir):
         path = QDir(dir)
         filters = ["*.cfg", "*.meta"]
         path.setNameFilters(filters)
