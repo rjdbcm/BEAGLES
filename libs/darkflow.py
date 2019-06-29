@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import *
 from .labelFile import LabelFile
 from .utils.flags import Flags, FlagIO
 import subprocess
+import cv2
 import sys
 import os
 import re
@@ -51,6 +52,48 @@ class FlowThread(QThread, FlagIO):
                 self.pbar.reset()
 
 
+class MultiCamThread(QThread):
+    def __init__(self, parent, model):
+        super(MultiCamThread, self).__init__(parent)
+        self.devs = []
+        self.model = model
+        self.stopped = False
+
+    def enum_devs(self):
+        index = 0
+        while index < 20:
+            cap = cv2.VideoCapture(index)
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 144)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)
+            if not cap.read()[0]:
+                pass
+            else:
+                self.devs.append(index)
+            index += 1
+        self.devs = dict(enumerate(self.devs))
+        self.model.clear()
+        return self.devs  # Use whilenot-else to display cams in UI
+
+    def stop(self):
+        self.stopped = False
+
+    def run(self):
+        self.model.clear()
+        self.model.appendRow(QStandardItem("Refreshing..."))
+        self.enum_devs()
+        while not self.devs:
+            time.sleep(1)
+        else:
+            self.model.clear()
+            for k, v in self.devs.items():
+                item = QStandardItem(" ".join(["Camera",
+                                              str(k), "on",
+                                              "/dev/video{}".format(v)]))
+                item.setData(v)
+                item.setCheckable(True)
+                self.model.appendRow(item)
+
+
 class FlowDialog(QDialog):
 
     def __init__(self, parent=None, labelfile=None):
@@ -63,7 +106,7 @@ class FlowDialog(QDialog):
         self.flowCmb.addItems(
             ["Train", "Flow", "Freeze", "Demo", "Annotate"])
         self.flowCmb.currentIndexChanged.connect(self.flow_select)
-        layout.addRow(QLabel("Select Mode"), self.flowCmb)
+        layout.addRow(QLabel("Mode"), self.flowCmb)
 
         self.modelCmb = QComboBox()
         self.modelCmb.addItems(self.list_files(FLAGS.config))
@@ -79,10 +122,10 @@ class FlowDialog(QDialog):
         self.thresholdSpd.setRange(0.0, .99)
         self.thresholdSpd.setSingleStep(0.01)
         self.thresholdSpd.setValue(FLAGS.threshold)
-        layout.addRow(QLabel("Confidence Threshold"), self.thresholdSpd)
+        layout.addRow(QLabel("Threshold"), self.thresholdSpd)
 
         self.verbaliseChb = QCheckBox()
-        layout.addRow(QLabel("Verbose Messages & Log"), self.verbaliseChb)
+        layout.addRow(QLabel("Verbose"), self.verbaliseChb)
 
         self.formGroupBox.setLayout(layout)
 
@@ -141,6 +184,22 @@ class FlowDialog(QDialog):
 
         self.trainGroupBox.setLayout(layout3)
 
+        self.demoGroupBox = QGroupBox("Select Capture Parameters")
+        layout4 = QFormLayout()
+
+        self.deviceLsV = QListView()
+        self.deviceItemModel = QStandardItemModel()
+        self.deviceLsV.setModel(self.deviceItemModel)
+        self.deviceLsV.show()
+        layout4.addRow(self.deviceLsV)
+
+        self.refreshDevBtn = QPushButton()
+        self.refreshDevBtn.setText("Refresh Device List")
+        self.refreshDevBtn.clicked.connect(self.list_cameras)
+        layout4.addRow(self.refreshDevBtn)
+
+        self.demoGroupBox.setLayout(layout4)
+
         self.labelfile = labelfile
 
         self.buttonOk = QDialogButtonBox(QDialogButtonBox.Ok)
@@ -153,11 +212,12 @@ class FlowDialog(QDialog):
         main_layout = QGridLayout()
         main_layout.addWidget(self.formGroupBox, 0, 0)
         main_layout.addWidget(self.flowGroupBox, 1, 0)
-        main_layout.addWidget(self.trainGroupBox, 2, 0)
+        main_layout.addWidget(self.demoGroupBox, 2, 0)
+        main_layout.addWidget(self.trainGroupBox, 3, 0)
         main_layout.setSizeConstraint(QLayout.SetFixedSize)
-        main_layout.addWidget(self.buttonOk, 3, 0, Qt.AlignRight)
-        main_layout.addWidget(self.buttonCancel, 3, 0, Qt.AlignLeft)
-        main_layout.addWidget(self.flowPrg, 3, 0, Qt.AlignCenter)
+        main_layout.addWidget(self.buttonOk, 4, 0, Qt.AlignRight)
+        main_layout.addWidget(self.buttonCancel, 4, 0, Qt.AlignLeft)
+        main_layout.addWidget(self.flowPrg, 4, 0, Qt.AlignCenter)
         self.setLayout(main_layout)
 
         self.setWindowTitle("SLGR-Suite - Machine Learning Tool")
@@ -183,6 +243,14 @@ class FlowDialog(QDialog):
         l.sort(reverse=True)
         l = list(map(str, l))
         self.loadCmb.addItems(l)
+
+    def list_cameras(self):
+        model = self.deviceItemModel
+        t = MultiCamThread(self, model)
+        if t.isRunning():
+            return
+        else:
+            t.start()
 
     def trainer_select(self):
         self.momentumSpd.setDisabled(True)
