@@ -53,29 +53,31 @@ class FlowThread(QThread, FlagIO):
 
 
 class MultiCamThread(QThread):
-    def __init__(self, parent, model):
+    def __init__(self, parent, model, pbar):
         super(MultiCamThread, self).__init__(parent)
         self.devs = []
         self.model = model
+        self.pbar = pbar
         self.stopped = False
 
     def enum_devs(self):
         index = 0
-        while index < 20:
+        while index < 32:
             cap = cv2.VideoCapture(index)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 144)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)
             if not cap.read()[0]:
-                pass
+                self.pbar.setValue(index * 3.125)
+                time.sleep(.05)
             else:
                 self.devs.append(index)
+                self.pbar.setValue(index * 3.125)
             index += 1
         self.devs = dict(enumerate(self.devs))
         self.model.clear()
+        time.sleep(0.001)  # avoids QBackingStore::endPaint() device collision
+        self.pbar.reset()
         return self.devs  # Use whilenot-else to display cams in UI
-
-    def stop(self):
-        self.stopped = False
 
     def run(self):
         self.model.clear()
@@ -89,7 +91,7 @@ class MultiCamThread(QThread):
                 item = QStandardItem(" ".join(["Camera",
                                                str(k), "on",
                                                "/dev/video{}".format(v)]))
-                item.setData(k)
+                item.setData(v)
                 item.setCheckable(True)
                 self.model.appendRow(item)
 
@@ -187,10 +189,12 @@ class FlowDialog(QDialog):
         self.demoGroupBox = QGroupBox("Select Capture Parameters")
         layout4 = QFormLayout()
 
+        self.deviceLbl = QLabel("Available Video Devices:")
+        layout4.addRow(self.deviceLbl)
+
         self.deviceLsV = QListView()
         self.deviceItemModel = QStandardItemModel()
         self.deviceLsV.setModel(self.deviceItemModel)
-        self.deviceLsV.show()
         layout4.addRow(self.deviceLsV)
 
         self.refreshDevBtn = QPushButton()
@@ -246,12 +250,20 @@ class FlowDialog(QDialog):
         self.loadCmb.addItems(l)
 
     def list_cameras(self):
+        self.refreshDevBtn.setDisabled(True)
+        self.buttonOk.setDisabled(True)
         model = self.deviceItemModel
-        t = MultiCamThread(self, model)
+        pbar = self.flowPrg
+        t = MultiCamThread(self, model, pbar)
         if t.isRunning():
             return
         else:
             t.start()
+            t.finished.connect(self._list_cameras_finished)
+
+    def _list_cameras_finished(self):
+        self.refreshDevBtn.setDisabled(False)
+        self.buttonOk.setDisabled(False)
 
     def trainer_select(self):
         self.momentumSpd.setDisabled(True)
