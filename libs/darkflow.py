@@ -67,21 +67,19 @@ class MultiCamThread(QThread):
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 144)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)
             if not cap.read()[0]:
-                self.pbar.setValue(index * 3.125)
-                time.sleep(.05)  # QBackingStore::endPaint() device collision
+                pass
             else:
                 self.devs.append(index)
-                self.pbar.setValue(index * 3.125)
-                time.sleep(.05)  # QBackingStore::endPaint() device collision
             index += 1
         self.devs = dict(enumerate(self.devs))
         self.model.clear()
-        self.pbar.reset()
+        self.pbar.setRange(0, 100)
         return self.devs  # Use whilenot-else to display cams in UI
 
     def run(self):
         self.model.clear()
         self.model.appendRow(QStandardItem("Refreshing..."))
+        self.pbar.setRange(0, 0)
         self.enum_devs()
         while not self.devs:
             time.sleep(1)
