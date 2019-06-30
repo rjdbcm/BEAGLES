@@ -41,7 +41,7 @@ class FlowThread(QThread, FlagIO):
 
     def run(self):
         while self.proc.poll() is None:
-            if round(self.flags.progress-1) > self.pbar.value():
+            if round(self.flags.progress - 1) > self.pbar.value():
                 self.pbar.setValue(self.flags.progress)
             time.sleep(self.rate)
             self.read_flags()
@@ -87,8 +87,8 @@ class MultiCamThread(QThread):
             self.model.clear()
             for k, v in self.devs.items():
                 item = QStandardItem(" ".join(["Camera",
-                                              str(k), "on",
-                                              "/dev/video{}".format(v)]))
+                                               str(k), "on",
+                                               "/dev/video{}".format(v)]))
                 item.setData(v)
                 item.setCheckable(True)
                 self.model.appendRow(item)
@@ -199,6 +199,7 @@ class FlowDialog(QDialog):
         layout4.addRow(self.refreshDevBtn)
 
         self.demoGroupBox.setLayout(layout4)
+        self.demoGroupBox.hide()
 
         self.labelfile = labelfile
 
@@ -234,7 +235,7 @@ class FlowDialog(QDialog):
             if f[:len(_model[0])] == _model[0]:
                 _ckpt = re.search(_regex, f)
                 start, end = _ckpt.span()
-                n = f[start+1:end-1]
+                n = f[start + 1:end - 1]
                 l.append(n)
                 self.buttonOk.setDisabled(False)
             # else:
@@ -259,6 +260,12 @@ class FlowDialog(QDialog):
                 self.momentumSpd.setDisabled(False)
 
     def flow_select(self):
+
+        if self.flowCmb.currentText() == "Demo":
+            self.demoGroupBox.show()
+        else:
+            self.demoGroupBox.hide()
+
         if self.flowCmb.currentText() == "Flow":
             self.flowGroupBox.show()
         else:
@@ -372,8 +379,7 @@ class FlowDialog(QDialog):
     @pyqtSlot()
     def on_finished(self):
         if FLAGS.verbalise:
-            QMessageBox.question(self, "Debug Message",
-                                 "Process Stopped:\n" +
+            QMessageBox.question(self, "Debug Message", "Process Stopped:\n" +
                                  "\n".join('{}: {}'.format(k, v)
                                            for k, v in FLAGS.items()),
                                  QMessageBox.Ok)
