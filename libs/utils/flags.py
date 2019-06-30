@@ -117,6 +117,7 @@ class Flags(dict):
         self.metaLoad = ''
         self.load = -1
         self.model = ''
+        self.capdevs = []
         self.json = False
         self.gpu = 0.0
         self.gpuName = '/gpu:0'

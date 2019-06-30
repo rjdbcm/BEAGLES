@@ -89,7 +89,7 @@ class MultiCamThread(QThread):
                 item = QStandardItem(" ".join(["Camera",
                                                str(k), "on",
                                                "/dev/video{}".format(v)]))
-                item.setData(v)
+                item.setData(k)
                 item.setCheckable(True)
                 self.model.appendRow(item)
 
@@ -302,18 +302,22 @@ class FlowDialog(QDialog):
         FLAGS.labels = self.labelfile
         FLAGS.json = bool(self.jsonChb.checkState()) if \
             self.flowGroupBox.isEnabled() else FLAGS.json
+        for i in range(self.deviceItemModel.rowCount()):
+            item = self.deviceItemModel.item(i)
+            if item.checkState():
+                FLAGS.capdevs.append(item.data())
 
         if self.flowCmb.currentText() == "Flow":
             pass
         if self.flowCmb.currentText() == "Train":
             if not FLAGS.save % FLAGS.batch == 0:
-                QMessageBox.question(self, 'Error',
+                QMessageBox.critical(self, 'Error',
                                      "The value of 'Save Every' should be "
                                      "divisible by the value of 'Batch Size'",
                                      QMessageBox.Ok)
                 return
             if not os.listdir(FLAGS.dataset):
-                QMessageBox.question(self, 'Error',
+                QMessageBox.critical(self, 'Error',
                                      "No committed frames found",
                                      QMessageBox.Ok)
                 return
@@ -379,10 +383,10 @@ class FlowDialog(QDialog):
     @pyqtSlot()
     def on_finished(self):
         if FLAGS.verbalise:
-            QMessageBox.question(self, "Debug Message", "Process Stopped:\n" +
-                                 "\n".join('{}: {}'.format(k, v)
-                                           for k, v in FLAGS.items()),
-                                 QMessageBox.Ok)
+            QMessageBox.information(self, "Debug Message", "Process Stopped:\n"
+                                    + "\n".join('{}: {}'.format(k, v)
+                                                for k, v in FLAGS.items()),
+                                    QMessageBox.Ok)
         self.trainGroupBox.setEnabled(True)
         self.formGroupBox.setEnabled(True)
         self.buttonOk.setDisabled(False)
