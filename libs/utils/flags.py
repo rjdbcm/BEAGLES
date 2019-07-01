@@ -110,7 +110,7 @@ class Flags(dict):
         self.save = 16000
         self.lr = 1e-5
         self.clip = False
-        self.saveVideo = './data/sample_img/out.avi'
+        self.saveVideo = True
         self.queue = 1
         self.lb = 0.0
         self.pbLoad = ''

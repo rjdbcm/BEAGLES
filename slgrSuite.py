@@ -15,6 +15,7 @@ from collections import defaultdict
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+import qdarkstyle
 # Add internal libs
 from libs.resources import *
 from libs.constants import *
@@ -169,6 +170,8 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.setDrawingShapeToSquare(settings.get(SETTING_DRAW_SQUARE, False))
 
         scroll = QScrollArea()
+        scroll.setAutoFillBackground(True)
+        scroll.setStyleSheet("color:black;")
         scroll.setWidget(self.canvas)
         scroll.setWidgetResizable(True)
         self.scrollBars = {
@@ -1265,7 +1268,8 @@ class MainWindow(QMainWindow, WindowMixin):
                 continue
 
         for i in filelist:
-            os.rename(i, self.committedframesDataPath + os.path.split(i)[1])
+            os.rename(i, os.path.join(
+                self.committedframesDataPath, os.path.split(i)[1]))
 
         self.importDirImages(defaultOpenDirPath)
 
@@ -1562,16 +1566,20 @@ def frame_capture(path):
     while success:
         success, image = vidObj.read()
         fileno = str(count)
-        cv2.imwrite("{}_frame_{}.jpg".format(name, fileno.zfill(total_zeros)), image)
+        cv2.imwrite("{}_frame_{}.jpg".format(name,
+                                             fileno.zfill(total_zeros)), image)
         count += 1
 
 
 def get_main_app(argv=[]):
     """
     Standard boilerplate Qt application code.
-    Do everything but app.exec_() -- so that we can test the application in one thread
+    Do everything but app.exec_()
+    -- so that we can test the application in one thread
     """
     app = QApplication(argv)
+    os.environ["QT_API"] = 'pyqt5'
+    app.setStyleSheet(qdarkstyle.load_stylesheet_from_environment())
     app.setApplicationName(__appname__)
     app.setWindowIcon(newIcon("app"))
     # Tzutalin 201705+: Accept extra agruments to change predefined class file

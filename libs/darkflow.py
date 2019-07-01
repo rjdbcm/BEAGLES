@@ -170,7 +170,7 @@ class FlowDialog(QDialog):
         layout3.addRow(QLabel("Batch Size"), self.batchSpb)
 
         self.epochSpb = QSpinBox()
-        self.epochSpb.setRange(1, 256)
+        self.epochSpb.setRange(1, 65536)
         self.epochSpb.setValue(int(FLAGS.epoch))
         layout3.addRow(QLabel("Epochs to Run"), self.epochSpb)
 
@@ -270,7 +270,6 @@ class FlowDialog(QDialog):
                 self.momentumSpd.setDisabled(False)
 
     def flow_select(self):
-
         if self.flowCmb.currentText() == "Demo":
             self.demoGroupBox.show()
         else:
