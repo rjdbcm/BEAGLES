@@ -6,7 +6,6 @@ from time import time as timer
 import tensorflow as tf
 import numpy as np
 from datetime import datetime
-import multitasking
 import time
 import sys
 import csv
@@ -59,6 +58,7 @@ def say(self, *msgs):
                         logfile.write(form.format(datetime.now(), msg))
         logfile.close()
 
+
 def load_old_graph(self, ckpt):
     ckpt_loader = create_loader(ckpt)
     self.say(old_graph_msg.format(ckpt))
@@ -86,15 +86,16 @@ def _get_fps(self, frame):
 
 
 def _exec(self, cmd, delay=False):
+    _cmd = []
     for n in self.cams:
-        exec(cmd.format(n))
-        if delay:
-            time.sleep(.001)
+        bytes = compile(cmd.format(n), '_cmd', 'exec')
+        _cmd.append(bytes)
+    for i in _cmd:
+        exec(i)
 
 
-#@multitasking.task
 def boxing(self, cap, original_img, predictions, annotation_file):
-    newImage = np.copy(original_img)
+    new_image = np.copy(original_img)
 
     for result in predictions:
 
@@ -108,11 +109,14 @@ def boxing(self, cap, original_img, predictions, annotation_file):
         label = result['label'] + " " + str(round(confidence, 3))
 
         if confidence > 0.01:
-            newImage = cv2.rectangle(newImage, (top_x, top_y), (btm_x, btm_y), (255, 0, 0), 3)
-            newImage = cv2.putText(newImage, label, (top_x, top_y - 5), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,
+            new_image = cv2.rectangle(new_image, (top_x, top_y), (btm_x, btm_y),
+                                     (255, 0, 0), 3)
+            new_image = cv2.putText(new_image, label, (top_x, top_y - 5),
+                                   cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,
                                    (0, 230, 0), 1, cv2.LINE_AA)
             with open(annotation_file, mode='a') as file:
-                file_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                file_writer = csv.writer(file, delimiter=',', quotechar='"',
+                                         quoting=csv.QUOTE_MINIMAL)
                 for item in predictions:
                     time_elapsed = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
                     labels = item['label']
@@ -121,8 +125,9 @@ def boxing(self, cap, original_img, predictions, annotation_file):
                     top_y = item['topleft']['y']
                     btm_x = item['bottomright']['x']
                     btm_y = item['bottomright']['y']
-                    file_writer.writerow([time_elapsed, labels, conf, top_x, top_y, btm_x, btm_y])
-    return newImage
+                    file_writer.writerow([time_elapsed, labels, conf, top_x,
+                                          top_y, btm_x, btm_y])
+    return new_image
 
 
 def camera(self):
@@ -153,7 +158,7 @@ def camera(self):
                   '    cv2.imshow("Cam {0}", new_frame{0})'
                  )
 
-        if cv2.waitKey(1) & 0xFF == ord('q') or self.flags.kill:
+        if cv2.waitKey(1) and self.flags.kill:
             break
     self._exec("cap{0}.release()")
     cv2.destroyAllWindows()
@@ -258,7 +263,8 @@ def annotate(self):
     max_y = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
     max_per = (2 * max_x) + (2 * max_y)
     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-    out = cv2.VideoWriter(os.path.splitext(INPUT_VIDEO)[0] + '_annotated.avi', fourcc, 20.0, (int(max_x), int(max_y)))
+    out = cv2.VideoWriter(os.path.splitext(INPUT_VIDEO)[0] + '_annotated.avi',
+                          fourcc, 20.0, (int(max_x), int(max_y)))
     self.say('Annotating ' + INPUT_VIDEO + ' press [ESC] to quit')
 
     def boxing(original_img, predictions):
