@@ -15,7 +15,6 @@ from collections import defaultdict
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-import qdarkstyle
 # Add internal libs
 from libs.resources import *
 from libs.constants import *
@@ -340,10 +339,12 @@ class MainWindow(QMainWindow, WindowMixin):
         self.drawSquaresOption.triggered.connect(self.toogleDrawSquare)
 
         # Store actions for further handling.
-        self.actions = struct(save=save, save_format=save_format, saveAs=saveAs, open=open, close=close,
-                              resetAll=resetAll,
-                              lineColor=color1, create=create, delete=delete, edit=edit, copy=copy,
-                              trainModel=trainModel, visualize=visualize,
+        self.actions = struct(save=save, save_format=save_format,
+                              saveAs=saveAs, open=open, close=close,
+                              resetAll=resetAll, verify=verify,
+                              lineColor=color1, create=create, delete=delete,
+                              edit=edit, copy=copy, trainModel=trainModel,
+                              visualize=visualize,
                               createMode=createMode,
                               editMode=editMode,
                               advancedMode=advancedMode,
@@ -389,7 +390,8 @@ class MainWindow(QMainWindow, WindowMixin):
         self.displayLabelOption.triggered.connect(self.togglePaintLabelsOption)
 
         addActions(self.menus.file,
-                   (open, opendir, changeSavedir, impVideo, openAnnotation, self.menus.recentFiles, save, save_format,
+                   (open, opendir, changeSavedir, impVideo, openAnnotation,
+                    self.menus.recentFiles, save, save_format,
                     saveAs, trainModel, close, resetAll, quit))
         addActions(self.menus.help, (help, showInfo))
         addActions(self.menus.view, (
@@ -565,7 +567,7 @@ class MainWindow(QMainWindow, WindowMixin):
         addActions(self.canvas.menus[0], menu)
         self.menus.edit.clear()
         actions = (self.actions.create,) if self.beginner() \
-            else (self.actions.createMode, self.actions.editMode)
+            else (self.actions.createMode, self.actions.editMode, self.actions.verify)
         addActions(self.menus.edit, actions + self.actions.editMenu)
 
     def setBeginner(self):
@@ -1306,14 +1308,16 @@ class MainWindow(QMainWindow, WindowMixin):
             try:
                 self.labelFile.toggleVerify()
             except AttributeError:
+                print("Bisquits")
                 # If the labelling file does not exist yet, create if and
                 # re-save it with the verified attribute.
-                self.saveFile()
+                self.labelFile = LabelFile()
+                print(self.labelFile)
                 if self.labelFile != None:
                     self.labelFile.toggleVerify()
+                    print("gravy")
                 else:
                     return
-
             self.canvas.verified = self.labelFile.verified
             self.paintCanvas()
             self.saveFile()
@@ -1578,8 +1582,12 @@ def get_main_app(argv=[]):
     -- so that we can test the application in one thread
     """
     app = QApplication(argv)
-    os.environ["QT_API"] = 'pyqt5'
-    app.setStyleSheet(qdarkstyle.load_stylesheet_from_environment())
+    try:
+        import qdarkstyle
+        os.environ["QT_API"] = 'pyqt5'
+        app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+    except ImportError:
+        pass
     app.setApplicationName(__appname__)
     app.setWindowIcon(newIcon("app"))
     # Tzutalin 201705+: Accept extra agruments to change predefined class file
