@@ -85,13 +85,14 @@ def _get_fps(self, frame):
     return timer() - start
 
 
-def _exec(self, cmd, delay=False):
+def _exec(self, cmd):
     _cmd = []
+    localdict = {'cv2': cv2, 'os': os, 'self': self}
     for n in self.cams:
         bytes = compile(cmd.format(n), '_cmd', 'exec')
         _cmd.append(bytes)
     for i in _cmd:
-        exec(i)
+        exec(i, globals(), localdict)
 
 
 def boxing(self, cap, original_img, predictions, annotation_file):
