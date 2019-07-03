@@ -50,11 +50,13 @@ class WindowMixin(object):
     def toolbar(self, title, actions=None):
         toolbar = ToolBar(title)
         toolbar.setObjectName(u'%sToolBar' % title)
-        # toolbar.setOrientation(Qt.Vertical)
-        toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        toolbar.setMovable(False)
+        toolbar.setFixedHeight(32)
+        toolbar.setIconSize(QSize(30, 30))
+        toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)
         if actions:
             addActions(toolbar, actions)
-        self.addToolBar(Qt.LeftToolBarArea, toolbar)
+        self.addToolBar(Qt.BottomToolBarArea, toolbar)
         return toolbar
 
 
@@ -413,13 +415,15 @@ class MainWindow(QMainWindow, WindowMixin):
             action('&Move here', self.moveShape)))
 
         self.tools = self.toolbar('Tools')
-        self.actions.beginner = (
-            open, opendir, changeSavedir, openPrevImg, openNextImg, save, None, create, copy, delete, None,
-            zoomIn, zoom, zoomOut, fitWindow, fitWidth)
 
-        self.actions.advanced = (
-            save_format, impVideo, None, commitAnnotatedFrames, None, trainModel, visualize,
-            None)
+        self.actions.beginner = (
+            open, opendir, changeSavedir, save, None,
+            create, copy, delete, None, openPrevImg, openNextImg, None, zoomIn,
+            zoom, zoomOut, fitWindow, fitWidth)
+
+        self.actions.advanced = self.actions.beginner + \
+                                (None, impVideo, commitAnnotatedFrames,
+                                 trainModel, visualize, save_format)
 
         self.statusBar().showMessage('%s started.' % __appname__)
         self.statusBar().show()
