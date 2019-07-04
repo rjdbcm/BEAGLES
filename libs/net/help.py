@@ -85,16 +85,6 @@ def _get_fps(self, frame):
     return timer() - start
 
 
-def _exec(self, cmd):
-    _cmd = []
-    localdict = {'cv2': cv2, 'os': os, 'self': self}
-    for n in self.cams:
-        bytes = compile(cmd.format(n), '_cmd', 'exec')
-        _cmd.append(bytes)
-    for i in _cmd:
-        exec(i, globals(), localdict)
-
-
 def boxing(self, cap, original_img, predictions, annotation_file):
     new_image = np.copy(original_img)
 
@@ -115,6 +105,7 @@ def boxing(self, cap, original_img, predictions, annotation_file):
             new_image = cv2.putText(new_image, label, (top_x, top_y - 5),
                                    cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,
                                    (0, 230, 0), 1, cv2.LINE_AA)
+
             with open(annotation_file, mode='a') as file:
                 file_writer = csv.writer(file, delimiter=',', quotechar='"',
                                          quoting=csv.QUOTE_MINIMAL)
@@ -131,33 +122,44 @@ def boxing(self, cap, original_img, predictions, annotation_file):
     return new_image
 
 
+def _compile(self, cmdstring):
+    cmdlist = []
+    for n in self.cams:
+        cmdlist.append(compile(cmdstring.format(n), 'cmd_{}'.format(n),
+                               'exec'))
+    return cmdlist
+
+
+def _exec(self, cmdlist):
+    localdict = {'cv2': cv2, 'os': os, 'self': self}
+    for cmd in cmdlist:
+        exec(cmd, globals(), localdict)
+
+
 def camera(self):
     self.cams = self.flags.capdevs
-    self._exec(
-               "global cap{0}\n"  # Globals avoid VIDIOC_DQBUF errors
-               "cap{0} = cv2.VideoCapture({0})\n"
-               "cap{0}.set(cv2.CAP_PROP_FRAME_WIDTH, 144)\n"
-               "cap{0}.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)\n"
-               "global annotation_file{0}\n"
-               "annotation_file{0} = os.path.join("
-               "self.flags.imgdir, 'video{0}_annotations.csv')"
-               )
+    get_caps = self._compile("global cap{0}\n"
+                             "cap{0} = cv2.VideoCapture({0})\n"
+                             "cap{0}.set(cv2.CAP_PROP_FRAME_WIDTH, 144)\n"
+                             "cap{0}.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)\n"
+                             "global annotation{0}\n"
+                             "annotation{0} = os.path.join("
+                             "self.flags.imgdir, 'video{0}_annotations.csv')")
+    get_frames = self._compile("global ret{0}\n"
+                               "global frame{0}\n"
+                               "ret{0}, frame{0} = cap{0}.read()")
+    get_boxing = self._compile('if ret{0}:\n'
+                               '    global res{0}\n'
+                               '    global new_frame{0}\n'
+                               '    frame{0} = np.asarray(frame{0})\n'
+                               '    res{0} = self.return_predict(frame{0})\n'
+                               '    new_frame{0} = self.boxing('
+                               'cap{0}, frame{0}, res{0}, annotation{0})\n'
+                               '    cv2.imshow("Cam {0}", new_frame{0})')
+    self._exec(get_caps)
     while True:
-        self._exec(
-                   "global ret{0}\n"
-                   "global frame{0}\n"
-                   "ret{0}, frame{0} = cap{0}.read()"
-                  )
-        self._exec(
-                  'if ret{0}:\n'
-                  '    global result{0}\n'
-                  '    global new_frame{0}\n'
-                  '    frame{0} = np.asarray(frame{0})\n'
-                  '    result{0} = self.return_predict(frame{0})\n'
-                  '    new_frame{0} = self.boxing('
-                  'cap{0}, frame{0}, result{0}, annotation_file{0})\n'
-                  '    cv2.imshow("Cam {0}", new_frame{0})'
-                 )
+        self._exec(get_frames)
+        self._exec(get_boxing)
 
         if cv2.waitKey(1) and self.flags.kill:
             break

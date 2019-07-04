@@ -27,6 +27,7 @@ class TFNet(FlagIO):
     # imported methods
     _get_fps = help._get_fps
     _exec = help._exec
+    _compile = help._compile
     boxing = help.boxing
     say = help.say
     train = flow.train
