@@ -421,9 +421,9 @@ class MainWindow(QMainWindow, WindowMixin):
             create, copy, delete, None, openPrevImg, openNextImg, None, zoomIn,
             zoom, zoomOut, fitWindow, fitWidth)
 
-        self.actions.advanced = self.actions.beginner + \
-                                (None, impVideo, commitAnnotatedFrames,
-                                 trainModel, visualize, save_format)
+        self.actions.advanced = (open, save, None, createMode, editMode, verify, None,
+            hideAll, showAll, None, commitAnnotatedFrames,
+                                 trainModel, visualize, impVideo)
 
         self.statusBar().showMessage('%s started.' % __appname__)
         self.statusBar().show()
