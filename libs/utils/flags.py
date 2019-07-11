@@ -127,7 +127,7 @@ class Flags(dict):
         self.killed = False
         self.started = False
         self.done = False
-        self.error = False
+        self.error = ""
         self.progress = 0.0
         self.size = 0
         self.imgdir = './data/sample_img/'  # These paths are relative to slgrSuite.py

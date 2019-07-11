@@ -391,6 +391,9 @@ class FlowDialog(QDialog):
 
     @pyqtSlot()
     def on_finished(self):
+        if FLAGS.error:
+            QMessageBox.error(self, "Error Message", FLAGS.error,
+                              QMessageBox.Ok)
         if FLAGS.verbalise:
             QMessageBox.information(self, "Debug Message", "Process Stopped:\n"
                                     + "\n".join('{}: {}'.format(k, v)
