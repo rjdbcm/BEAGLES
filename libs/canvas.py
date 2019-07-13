@@ -400,7 +400,10 @@ class Canvas(QWidget):
     def deleteSelected(self):
         if self.selectedShape:
             shape = self.selectedShape
-            self.shapes.remove(self.selectedShape)
+            try:
+                self.shapes.remove(self.selectedShape)
+            except ValueError:
+                pass
             self.selectedShape = None
             self.update()
             return shape

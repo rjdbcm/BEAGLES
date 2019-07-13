@@ -714,7 +714,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
     # Tzutalin 20160906 : Add file list and dock to move faster
     def fileitemDoubleClicked(self, item=None):
-        currIndex = self.mImgList.index(ustr(item.text()))
+        item = os.path.join(self.dirname, item.text())
+        currIndex = self.mImgList.index(item)
         if currIndex < len(self.mImgList):
             filename = self.mImgList[currIndex]
             if filename:
@@ -764,16 +765,19 @@ class MainWindow(QMainWindow, WindowMixin):
         self.actions.shapeFillColor.setEnabled(selected)
 
     def addLabel(self, shape):
-        shape.paintLabel = self.displayLabelOption.isChecked()
-        item = HashableQListWidgetItem(shape.label)
-        item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-        item.setCheckState(Qt.Checked)
-        item.setBackground(generateColorByText(shape.label))
-        self.itemsToShapes[item] = shape
-        self.shapesToItems[shape] = item
-        self.labelList.addItem(item)
-        for action in self.actions.onShapesPresent:
-            action.setEnabled(True)
+        try:
+            shape.paintLabel = self.displayLabelOption.isChecked()
+            item = HashableQListWidgetItem(shape.label)
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            item.setCheckState(Qt.Checked)
+            item.setBackground(generateColorByText(shape.label))
+            self.itemsToShapes[item] = shape
+            self.shapesToItems[shape] = item
+            self.labelList.addItem(item)
+            for action in self.actions.onShapesPresent:
+                action.setEnabled(True)
+        except AttributeError:
+            pass
 
     def remLabel(self, shape):
         if shape is None:
@@ -1302,8 +1306,9 @@ class MainWindow(QMainWindow, WindowMixin):
         self.fileListWidget.clear()
         self.mImgList = self.scanAllImages(dirpath)
         self.openNextImg()
+        self.actions.open.setEnabled(False)
         for imgPath in self.mImgList:
-            item = QListWidgetItem(imgPath)
+            item = QListWidgetItem(os.path.basename(imgPath))
             self.fileListWidget.addItem(item)
 
     def verifyImg(self, _value=False):
@@ -1385,8 +1390,9 @@ class MainWindow(QMainWindow, WindowMixin):
         formats = ['*.%s' % fmt.data().decode("ascii").lower() for fmt in QImageReader.supportedImageFormats()]
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        filters = "Image & Label files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
-        filename = QFileDialog.getOpenFileName(self, '%s - Choose Image or Label file' % __appname__, path, filters,
+        filters = "Image files (%s)" % ' '.join(formats)
+        print(filters)
+        filename = QFileDialog.getOpenFileName(self, '%s - Choose Image file' % __appname__, path, filters,
                                                options=options)
         if filename:
             if isinstance(filename, (tuple, list)):
