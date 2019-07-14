@@ -1014,9 +1014,12 @@ class MainWindow(QMainWindow, WindowMixin):
         # Tzutalin 20160906 : Add file list and dock to move faster
         # Highlight the file item
         if unicodeFilePath and self.fileListWidget.count() > 0:
-            index = self.mImgList.index(unicodeFilePath)
-            fileWidgetItem = self.fileListWidget.item(index)
-            fileWidgetItem.setSelected(True)
+            try:
+                index = self.mImgList.index(unicodeFilePath)
+                fileWidgetItem = self.fileListWidget.item(index)
+                fileWidgetItem.setSelected(True)
+            except ValueError:
+                pass
 
         if unicodeFilePath and os.path.exists(unicodeFilePath):
             if LabelFile.isLabelFile(unicodeFilePath):
@@ -1306,7 +1309,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.fileListWidget.clear()
         self.mImgList = self.scanAllImages(dirpath)
         self.openNextImg()
-        self.actions.open.setEnabled(False)
+        #self.actions.open.setEnabled(False)
         for imgPath in self.mImgList:
             item = QListWidgetItem(os.path.basename(imgPath))
             self.fileListWidget.addItem(item)
@@ -1317,14 +1320,12 @@ class MainWindow(QMainWindow, WindowMixin):
             try:
                 self.labelFile.toggleVerify()
             except AttributeError:
-                print("Bisquits")
                 # If the labelling file does not exist yet, create if and
                 # re-save it with the verified attribute.
                 self.labelFile = LabelFile()
                 print(self.labelFile)
                 if self.labelFile != None:
                     self.labelFile.toggleVerify()
-                    print("gravy")
                 else:
                     return
             self.canvas.verified = self.labelFile.verified
@@ -1391,7 +1392,6 @@ class MainWindow(QMainWindow, WindowMixin):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         filters = "Image files (%s)" % ' '.join(formats)
-        print(filters)
         filename = QFileDialog.getOpenFileName(self, '%s - Choose Image file' % __appname__, path, filters,
                                                options=options)
         if filename:
