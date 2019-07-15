@@ -76,11 +76,9 @@ class MainWindow(QMainWindow, WindowMixin):
         self.stringBundle = StringBundle.getBundle()
         getStr = lambda strId: self.stringBundle.getString(strId)
 
-        # Only allow visualize to start tensorboard once
-        self._visualizeFirstRun = True
-        self.visualizeTimer = QTimer()
-        self.visualizeTimer.setSingleShot(True)
+        # Start tensorboard process
         self.tb_process = QProcess(self)
+        self.tb_process.start("tensorboard", ["--logdir=data/summaries"])
 
         # Save as Pascal voc xml
         self.defaultSaveDir = defaultSaveDir
@@ -1292,12 +1290,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.trainDialog.show()
 
     def visualize(self):
-        if self._visualizeFirstRun:
-            self.tb_process.start("tensorboard", ["--logdir=data/summaries"])
-            self._visualizeFirstRun = False
-            subprocess.Popen(self.screencastViewer + ['http://localhost:6006/'])
-        else:
-            subprocess.Popen(self.screencastViewer + ['http://localhost:6006/'])
+        subprocess.Popen(self.screencastViewer + ['http://localhost:6006/'])
 
     def importDirImages(self, dirpath):
         if not self.mayContinue() or not dirpath:
