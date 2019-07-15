@@ -56,7 +56,7 @@ class WindowMixin(object):
         toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)
         if actions:
             addActions(toolbar, actions)
-        self.addToolBar(Qt.BottomToolBarArea, toolbar)
+        self.addToolBar(Qt.TopToolBarArea, toolbar)
         return toolbar
 
 
@@ -1009,7 +1009,6 @@ class MainWindow(QMainWindow, WindowMixin):
 
         # Make sure that filePath is a regular python string, rather than QString
         filePath = ustr(filePath)
-
         unicodeFilePath = ustr(filePath)
         # Tzutalin 20160906 : Add file list and dock to move faster
         # Highlight the file item
@@ -1018,6 +1017,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 index = self.mImgList.index(unicodeFilePath)
                 fileWidgetItem = self.fileListWidget.item(index)
                 fileWidgetItem.setSelected(True)
+                self.fileListWidget.scrollToItem(fileWidgetItem)
             except ValueError:
                 pass
 
