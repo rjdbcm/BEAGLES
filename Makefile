@@ -12,7 +12,7 @@ testpy3:
 	python3 -m unittest discover tests
 
 clean:
-	rm -f ~/.SLGR-SuiteSettings.pkl ./resources/resources.py
+	rm -f ~/.SLGR-SuiteSettings.pkl ./libs/resources.py
 	rm -f ./libs/cython_utils/*.c
 	rm -rf *.egg-info
 	rm -rf SLGR-Suite-*
