@@ -29,6 +29,7 @@ def constructor(self, meta, FLAGS):
         FLAGS.done = True
         self.flags = FLAGS
         FlagIO.send_flags(self)
+        raise
 
     # assign a color for each label
     colors = list()
