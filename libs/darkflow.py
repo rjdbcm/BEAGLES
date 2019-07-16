@@ -35,8 +35,8 @@ class FlowThread(QThread, FlagIO):
             self.io_flags()
         self.read_flags()
         self.pbar.reset()
-        self.return_flags()
         self.proc.kill()
+        self.return_flags()
         self.cleanup_ramdisk()
 
     def run(self):
@@ -47,6 +47,7 @@ class FlowThread(QThread, FlagIO):
             self.read_flags()
             if self.flags.done:
                 self.read_flags()
+                self.proc.kill()
                 self.return_flags()
                 self.cleanup_ramdisk()
                 self.pbar.reset()
@@ -392,7 +393,7 @@ class FlowDialog(QDialog):
     @pyqtSlot()
     def on_finished(self):
         if FLAGS.error:
-            QMessageBox.error(self, "Error Message", FLAGS.error,
+            QMessageBox.information(self, "Error Message", FLAGS.error,
                               QMessageBox.Ok)
         if FLAGS.verbalise:
             QMessageBox.information(self, "Debug Message", "Process Stopped:\n"
