@@ -326,9 +326,10 @@ class FlowDialog(QDialog):
                                      "divisible by the value of 'Batch Size'",
                                      QMessageBox.Ok)
                 return
-            if not os.listdir(FLAGS.dataset):
+            dataset = [f for f in os.listdir(FLAGS.dataset) if not f.startswith('.')]
+            if not dataset:
                 QMessageBox.critical(self, 'Error',
-                                     "No committed frames found",
+                                     'No frames or annotations found',
                                      QMessageBox.Ok)
                 return
             else:
@@ -393,7 +394,7 @@ class FlowDialog(QDialog):
     @pyqtSlot()
     def on_finished(self):
         if FLAGS.error:
-            QMessageBox.information(self, "Error Message", FLAGS.error,
+            QMessageBox.critical(self, "Error Message", FLAGS.error,
                               QMessageBox.Ok)
         if FLAGS.verbalise:
             QMessageBox.information(self, "Debug Message", "Process Stopped:\n"
@@ -406,8 +407,9 @@ class FlowDialog(QDialog):
         self.find_ckpt()
 
     # HELPERS
-    def list_files(self, dir):
-        path = QDir(dir)
+    @staticmethod
+    def list_files(path):
+        path = QDir(path)
         filters = ["*.cfg", "*.meta"]
         path.setNameFilters(filters)
         files = path.entryList()

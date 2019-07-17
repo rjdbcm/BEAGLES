@@ -42,7 +42,7 @@ def load_from_ckpt(self):
     self.say('Loading from {}'.format(load_point))
     try:
         self.saver.restore(self.sess, load_point)
-    except:
+    except ValueError:
         load_old_graph(self, load_point)
 
 
