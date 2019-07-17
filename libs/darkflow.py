@@ -326,7 +326,8 @@ class FlowDialog(QDialog):
                                      "divisible by the value of 'Batch Size'",
                                      QMessageBox.Ok)
                 return
-            dataset = [f for f in os.listdir(FLAGS.dataset) if not f.startswith('.')]
+            dataset = [f for f in os.listdir(FLAGS.dataset)
+                       if not f.startswith('.')]
             if not dataset:
                 QMessageBox.critical(self, 'Error',
                                      'No frames or annotations found',

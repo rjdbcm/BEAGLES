@@ -22,9 +22,11 @@ def build_train_op(self):
     if self.flags.clip == False:
         gradients = optimizer.compute_gradients(self.framework.loss)
     if self.flags.clip == True:
-        # From github.com/thtrieu/darkflow/issues/557#issuecomment-377378352 avoid gradient explosions late in training
+        # From github.com/thtrieu/darkflow/issues/557#issuecomment-377378352
+        # avoid gradient explosions late in training
         gradients = [(tf.clip_by_value(grad, -1., 1.), var) for
-                     grad, var in optimizer.compute_gradients(self.framework.loss)]
+                     grad, var in optimizer.compute_gradients(
+                self.framework.loss)]
     self.train_op = optimizer.apply_gradients(gradients)
 
 
@@ -100,8 +102,8 @@ def boxing(self, cap, original_img, predictions, annotation_file):
         label = result['label'] + " " + str(round(confidence, 3))
 
         if confidence > 0.01:
-            new_image = cv2.rectangle(new_image, (top_x, top_y), (btm_x, btm_y),
-                                     (255, 0, 0), 3)
+            new_image = cv2.rectangle(new_image, (top_x, top_y), (btm_x, btm_y)
+                                      , (255, 0, 0), 3)
             new_image = cv2.putText(new_image, label, (top_x, top_y - 5),
                                    cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,
                                    (0, 230, 0), 1, cv2.LINE_AA)
