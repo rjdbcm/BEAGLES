@@ -25,7 +25,7 @@ class FlowThread(QThread, FlagIO):
         self.send_flags()
         time.sleep(1)
 
-    def return_flags(self):
+    def returnFlags(self):
         global FLAGS
         FLAGS = self.read_flags()
 
@@ -36,7 +36,7 @@ class FlowThread(QThread, FlagIO):
         self.read_flags()
         self.pbar.reset()
         self.proc.kill()
-        self.return_flags()
+        self.returnFlags()
         self.cleanup_ramdisk()
 
     def run(self):
@@ -48,7 +48,7 @@ class FlowThread(QThread, FlagIO):
             if self.flags.done:
                 self.read_flags()
                 self.proc.kill()
-                self.return_flags()
+                self.returnFlags()
                 self.cleanup_ramdisk()
                 self.pbar.reset()
 
@@ -61,7 +61,7 @@ class MultiCamThread(QThread):
         self.pbar = pbar
         self.stopped = False
 
-    def enum_devs(self):
+    def enumDevs(self):
         index = 0
         while index < 32:
             cap = cv2.VideoCapture(index)
@@ -81,7 +81,7 @@ class MultiCamThread(QThread):
         self.model.clear()
         self.model.appendRow(QStandardItem("Refreshing..."))
         self.pbar.setRange(0, 0)
-        self.enum_devs()
+        self.enumDevs()
         while not self.devs:
             time.sleep(1)
         else:
@@ -105,14 +105,14 @@ class FlowDialog(QDialog):
 
         self.flowCmb = QComboBox()
         self.flowCmb.addItems(
-            ["Train", "Flow", "Freeze", "Demo", "Annotate"])
-        self.flowCmb.currentIndexChanged.connect(self.flow_select)
+            ["Train", "Flow", "Freeze", "Capture", "Annotate"])
+        self.flowCmb.currentIndexChanged.connect(self.flowSelect)
         layout.addRow(QLabel("Mode"), self.flowCmb)
 
         self.modelCmb = QComboBox()
-        self.modelCmb.addItems(self.list_files(FLAGS.config))
+        self.modelCmb.addItems(self.listFiles(FLAGS.config))
         self.modelCmb.setToolTip("Choose a model configuration")
-        self.modelCmb.currentIndexChanged.connect(self.find_ckpt)
+        self.modelCmb.currentIndexChanged.connect(self.findCkpt)
         layout.addRow(QLabel("Model"), self.modelCmb)
 
         self.loadCmb = QComboBox()
@@ -149,7 +149,7 @@ class FlowDialog(QDialog):
         self.trainerCmb.addItems(["rmsprop", "adadelta", "adagrad",
                                   "adagradDA", "momentum", "adam",
                                   "ftrl", "sgd"])
-        self.trainerCmb.currentIndexChanged.connect(self.trainer_select)
+        self.trainerCmb.currentIndexChanged.connect(self.trainerSelect)
         layout3.addRow(QLabel("Training Algorithm"), self.trainerCmb)
 
         self.momentumSpd = QDoubleSpinBox()
@@ -198,7 +198,7 @@ class FlowDialog(QDialog):
 
         self.refreshDevBtn = QPushButton()
         self.refreshDevBtn.setText("Refresh Device List")
-        self.refreshDevBtn.clicked.connect(self.list_cameras)
+        self.refreshDevBtn.clicked.connect(self.listCameras)
         layout4.addRow(self.refreshDevBtn)
 
         self.demoGroupBox.setLayout(layout4)
@@ -225,11 +225,11 @@ class FlowDialog(QDialog):
         self.setLayout(main_layout)
 
         self.setWindowTitle("SLGR-Suite - Machine Learning Tool")
-        self.find_ckpt()
+        self.findCkpt()
 
-    def find_ckpt(self):
+    def findCkpt(self):
         self.loadCmb.clear()
-        checkpoints = self.list_files(FLAGS.backup)
+        checkpoints = self.listFiles(FLAGS.backup)
         _model = os.path.splitext(self.modelCmb.currentText())
         l = ['0']
         # a dash followed by a number or numbers followed by a dot
@@ -248,7 +248,7 @@ class FlowDialog(QDialog):
         l = list(map(str, l))
         self.loadCmb.addItems(l)
 
-    def list_cameras(self):
+    def listCameras(self):
         self.refreshDevBtn.setDisabled(True)
         self.buttonOk.setDisabled(True)
         model = self.deviceItemModel
@@ -264,14 +264,14 @@ class FlowDialog(QDialog):
         self.refreshDevBtn.setDisabled(False)
         self.buttonOk.setDisabled(False)
 
-    def trainer_select(self):
+    def trainerSelect(self):
         self.momentumSpd.setDisabled(True)
         for trainer in ("rmsprop", "momentum"):
             if self.trainerCmb.currentText() == trainer:
                 self.momentumSpd.setDisabled(False)
 
-    def flow_select(self):
-        if self.flowCmb.currentText() == "Demo":
+    def flowSelect(self):
+        if self.flowCmb.currentText() == "Capture":
             self.demoGroupBox.show()
         else:
             self.demoGroupBox.hide()
@@ -320,14 +320,14 @@ class FlowDialog(QDialog):
                 FLAGS.capdevs.append(item.data())
 
         if not self.flowCmb.currentText() == "Train" and FLAGS.load == 0:
-            QMessageBox.critical(self, 'Error', "Invalid checkpoint",
+            QMessageBox.warning(self, 'Error', "Invalid checkpoint",
                                  QMessageBox.Ok)
             return
         if self.flowCmb.currentText() == "Flow":
             pass
         if self.flowCmb.currentText() == "Train":
             if not FLAGS.save % FLAGS.batch == 0:
-                QMessageBox.critical(self, 'Error',
+                QMessageBox.warning(self, 'Error',
                                      "The value of 'Save Every' should be "
                                      "divisible by the value of 'Batch Size'",
                                      QMessageBox.Ok)
@@ -335,7 +335,7 @@ class FlowDialog(QDialog):
             dataset = [f for f in os.listdir(FLAGS.dataset)
                        if not f.startswith('.')]
             if not dataset:
-                QMessageBox.critical(self, 'Error',
+                QMessageBox.warning(self, 'Error',
                                      'No frames or annotations found',
                                      QMessageBox.Ok)
                 return
@@ -355,9 +355,9 @@ class FlowDialog(QDialog):
                                                    os.getcwd(),
                                                    filters, options=options)
             FLAGS.fbf = filename[0]
-        if self.flowCmb.currentText() == "Demo":
+        if self.flowCmb.currentText() == "Capture":
             if not FLAGS.capdevs:
-                QMessageBox.critical(self, 'Error',
+                QMessageBox.warning(self, 'Error',
                                      'No capture device is selected',
                                      QMessageBox.Ok)
                 return
@@ -369,14 +369,13 @@ class FlowDialog(QDialog):
             self.flowthread = FlowThread(self, proc=proc, flags=FLAGS,
                                          pbar=self.flowPrg)
             self.flowthread.setTerminationEnabled(True)
-            self.flowthread.finished.connect(self.on_finished)
+            self.flowthread.finished.connect(self.onFinished)
             self.flowthread.start()
         self.buttonOk.setEnabled(False)
         self.formGroupBox.setEnabled(False)
         self.trainGroupBox.setEnabled(False)
 
-    @pyqtSlot()
-    def closeEvent(self, event):
+
         try:
             thread_running = self.flowthread.isRunning()
         except AttributeError:
@@ -403,8 +402,7 @@ class FlowDialog(QDialog):
             self.formGroupBox.setEnabled(True)
             event.accept()
 
-    @pyqtSlot()
-    def on_finished(self):
+    def onFinished(self):
         if FLAGS.error:
             QMessageBox.critical(self, "Error Message", FLAGS.error,
                               QMessageBox.Ok)
@@ -416,11 +414,11 @@ class FlowDialog(QDialog):
         self.trainGroupBox.setEnabled(True)
         self.formGroupBox.setEnabled(True)
         self.buttonOk.setDisabled(False)
-        self.find_ckpt()
+        self.findCkpt()
 
     # HELPERS
     @staticmethod
-    def list_files(path):
+    def listFiles(path):
         path = QDir(path)
         filters = ["*.cfg", "*.meta"]
         path.setNameFilters(filters)
