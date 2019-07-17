@@ -375,7 +375,7 @@ class FlowDialog(QDialog):
         self.formGroupBox.setEnabled(False)
         self.trainGroupBox.setEnabled(False)
 
-
+    def closeEvent(self, event):
         try:
             thread_running = self.flowthread.isRunning()
         except AttributeError:

@@ -646,7 +646,8 @@ class MainWindow(QMainWindow, WindowMixin):
         subprocess.Popen(self.screencastViewer + [self.screencast])
 
     def showInfoDialog(self):
-        msg = u'Name:{0} \nApp Version:{1} \n{2} '.format(__appname__, __version__, sys.version_info)
+        msg = u'Name:{0} \nApp Version:{1} \n{2} '.format(
+            __appname__, __version__, sys.version_info)
         QMessageBox.information(self, u'Information', msg)
 
     def createShape(self):
@@ -655,7 +656,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.actions.create.setEnabled(False)
 
     def toggleDrawingSensitive(self, drawing=True):
-        """In the middle of drawing, toggling between modes should be disabled."""
+        """In the middle of drawing, toggling between modes disabled."""
         self.actions.editMode.setEnabled(not drawing)
         if not drawing and self.beginner():
             # Cancel creation.
@@ -742,7 +743,8 @@ class MainWindow(QMainWindow, WindowMixin):
                 shape.difficult = difficult
                 self.setDirty()
             else:  # User probably changed item visibility
-                self.canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
+                self.canvas.setShapeVisible(
+                    shape, item.checkState() == Qt.Checked)
         except:
             pass
 
@@ -792,7 +794,8 @@ class MainWindow(QMainWindow, WindowMixin):
             shape = Shape(label=label)
             for x, y in points:
 
-                # Ensure the labels are within the bounds of the image. If not, fix them.
+                # Ensure the labels are within the bounds of the image.
+                # If not, fix them.
                 x, y, snapped = self.canvas.snapPointToCanvas(x, y)
                 if snapped:
                     self.setDirty()
@@ -882,7 +885,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
         position MUST be in global coordinates.
         """
-        if not self.useDefaultLabelCheckbox.isChecked() or not self.defaultLabelTextLine.text():
+        if not self.useDefaultLabelCheckbox.isChecked() or\
+                not self.defaultLabelTextLine.text():
             if len(self.labelHist) > 0:
                 self.labelDialog = LabelDialog(
                     parent=self, listItem=self.labelHist)
@@ -1111,7 +1115,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.zoomWidget.setValue(int(100 * value))
 
     def scaleFitWindow(self):
-        """Figure out the size of the pixmap in order to fit the main widget."""
+        """Figure out the size of the pixmap to fit the main widget."""
         e = 2.0  # So that no scrollbars are generated.
         w1 = self.centralWidget().width() - e
         h1 = self.centralWidget().height() - e
@@ -1166,7 +1170,8 @@ class MainWindow(QMainWindow, WindowMixin):
             self.loadFile(filename)
 
     def scanAllImages(self, folderPath):
-        extensions = ['.%s' % fmt.data().decode("ascii").lower() for fmt in QImageReader.supportedImageFormats()]
+        extensions = ['.%s' % fmt.data().decode("ascii").lower() for
+                      fmt in QImageReader.supportedImageFormats()]
         images = []
 
         for root, dirs, files in os.walk(folderPath):
@@ -1184,16 +1189,16 @@ class MainWindow(QMainWindow, WindowMixin):
         else:
             path = '.'
 
-        dirpath = ustr(QFileDialog.getExistingDirectory(self,
-                                                        '%s - Save annotations to the directory' % __appname__, path,
-                                                        QFileDialog.ShowDirsOnly
-                                                        | QFileDialog.DontResolveSymlinks))
+        dirpath = ustr(QFileDialog.getExistingDirectory(
+            self, '%s - Save annotations to the directory' % __appname__, path,
+            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
 
         if dirpath is not None and len(dirpath) > 1:
             self.defaultSaveDir = dirpath
 
-        self.statusBar().showMessage('%s . Annotation will be saved to %s' %
-                                     ('Change saved folder', self.defaultSaveDir))
+        self.statusBar().showMessage(
+            '%s . Annotation will be saved to %s' %
+            ('Change saved folder', self.defaultSaveDir))
         self.statusBar().show()
 
     def openAnnotationDialog(self, _value=False):
@@ -1208,8 +1213,9 @@ class MainWindow(QMainWindow, WindowMixin):
             filters = "Open Annotation XML file (%s)" % ' '.join(['*.xml'])
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
-            filename = ustr(QFileDialog.getOpenFileName(self, '%s - Choose a xml file' % __appname__, path, filters,
-                                                        options=options))
+            filename = ustr(QFileDialog.getOpenFileName(
+                self, '%s - Choose a xml file' % __appname__, path, filters,
+                options=options))
             if filename:
                 if isinstance(filename, (tuple, list)):
                     filename = filename[0]
@@ -1223,11 +1229,12 @@ class MainWindow(QMainWindow, WindowMixin):
         if self.lastOpenDir and os.path.exists(self.lastOpenDir):
             defaultOpenDirPath = self.lastOpenDir
         else:
-            defaultOpenDirPath = os.path.dirname(self.filePath) if self.filePath else '.'
+            defaultOpenDirPath = os.path.dirname(self.filePath) if\
+                self.filePath else '.'
 
-        targetDirPath = ustr(QFileDialog.getExistingDirectory(self,
-                                                              '%s - Open Directory' % __appname__, defaultOpenDirPath,
-                                                              QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
+        targetDirPath = ustr(QFileDialog.getExistingDirectory(
+            self, '%s - Open Directory' % __appname__, defaultOpenDirPath,
+            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
         self.importDirImages(targetDirPath)
 
     def impVideo(self, _value=False, dirpath=None):
@@ -1264,13 +1271,15 @@ class MainWindow(QMainWindow, WindowMixin):
         if self.lastOpenDir and os.path.exists(self.lastOpenDir):
             defaultOpenDirPath = self.lastOpenDir
         else:
-            defaultOpenDirPath = os.path.dirname(self.filePath) if self.filePath else '.'
+            defaultOpenDirPath = os.path.dirname(self.filePath) if \
+                self.filePath else '.'
 
         filelist = []
         for file in os.listdir(defaultOpenDirPath):
             filename = os.fsdecode(file)
             if filename.endswith(".xml"):
-                print("Moving {0} to data/committedframes/{0}".format(filename))
+                print("Moving {0} to data/committedframes/{0}".format(
+                    filename))
                 filename = os.path.join(defaultOpenDirPath, filename)
                 basename = os.path.splitext(filename)[0]
                 filelist.append(filename)
@@ -1302,7 +1311,6 @@ class MainWindow(QMainWindow, WindowMixin):
         self.fileListWidget.clear()
         self.mImgList = self.scanAllImages(dirpath)
         self.openNextImg()
-        #self.actions.open.setEnabled(False)
         for imgPath in self.mImgList:
             item = QListWidgetItem(os.path.basename(imgPath))
             self.fileListWidget.addItem(item)
@@ -1381,12 +1389,14 @@ class MainWindow(QMainWindow, WindowMixin):
         if not self.mayContinue():
             return
         path = os.path.dirname(ustr(self.filePath)) if self.filePath else '.'
-        formats = ['*.%s' % fmt.data().decode("ascii").lower() for fmt in QImageReader.supportedImageFormats()]
+        formats = ['*.%s' % fmt.data().decode("ascii").lower()
+                   for fmt in QImageReader.supportedImageFormats()]
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         filters = "Image files (%s)" % ' '.join(formats)
-        filename = QFileDialog.getOpenFileName(self, '%s - Choose Image file' % __appname__, path, filters,
-                                               options=options)
+        filename = QFileDialog.getOpenFileName(
+            self, '%s - Choose Image file' % __appname__, path, filters,
+            options=options)
         if filename:
             if isinstance(filename, (tuple, list)):
                 filename = filename[0]
@@ -1397,7 +1407,8 @@ class MainWindow(QMainWindow, WindowMixin):
             if self.filePath:
                 imgFileName = os.path.basename(self.filePath)
                 savedFileName = os.path.splitext(imgFileName)[0]
-                savedPath = os.path.join(ustr(self.defaultSaveDir), savedFileName)
+                savedPath = os.path.join(ustr(self.defaultSaveDir),
+                                         savedFileName)
                 self._saveFile(savedPath)
         else:
             imgFileDir = os.path.dirname(self.filePath)
@@ -1424,7 +1435,8 @@ class MainWindow(QMainWindow, WindowMixin):
         if dlg.exec_():
             fullFilePath = ustr(dlg.selectedFiles()[0])
             if removeExt:
-                return os.path.splitext(fullFilePath)[0]  # Return file path without the extension.
+                # Return file path without the extension.
+                return os.path.splitext(fullFilePath)[0]
             else:
                 return fullFilePath
         return ''
