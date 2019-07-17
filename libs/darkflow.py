@@ -293,6 +293,7 @@ class FlowDialog(QDialog):
             self.thresholdSpd.setDisabled(False)
 
     def accept(self):
+        """set flags for darkflow and prevent startup if errors anticipated"""
         FLAGS.get_defaults()  # Reset FLAGS
         FLAGS.model = os.path.join(FLAGS.config, self.modelCmb.currentText())
         try:
@@ -312,11 +313,16 @@ class FlowDialog(QDialog):
         FLAGS.labels = self.labelfile
         FLAGS.json = bool(self.jsonChb.checkState()) if \
             self.flowGroupBox.isEnabled() else FLAGS.json
+
         for i in range(self.deviceItemModel.rowCount()):
             item = self.deviceItemModel.item(i)
             if item.checkState():
                 FLAGS.capdevs.append(item.data())
 
+        if not self.flowCmb.currentText() == "Train" and FLAGS.load == 0:
+            QMessageBox.critical(self, 'Error', "Invalid checkpoint",
+                                 QMessageBox.Ok)
+            return
         if self.flowCmb.currentText() == "Flow":
             pass
         if self.flowCmb.currentText() == "Train":
@@ -350,6 +356,11 @@ class FlowDialog(QDialog):
                                                    filters, options=options)
             FLAGS.fbf = filename[0]
         if self.flowCmb.currentText() == "Demo":
+            if not FLAGS.capdevs:
+                QMessageBox.critical(self, 'Error',
+                                     'No capture device is selected',
+                                     QMessageBox.Ok)
+                return
             FLAGS.demo = "camera"
         if [self.flowCmb.currentText() == "Train" or "Freeze"]:
             proc = subprocess.Popen([sys.executable, os.path.join(
