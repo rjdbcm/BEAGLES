@@ -61,7 +61,7 @@ class DarkWrapper(FlagIO):
                                 help='applicable for rmsprop and momentum optimizers')
             parser.add_argument('--keep', default=Flags().keep, metavar='N',
                                 help='number of most recent training results to save')
-            parser.add_argument('--batch', default=Flags().batch, metavar='N', help='batch size')
+            parser.add_argument('--batch', default=Flags().batch, metavar='N', type=int, help='batch size')
             parser.add_argument('--epoch', default=Flags().epoch, type=int, metavar='N', help='number of epochs')
             parser.add_argument('--save', default=Flags().save, metavar='N',
                                 help='save a checkpoint ever N training examples')

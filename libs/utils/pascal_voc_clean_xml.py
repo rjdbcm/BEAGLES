@@ -13,9 +13,9 @@ def _pp(l):  # pretty printing
         print('{}: {}'.format(i, l[i]))
 
 
-def pascal_voc_clean_xml(ANN, pick, exclusive = False):
+def pascal_voc_clean_xml(ANN, pick, exclusive=False):
     print('Parsing for {} {}'.format(
-            pick, 'exclusively' * int(exclusive)))
+            pick, 'exclusively' * int(exclusive)), file=sys.stderr)
 
     dumps = list()
     cur_dir = os.getcwd()
@@ -25,18 +25,20 @@ def pascal_voc_clean_xml(ANN, pick, exclusive = False):
     size = len(annotations)
 
     for i, file in enumerate(annotations):
-        # progress bar      
-        sys.stdout.write('\r')
-        percentage = 1. * (i+1) / size
-        progress = int(percentage * 20)
-        bar_arg = [progress*'=', ' '*(19-progress), percentage*100]
-        bar_arg += [file]
-        sys.stdout.write('[{}>{}]{:.0f}%  {}'.format(*bar_arg))
-        sys.stdout.flush()
+        # progress bar that awakens deep magic from the dawn of time causing
+        # train ops to hang when started from the GUI on linux platforms
+        
+        # sys.stdout.write('\r')
+        # percentage = 1. * (i+1) / size
+        # progress = int(percentage * 20)
+        # bar_arg = [progress*'=', ' '*(19-progress), percentage*100]
+        # bar_arg += [file]
+        # sys.stdout.write('[{}>{}]{:.0f}%  {}'.format(*bar_arg))
+        # sys.stdout.flush()
         
         # actual parsing 
         in_file = open(file)
-        tree=ET.parse(in_file)
+        tree = ET.parse(in_file)
         root = tree.getroot()
         jpg = str(root.find('filename').text)
         imsize = root.find('size')
@@ -73,9 +75,9 @@ def pascal_voc_clean_xml(ANN, pick, exclusive = False):
                 else:
                     stat[current[0]] =1
 
-    print('\nStatistics:')
+    print('\nStatistics:', file=sys.stderr)
     _pp(stat)
-    print('Dataset size: {}'.format(len(dumps)))
+    print('Dataset size: {}'.format(len(dumps)), file=sys.stderr)
 
     os.chdir(cur_dir)
     return dumps

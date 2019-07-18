@@ -4,8 +4,9 @@ from .predict import preprocess
 # from .misc import show
 from copy import deepcopy
 import pickle
-import numpy as np
+numpy as np
 import os 
+
 
 def parse(self, exclusive = False):
     meta = self.meta
