@@ -10,7 +10,7 @@ function RAMDisk_mount {
     if [ ! -d "$VOLUMEPATH/$NAME" ]; then
         diskutil eraseVolume HFS+ $NAME `hdiutil attach -nomount ram://$((2048 * 2))`
     else
-        >&2 echo Error: $NAME already mounted in $VOLUMEPATH
+        >&2 echo $NAME already mounted in $VOLUMEPATH
         exit 1
     fi
 }

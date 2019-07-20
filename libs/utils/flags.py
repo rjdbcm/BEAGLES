@@ -12,14 +12,16 @@ class FlagIO(object):
         self.READ_MSG = "[{}] {} Flags Read: {}"
         self.subprogram = subprogram
         self.delay = delay
-        self.flagpath = self.init_ramdisk()
+
         self.logger = logging.getLogger(type(self).__name__)
         formatter = logging.Formatter(
-            '[%(asctime)s]%(levelname)s: %(name)s.%(funcName)s: %(message)s')
+            '[{asctime}]{levelname}: {name}.{funcName}: {message}', style='{')
         logfile = logging.FileHandler(Flags().log)
         logfile.setFormatter(formatter)
         self.logger.addHandler(logfile)
         self.logger.setLevel(logging.DEBUG)
+
+        self.flagpath = self.init_ramdisk()
 
         if subprogram:
             try:
@@ -68,8 +70,10 @@ class FlagIO(object):
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.STDOUT)
                 stdout, stderr = proc.communicate()
-                self.logger.info(stdout)
-                self.logger.debug(stderr)
+                for line in stdout.decode('utf-8').splitlines():
+                    self.logger.info(line)
+                if stderr:
+                    self.logger.debug(stderr.decode('utf-8'))
                 time.sleep(self.delay)  # Give the OS time to finish
         else:
             ramdisk = "/dev/shm"
@@ -82,8 +86,10 @@ class FlagIO(object):
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT)
             stdout, stderr = proc.communicate()
-            self.logger.info(stdout)
-            self.logger.debug(stderr)
+            for line in stdout.decode('utf-8').splitlines():
+                self.logger.info(line)
+            if stderr:
+                self.logger.debug(stderr.decode('utf-8'))
         else:
             os.remove(self.flagpath)
 
