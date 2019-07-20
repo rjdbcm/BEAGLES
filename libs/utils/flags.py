@@ -9,21 +9,28 @@ import os
 
 class FlagIO(object):
     def __init__(self, subprogram=False, delay=0.1):
-        self.READ_MSG = "[{}] {} Flags Read: {}"
         self.subprogram = subprogram
         self.delay = delay
 
         self.logger = logging.getLogger(type(self).__name__)
         formatter = logging.Formatter(
-            '[{asctime}]{levelname}: {name}.{funcName}: {message}', style='{')
+            '{asctime} | {levelname} | {name}.{funcName} | {message}',
+            style='{')
         logfile = logging.FileHandler(Flags().log)
         logfile.setFormatter(formatter)
         self.logger.addHandler(logfile)
-        self.logger.setLevel(logging.DEBUG)
 
         self.flagpath = self.init_ramdisk()
 
         if subprogram:
+            self.read_flags()
+            try:
+                if self.flags.verbalise:
+                    self.logger.setLevel(logging.DEBUG)
+                else:
+                    self.logger.setLevel(logging.INFO)
+            except AttributeError:
+                self.logger.setLevel(logging.DEBUG)
             try:
                 f = open(self.flagpath)
                 f.close()
@@ -46,7 +53,7 @@ class FlagIO(object):
                         time.sleep(self.delay)
                         flags = pickle.load(inpfile)
                     except EOFError:
-                        self.logger.debug("Flags Busy: Reusing old")
+                        self.logger.warning("Flags Busy: Reusing old")
                         flags = self.flags
                     self.flags = flags
                     self.logger.debug(self.flags)
@@ -135,7 +142,7 @@ class Flags(dict):
         self.gpu = 0.0
         self.gpuName = '/gpu:0'
         self.threshold = 0.4
-        self.verbalise = True
+        self.verbalise = False
         self.kill = False
         self.killed = False
         self.started = False

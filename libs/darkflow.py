@@ -34,6 +34,7 @@ class FlowThread(QThread, FlagIO):
             self.flags.kill = True
             self.io_flags()
         self.read_flags()
+        self.logger.info('Thread killed')
         self.pbar.reset()
         self.proc.kill()
         self.returnFlags()

@@ -17,7 +17,7 @@ old_graph_msg = 'Resolving old graph def {} (no guarantee)'
 
 def build_train_op(self):
     self.framework.loss(self.out)
-    self.say('Building {} train op'.format(self.meta['model']))
+    self.logger.info('Building {} train op'.format(self.meta['model']))
     optimizer = self._TRAINER[self.flags.trainer](self.flags.lr)
     if self.flags.clip == False:
         gradients = optimizer.compute_gradients(self.framework.loss)
@@ -41,7 +41,7 @@ def load_from_ckpt(self):
 
     load_point = os.path.join(self.flags.backup, self.meta['name'])
     load_point = '{}-{}'.format(load_point, self.flags.load)
-    self.say('Loading from {}'.format(load_point))
+    self.logger.info('Loading from {}'.format(load_point))
     try:
         self.saver.restore(self.sess, load_point)
     except ValueError:
@@ -63,7 +63,7 @@ def say(self, *msgs):
 
 def load_old_graph(self, ckpt):
     ckpt_loader = create_loader(ckpt)
-    self.say(old_graph_msg.format(ckpt))
+    self.logger.info(old_graph_msg.format(ckpt))
 
     for var in tf.global_variables():
         name = var.name.split(':')[0]
@@ -180,7 +180,7 @@ def camera(self):
     # camera = cv2.VideoCapture(file)
     #
     # if file == 0:
-    #     self.say('Press [ESC] to quit demo')
+    #     self.logger.info('Press [ESC] to quit demo')
     #
     # assert camera.isOpened(), \
     #     'Cannot capture source'
@@ -262,7 +262,7 @@ def annotate(self):
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     annotation_file = os.path.splitext(INPUT_VIDEO)[0] + '_annotations.csv'
     if os.path.exists(annotation_file):
-        self.say("Overwriting existing annotations")
+        self.logger.info("Overwriting existing annotations")
         os.remove(annotation_file)
     max_x = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     max_y = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -270,7 +270,7 @@ def annotate(self):
     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
     out = cv2.VideoWriter(os.path.splitext(INPUT_VIDEO)[0] + '_annotated.avi',
                           fourcc, 20.0, (int(max_x), int(max_y)))
-    self.say('Annotating ' + INPUT_VIDEO + ' press [ESC] to quit')
+    self.logger.info('Annotating ' + INPUT_VIDEO + ' press [ESC] to quit')
 
     def boxing(original_img, predictions):
         newImage = np.copy(original_img)
@@ -319,7 +319,7 @@ def annotate(self):
         ret, frame = cap.read()
         if ret == True:
             self.flags.progress = round((100 * FRAME_NUMBER / total_frames), 0)
-            self.say = (
+            self.logger.info = (
                 "Frame {}/{} [{}%]".format(FRAME_NUMBER, total_frames, round(100 * FRAME_NUMBER / total_frames),
                                            1))
             frame = np.asarray(frame)

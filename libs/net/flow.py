@@ -28,7 +28,7 @@ def _save_ckpt(self, step, loss_profile):
 
     ckpt = file.format(model, step, '')
     ckpt = os.path.join(self.FLAGS.backup, ckpt)
-    self.say('Checkpoint at step {}'.format(step))
+    self.logger.info('Checkpoint at step {}'.format(step))
     self.saver.save(self.sess, ckpt)
 
 
@@ -43,7 +43,7 @@ def train(self):
     for i, (x_batch, datum) in enumerate(batches):
         self.FLAGS = self.read_flags()
         if not i:
-            self.say(train_stats.format(
+            self.logger.info(train_stats.format(
                 self.FLAGS.lr, self.FLAGS.batch,
                 self.FLAGS.epoch, self.FLAGS.save
             ))
@@ -51,7 +51,7 @@ def train(self):
         if self.FLAGS.kill:
             self.FLAGS.killed = True
             self.send_flags()
-            self.say("Train op killed")
+            self.logger.info("Train op killed")
             return
         feed_dict = {
             loss_ph[key]: datum[key]
@@ -89,7 +89,7 @@ def train(self):
             self.writer.add_summary(fetched[2], step_now)
 
         form = 'step {} - loss {} - moving ave loss {}'
-        self.say(form.format(step_now, loss, loss_mva))
+        self.logger.info(form.format(step_now, loss, loss_mva))
         profile += [(loss, loss_mva)]
 
         ckpt = (i + 1) % (self.FLAGS.save // self.FLAGS.batch)
@@ -145,7 +145,7 @@ def predict(self):
     # predict in batches
     n_batch = int(math.ceil(len(all_inps) / batch))
     for j in range(n_batch):
-        self.say(range(n_batch))
+        self.logger.info(range(n_batch))
         from_idx = j * batch
         to_idx = min(from_idx + batch, len(all_inps))
 
@@ -157,16 +157,16 @@ def predict(self):
 
         # Feed to the net
         feed_dict = {self.inp: np.concatenate(inp_feed, 0)}
-        self.say('Forwarding {} inputs ...'.format(len(inp_feed)))
+        self.logger.info('Forwarding {} inputs ...'.format(len(inp_feed)))
         start = time.time()
         out = self.sess.run(self.out, feed_dict)
         stop = time.time()
         last = stop - start
-        self.say('Total time = {}s / {} inps = {} ips'.format(
+        self.logger.info('Total time = {}s / {} inps = {} ips'.format(
             last, len(inp_feed), len(inp_feed) / last))
 
         # Post processing
-        self.say('Post processing {} inputs ...'.format(len(inp_feed)))
+        self.logger.info('Post processing {} inputs ...'.format(len(inp_feed)))
         start = time.time()
         pool.map(lambda p: (lambda i, prediction:
                             self.framework.postprocess(
@@ -176,5 +176,5 @@ def predict(self):
         last = stop - start
 
         # Timing
-        self.say('Total time = {}s / {} inps = {} ips'.format(
+        self.logger.info('Total time = {}s / {} inps = {} ips'.format(
             last, len(inp_feed), len(inp_feed) / last))

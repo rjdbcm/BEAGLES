@@ -1,21 +1,14 @@
 """
 parse PASCAL VOC xml annotations
 """
-
 import os
 import sys
 import xml.etree.ElementTree as ET
 import glob
 
-
-def _pp(l):  # pretty printing
-    for i in l:
-        print('{}: {}'.format(i, l[i]))
-
-
-def pascal_voc_clean_xml(ANN, pick, exclusive=False):
-    print('Parsing for {} {}'.format(
-            pick, 'exclusively' * int(exclusive)), file=sys.stderr)
+def pascal_voc_clean_xml(self, ANN, pick, exclusive=False):
+    self.logger.info('Parsing for {} {}'.format(
+            pick, 'exclusively' * int(exclusive)))
 
     dumps = list()
     cur_dir = os.getcwd()
@@ -74,10 +67,9 @@ def pascal_voc_clean_xml(ANN, pick, exclusive=False):
                     stat[current[0]]+=1
                 else:
                     stat[current[0]] =1
-
-    print('\nStatistics:', file=sys.stderr)
-    _pp(stat)
-    print('Dataset size: {}'.format(len(dumps)), file=sys.stderr)
+    for i in stat:
+        self.logger.info('{}: {}'.format(i, stat[i]))
+    self.logger.info('Dataset size: {}'.format(len(dumps)))
 
     os.chdir(cur_dir)
     return dumps

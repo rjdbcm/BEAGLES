@@ -103,6 +103,7 @@ class DarkWrapper(FlagIO):
             self.done()
         except KeyboardInterrupt:
             self.cleanup_ramdisk()
+            self.logger.error("Keyboard Interrupt")
             raise
 
     def done(self):

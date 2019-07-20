@@ -15,8 +15,8 @@ def parse(self, exclusive = False):
     if not os.path.isdir(ann):
         msg = 'Annotation directory not found {} .'
         exit('Error: {}'.format(msg.format(ann)))
-    print('\n{} parsing {}'.format(meta['model'], ann))
-    dumps = pascal_voc_clean_xml(ann, meta['labels'], exclusive)
+    self.logger.info('{} parsing {}'.format(meta['model'], ann))
+    dumps = pascal_voc_clean_xml(self, ann, meta['labels'], exclusive)
     return dumps
 
 
@@ -98,7 +98,7 @@ def shuffle(self):
     data = self.parse()
     self.FLAGS.size = len(data)
     self.io_flags()
-    print('Dataset of {} instance(s)'.format(self.FLAGS.size))
+    self.logger.info('Dataset of {} instance(s)'.format(self.FLAGS.size))
     if batch > self.FLAGS.size:
         self.FLAGS.batch = batch = self.FLAGS.size
     batch_per_epoch = int(self.FLAGS.size / batch)
@@ -115,9 +115,9 @@ def shuffle(self):
                 try:
                     inp, new_feed = self._batch(train_instance)
                 except ZeroDivisionError:
-                    print("This image's width or height are zeros: ", train_instance[0])
-                    print('train_instance:', train_instance)
-                    print('Please remove or fix it then try again.')
+                    self.logger.error("This image's width or height are zeros: ", train_instance[0])
+                    self.logger.error('train_instance:', train_instance)
+                    self.logger.error('Please remove or fix it then try again.')
                     raise
 
                 if inp is None: continue
@@ -134,5 +134,5 @@ def shuffle(self):
             x_batch = np.concatenate(x_batch, 0)
             yield x_batch, feed_batch
         
-        print('Finish {} epoch(es)'.format(i + 1))
+        self.logger.info('Finish {} epoch(es)'.format(i + 1))
 

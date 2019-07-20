@@ -1,26 +1,28 @@
 from ..utils.process import cfg_yielder
 from .darkop import create_darkop
 from ..utils import loader
+from ..utils.flags import FlagIO
 import warnings
 import time
 import os
 
 
-class Darknet(object):
+class Darknet(FlagIO, object):
     _EXT = '.weights'
 
     def __init__(self, FLAGS):
+        FlagIO.__init__(self, subprogram=True)
         self.get_weight_src(FLAGS)
         self.modify = False
 
-        print('Parsing {}'.format(self.src_cfg))
+        self.logger.info('Parsing {}'.format(self.src_cfg))
         src_parsed = self.parse_cfg(self.src_cfg, FLAGS)
         self.src_meta, self.src_layers = src_parsed
 
         if self.src_cfg == FLAGS.model:
             self.meta, self.layers = src_parsed
         else:
-            print('Parsing {}'.format(FLAGS.model))
+            self.logger.info('Parsing {}'.format(FLAGS.model))
             des_parsed = self.parse_cfg(FLAGS.model, FLAGS)
             self.meta, self.layers = des_parsed
 
@@ -79,7 +81,7 @@ class Darknet(object):
         """
         Use `layers` and Loader to load .weights file
         """
-        print('Loading {} ...'.format(self.src_bin))
+        self.logger.info('Loading {} ...'.format(self.src_bin))
         start = time.time()
 
         args = [self.src_bin, self.src_layers]
@@ -88,4 +90,4 @@ class Darknet(object):
             layer.load(wgts_loader)
 
         stop = time.time()
-        print('Finished in {}s'.format(stop - start))
+        self.logger.info('Finished in {}s'.format(stop - start))

@@ -1,6 +1,7 @@
 import tensorflow as tf
 from datetime import datetime
 import numpy as np
+from time import strftime
 
 FORM = '{:>6} | {:>6} | {:<32} | {}'
 FORM_ = '{}+{}+{}+{}'
@@ -92,11 +93,12 @@ class BaseOp(object):
     def verbalise(self):  # console speaker
         msg = str()
         inp = _name(self.inp.out)
-        if inp == 'input': \
-        msg = FORM.format(
-            '', '', 'input',
-            _shape(self.inp.out)) + '\n' + "[{}] ".format(str(datetime.now()))
-        if not self.act: return msg
+        if inp == 'input':
+            msg = FORM.format(
+                '', '', 'input',
+                _shape(self.inp.out)) + '\n' + '{} | {} | {}.{} | '.format(datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3], 'INFO', 'TFNet', 'build_forward')
+        if not self.act:
+            return msg
         return msg + FORM.format(
             self.act, self.train_msg, 
             self.speak(), _shape(self.out))
