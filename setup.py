@@ -18,7 +18,7 @@ if os.name == 'nt':
             sources=["libs/cython_utils/nms.pyx"],
             #libraries=["m"] # Unix-like specific
             include_dirs=[numpy.get_include()]
-        ),        
+        ),
         Extension("libs.cython_utils.cy_yolo2_findboxes",
             sources=["libs/cython_utils/cy_yolo2_findboxes.pyx"],
             #libraries=["m"] # Unix-like specific
@@ -37,7 +37,8 @@ elif os.name == 'posix':
         compile_args = ''
         linker_args = ''
     else:
-        compile_args = ['-fopenmp', '-funroll-loops'] # This gives a significant boost to postprocessing time
+        # This gives a significant boost to postprocessing time
+        compile_args = ['-fopenmp', '-funroll-loops']
         linker_args = ['-fopenmp']
     ext_modules = [
         Extension("libs.cython_utils.nms",
