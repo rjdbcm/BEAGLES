@@ -1,6 +1,7 @@
 from datetime import datetime
-from libs.net.help import say
 import pickle
+import subprocess
+import logging
 import sys
 import time
 import os
@@ -12,6 +13,14 @@ class FlagIO(object):
         self.subprogram = subprogram
         self.delay = delay
         self.flagpath = self.init_ramdisk()
+        self.logger = logging.getLogger(type(self).__name__)
+        formatter = logging.Formatter(
+            '[%(asctime)s]%(levelname)s: %(name)s.%(funcName)s: %(message)s')
+        logfile = logging.FileHandler(Flags().log)
+        logfile.setFormatter(formatter)
+        self.logger.addHandler(logfile)
+        self.logger.setLevel(logging.DEBUG)
+
         if subprogram:
             try:
                 f = open(self.flagpath)
@@ -19,20 +28,8 @@ class FlagIO(object):
             except FileNotFoundError:
                 time.sleep(1)
 
-    def debug_log(self, *msgs):
-        with open(self.flags.log, 'a') as logfile:
-            msg = list(msgs)
-            form = "[{}] {}\n"
-            for msg in msgs:
-                if msg is None:
-                    continue
-                else:
-                    logfile.write(form.format(datetime.now(), msg))
-        logfile.close()
-
-
     def send_flags(self):
-        self.debug_log("{} Flags Send: {}".format(type(self).__name__, self.flags))
+        self.logger.debug(self.flags)
         with open(r"{}".format(self.flagpath), "wb") as outfile:
             pickle.dump(self.flags, outfile)
 
@@ -47,10 +44,10 @@ class FlagIO(object):
                         time.sleep(self.delay)
                         flags = pickle.load(inpfile)
                     except EOFError:
-                        self.debug_log("{} Flags Busy: Reusing old".format(type(self).__name__))
+                        self.logger.debug("Flags Busy: Reusing old")
                         flags = self.flags
                     self.flags = flags
-                    self.debug_log("{} Flags Read: {}".format(type(self).__name__, self.flags))
+                    self.logger.debug(self.flags)
                     return self.flags
             except FileNotFoundError:
                 if count > 10:
@@ -67,7 +64,12 @@ class FlagIO(object):
         if sys.platform == "darwin":
             ramdisk = "/Volumes/RAMDisk"
             if not self.subprogram:
-                os.system("./libs/scripts/RAMDisk mount")
+                proc = subprocess.Popen(['./libs/scripts/RAMDisk', 'mount'],
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.STDOUT)
+                stdout, stderr = proc.communicate()
+                self.logger.info(stdout)
+                self.logger.debug(stderr)
                 time.sleep(self.delay)  # Give the OS time to finish
         else:
             ramdisk = "/dev/shm"
@@ -76,9 +78,14 @@ class FlagIO(object):
 
     def cleanup_ramdisk(self):
         if sys.platform == "darwin":
-            os.system("./libs/scripts/RAMDisk unmount")
+            proc = subprocess.Popen(['./libs/scripts/RAMDisk', 'unmount'],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
+            stdout, stderr = proc.communicate()
+            self.logger.info(stdout)
+            self.logger.debug(stderr)
         else:
-            pass
+            os.remove(self.flagpath)
 
 
 class Flags(dict):
@@ -130,7 +137,8 @@ class Flags(dict):
         self.error = ""
         self.progress = 0.0
         self.size = 0
-        self.imgdir = './data/sample_img/'  # These paths are relative to slgrSuite.py
+        # These paths are relative to slgrSuite.py
+        self.imgdir = './data/sample_img/'
         self.binary = './data/bin/'
         self.config = './data/cfg/'
         self.dataset = './data/committedframes/'

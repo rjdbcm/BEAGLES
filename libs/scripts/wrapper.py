@@ -88,18 +88,22 @@ class DarkWrapper(FlagIO):
         self.flags = self.read_flags()
         self.flags.started = True
         self.io_flags()
-        if self.flags.train:
-            TFNet(self.flags).train()
-        elif self.flags.savepb:
-            TFNet(self.flags).savepb()
-        elif self.flags.demo != '':
-            TFNet(self.flags).camera()
-        elif self.flags.fbf != '':
-            TFNet(self.flags).annotate()
-        else:
-            tfnet = TFNet(self.flags)
-            tfnet.predict()
-        self.done()
+        try:
+            if self.flags.train:
+                TFNet(self.flags).train()
+            elif self.flags.savepb:
+                TFNet(self.flags).savepb()
+            elif self.flags.demo != '':
+                TFNet(self.flags).camera()
+            elif self.flags.fbf != '':
+                TFNet(self.flags).annotate()
+            else:
+                tfnet = TFNet(self.flags)
+                tfnet.predict()
+            self.done()
+        except KeyboardInterrupt:
+            self.cleanup_ramdisk()
+            raise
 
     def done(self):
         time.sleep(5)

@@ -4,7 +4,7 @@ from .predict import preprocess
 # from .misc import show
 from copy import deepcopy
 import pickle
-numpy as np
+import numpy as np
 import os 
 
 
