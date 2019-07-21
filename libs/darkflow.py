@@ -41,9 +41,20 @@ class FlowThread(QThread, FlagIO):
         self.cleanup_ramdisk()
 
     def run(self):
+        first = True
+        incr = False
         while self.proc.poll() is None:
+            # pulse flowPrg during startup
+            if first:
+                self.pbar.setRange(0, 0)
+                first = False
+            # stop pulsing flowPrg once the progress has increased
+            if incr:
+                self.pbar.setRange(0, 100)
+                incr = False
             if round(self.flags.progress - 1) > self.pbar.value():
                 self.pbar.setValue(self.flags.progress)
+                incr = True
             time.sleep(self.rate)
             self.read_flags()
             if self.flags.done:
