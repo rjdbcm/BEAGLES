@@ -80,6 +80,7 @@ class DarkWrapper(FlagIO):
             parser.add_argument('--lr', default=Flags().lr, metavar='N', help='learning rate')
             parser.add_argument('-v', '--verbalise', default=Flags().verbalise, action='store_true',
                                 help='show graph structure while building')
+            parser.add_argument('--cli', default=True, help=argparse.SUPPRESS)
             parser.add_argument('--kill', default=Flags().kill, help=argparse.SUPPRESS)
             parser.add_argument('--done', default=Flags().done, help=argparse.SUPPRESS)
             parser.add_argument('--started', default=Flags().started, help=argparse.SUPPRESS)

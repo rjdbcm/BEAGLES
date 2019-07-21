@@ -35,7 +35,7 @@ def _save_ckpt(self, step, loss_profile):
 def train(self):
     self.io_flags()
     loss_ph = self.framework.placeholders
-    loss_mva = None;
+    loss_mva = None
     profile = list()
 
     batches = self.framework.shuffle()

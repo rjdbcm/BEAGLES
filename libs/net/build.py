@@ -1,4 +1,5 @@
 import tensorflow as tf
+from tensorflow.python.platform import tf_logging
 import time
 from . import help
 from . import flow
@@ -43,13 +44,18 @@ class TFNet(FlagIO):
         FlagIO.__init__(self, subprogram=True)
         self.ntrain = 0
 
-        log = logging.getLogger('tensorflow')
-        log.setLevel(logging.INFO)
+        #  Setup logging verbosity
+        tf_logger = tf_logging.get_logger()
+        #  remove default StreamHandler and use the tf_handler from utils.flags
+        tf_logger.handlers = []
+        tf_logger.addHandler(self.tf_logfile)
         self.FLAGS = self.read_flags()
         self.io_flags()
         if self.FLAGS.verbalise:
+            os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
             tf.logging.set_verbosity(tf.logging.DEBUG)
         else:
+            os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
             tf.logging.set_verbosity(tf.logging.FATAL)
 
         if self.FLAGS.pbLoad and self.FLAGS.metaLoad:
@@ -152,7 +158,8 @@ class TFNet(FlagIO):
             self.logger.info('Running entirely on CPU')
             cfg['device_count'] = {'GPU': 0}
 
-        if self.FLAGS.train: self.build_train_op()
+        if self.FLAGS.train:
+            self.build_train_op()
 
         if self.FLAGS.summary:
             self.summary_op = tf.summary.merge_all()

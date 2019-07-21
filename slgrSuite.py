@@ -78,7 +78,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         # Start tensorboard process
         self.tb_process = QProcess(self)
-        self.tb_process.start("tensorboard", ["--logdir=data/summaries"])
+        self.tb_process.start("tensorboard", ["--logdir=data/summaries", "--debugger_port=6064"])
 
         # Save as Pascal voc xml
         self.defaultSaveDir = defaultSaveDir

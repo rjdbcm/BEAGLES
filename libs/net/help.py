@@ -20,14 +20,14 @@ def build_train_op(self):
     self.logger.info('Building {} train op'.format(self.meta['model']))
     optimizer = self._TRAINER[self.flags.trainer](self.flags.lr)
     if self.flags.clip == False:
-        gradients = optimizer.compute_gradients(self.framework.loss)
+        self.gradients = optimizer.compute_gradients(self.framework.loss)
     if self.flags.clip == True:
         # From github.com/thtrieu/darkflow/issues/557#issuecomment-377378352
         # avoid gradient explosions late in training
-        gradients = [(tf.clip_by_value(grad, -1., 1.), var) for
+        self.gradients = [(tf.clip_by_value(grad, -1., 1.), var) for
                      grad, var in optimizer.compute_gradients(
                 self.framework.loss)]
-    self.train_op = optimizer.apply_gradients(gradients)
+    self.train_op = optimizer.apply_gradients(self.gradients)
 
 
 def load_from_ckpt(self):

@@ -1,6 +1,7 @@
 from datetime import datetime
 import pickle
 import subprocess
+import logging.handlers
 import logging
 import sys
 import time
@@ -14,13 +15,27 @@ class FlagIO(object):
 
         self.logger = logging.getLogger(type(self).__name__)
         formatter = logging.Formatter(
-            '{asctime} | {levelname} | {name}.{funcName} | {message}',
+            '{asctime} | {levelname:7} | {name:<11} | {funcName:<20} | {message}',
             style='{')
-        logfile = logging.FileHandler(Flags().log)
-        logfile.setFormatter(formatter)
-        self.logger.addHandler(logfile)
+        self.logfile = logging.handlers.RotatingFileHandler(Flags().log)
+        self.logstream = logging.StreamHandler()
+        self.tf_logfile = logging.handlers.RotatingFileHandler(
+            os.path.splitext(Flags().log)[0] + ".tf" +
+            os.path.splitext(Flags().log)[1])
+
+        self.logfile.setFormatter(formatter)
+        self.logstream.setFormatter(formatter)
+        self.tf_logfile.setFormatter(formatter)
+
+        self.logger.addHandler(self.logfile)
 
         self.flagpath = self.init_ramdisk()
+
+        try:
+            if self.read_flags().cli:
+                self.logger.addHandler(self.logstream)
+        except AttributeError:
+            pass
 
         if subprogram:
             self.read_flags()
@@ -102,7 +117,10 @@ class FlagIO(object):
 
 
 class Flags(dict):
-    """Allows you to set and get {key, value} pairs like attributes"""
+    """
+    Allows you to set and get {key, value} pairs like attributes.
+    This allows compatibility with argparse.Namespace objects.
+    """
     def __init__(self, defaults=True):
         self.defaults = defaults
         if self.defaults:
