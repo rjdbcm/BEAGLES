@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import sys
 import cv2
 import os
 import json
@@ -21,7 +22,7 @@ def findboxes(self, net_out):
 	# meta
 	meta = self.meta
 	boxes = list()
-	boxes=box_constructor(meta,net_out)
+	boxes = box_constructor(meta, net_out)
 	return boxes
 
 def postprocess(self, net_out, im, save = True):
@@ -37,7 +38,8 @@ def postprocess(self, net_out, im, save = True):
 	labels = meta['labels']
 	if type(im) is not np.ndarray:
 		imgcv = cv2.imread(im)
-	else: imgcv = im
+	else:
+		imgcv = im
 	h, w, _ = imgcv.shape
 	
 	resultsForJSON = []
@@ -49,19 +51,22 @@ def postprocess(self, net_out, im, save = True):
 		thick = int((h + w) // 300)
 		if self.FLAGS.json:
 			resultsForJSON.append({"label": mess, "confidence": float('%.2f' % confidence), "topleft": {"x": left, "y": top}, "bottomright": {"x": right, "y": bot}})
-			continue
+			#continue
 		mess = mess + " " + str(round(confidence, 3))
 		cv2.rectangle(imgcv, (left, top), (right, bot), colors[max_indx], 3)
-		cv2.putText(imgcv, mess, (left, top - 12), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8, (0, 230, 0), 1, cv2.LINE_AA)
+		cv2.putText(
+			imgcv, mess, (left, top - 5), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,
+			(0, 230, 0), 1, cv2.LINE_AA)
 	if not save:
 		return imgcv
 
-	outfolder = os.path.abspath(os.path.join(self.FLAGS.imgdir, 'out'))
+	outfolder = os.path.join(self.FLAGS.imgdir, 'out')
 	img_name = os.path.join(outfolder, os.path.basename(im))
 	if self.FLAGS.json:
 		textJSON = json.dumps(resultsForJSON)
 		textFile = os.path.splitext(img_name)[0] + ".json"
 		with open(textFile, 'w') as f:
 			f.write(textJSON)
-		return
-	ret = cv2.imwrite(img_name, imgcv)
+	cv2.imwrite(img_name, imgcv)
+
+

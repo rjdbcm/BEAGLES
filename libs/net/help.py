@@ -6,6 +6,7 @@ from time import time as timer
 import tensorflow as tf
 import numpy as np
 from datetime import datetime
+import time
 import sys
 import csv
 import cv2
@@ -16,38 +17,40 @@ old_graph_msg = 'Resolving old graph def {} (no guarantee)'
 
 def build_train_op(self):
     self.framework.loss(self.out)
-    self.say('Building {} train op'.format(self.meta['model']))
-    optimizer = self._TRAINER[self.FLAGS.trainer](self.FLAGS.lr)
-    if self.FLAGS.clip == False:
+    self.logger.info('Building {} train op'.format(self.meta['model']))
+    optimizer = self._TRAINER[self.flags.trainer](self.flags.lr)
+    if self.flags.clip == False:
         gradients = optimizer.compute_gradients(self.framework.loss)
-    if self.FLAGS.clip == True:
-        # From github.com/thtrieu/darkflow/issues/557#issuecomment-377378352 avoid gradient explosions late in training
+    if self.flags.clip == True:
+        # From github.com/thtrieu/darkflow/issues/557#issuecomment-377378352
+        # avoid gradient explosions late in training
         gradients = [(tf.clip_by_value(grad, -1., 1.), var) for
-                     grad, var in optimizer.compute_gradients(self.framework.loss)]
+                     grad, var in optimizer.compute_gradients(
+                self.framework.loss)]
     self.train_op = optimizer.apply_gradients(gradients)
 
 
 def load_from_ckpt(self):
-    if self.FLAGS.load < 0:  # load lastest ckpt
-        with open(os.path.join(self.FLAGS.backup, 'checkpoint'), 'r') as f:
+    if self.flags.load < 0:  # load lastest ckpt
+        with open(os.path.join(self.flags.backup, 'checkpoint'), 'r') as f:
             last = f.readlines()[-1].strip()
             load_point = last.split(' ')[1]
             load_point = load_point.split('"')[1]
             load_point = load_point.split('-')[-1]
-            self.FLAGS.load = int(load_point)
+            self.flags.load = int(load_point)
 
-    load_point = os.path.join(self.FLAGS.backup, self.meta['name'])
-    load_point = '{}-{}'.format(load_point, self.FLAGS.load)
-    self.say('Loading from {}'.format(load_point))
+    load_point = os.path.join(self.flags.backup, self.meta['name'])
+    load_point = '{}-{}'.format(load_point, self.flags.load)
+    self.logger.info('Loading from {}'.format(load_point))
     try:
         self.saver.restore(self.sess, load_point)
-    except:
+    except ValueError:
         load_old_graph(self, load_point)
 
 
 def say(self, *msgs):
-    if self.FLAGS.verbalise:
-        with open(self.FLAGS.log, 'a') as logfile:
+    if self.flags.verbalise:
+        with open(self.flags.log, 'a') as logfile:
                 msgs = list(msgs)
                 form = "[{}] {}\n"
                 for msg in msgs:
@@ -55,12 +58,12 @@ def say(self, *msgs):
                         continue
                     else:
                         logfile.write(form.format(datetime.now(), msg))
-        if self.FLAGS.killed or self.FLAGS.done:
-            logfile.close()
+        logfile.close()
+
 
 def load_old_graph(self, ckpt):
     ckpt_loader = create_loader(ckpt)
-    self.say(old_graph_msg.format(ckpt))
+    self.logger.info(old_graph_msg.format(ckpt))
 
     for var in tf.global_variables():
         name = var.name.split(':')[0]
@@ -84,109 +87,190 @@ def _get_fps(self, frame):
     return timer() - start
 
 
+def boxing(self, cap, original_img, predictions, annotation_file):
+    new_image = np.copy(original_img)
+
+    for result in predictions:
+
+        top_x = result['topleft']['x']
+        top_y = result['topleft']['y']
+
+        btm_x = result['bottomright']['x']
+        btm_y = result['bottomright']['y']
+
+        confidence = result['confidence']
+        label = result['label'] + " " + str(round(confidence, 3))
+
+        if confidence > 0.01:
+            new_image = cv2.rectangle(new_image, (top_x, top_y), (btm_x, btm_y)
+                                      , (255, 0, 0), 3)
+            new_image = cv2.putText(new_image, label, (top_x, top_y - 5),
+                                   cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,
+                                   (0, 230, 0), 1, cv2.LINE_AA)
+
+            with open(annotation_file, mode='a') as file:
+                file_writer = csv.writer(file, delimiter=',', quotechar='"',
+                                         quoting=csv.QUOTE_MINIMAL)
+                for item in predictions:
+                    time_elapsed = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
+                    labels = item['label']
+                    conf = item['confidence']
+                    top_x = item['topleft']['x']
+                    top_y = item['topleft']['y']
+                    btm_x = item['bottomright']['x']
+                    btm_y = item['bottomright']['y']
+                    file_writer.writerow([time_elapsed, labels, conf, top_x,
+                                          top_y, btm_x, btm_y])
+    return new_image
+
+
+def _compile(self, cmdstring):
+    cmdlist = []
+    for n in self.cams:
+        cmdlist.append(compile(cmdstring.format(n), 'cmd_{}'.format(n),
+                               'exec'))
+    return cmdlist
+
+
+def _exec(self, cmdlist):
+    localdict = {'cv2': cv2, 'os': os, 'self': self}
+    for cmd in cmdlist:
+        exec(cmd, globals(), localdict)
+
+
 def camera(self):
-    file = self.FLAGS.demo  # TODO add asynchronous capture
-    SaveVideo = self.FLAGS.saveVideo
+    self.cams = self.flags.capdevs
+    get_caps = self._compile("global cap{0}\n"
+                             "cap{0} = cv2.VideoCapture({0})\n"
+                             "cap{0}.set(cv2.CAP_PROP_FRAME_WIDTH, 144)\n"
+                             "cap{0}.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)\n"
+                             "global annotation{0}\n"
+                             "annotation{0} = os.path.join("
+                             "self.flags.imgdir, 'video{0}_annotations.csv')")
+    get_frames = self._compile("global ret{0}\n"
+                               "global frame{0}\n"
+                               "ret{0}, frame{0} = cap{0}.read()")
+    get_boxing = self._compile('if ret{0}:\n'
+                               '    global res{0}\n'
+                               '    global new_frame{0}\n'
+                               '    frame{0} = np.asarray(frame{0})\n'
+                               '    res{0} = self.return_predict(frame{0})\n'
+                               '    new_frame{0} = self.boxing('
+                               'cap{0}, frame{0}, res{0}, annotation{0})\n'
+                               '    cv2.imshow("Cam {0}", new_frame{0})')
+    self._exec(get_caps)
+    while True:
+        self._exec(get_frames)
+        self._exec(get_boxing)
 
-    if file == 'camera':
-        file = 0
-    else:
-        assert os.path.isfile(file), \
-            'file {} does not exist'.format(file)
-
-    camera = cv2.VideoCapture(file)
-
-    if file == 0:
-        self.say('Press [ESC] to quit demo')
-
-    assert camera.isOpened(), \
-        'Cannot capture source'
-
-    if file == 0:  # camera window
-        cv2.namedWindow('', 0)
-        _, frame = camera.read()
-        max_y, max_x, _ = frame.shape
-        cv2.resizeWindow('', max_x, max_y)
-    else:
-        _, frame = camera.read()
-        max_y, max_x, _ = frame.shape
-
-    if SaveVideo:
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        if file == 0:  # camera window
-            fps = 1 / self._get_fps(frame)
-            if fps < 1:
-                fps = 1
-        else:
-            fps = round(camera.get(cv2.CAP_PROP_FPS))
-        videoWriter = cv2.VideoWriter(
-            self.FLAGS.saveVideo, fourcc, fps, (max_x, max_y))
-
-    # buffers for demo in batch
-    buffer_inp = list()
-    buffer_pre = list()
-
-    elapsed = int()
-    start = timer()
-    # Loop through frames
-    while camera.isOpened():
-        elapsed += 1
-        _, frame = camera.read()
-        if frame is None:
-            print('\nEnd of Video')
+        if cv2.waitKey(1) and self.flags.kill:
             break
-        preprocessed = self.framework.preprocess(frame)
-        buffer_inp.append(frame)
-        buffer_pre.append(preprocessed)
+    self._exec("cap{0}.release()")
+    cv2.destroyAllWindows()
 
-        # Only process and imshow when queue is full
-        if elapsed % self.FLAGS.queue == 0:
-            feed_dict = {self.inp: buffer_pre}
-            net_out = self.sess.run(self.out, feed_dict)
-            for img, single_out in zip(buffer_inp, net_out):
-                postprocessed = self.framework.postprocess(
-                    single_out, img, False)
-                if SaveVideo:
-                    videoWriter.write(postprocessed)
-                if file == 0:  # camera window
-                    cv2.imshow('', postprocessed)
-            # Clear Buffers
-            buffer_inp = list()
-            buffer_pre = list()
-
-        if elapsed % 5 == 0:
-            sys.stdout.write('\r')
-            sys.stdout.write('{0:3.3f} FPS'.format(
-                elapsed / (timer() - start)))
-            sys.stdout.flush()
-        if file == 0:  # camera window
-            choice = cv2.waitKey(1)
-            if choice == 27: break
-
-    sys.stdout.write('\n')
-    if SaveVideo:
-        videoWriter.release()
-    camera.release()
-    if file == 0:  # camera window
-        cv2.destroyAllWindows()
+    # file = self.flags.demo  # TODO add asynchronous capture
+    # SaveVideo = self.flags.saveVideo
+    #
+    # if file == 'camera':
+    #     file = 0
+    # else:
+    #     assert os.path.isfile(file), \
+    #         'file {} does not exist'.format(file)
+    #
+    # camera = cv2.VideoCapture(file)
+    #
+    # if file == 0:
+    #     self.logger.info('Press [ESC] to quit demo')
+    #
+    # assert camera.isOpened(), \
+    #     'Cannot capture source'
+    #
+    # if file == 0:  # camera window
+    #     cv2.namedWindow('', 0)
+    #     _, frame = camera.read()
+    #     max_y, max_x, _ = frame.shape
+    #     cv2.resizeWindow('', max_x, max_y)
+    # else:
+    #     _, frame = camera.read()
+    #     max_y, max_x, _ = frame.shape
+    #
+    # if SaveVideo:
+    #     fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    #     if file == 0:  # camera window
+    #         fps = 1 / self._get_fps(frame)
+    #         if fps < 1:
+    #             fps = 1
+    #     else:
+    #         fps = round(camera.get(cv2.CAP_PROP_FPS))
+    #     videoWriter = cv2.VideoWriter(
+    #         self.flags.saveVideo, fourcc, fps, (max_x, max_y))
+    #
+    # # buffers for demo in batch
+    # buffer_inp = list()
+    # buffer_pre = list()
+    #
+    # elapsed = int()
+    # start = timer()
+    # # Loop through frames
+    # while camera.isOpened():
+    #     elapsed += 1
+    #     _, frame = camera.read()
+    #     if frame is None:
+    #         print('\nEnd of Video')
+    #         break
+    #     preprocessed = self.framework.preprocess(frame)
+    #     buffer_inp.append(frame)
+    #     buffer_pre.append(preprocessed)
+    #
+    #     # Only process and imshow when queue is full
+    #     if elapsed % self.flags.queue == 0:
+    #         feed_dict = {self.inp: buffer_pre}
+    #         net_out = self.sess.run(self.out, feed_dict)
+    #         for img, single_out in zip(buffer_inp, net_out):
+    #             postprocessed = self.framework.postprocess(
+    #                 single_out, img, False)
+    #             if SaveVideo:
+    #                 videoWriter.write(postprocessed)
+    #             if file == 0:  # camera window
+    #                 cv2.imshow('', postprocessed)
+    #         # Clear Buffers
+    #         buffer_inp = list()
+    #         buffer_pre = list()
+    #
+    #     if elapsed % 5 == 0:
+    #         sys.stdout.write('\r')
+    #         sys.stdout.write('{0:3.3f} FPS'.format(
+    #             elapsed / (timer() - start)))
+    #         sys.stdout.flush()
+    #     if file == 0:  # camera window
+    #         choice = cv2.waitKey(1)
+    #         if choice == 27: break
+    #
+    # sys.stdout.write('\n')
+    # if SaveVideo:
+    #     videoWriter.release()
+    # camera.release()
+    # if file == 0:  # camera window
+    #     cv2.destroyAllWindows()
 
 
 def annotate(self):
-    lb = self.FLAGS.lb
-    INPUT_VIDEO = self.FLAGS.fbf
+    lb = self.flags.lb
+    INPUT_VIDEO = self.flags.fbf
     FRAME_NUMBER = 0
     cap = cv2.VideoCapture(INPUT_VIDEO)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     annotation_file = os.path.splitext(INPUT_VIDEO)[0] + '_annotations.csv'
     if os.path.exists(annotation_file):
-        self.say("Overwriting existing annotations")
+        self.logger.info("Overwriting existing annotations")
         os.remove(annotation_file)
     max_x = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     max_y = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
     max_per = (2 * max_x) + (2 * max_y)
     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-    out = cv2.VideoWriter(os.path.splitext(INPUT_VIDEO)[0] + '_annotated.avi', fourcc, 20.0, (int(max_x), int(max_y)))
-    self.say('Annotating ' + INPUT_VIDEO + ' press [ESC] to quit')
+    out = cv2.VideoWriter(os.path.splitext(INPUT_VIDEO)[0] + '_annotated.avi',
+                          fourcc, 20.0, (int(max_x), int(max_y)))
+    self.logger.info('Annotating ' + INPUT_VIDEO + ' press [ESC] to quit')
 
     def boxing(original_img, predictions):
         newImage = np.copy(original_img)
@@ -234,20 +318,20 @@ def annotate(self):
         FRAME_NUMBER += 1
         ret, frame = cap.read()
         if ret == True:
-            self.FLAGS.progress = round((100 * FRAME_NUMBER / total_frames), 0)
-            self.say = (
+            self.flags.progress = round((100 * FRAME_NUMBER / total_frames), 0)
+            self.logger.info = (
                 "Frame {}/{} [{}%]".format(FRAME_NUMBER, total_frames, round(100 * FRAME_NUMBER / total_frames),
                                            1))
             frame = np.asarray(frame)
             result = self.return_predict(frame)
             new_frame = boxing(frame, result)  # Display the resulting frame
             out.write(new_frame)
-            if self.FLAGS.kill:
-                self.FLAGS.killed = True
+            if self.flags.kill:
+                self.flags.killed = True
                 break
         else:
             break
-    self.FLAGS.done = True
+    self.flags.done = True
     # When everything done, release the capture
     cap.release()
     out.release()

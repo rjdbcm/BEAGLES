@@ -1,20 +1,13 @@
 """
 parse PASCAL VOC xml annotations
 """
-
 import os
 import sys
 import xml.etree.ElementTree as ET
 import glob
 
-
-def _pp(l):  # pretty printing
-    for i in l:
-        print('{}: {}'.format(i, l[i]))
-
-
-def pascal_voc_clean_xml(ANN, pick, exclusive = False):
-    print('Parsing for {} {}'.format(
+def pascal_voc_clean_xml(self, ANN, pick, exclusive=False):
+    self.logger.info('Parsing for {} {}'.format(
             pick, 'exclusively' * int(exclusive)))
 
     dumps = list()
@@ -25,18 +18,20 @@ def pascal_voc_clean_xml(ANN, pick, exclusive = False):
     size = len(annotations)
 
     for i, file in enumerate(annotations):
-        # progress bar      
-        sys.stdout.write('\r')
-        percentage = 1. * (i+1) / size
-        progress = int(percentage * 20)
-        bar_arg = [progress*'=', ' '*(19-progress), percentage*100]
-        bar_arg += [file]
-        sys.stdout.write('[{}>{}]{:.0f}%  {}'.format(*bar_arg))
-        sys.stdout.flush()
+        # progress bar that awakens deep magic from the dawn of time causing
+        # train ops to hang when started from the GUI on linux platforms
+        
+        # sys.stdout.write('\r')
+        # percentage = 1. * (i+1) / size
+        # progress = int(percentage * 20)
+        # bar_arg = [progress*'=', ' '*(19-progress), percentage*100]
+        # bar_arg += [file]
+        # sys.stdout.write('[{}>{}]{:.0f}%  {}'.format(*bar_arg))
+        # sys.stdout.flush()
         
         # actual parsing 
         in_file = open(file)
-        tree=ET.parse(in_file)
+        tree = ET.parse(in_file)
         root = tree.getroot()
         jpg = str(root.find('filename').text)
         imsize = root.find('size')
@@ -72,10 +67,9 @@ def pascal_voc_clean_xml(ANN, pick, exclusive = False):
                     stat[current[0]]+=1
                 else:
                     stat[current[0]] =1
-
-    print('\nStatistics:')
-    _pp(stat)
-    print('Dataset size: {}'.format(len(dumps)))
+    for i in stat:
+        self.logger.info('{}: {}'.format(i, stat[i]))
+    self.logger.info('Dataset size: {}'.format(len(dumps)))
 
     os.chdir(cur_dir)
     return dumps

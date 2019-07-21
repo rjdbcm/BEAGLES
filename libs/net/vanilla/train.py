@@ -13,7 +13,7 @@ def loss(self, net_out):
 	out = net_out
 	out_shape = out.get_shape()
 	out_dtype = out.dtype.base_dtype
-	_truth = tf.placeholders(out_dtype, out_shape)
+	_truth = tf.placeholder(out_dtype, out_shape)
 
 	self.placeholders = dict({
 			'truth': _truth

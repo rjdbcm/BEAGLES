@@ -1,5 +1,7 @@
 import tensorflow as tf
+from datetime import datetime
 import numpy as np
+from time import strftime
 
 FORM = '{:>6} | {:>6} | {:<32} | {}'
 FORM_ = '{}+{}+{}+{}'
@@ -38,8 +40,10 @@ class BaseOp(object):
         self.var = not self.gap > 0
         self.act = 'Load '
         self.convert(feed)
-        if self.var: self.train_msg = 'Yep! '
-        else: self.train_msg = 'Nope '
+        if self.var:
+            self.train_msg = 'Yep! '
+        else:
+            self.train_msg = 'Nope '
         self.forward()
 
     def convert(self, feed):
@@ -89,11 +93,12 @@ class BaseOp(object):
     def verbalise(self):  # console speaker
         msg = str()
         inp = _name(self.inp.out)
-        if inp == 'input': \
-        msg = FORM.format(
-            '', '', 'input',
-            _shape(self.inp.out)) + '\n'
-        if not self.act: return msg
+        if inp == 'input':
+            msg = FORM.format(
+                '', '', 'input',
+                _shape(self.inp.out)) + '\n' + '{} | {} | {}.{} | '.format(datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3], 'INFO', 'TFNet', 'build_forward')
+        if not self.act:
+            return msg
         return msg + FORM.format(
             self.act, self.train_msg, 
             self.speak(), _shape(self.out))

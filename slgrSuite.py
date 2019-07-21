@@ -25,7 +25,7 @@ from libs.stringBundle import StringBundle
 from libs.canvas import Canvas
 from libs.zoomWidget import ZoomWidget
 from libs.labelDialog import LabelDialog
-from libs.darkflow import flowDialog
+from libs.darkflow import FlowDialog
 from libs.colorDialog import ColorDialog
 from libs.labelFile import LabelFile, LabelFileError
 from libs.toolBar import ToolBar
@@ -50,11 +50,13 @@ class WindowMixin(object):
     def toolbar(self, title, actions=None):
         toolbar = ToolBar(title)
         toolbar.setObjectName(u'%sToolBar' % title)
-        # toolbar.setOrientation(Qt.Vertical)
-        toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        toolbar.setMovable(False)
+        toolbar.setFixedHeight(32)
+        toolbar.setIconSize(QSize(30, 30))
+        toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)
         if actions:
             addActions(toolbar, actions)
-        self.addToolBar(Qt.LeftToolBarArea, toolbar)
+        self.addToolBar(Qt.TopToolBarArea, toolbar)
         return toolbar
 
 
@@ -74,14 +76,9 @@ class MainWindow(QMainWindow, WindowMixin):
         self.stringBundle = StringBundle.getBundle()
         getStr = lambda strId: self.stringBundle.getString(strId)
 
-        self.trainModelOn = False
-        self.trainModelOff = True
-
-        # Only allow visualize to start tensorboard once
-        self._visualizeFirstRun = True
-        self.visualizeTimer = QTimer()
-        self.visualizeTimer.setSingleShot(True)
+        # Start tensorboard process
         self.tb_process = QProcess(self)
+        self.tb_process.start("tensorboard", ["--logdir=data/summaries"])
 
         # Save as Pascal voc xml
         self.defaultSaveDir = defaultSaveDir
@@ -107,8 +104,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         # Main widgets and related state.
         self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist)
-        self.trainDialog = flowDialog(parent=self)
-
+        self.trainDialog = FlowDialog(parent=self, labelfile=defaultPrefdefClassFile)
 
         self.itemsToShapes = {}
         self.shapesToItems = {}
@@ -173,6 +169,8 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.setDrawingShapeToSquare(settings.get(SETTING_DRAW_SQUARE, False))
 
         scroll = QScrollArea()
+        scroll.setAutoFillBackground(True)
+        scroll.setStyleSheet("color:black;")
         scroll.setWidget(self.canvas)
         scroll.setWidgetResizable(True)
         self.scrollBars = {
@@ -228,7 +226,7 @@ class MainWindow(QMainWindow, WindowMixin):
                       'Ctrl+S', 'save', getStr('saveDetail'), enabled=False)
 
         save_format = action('&PascalVOC', self.change_format,
-                      'Ctrl+', 'format_voc', getStr('changeSaveFormat'), enabled=True)
+                             'Ctrl+', 'format_voc', getStr('changeSaveFormat'), enabled=True)
 
         saveAs = action(getStr('saveAs'), self.saveFileAs,
                         'Ctrl+Shift+S', 'save-as', getStr('saveAsDetail'), enabled=False)
@@ -255,7 +253,8 @@ class MainWindow(QMainWindow, WindowMixin):
                       'Ctrl+D', 'copy', getStr('dupBoxDetail'),
                       enabled=False)
 
-        commitAnnotatedFrames = action(getStr('commitAnnotatedFrames'), self.commitAnnotatedFrames, None, 'commitAnnotatedFrames',
+        commitAnnotatedFrames = action(getStr('commitAnnotatedFrames'), self.commitAnnotatedFrames, None,
+                                       'commitAnnotatedFrames',
                                        getStr('commitAnnotatedFrames'), enabled=True)
 
         trainModel = action(getStr('trainModel'), self.trainModel, 'Ctrl+T', 'trainModel', getStr('trainModelDetail'),
@@ -340,9 +339,12 @@ class MainWindow(QMainWindow, WindowMixin):
         self.drawSquaresOption.triggered.connect(self.toogleDrawSquare)
 
         # Store actions for further handling.
-        self.actions = struct(save=save, save_format=save_format, saveAs=saveAs, open=open, close=close, resetAll = resetAll,
-                              lineColor=color1, create=create, delete=delete, edit=edit, copy=copy,
-                              trainModel=trainModel, visualize=visualize,
+        self.actions = struct(save=save, save_format=save_format,
+                              saveAs=saveAs, open=open, close=close,
+                              resetAll=resetAll, verify=verify,
+                              lineColor=color1, create=create, delete=delete,
+                              edit=edit, copy=copy, trainModel=trainModel,
+                              visualize=visualize,
                               createMode=createMode,
                               editMode=editMode,
                               advancedMode=advancedMode,
@@ -388,7 +390,9 @@ class MainWindow(QMainWindow, WindowMixin):
         self.displayLabelOption.triggered.connect(self.togglePaintLabelsOption)
 
         addActions(self.menus.file,
-                   (open, opendir, changeSavedir, impVideo, openAnnotation, self.menus.recentFiles, save, save_format, saveAs, trainModel, close, resetAll, quit))
+                   (open, opendir, changeSavedir, impVideo, openAnnotation,
+                    self.menus.recentFiles, save, save_format,
+                    saveAs, trainModel, close, resetAll, quit))
         addActions(self.menus.help, (help, showInfo))
         addActions(self.menus.view, (
             self.autoSaving,
@@ -409,13 +413,15 @@ class MainWindow(QMainWindow, WindowMixin):
             action('&Move here', self.moveShape)))
 
         self.tools = self.toolbar('Tools')
-        self.actions.beginner = (
-            open, opendir, changeSavedir, openPrevImg, openNextImg, save, None, create, copy, delete, None,
-            zoomIn, zoom, zoomOut, fitWindow, fitWidth)
 
-        self.actions.advanced = (
-            save_format, impVideo, None, commitAnnotatedFrames, None, trainModel, visualize,
-            None)
+        self.actions.beginner = (
+            open, opendir, changeSavedir, save, None,
+            create, copy, delete, None, openPrevImg, openNextImg, None, zoomIn,
+            zoom, zoomOut, fitWindow, fitWidth)
+
+        self.actions.advanced = (open, save, None, createMode, editMode, verify, None,
+            hideAll, showAll, None, commitAnnotatedFrames,
+                                 trainModel, visualize, impVideo)
 
         self.statusBar().showMessage('%s started.' % __appname__)
         self.statusBar().show()
@@ -429,7 +435,6 @@ class MainWindow(QMainWindow, WindowMixin):
             self.rawframesDataPath = os.path.abspath('./data/rawframes/')
             self.committedframesDataPath = os.path.abspath('./data/committedframes/')
             self.backendPath = os.path.abspath('backend/')
-
 
         # Application state.
         self.image = QImage()
@@ -533,8 +538,10 @@ class MainWindow(QMainWindow, WindowMixin):
             LabelFile.suffix = TXT_EXT
 
     def change_format(self):
-        if self.usingPascalVocFormat: self.set_format(FORMAT_YOLO)
-        elif self.usingYoloFormat: self.set_format(FORMAT_PASCALVOC)
+        if self.usingPascalVocFormat:
+            self.set_format(FORMAT_YOLO)
+        elif self.usingYoloFormat:
+            self.set_format(FORMAT_PASCALVOC)
 
     def noShapes(self):
         return not self.itemsToShapes
@@ -561,8 +568,8 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.menus[0].clear()
         addActions(self.canvas.menus[0], menu)
         self.menus.edit.clear()
-        actions = (self.actions.create,) if self.beginner()\
-            else (self.actions.createMode, self.actions.editMode)
+        actions = (self.actions.create,) if self.beginner() \
+            else (self.actions.createMode, self.actions.editMode, self.actions.verify)
         addActions(self.menus.edit, actions + self.actions.editMenu)
 
     def setBeginner(self):
@@ -639,7 +646,8 @@ class MainWindow(QMainWindow, WindowMixin):
         subprocess.Popen(self.screencastViewer + [self.screencast])
 
     def showInfoDialog(self):
-        msg = u'Name:{0} \nApp Version:{1} \n{2} '.format(__appname__, __version__, sys.version_info)
+        msg = u'Name:{0} \nApp Version:{1} \n{2} '.format(
+            __appname__, __version__, sys.version_info)
         QMessageBox.information(self, u'Information', msg)
 
     def createShape(self):
@@ -648,7 +656,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.actions.create.setEnabled(False)
 
     def toggleDrawingSensitive(self, drawing=True):
-        """In the middle of drawing, toggling between modes should be disabled."""
+        """In the middle of drawing, toggling between modes disabled."""
         self.actions.editMode.setEnabled(not drawing)
         if not drawing and self.beginner():
             # Cancel creation.
@@ -676,6 +684,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         def exists(filename):
             return os.path.exists(filename)
+
         menu = self.menus.recentFiles
         menu.clear()
         files = [f for f in self.recentFiles if f !=
@@ -704,22 +713,23 @@ class MainWindow(QMainWindow, WindowMixin):
 
     # Tzutalin 20160906 : Add file list and dock to move faster
     def fileitemDoubleClicked(self, item=None):
-        currIndex = self.mImgList.index(ustr(item.text()))
+        item = os.path.join(self.dirname, item.text())
+        currIndex = self.mImgList.index(item)
         if currIndex < len(self.mImgList):
             filename = self.mImgList[currIndex]
             if filename:
                 self.loadFile(filename)
 
     # Add chris
-    def btnstate(self, item= None):
+    def btnstate(self, item=None):
         """ Function to handle difficult examples
         Update on each object """
         if not self.canvas.editing():
             return
 
         item = self.currentItem()
-        if not item: # If not selected Item, take the first one
-            item = self.labelList.item(self.labelList.count()-1)
+        if not item:  # If not selected Item, take the first one
+            item = self.labelList.item(self.labelList.count() - 1)
 
         difficult = self.diffcButton.isChecked()
 
@@ -733,7 +743,8 @@ class MainWindow(QMainWindow, WindowMixin):
                 shape.difficult = difficult
                 self.setDirty()
             else:  # User probably changed item visibility
-                self.canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
+                self.canvas.setShapeVisible(
+                    shape, item.checkState() == Qt.Checked)
         except:
             pass
 
@@ -754,16 +765,19 @@ class MainWindow(QMainWindow, WindowMixin):
         self.actions.shapeFillColor.setEnabled(selected)
 
     def addLabel(self, shape):
-        shape.paintLabel = self.displayLabelOption.isChecked()
-        item = HashableQListWidgetItem(shape.label)
-        item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-        item.setCheckState(Qt.Checked)
-        item.setBackground(generateColorByText(shape.label))
-        self.itemsToShapes[item] = shape
-        self.shapesToItems[shape] = item
-        self.labelList.addItem(item)
-        for action in self.actions.onShapesPresent:
-            action.setEnabled(True)
+        try:
+            shape.paintLabel = self.displayLabelOption.isChecked()
+            item = HashableQListWidgetItem(shape.label)
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            item.setCheckState(Qt.Checked)
+            item.setBackground(generateColorByText(shape.label))
+            self.itemsToShapes[item] = shape
+            self.shapesToItems[shape] = item
+            self.labelList.addItem(item)
+            for action in self.actions.onShapesPresent:
+                action.setEnabled(True)
+        except AttributeError:
+            pass
 
     def remLabel(self, shape):
         if shape is None:
@@ -780,7 +794,8 @@ class MainWindow(QMainWindow, WindowMixin):
             shape = Shape(label=label)
             for x, y in points:
 
-                # Ensure the labels are within the bounds of the image. If not, fix them.
+                # Ensure the labels are within the bounds of the image.
+                # If not, fix them.
                 x, y, snapped = self.canvas.snapPointToCanvas(x, y)
                 if snapped:
                     self.setDirty()
@@ -815,8 +830,8 @@ class MainWindow(QMainWindow, WindowMixin):
                         line_color=s.line_color.getRgb(),
                         fill_color=s.fill_color.getRgb(),
                         points=[(p.x(), p.y()) for p in s.points],
-                       # add chris
-                        difficult = s.difficult)
+                        # add chris
+                        difficult=s.difficult)
 
         shapes = [format_shape(shape) for shape in self.canvas.shapes]
         # Can add differrent annotation formats here
@@ -830,7 +845,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 if annotationFilePath[-4:].lower() != ".txt":
                     annotationFilePath += TXT_EXT
                 self.labelFile.saveYoloFormat(annotationFilePath, shapes, self.filePath, self.imageData, self.labelHist,
-                                                   self.lineColor.getRgb(), self.fillColor.getRgb())
+                                              self.lineColor.getRgb(), self.fillColor.getRgb())
             else:
                 self.labelFile.save(annotationFilePath, shapes, self.filePath, self.imageData,
                                     self.lineColor.getRgb(), self.fillColor.getRgb())
@@ -870,7 +885,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
         position MUST be in global coordinates.
         """
-        if not self.useDefaultLabelCheckbox.isChecked() or not self.defaultLabelTextLine.text():
+        if not self.useDefaultLabelCheckbox.isChecked() or\
+                not self.defaultLabelTextLine.text():
             if len(self.labelHist) > 0:
                 self.labelDialog = LabelDialog(
                     parent=self, listItem=self.labelHist)
@@ -995,14 +1011,17 @@ class MainWindow(QMainWindow, WindowMixin):
 
         # Make sure that filePath is a regular python string, rather than QString
         filePath = ustr(filePath)
-
         unicodeFilePath = ustr(filePath)
         # Tzutalin 20160906 : Add file list and dock to move faster
         # Highlight the file item
         if unicodeFilePath and self.fileListWidget.count() > 0:
-            index = self.mImgList.index(unicodeFilePath)
-            fileWidgetItem = self.fileListWidget.item(index)
-            fileWidgetItem.setSelected(True)
+            try:
+                index = self.mImgList.index(unicodeFilePath)
+                fileWidgetItem = self.fileListWidget.item(index)
+                fileWidgetItem.setSelected(True)
+                self.fileListWidget.scrollToItem(fileWidgetItem)
+            except ValueError:
+                pass
 
         if unicodeFilePath and os.path.exists(unicodeFilePath):
             if LabelFile.isLabelFile(unicodeFilePath):
@@ -1072,16 +1091,16 @@ class MainWindow(QMainWindow, WindowMixin):
 
             # Default : select last item if there is at least one item
             if self.labelList.count():
-                self.labelList.setCurrentItem(self.labelList.item(self.labelList.count()-1))
-                self.labelList.item(self.labelList.count()-1).setSelected(True)
+                self.labelList.setCurrentItem(self.labelList.item(self.labelList.count() - 1))
+                self.labelList.item(self.labelList.count() - 1).setSelected(True)
 
             self.canvas.setFocus(True)
             return True
         return False
 
     def resizeEvent(self, event):
-        if self.canvas and not self.image.isNull()\
-           and self.zoomMode != self.MANUAL_ZOOM:
+        if self.canvas and not self.image.isNull() \
+                and self.zoomMode != self.MANUAL_ZOOM:
             self.adjustScale()
         super(MainWindow, self).resizeEvent(event)
 
@@ -1096,7 +1115,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.zoomWidget.setValue(int(100 * value))
 
     def scaleFitWindow(self):
-        """Figure out the size of the pixmap in order to fit the main widget."""
+        """Figure out the size of the pixmap to fit the main widget."""
         e = 2.0  # So that no scrollbars are generated.
         w1 = self.centralWidget().width() - e
         h1 = self.centralWidget().height() - e
@@ -1115,8 +1134,8 @@ class MainWindow(QMainWindow, WindowMixin):
     def closeEvent(self, event):
         if not self.mayContinue():
             event.ignore()
-        if self.tb_process:
-            self.tb_process.terminate()
+        if self.tb_process.pid() > 0:
+            self.tb_process.kill()
         settings = self.settings
         # If it loads images from dir, don't load it at the begining
         if self.dirname is None:
@@ -1151,7 +1170,8 @@ class MainWindow(QMainWindow, WindowMixin):
             self.loadFile(filename)
 
     def scanAllImages(self, folderPath):
-        extensions = ['.%s' % fmt.data().decode("ascii").lower() for fmt in QImageReader.supportedImageFormats()]
+        extensions = ['.%s' % fmt.data().decode("ascii").lower() for
+                      fmt in QImageReader.supportedImageFormats()]
         images = []
 
         for root, dirs, files in os.walk(folderPath):
@@ -1169,15 +1189,16 @@ class MainWindow(QMainWindow, WindowMixin):
         else:
             path = '.'
 
-        dirpath = ustr(QFileDialog.getExistingDirectory(self,
-                                                       '%s - Save annotations to the directory' % __appname__, path,  QFileDialog.ShowDirsOnly
-                                                       | QFileDialog.DontResolveSymlinks))
+        dirpath = ustr(QFileDialog.getExistingDirectory(
+            self, '%s - Save annotations to the directory' % __appname__, path,
+            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
 
         if dirpath is not None and len(dirpath) > 1:
             self.defaultSaveDir = dirpath
 
-        self.statusBar().showMessage('%s . Annotation will be saved to %s' %
-                                     ('Change saved folder', self.defaultSaveDir))
+        self.statusBar().showMessage(
+            '%s . Annotation will be saved to %s' %
+            ('Change saved folder', self.defaultSaveDir))
         self.statusBar().show()
 
     def openAnnotationDialog(self, _value=False):
@@ -1186,14 +1207,15 @@ class MainWindow(QMainWindow, WindowMixin):
             self.statusBar().show()
             return
 
-        path = os.path.dirname(ustr(self.filePath))\
+        path = os.path.dirname(ustr(self.filePath)) \
             if self.filePath else '.'
         if self.usingPascalVocFormat:
             filters = "Open Annotation XML file (%s)" % ' '.join(['*.xml'])
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
-            filename = ustr(QFileDialog.getOpenFileName(self, '%s - Choose a xml file' % __appname__, path, filters,
-                                                        options=options))
+            filename = ustr(QFileDialog.getOpenFileName(
+                self, '%s - Choose a xml file' % __appname__, path, filters,
+                options=options))
             if filename:
                 if isinstance(filename, (tuple, list)):
                     filename = filename[0]
@@ -1207,11 +1229,12 @@ class MainWindow(QMainWindow, WindowMixin):
         if self.lastOpenDir and os.path.exists(self.lastOpenDir):
             defaultOpenDirPath = self.lastOpenDir
         else:
-            defaultOpenDirPath = os.path.dirname(self.filePath) if self.filePath else '.'
+            defaultOpenDirPath = os.path.dirname(self.filePath) if\
+                self.filePath else '.'
 
-        targetDirPath = ustr(QFileDialog.getExistingDirectory(self,
-                                                     '%s - Open Directory' % __appname__, defaultOpenDirPath,
-                                                     QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
+        targetDirPath = ustr(QFileDialog.getExistingDirectory(
+            self, '%s - Open Directory' % __appname__, defaultOpenDirPath,
+            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
         self.importDirImages(targetDirPath)
 
     def impVideo(self, _value=False, dirpath=None):
@@ -1222,7 +1245,7 @@ class MainWindow(QMainWindow, WindowMixin):
         else:
             defaultOpenDirPath = os.path.dirname(self.filePath) if self.filePath else '.'
         options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog  # TODO Check if this fixes the non-native fileOpen issue on linux
+        options |= QFileDialog.DontUseNativeDialog
         formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
         filters = "Video Files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
         filename = QFileDialog.getOpenFileName(self, '%s - Choose Image or Label file' % __appname__,
@@ -1248,13 +1271,15 @@ class MainWindow(QMainWindow, WindowMixin):
         if self.lastOpenDir and os.path.exists(self.lastOpenDir):
             defaultOpenDirPath = self.lastOpenDir
         else:
-            defaultOpenDirPath = os.path.dirname(self.filePath) if self.filePath else '.'
+            defaultOpenDirPath = os.path.dirname(self.filePath) if \
+                self.filePath else '.'
 
         filelist = []
         for file in os.listdir(defaultOpenDirPath):
             filename = os.fsdecode(file)
             if filename.endswith(".xml"):
-                print("Moving {0} to data/committedframes/{0}".format(filename))
+                print("Moving {0} to data/committedframes/{0}".format(
+                    filename))
                 filename = os.path.join(defaultOpenDirPath, filename)
                 basename = os.path.splitext(filename)[0]
                 filelist.append(filename)
@@ -1263,7 +1288,8 @@ class MainWindow(QMainWindow, WindowMixin):
                 continue
 
         for i in filelist:
-            os.rename(i, self.committedframesDataPath + os.path.split(i)[1])
+            os.rename(i, os.path.join(
+                self.committedframesDataPath, os.path.split(i)[1]))
 
         self.importDirImages(defaultOpenDirPath)
 
@@ -1273,13 +1299,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.trainDialog.show()
 
     def visualize(self):
-        if self._visualizeFirstRun:
-
-            self.tb_process.start("tensorboard", ["--logdir=data/summaries"])
-            self._visualizeFirstRun = False
-            subprocess.Popen(self.screencastViewer + ['http://localhost:6006/'])
-        else:
-            subprocess.Popen(self.screencastViewer + ['http://localhost:6006/'])
+        subprocess.Popen(self.screencastViewer + ['http://localhost:6006/'])
 
     def importDirImages(self, dirpath):
         if not self.mayContinue() or not dirpath:
@@ -1292,7 +1312,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.mImgList = self.scanAllImages(dirpath)
         self.openNextImg()
         for imgPath in self.mImgList:
-            item = QListWidgetItem(imgPath)
+            item = QListWidgetItem(os.path.basename(imgPath))
             self.fileListWidget.addItem(item)
 
     def verifyImg(self, _value=False):
@@ -1303,12 +1323,12 @@ class MainWindow(QMainWindow, WindowMixin):
             except AttributeError:
                 # If the labelling file does not exist yet, create if and
                 # re-save it with the verified attribute.
-                self.saveFile()
+                self.labelFile = LabelFile()
+                print(self.labelFile)
                 if self.labelFile != None:
                     self.labelFile.toggleVerify()
                 else:
                     return
-
             self.canvas.verified = self.labelFile.verified
             self.paintCanvas()
             self.saveFile()
@@ -1369,12 +1389,14 @@ class MainWindow(QMainWindow, WindowMixin):
         if not self.mayContinue():
             return
         path = os.path.dirname(ustr(self.filePath)) if self.filePath else '.'
-        formats = ['*.%s' % fmt.data().decode("ascii").lower() for fmt in QImageReader.supportedImageFormats()]
+        formats = ['*.%s' % fmt.data().decode("ascii").lower()
+                   for fmt in QImageReader.supportedImageFormats()]
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        filters = "Image & Label files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
-        filename = QFileDialog.getOpenFileName(self, '%s - Choose Image or Label file' % __appname__, path, filters,
-                                               options=options)
+        filters = "Image files (%s)" % ' '.join(formats)
+        filename = QFileDialog.getOpenFileName(
+            self, '%s - Choose Image file' % __appname__, path, filters,
+            options=options)
         if filename:
             if isinstance(filename, (tuple, list)):
                 filename = filename[0]
@@ -1385,7 +1407,8 @@ class MainWindow(QMainWindow, WindowMixin):
             if self.filePath:
                 imgFileName = os.path.basename(self.filePath)
                 savedFileName = os.path.splitext(imgFileName)[0]
-                savedPath = os.path.join(ustr(self.defaultSaveDir), savedFileName)
+                savedPath = os.path.join(ustr(self.defaultSaveDir),
+                                         savedFileName)
                 self._saveFile(savedPath)
         else:
             imgFileDir = os.path.dirname(self.filePath)
@@ -1412,7 +1435,8 @@ class MainWindow(QMainWindow, WindowMixin):
         if dlg.exec_():
             fullFilePath = ustr(dlg.selectedFiles()[0])
             if removeExt:
-                return os.path.splitext(fullFilePath)[0] # Return file path without the extension.
+                # Return file path without the extension.
+                return os.path.splitext(fullFilePath)[0]
             else:
                 return fullFilePath
         return ''
@@ -1527,7 +1551,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.set_format(FORMAT_YOLO)
         tYoloParseReader = YoloReader(txtPath, self.image)
         shapes = tYoloParseReader.getShapes()
-        print (shapes)
+        print(shapes)
         self.loadLabels(shapes)
         self.canvas.verified = tYoloParseReader.verified
 
@@ -1537,6 +1561,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def toogleDrawSquare(self):
         self.canvas.setDrawingShapeToSquare(self.drawSquaresOption.isChecked())
+
 
 def inverted(color):
     return QColor(*[255 - v for v in color.getRgb()])
@@ -1560,16 +1585,24 @@ def frame_capture(path):
     while success:
         success, image = vidObj.read()
         fileno = str(count)
-        cv2.imwrite("{}_frame_{}.jpg".format(name, fileno.zfill(total_zeros)), image)
+        cv2.imwrite("{}_frame_{}.jpg".format(name,
+                                             fileno.zfill(total_zeros)), image)
         count += 1
 
 
 def get_main_app(argv=[]):
     """
     Standard boilerplate Qt application code.
-    Do everything but app.exec_() -- so that we can test the application in one thread
+    Do everything but app.exec_()
+    -- so that we can test the application in one thread
     """
     app = QApplication(argv)
+    try:
+        import qdarkstyle
+        os.environ["QT_API"] = 'pyqt5'
+        app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+    except ImportError:
+        pass
     app.setApplicationName(__appname__)
     app.setWindowIcon(newIcon("app"))
     # Tzutalin 201705+: Accept extra agruments to change predefined class file
@@ -1587,6 +1620,7 @@ def main():
     '''construct main app and run it'''
     app, _win = get_main_app(sys.argv)
     return app.exec_()
+
 
 if __name__ == '__main__':
     sys.exit(main())

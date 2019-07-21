@@ -83,9 +83,11 @@ class convolutional(BaseOp):
             return temp
         else:
             args = dict({
-                'center' : False, 'scale' : True,
-                'epsilon': 1e-5, 'scope' : self.scope,
-                'updates_collections' : None,
+                'center': False,
+                'scale': True,
+                'epsilon': 1e-5,
+                'scope': self.scope,
+                'updates_collections': None,
                 'is_training': layer.h['is_training'],
                 'param_initializers': layer.w
                 })

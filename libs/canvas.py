@@ -400,7 +400,10 @@ class Canvas(QWidget):
     def deleteSelected(self):
         if self.selectedShape:
             shape = self.selectedShape
-            self.shapes.remove(self.selectedShape)
+            try:
+                self.shapes.remove(self.selectedShape)
+            except ValueError:
+                pass
             self.selectedShape = None
             self.update()
             return shape
@@ -473,7 +476,7 @@ class Canvas(QWidget):
             self.setPalette(pal)
         else:
             pal = self.palette()
-            pal.setColor(self.backgroundRole(), QColor(232, 232, 232, 255))
+            pal.setColor(self.backgroundRole(), QColor(25, 35, 45, 255))
             self.setPalette(pal)
 
         p.end()

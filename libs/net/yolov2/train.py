@@ -28,12 +28,12 @@ def loss(self, net_out):
     HW = H * W  # number of grid cells
     anchors = m['anchors']
 
-    print('{} loss hyper-parameters:'.format(m['model']))
-    print('\tH       = {}'.format(H))
-    print('\tW       = {}'.format(W))
-    print('\tbox     = {}'.format(m['num']))
-    print('\tclasses = {}'.format(m['classes']))
-    print('\tscales  = {}'.format([sprob, sconf, snoob, scoor]))
+    self.logger.info('{} loss hyper-parameters:'.format(m['model']))
+    self.logger.info('\tH       = {}'.format(H))
+    self.logger.info('\tW       = {}'.format(W))
+    self.logger.info('\tbox     = {}'.format(m['num']))
+    self.logger.info('\tclasses = {}'.format(m['classes']))
+    self.logger.info('\tscales  = {}'.format([sprob, sconf, snoob, scoor]))
 
     size1 = [None, HW, B, C]
     size2 = [None, HW, B]
@@ -86,7 +86,7 @@ def loss(self, net_out):
     # calculate the best IOU, set 0.0 confidence for worse boxes
     iou = tf.truediv(intersect, _areas + area_pred - intersect)
     best_box = tf.equal(iou, tf.reduce_max(iou, [2], True))
-    best_box = tf.to_float(best_box)
+    best_box = tf.cast(best_box, tf.float32)
     confs = tf.multiply(best_box, _confs)
 
     # take care of the weight terms
@@ -100,7 +100,7 @@ def loss(self, net_out):
     true = tf.concat([_coord, tf.expand_dims(confs, 3), _probs], 3)
     wght = tf.concat([cooid, tf.expand_dims(conid, 3), proid], 3)
 
-    print('Building {} loss'.format(m['model']))
+    self.logger.info('Building {} loss'.format(m['model']))
     loss = tf.pow(adjusted_net_out - true, 2)
     loss = tf.multiply(loss, wght)
     loss = tf.reshape(loss, [-1, H*W*B*(4 + 1 + C)])
