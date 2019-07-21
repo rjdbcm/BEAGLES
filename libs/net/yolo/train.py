@@ -22,10 +22,10 @@ def loss(self, net_out):
     SS = S * S # number of grid cells
 
     self.logger.info('{} loss hyper-parameters:'.format(m['model']))
-    self.logger.info('\tside    = {}'.format(m['side']))
-    self.logger.info('\tbox     = {}'.format(m['num']))
-    self.logger.info('\tclasses = {}'.format(m['classes']))
-    self.logger.info('\tscales  = {}'.format([sprob, sconf, snoob, scoor]))
+    self.logger.info('side    = {}'.format(m['side']))
+    self.logger.info('box     = {}'.format(m['num']))
+    self.logger.info('classes = {}'.format(m['classes']))
+    self.logger.info('scales  = {}'.format([sprob, sconf, snoob, scoor]))
 
     size1 = [None, SS, C]
     size2 = [None, SS, B]
