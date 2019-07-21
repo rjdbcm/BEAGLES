@@ -49,6 +49,9 @@ class TFNet(FlagIO):
         #  remove default StreamHandler and use the tf_handler from utils.flags
         tf_logger.handlers = []
         tf_logger.addHandler(self.tf_logfile)
+        if os.stat(self.tf_logfile.baseFilename).st_size > 0:
+            self.tf_logfile.doRollover()
+
         self.FLAGS = self.read_flags()
         self.io_flags()
         if self.FLAGS.verbalise:

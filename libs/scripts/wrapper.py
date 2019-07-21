@@ -105,6 +105,7 @@ class DarkWrapper(FlagIO):
         except KeyboardInterrupt:
             self.cleanup_ramdisk()
             self.logger.error("Keyboard Interrupt")
+            self.logfile.doRollover()
             raise
 
     def done(self):
@@ -113,6 +114,7 @@ class DarkWrapper(FlagIO):
         self.flags.progress = 100
         self.flags.done = True
         self.io_flags()
+        self.logfile.doRollover()
         exit(0)
 
 

@@ -17,11 +17,12 @@ class FlagIO(object):
         formatter = logging.Formatter(
             '{asctime} | {levelname:7} | {name:<11} | {funcName:<20} | {message}',
             style='{')
-        self.logfile = logging.handlers.RotatingFileHandler(Flags().log)
+        self.logfile = logging.handlers.RotatingFileHandler(Flags().log,
+                                                            backupCount=20)
         self.logstream = logging.StreamHandler()
         self.tf_logfile = logging.handlers.RotatingFileHandler(
             os.path.splitext(Flags().log)[0] + ".tf" +
-            os.path.splitext(Flags().log)[1])
+            os.path.splitext(Flags().log)[1], backupCount=20)
 
         self.logfile.setFormatter(formatter)
         self.logstream.setFormatter(formatter)
@@ -168,6 +169,7 @@ class Flags(dict):
         self.error = ""
         self.progress = 0.0
         self.size = 0
+        self.cli = False
         # These paths are relative to slgrSuite.py
         self.imgdir = './data/sample_img/'
         self.binary = './data/bin/'

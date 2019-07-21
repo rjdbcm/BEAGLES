@@ -38,6 +38,7 @@ class FlowThread(QThread, FlagIO):
         self.pbar.reset()
         self.proc.kill()
         self.returnFlags()
+        self.logfile.doRollover()
         self.cleanup_ramdisk()
 
     def run(self):
@@ -62,6 +63,7 @@ class FlowThread(QThread, FlagIO):
                 self.proc.kill()
                 self.returnFlags()
                 self.cleanup_ramdisk()
+                self.logfile.doRollover()
                 self.pbar.reset()
 
 
