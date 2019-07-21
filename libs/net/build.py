@@ -30,7 +30,6 @@ class TFNet(FlagIO):
     _exec = help._exec
     _compile = help._compile
     boxing = help.boxing
-    say = help.say
     train = flow.train
     camera = help.camera
     annotate = help.annotate
@@ -45,7 +44,7 @@ class TFNet(FlagIO):
         self.ntrain = 0
 
         log = logging.getLogger('tensorflow')
-        log.setLevel(logging.ERROR)
+        log.setLevel(logging.INFO)
         self.FLAGS = self.read_flags()
         self.io_flags()
         if self.FLAGS.verbalise:

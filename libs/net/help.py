@@ -48,19 +48,6 @@ def load_from_ckpt(self):
         load_old_graph(self, load_point)
 
 
-def say(self, *msgs):
-    if self.flags.verbalise:
-        with open(self.flags.log, 'a') as logfile:
-                msgs = list(msgs)
-                form = "[{}] {}\n"
-                for msg in msgs:
-                    if msg is None:
-                        continue
-                    else:
-                        logfile.write(form.format(datetime.now(), msg))
-        logfile.close()
-
-
 def load_old_graph(self, ckpt):
     ckpt_loader = create_loader(ckpt)
     self.logger.info(old_graph_msg.format(ckpt))
@@ -270,7 +257,7 @@ def annotate(self):
     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
     out = cv2.VideoWriter(os.path.splitext(INPUT_VIDEO)[0] + '_annotated.avi',
                           fourcc, 20.0, (int(max_x), int(max_y)))
-    self.logger.info('Annotating ' + INPUT_VIDEO + ' press [ESC] to quit')
+    self.logger.info('Annotating ' + INPUT_VIDEO)
 
     def boxing(original_img, predictions):
         newImage = np.copy(original_img)
@@ -335,6 +322,7 @@ def annotate(self):
     # When everything done, release the capture
     cap.release()
     out.release()
+
 
 def to_darknet(self):
     darknet_ckpt = self.darknet
