@@ -48,8 +48,6 @@ class DarkWrapper(FlagIO):
                                 help='generate frame-by-frame annotation')
             parser.add_argument('--saveVideo', default=Flags().saveVideo,
                                 help='filename of video output')
-            parser.add_argument('--queue', default=Flags().queue,
-                                help='batch process demo')
             parser.add_argument('--json', default=Flags().json,
                                 action='store_true',
                                 help='output bounding box information in .json')

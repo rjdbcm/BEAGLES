@@ -289,7 +289,6 @@ def write_annotations(self, annotation_file, prediction):
 
 
 def annotate(self):
-    lb = self.flags.lb
     INPUT_VIDEO = self.flags.fbf
     FRAME_NUMBER = 0
     cap = cv2.VideoCapture(INPUT_VIDEO)

@@ -48,11 +48,7 @@ def train(self):
                 self.flags.epoch, self.flags.save
             ))
             count = 0
-        if self.flags.kill:
-            self.flags.killed = True
-            self.send_flags()
-            self.logger.info("Train op killed")
-            return
+
         feed_dict = {
             loss_ph[key]: datum[key]
             for key in loss_ph}

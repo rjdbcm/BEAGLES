@@ -137,49 +137,45 @@ class Flags(dict):
         pass
 
     def get_defaults(self):
-        self.train = False
-        self.savepb = False
-        self.demo = ''
-        self.fbf = ''
-        self.trainer = 'rmsprop'
-        self.momentum = 0.0
-        self.keep = 20
+        # All paths are relative to slgrSuite.py
+        self.annotation = './data/committedframes/'
+        self.backup = './data/ckpt/'
         self.batch = 16
-        self.epoch = 1
-        self.save = 16000
-        self.lr = 1e-5
-        self.clip = False
-        self.saveVideo = True
-        self.queue = 1
-        self.lb = 0.0
-        self.pbLoad = ''
-        self.metaLoad = ''
-        self.load = -1
-        self.model = ''
-        self.capdevs = []
-        self.json = False
-        self.gpu = 0.0
-        self.gpuName = '/gpu:0'
-        self.threshold = 0.4
-        self.verbalise = False
-        self.kill = False
-        self.killed = False
-        self.started = False
-        self.done = False
-        self.error = ""
-        self.progress = 0.0
-        self.size = 0
-        self.timeout = 0
-        self.cli = False
-        # These paths are relative to slgrSuite.py
-        self.imgdir = './data/sample_img/'
         self.binary = './data/bin/'
+        self.capdevs = []
+        self.cli = False
+        self.clip = False
         self.config = './data/cfg/'
         self.dataset = './data/committedframes/'
-        self.backup = './data/ckpt/'
+        self.demo = ''
+        self.done = False
+        self.epoch = 1
+        self.error = ""
+        self.fbf = ''
+        self.gpu = 0.0
+        self.gpuName = '/gpu:0'
+        self.imgdir = './data/sample_img/'
+        self.json = False
+        self.keep = 20
+        self.kill = False
         self.labels = './data/predefined_classes.txt'
+        self.load = -1
         self.log = './data/logs/flow.log'
-        self.annotation = './data/committedframes/'
+        self.lr = 1e-5
+        self.metaLoad = ''
+        self.model = ''
+        self.momentum = 0.0
+        self.pbLoad = ''
+        self.progress = 0.0
+        self.save = 16000
+        self.savepb = False
+        self.saveVideo = True
+        self.size = 0
+        self.started = False
         self.summary = './data/summaries/'
-
+        self.threshold = 0.4
+        self.timeout = 0
+        self.trainer = 'rmsprop'
+        self.verbalise = False
+        self.train = False
 
