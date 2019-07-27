@@ -15,8 +15,8 @@ class FlagIO(object):
 
         self.logger = logging.getLogger(type(self).__name__)
         formatter = logging.Formatter(
-            '{asctime} | {levelname:7} | {name:<11} | {funcName:<20} | {message}',
-            style='{')
+         '{asctime} | {levelname:7} | {name:<11} | {funcName:<20} | {message}',
+         style='{')
         self.logfile = logging.handlers.RotatingFileHandler(Flags().log,
                                                             backupCount=20)
         self.logstream = logging.StreamHandler()
@@ -169,6 +169,7 @@ class Flags(dict):
         self.error = ""
         self.progress = 0.0
         self.size = 0
+        self.timeout = 0
         self.cli = False
         # These paths are relative to slgrSuite.py
         self.imgdir = './data/sample_img/'

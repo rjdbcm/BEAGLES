@@ -10,8 +10,7 @@ import os
 import re
 import time
 
-FLAGS = Flags()
-
+flags = Flags()
 
 class Connection(QObject):
 
@@ -21,28 +20,29 @@ class Connection(QObject):
 class FlowThread(QThread, FlagIO):
     """Needed so the long-running train ops don't block Qt UI"""
 
-    def __init__(self, parent, proc, flags, rate=1):
+    def __init__(self, parent, proc, flags, rate=.2):
         super(FlowThread, self).__init__(parent)
         self.connection = Connection()
         self.rate = rate
         self.proc = proc
         self.flags = flags
         self.send_flags()
-        time.sleep(1)
 
     def returnFlags(self):
-        global FLAGS
-        FLAGS = self.read_flags()
+        global flags
+        flags = self.read_flags()
 
     def stop(self):
         if not self.flags.done:
             self.flags.kill = True
             self.io_flags()
         self.read_flags()
-        self.logger.info('Thread killed')
-        self.proc.kill()
+        self.proc.terminate()
         self.returnFlags()
-        self.logfile.doRollover()
+        if os.stat(self.logfile.baseFilename).st_size > 0:
+            self.logfile.doRollover()
+        if os.stat(self.tf_logfile.baseFilename).st_size > 0:
+            self.tf_logfile.doRollover()
         self.cleanup_ramdisk()
 
     def run(self):
@@ -53,12 +53,6 @@ class FlowThread(QThread, FlagIO):
                 self.connection.progressUpdate.emit(prg)
             time.sleep(self.rate)
             self.read_flags()
-            if self.flags.done:
-                self.read_flags()
-                self.proc.kill()
-                self.returnFlags()
-                self.cleanup_ramdisk()
-                self.logfile.doRollover()
 
 
 class MultiCamThread(QThread):
@@ -74,7 +68,7 @@ class MultiCamThread(QThread):
             cap = cv2.VideoCapture(index)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 144)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)
-            if not cap.read()[0]:
+            if cap is None or not cap.isOpened():
                 pass
             else:
                 self.devs.append(index)
@@ -115,7 +109,7 @@ class FlowDialog(QDialog):
         layout.addRow(QLabel("Mode"), self.flowCmb)
 
         self.modelCmb = QComboBox()
-        self.modelCmb.addItems(self.listFiles(FLAGS.config))
+        self.modelCmb.addItems(self.listFiles(flags.config))
         self.modelCmb.setToolTip("Choose a model configuration")
         self.modelCmb.currentIndexChanged.connect(self.findCkpt)
         layout.addRow(QLabel("Model"), self.modelCmb)
@@ -127,7 +121,7 @@ class FlowDialog(QDialog):
         self.thresholdSpd = QDoubleSpinBox()
         self.thresholdSpd.setRange(0.0, .99)
         self.thresholdSpd.setSingleStep(0.01)
-        self.thresholdSpd.setValue(FLAGS.threshold)
+        self.thresholdSpd.setValue(flags.threshold)
         layout.addRow(QLabel("Threshold"), self.thresholdSpd)
 
         self.verbaliseChb = QCheckBox()
@@ -165,24 +159,24 @@ class FlowDialog(QDialog):
         layout3.addRow(QLabel("Momentum"), self.momentumSpd)
 
         self.keepSpb = QSpinBox()
-        self.keepSpb.setValue(FLAGS.keep)
+        self.keepSpb.setValue(flags.keep)
         self.keepSpb.setRange(1, 256)
         layout3.addRow(QLabel("Checkpoints to Keep"), self.keepSpb)
 
         self.batchSpb = QSpinBox()
         self.batchSpb.setRange(2, 256)
-        self.batchSpb.setValue(int(FLAGS.batch))
+        self.batchSpb.setValue(int(flags.batch))
         self.batchSpb.setSingleStep(2)
         layout3.addRow(QLabel("Batch Size"), self.batchSpb)
 
         self.epochSpb = QSpinBox()
         self.epochSpb.setRange(1, 65536)
-        self.epochSpb.setValue(int(FLAGS.epoch))
+        self.epochSpb.setValue(int(flags.epoch))
         layout3.addRow(QLabel("Epochs to Run"), self.epochSpb)
 
         self.saveSpb = QSpinBox()
         self.saveSpb.setRange(1, 65536)
-        self.saveSpb.setValue(FLAGS.save)
+        self.saveSpb.setValue(flags.save)
         layout3.addRow(QLabel("Save Every"), self.saveSpb)
 
         self.clipChb = QCheckBox()
@@ -192,6 +186,15 @@ class FlowDialog(QDialog):
 
         self.demoGroupBox = QGroupBox("Select Capture Parameters")
         layout4 = QFormLayout()
+
+        self.timeoutTme = QTimeEdit()
+        self.timeoutTme.setDisplayFormat('hh:mm:ss')
+        layout4.addRow(QLabel('Record Time (hh:mm:ss)'), self.timeoutTme)
+
+        self.lineFrm = QFrame()
+        self.lineFrm.setFrameShape(QFrame.HLine)
+        self.lineFrm.setFrameShadow(QFrame.Sunken)
+        layout4.addRow(self.lineFrm)
 
         self.deviceLbl = QLabel("Available Video Devices:")
         layout4.addRow(self.deviceLbl)
@@ -234,7 +237,7 @@ class FlowDialog(QDialog):
 
     def findCkpt(self):
         self.loadCmb.clear()
-        checkpoints = self.listFiles(FLAGS.backup)
+        checkpoints = self.listFiles(flags.backup)
         _model = os.path.splitext(self.modelCmb.currentText())
         l = ['0']
         # a dash followed by a number or numbers followed by a dot
@@ -301,45 +304,46 @@ class FlowDialog(QDialog):
 
     def accept(self):
         """set flags for darkflow and prevent startup if errors anticipated"""
-        FLAGS.get_defaults()  # Reset FLAGS
-        FLAGS.model = os.path.join(FLAGS.config, self.modelCmb.currentText())
+        flags.get_defaults()  # Reset flags
+        flags.model = os.path.join(flags.config, self.modelCmb.currentText())
         try:
-            FLAGS.load = int(self.loadCmb.currentText())
+            flags.load = int(self.loadCmb.currentText())
         except ValueError:
-            FLAGS.load = 0
+            flags.load = 0
             pass
-        FLAGS.trainer = self.trainerCmb.currentText()
-        FLAGS.threshold = self.thresholdSpd.value()
-        FLAGS.clip = bool(self.clipChb.checkState())
-        FLAGS.verbalise = bool(self.verbaliseChb.checkState())
-        FLAGS.momentum = self.momentumSpd.value()
-        FLAGS.keep = self.keepSpb.value()
-        FLAGS.batch = self.batchSpb.value()
-        FLAGS.save = self.saveSpb.value()
-        FLAGS.epoch = self.epochSpb.value()
-        FLAGS.labels = self.labelfile
-        FLAGS.json = bool(self.jsonChb.checkState()) if \
-            self.flowGroupBox.isEnabled() else FLAGS.json
+        flags.trainer = self.trainerCmb.currentText()
+        flags.threshold = self.thresholdSpd.value()
+        flags.clip = bool(self.clipChb.checkState())
+        flags.verbalise = bool(self.verbaliseChb.checkState())
+        flags.momentum = self.momentumSpd.value()
+        flags.keep = self.keepSpb.value()
+        flags.batch = self.batchSpb.value()
+        flags.save = self.saveSpb.value()
+        flags.epoch = self.epochSpb.value()
+        flags.labels = self.labelfile
+        flags.json = bool(self.jsonChb.checkState()) if \
+            self.flowGroupBox.isEnabled() else flags.json
+        flags.timeout = QTime(0, 0, 0).secsTo(self.timeoutTme.time())
 
         for i in range(self.deviceItemModel.rowCount()):
             item = self.deviceItemModel.item(i)
             if item.checkState():
-                FLAGS.capdevs.append(item.data())
+                flags.capdevs.append(item.data())
 
-        if not self.flowCmb.currentText() == "Train" and FLAGS.load == 0:
+        if not self.flowCmb.currentText() == "Train" and flags.load == 0:
             QMessageBox.warning(self, 'Error', "Invalid checkpoint",
                                  QMessageBox.Ok)
             return
         if self.flowCmb.currentText() == "Flow":
             pass
         if self.flowCmb.currentText() == "Train":
-            if not FLAGS.save % FLAGS.batch == 0:
+            if not flags.save % flags.batch == 0:
                 QMessageBox.warning(self, 'Error',
                                      "The value of 'Save Every' should be "
                                      "divisible by the value of 'Batch Size'",
                                      QMessageBox.Ok)
                 return
-            dataset = [f for f in os.listdir(FLAGS.dataset)
+            dataset = [f for f in os.listdir(flags.dataset)
                        if not f.startswith('.')]
             if not dataset:
                 QMessageBox.warning(self, 'Error',
@@ -347,9 +351,9 @@ class FlowDialog(QDialog):
                                      QMessageBox.Ok)
                 return
             else:
-                FLAGS.train = True
+                flags.train = True
         if self.flowCmb.currentText() == "Freeze":
-            FLAGS.savepb = True
+            flags.savepb = True
         if self.flowCmb.currentText() == "Annotate":
             formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
             filters = "Video Files (%s)" % ' '.join(
@@ -361,19 +365,24 @@ class FlowDialog(QDialog):
                                                    'Choose Video file',
                                                    os.getcwd(),
                                                    filters, options=options)
-            FLAGS.fbf = filename[0]
+            flags.fbf = filename[0]
         if self.flowCmb.currentText() == "Capture":
-            if not FLAGS.capdevs:
+            if not flags.capdevs:
                 QMessageBox.warning(self, 'Error',
-                                     'No capture device is selected',
-                                     QMessageBox.Ok)
+                                    'No capture device is selected',
+                                    QMessageBox.Ok)
                 return
-            FLAGS.demo = "camera"
+            if not flags.timeout:
+                QMessageBox.warning(self, 'Error',
+                                    "Please specify a record time",
+                                    QMessageBox.Ok)
+                return
+            flags.demo = "camera"
         if [self.flowCmb.currentText() == "Train" or "Freeze"]:
             proc = subprocess.Popen([sys.executable, os.path.join(
                 os.getcwd(), "libs/scripts/wrapper.py")],
                                     stdout=subprocess.PIPE, shell=False)
-            self.flowthread = FlowThread(self, proc=proc, flags=FLAGS)
+            self.flowthread = FlowThread(self, proc=proc, flags=flags)
             self.flowthread.setTerminationEnabled(True)
             self.flowthread.finished.connect(self.onFinished)
             self.flowthread.connection.progressUpdate.connect(
@@ -414,13 +423,13 @@ class FlowDialog(QDialog):
             event.accept()
 
     def onFinished(self):
-        if FLAGS.error:
-            QMessageBox.critical(self, "Error Message", FLAGS.error,
+        if flags.error:
+            QMessageBox.critical(self, "Error Message", flags.error,
                               QMessageBox.Ok)
-        if FLAGS.verbalise:
+        if flags.verbalise:
             QMessageBox.information(self, "Debug Message", "Process Stopped:\n"
                                     + "\n".join('{}: {}'.format(k, v)
-                                                for k, v in FLAGS.items()),
+                                                for k, v in flags.items()),
                                     QMessageBox.Ok)
         self.trainGroupBox.setEnabled(True)
         self.formGroupBox.setEnabled(True)

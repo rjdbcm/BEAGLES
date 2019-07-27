@@ -39,7 +39,7 @@ class TFNet(FlagIO):
     build_train_op = help.build_train_op
     load_from_ckpt = help.load_from_ckpt
 
-    def __init__(self, FLAGS, darknet=None):
+    def __init__(self, flags, darknet=None):
         FlagIO.__init__(self, subprogram=True)
         self.ntrain = 0
 
@@ -51,20 +51,20 @@ class TFNet(FlagIO):
         if os.stat(self.tf_logfile.baseFilename).st_size > 0:
             self.tf_logfile.doRollover()
 
-        self.FLAGS = self.read_flags()
+        self.flags = self.read_flags()
         self.io_flags()
-        if self.FLAGS.verbalise:
+        if self.flags.verbalise:
             os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
             tf.logging.set_verbosity(tf.logging.DEBUG)
         else:
             os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
             tf.logging.set_verbosity(tf.logging.FATAL)
 
-        if self.FLAGS.pbLoad and self.FLAGS.metaLoad:
+        if self.flags.pbLoad and self.flags.metaLoad:
             self.logger.info('Loading from .pb and .meta')
             self.graph = tf.Graph()
-            if FLAGS.gpu > 0.0:
-                device_name = FLAGS.gpuName
+            if flags.gpu > 0.0:
+                device_name = flags.gpuName
             else:
                 device_name = None
             with tf.device(device_name):
@@ -73,11 +73,11 @@ class TFNet(FlagIO):
             return
 
         if darknet is None:
-            darknet = Darknet(FLAGS)
+            darknet = Darknet(flags)
             self.ntrain = len(darknet.layers)
 
         self.darknet = darknet
-        args = [darknet.meta, FLAGS]
+        args = [darknet.meta, flags]
         self.num_layer = len(darknet.layers)
         self.framework = create_framework(*args)
 
@@ -86,8 +86,8 @@ class TFNet(FlagIO):
         self.logger.info('Building net ...')
         start = time.time()
         self.graph = tf.Graph()
-        if FLAGS.gpu > 0.0:
-            device_name = FLAGS.gpuName
+        if flags.gpu > 0.0:
+            device_name = flags.gpuName
         else:
             device_name = None
         with tf.device(device_name):
@@ -98,7 +98,7 @@ class TFNet(FlagIO):
             time.time() - start))
 
     def build_from_pb(self):
-        with tf.gfile.FastGFile(self.FLAGS.pbLoad, "rb") as f:
+        with tf.gfile.FastGFile(self.flags.pbLoad, "rb") as f:
             graph_def = tf.GraphDef()
             graph_def.ParseFromString(f.read())
 
@@ -106,9 +106,9 @@ class TFNet(FlagIO):
             graph_def,
             name=""
         )
-        with open(self.FLAGS.metaLoad, 'r') as fp:
+        with open(self.flags.metaLoad, 'r') as fp:
             self.meta = json.load(fp)
-        self.framework = create_framework(self.meta, self.FLAGS)
+        self.framework = create_framework(self.meta, self.flags)
 
         # Placeholders
         self.inp = tf.get_default_graph().get_tensor_by_name('input:0')
@@ -118,7 +118,7 @@ class TFNet(FlagIO):
         self.setup_meta_ops()
 
     def build_forward(self):
-        verbalise = self.FLAGS.verbalise
+        verbalise = self.flags.verbalise
 
         # Placeholders
         inp_size = [None] + self.meta['inp_size']
@@ -150,7 +150,7 @@ class TFNet(FlagIO):
             'log_device_placement': False
         })
 
-        utility = min(self.FLAGS.gpu, 1.)
+        utility = min(self.flags.gpu, 1.)
         if utility > 0.0:
             self.logger.info('GPU mode with {} usage'.format(utility))
             cfg['gpu_options'] = tf.GPUOptions(
@@ -160,22 +160,22 @@ class TFNet(FlagIO):
             self.logger.info('Running entirely on CPU')
             cfg['device_count'] = {'GPU': 0}
 
-        if self.FLAGS.train:
+        if self.flags.train:
             self.build_train_op()
 
-        if self.FLAGS.summary:
+        if self.flags.summary:
             self.summary_op = tf.summary.merge_all()
-            self.writer = tf.summary.FileWriter(self.FLAGS.summary + 'train')
+            self.writer = tf.summary.FileWriter(self.flags.summary + 'train')
 
         self.sess = tf.Session(config=tf.ConfigProto(**cfg))
         self.sess.run(tf.global_variables_initializer())
 
         if not self.ntrain: return
-        self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=self.FLAGS.keep)
-        if self.FLAGS.load != 0:
+        self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=self.flags.keep)
+        if self.flags.load != 0:
             self.load_from_ckpt()
 
-        if self.FLAGS.summary:
+        if self.flags.summary:
             self.writer.add_graph(self.sess.graph)
 
     def savepb(self):
@@ -185,17 +185,17 @@ class TFNet(FlagIO):
         """
         
         darknet_pb = self.to_darknet()
-        flags_pb = self.FLAGS
+        flags_pb = self.flags
         flags_pb.verbalise = False
         flags_pb.train = False
-        self.FLAGS.progress = 25
+        self.flags.progress = 25
         # rebuild another tfnet. all const.
         tfnet_pb = TFNet(flags_pb, darknet_pb)
         tfnet_pb.sess = tf.Session(graph=tfnet_pb.graph)
         # tfnet_pb.predict() # uncomment for unit testing
         name = 'built_graph/{}.pb'.format(self.meta['name'])
         os.makedirs(os.path.dirname(name), exist_ok=True)
-        self.FLAGS.progress = 50
+        self.flags.progress = 50
         # Save dump of everything in meta
         with open('./data/built_graph/{}.meta'.format(self.meta['name']), 'w') as fp:
             json.dump(self.meta, fp)
@@ -203,5 +203,5 @@ class TFNet(FlagIO):
         self.logger.info('Saving const graph def to {}'.format(name))
         graph_def = tfnet_pb.sess.graph_def
         tf.train.write_graph(graph_def, './data/', name, False)
-        self.FLAGS.progress = 90
-        self.FLAGS.done = True
+        self.flags.progress = 90
+        self.flags.done = True

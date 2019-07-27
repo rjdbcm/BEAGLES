@@ -23,7 +23,7 @@ def _batch(self, chunk):
     # preprocess
     jpg = chunk[0]; w, h, allobj_ = chunk[1]
     allobj = deepcopy(allobj_)
-    path = os.path.join(self.FLAGS.dataset, jpg)
+    path = os.path.join(self.flags.dataset, jpg)
     img = self.preprocess(path, allobj)
 
     # Calculate regression target

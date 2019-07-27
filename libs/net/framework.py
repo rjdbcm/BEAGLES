@@ -9,12 +9,12 @@ class framework(object):
     constructor = vanilla.constructor
     loss = vanilla.train.loss
     
-    def __init__(self, meta, FLAGS):
+    def __init__(self, meta, flags):
         model = basename(meta['model'])
         model = '.'.join(model.split('.')[:-1])
         meta['name'] = model
         self.meta = meta
-        self.constructor(meta, FLAGS)
+        self.constructor(meta, flags)
 
     def is_inp(self, file_name):
         return True
@@ -73,7 +73,7 @@ types = {
 }
 
 
-def create_framework(meta, FLAGS):
+def create_framework(meta, flags):
     net_type = meta['type']
     this = types.get(net_type, framework)
-    return this(meta, FLAGS)
+    return this(meta, flags)

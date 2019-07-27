@@ -120,7 +120,7 @@ def camera_compile(self, cmdstring):
 
 
 def camera_exec(self, cmdlist):
-    localdict = {'cv2': cv2, 'os': os, 'self': self}
+    localdict = {'cv2': cv2, 'os': os, 'self': self, 'c': None}
     for cmd in cmdlist:
         exec(cmd, globals(), localdict)
 
@@ -150,16 +150,15 @@ def camera(self):
         '    self.write_annotations(annotation{0}, res{0})\n'
         '    cv2.imshow("Cam {0}", new_frame{0})')
     self.camera_exec(get_caps)
-    count = 0
+    timeout = time.time() + self.flags.timeout
     while True:
         self.camera_exec(get_frames)
         self.camera_exec(get_boxing)
 
-        if cv2.waitKey(1) and self.flags.kill:
-            self.logger.info("Camera capture killed on devices {}".format(
+        if cv2.waitKey(1) and time.time() > timeout:
+            self.logger.info("Camera capture done on devices {}".format(
                              self.flags.capdevs))
             break
-    self.camera_exec("cap{0}.release()")
     cv2.destroyAllWindows()
 
     # file = self.flags.demo  # TODO add asynchronous capture
