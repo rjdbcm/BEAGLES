@@ -29,6 +29,7 @@ Cython==0.29.6
 opencv-contrib-python==4.0.0.21
 tensorflow==1.13.1
 numpy==1.16.2
+traces==0.4.2
 ```
 ##### Build Binary:
 ```bash

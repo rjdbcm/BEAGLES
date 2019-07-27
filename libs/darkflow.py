@@ -13,12 +13,17 @@ import time
 FLAGS = Flags()
 
 
+class Connection(QObject):
+
+    progressUpdate = pyqtSignal(int)
+
+
 class FlowThread(QThread, FlagIO):
     """Needed so the long-running train ops don't block Qt UI"""
 
-    def __init__(self, parent, proc, flags, pbar, rate=1):
+    def __init__(self, parent, proc, flags, rate=1):
         super(FlowThread, self).__init__(parent)
-        self.pbar = pbar
+        self.connection = Connection()
         self.rate = rate
         self.proc = proc
         self.flags = flags
@@ -35,27 +40,17 @@ class FlowThread(QThread, FlagIO):
             self.io_flags()
         self.read_flags()
         self.logger.info('Thread killed')
-        self.pbar.reset()
         self.proc.kill()
         self.returnFlags()
         self.logfile.doRollover()
         self.cleanup_ramdisk()
 
     def run(self):
-        first = True
-        incr = False
+        prg = 0
         while self.proc.poll() is None:
-            # pulse flowPrg during startup
-            if first:
-                self.pbar.setRange(0, 0)
-                first = False
-            # stop pulsing flowPrg once the progress has increased
-            if incr:
-                self.pbar.setRange(0, 100)
-                incr = False
-            if round(self.flags.progress - 1) > self.pbar.value():
-                self.pbar.setValue(self.flags.progress)
-                incr = True
+            prg_old, prg = prg, self.flags.progress
+            if prg > prg_old:
+                self.connection.progressUpdate.emit(prg)
             time.sleep(self.rate)
             self.read_flags()
             if self.flags.done:
@@ -64,15 +59,13 @@ class FlowThread(QThread, FlagIO):
                 self.returnFlags()
                 self.cleanup_ramdisk()
                 self.logfile.doRollover()
-                self.pbar.reset()
 
 
 class MultiCamThread(QThread):
-    def __init__(self, parent, model, pbar):
+    def __init__(self, parent, model):
         super(MultiCamThread, self).__init__(parent)
         self.devs = []
         self.model = model
-        self.pbar = pbar
         self.stopped = False
 
     def enumDevs(self):
@@ -88,13 +81,11 @@ class MultiCamThread(QThread):
             index += 1
         self.devs = dict(enumerate(self.devs))
         self.model.clear()
-        self.pbar.setRange(0, 100)
         return self.devs  # Use whilenot-else to display cams in UI
 
     def run(self):
         self.model.clear()
         self.model.appendRow(QStandardItem("Refreshing..."))
-        self.pbar.setRange(0, 0)
         self.enumDevs()
         while not self.devs:
             time.sleep(1)
@@ -267,16 +258,18 @@ class FlowDialog(QDialog):
         self.buttonOk.setDisabled(True)
         model = self.deviceItemModel
         pbar = self.flowPrg
-        t = MultiCamThread(self, model, pbar)
+        t = MultiCamThread(self, model)
         if t.isRunning():
             return
         else:
+            self.flowPrg.setMaximum(0)
             t.start()
             t.finished.connect(self._list_cameras_finished)
 
     def _list_cameras_finished(self):
         self.refreshDevBtn.setDisabled(False)
         self.buttonOk.setDisabled(False)
+        self.flowPrg.setMaximum(100)
 
     def trainerSelect(self):
         self.momentumSpd.setDisabled(True)
@@ -380,11 +373,13 @@ class FlowDialog(QDialog):
             proc = subprocess.Popen([sys.executable, os.path.join(
                 os.getcwd(), "libs/scripts/wrapper.py")],
                                     stdout=subprocess.PIPE, shell=False)
-            self.flowthread = FlowThread(self, proc=proc, flags=FLAGS,
-                                         pbar=self.flowPrg)
+            self.flowthread = FlowThread(self, proc=proc, flags=FLAGS)
             self.flowthread.setTerminationEnabled(True)
             self.flowthread.finished.connect(self.onFinished)
+            self.flowthread.connection.progressUpdate.connect(
+                self.updateProgress)
             self.flowthread.start()
+        self.flowPrg.setMaximum(0)
         self.buttonOk.setEnabled(False)
         self.formGroupBox.setEnabled(False)
         self.trainGroupBox.setEnabled(False)
@@ -411,6 +406,8 @@ class FlowDialog(QDialog):
                 self.formGroupBox.setEnabled(True)
                 event.accept()
         else:
+            self.flowPrg.setMaximum(100)
+            self.flowPrg.reset()
             self.buttonOk.setDisabled(False)
             self.trainGroupBox.setEnabled(True)
             self.formGroupBox.setEnabled(True)
@@ -427,8 +424,18 @@ class FlowDialog(QDialog):
                                     QMessageBox.Ok)
         self.trainGroupBox.setEnabled(True)
         self.formGroupBox.setEnabled(True)
+        self.flowPrg.setMaximum(100)
+        self.flowPrg.reset()
         self.buttonOk.setDisabled(False)
         self.findCkpt()
+
+    @pyqtSlot(int)
+    def updateProgress(self, value):
+        if self.flowPrg.maximum():
+            self.flowPrg.setValue(value)
+        else:  # stop pulsing and set value
+            self.flowPrg.setMaximum(100)
+            self.flowPrg.setValue(value)
 
     # HELPERS
     @staticmethod

@@ -9,7 +9,6 @@ from .framework import create_framework
 from ..dark.darknet import Darknet
 import json
 from ..utils.flags import FlagIO
-import logging
 import os
 
 
@@ -27,10 +26,10 @@ class TFNet(FlagIO):
     })
 
     # imported methods
-    _get_fps = help._get_fps
-    _exec = help._exec
-    _compile = help._compile
-    boxing = help.boxing
+    camera_exec = help.camera_exec
+    camera_compile = help.camera_compile
+    draw_box = help.draw_box
+    write_annotations = help.write_annotations
     train = flow.train
     camera = help.camera
     annotate = help.annotate
