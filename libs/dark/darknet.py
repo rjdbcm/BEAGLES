@@ -67,7 +67,7 @@ class Darknet(FlagIO, object):
         """
         args = [model, flags.binary]
         cfg_layers = cfg_yielder(*args)
-        meta = dict();
+        meta = dict()
         layers = list()
         for i, info in enumerate(cfg_layers):
             if i == 0:

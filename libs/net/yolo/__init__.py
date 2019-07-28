@@ -4,12 +4,14 @@ from . import data
 from . import misc
 from ...utils.flags import FlagIO
 import numpy as np
+import time
 
 """ YOLO framework __init__ equivalent"""
 
 
 def constructor(self, meta, flags):
     FlagIO.__init__(self, delay=0.5, subprogram=True)
+    self.flags = flags
 
     def _to_color(indx, base):
         """ return (b, r, g) tuple"""
@@ -25,11 +27,10 @@ def constructor(self, meta, flags):
         assert len(meta['labels']) == meta['classes'], (
                 '{} and {} indicate inconsistent class numbers').format(flags.labels, meta['model'])
     except AssertionError as e:
-        flags.error = str(e)
-        flags.done = True
-        self.flags = flags
+        self.flags.error = str(e)
         FlagIO.send_flags(self)
         raise
+
 
     # assign a color for each label
     colors = list()
@@ -39,7 +40,6 @@ def constructor(self, meta, flags):
     meta['colors'] = colors
     self.fetch = list()
     self.meta, self.flags = meta, flags
-    self.flags = self.flags
 
     # over-ride the threshold in meta if flags has it.
     if flags.threshold > 0.0:

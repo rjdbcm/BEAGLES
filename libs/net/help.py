@@ -2,7 +2,6 @@
 tfnet secondary (helper) methods
 """
 from ..utils.loader import create_loader
-from time import time as timer
 import tensorflow as tf
 import numpy as np
 from datetime import datetime
@@ -72,43 +71,6 @@ def load_old_graph(self, ckpt):
 #     net_out = self.sess.run(self.out, feed_dict)[0]
 #     processed = self.framework.postprocess(net_out, frame, False)
 #     return timer() - start
-
-
-# def boxing(self, cap, original_img, predictions, annotation_file):
-#     new_image = np.copy(original_img)
-#
-#     for result in predictions:
-#
-#         top_x = result['topleft']['x']
-#         top_y = result['topleft']['y']
-#
-#         btm_x = result['bottomright']['x']
-#         btm_y = result['bottomright']['y']
-#
-#         confidence = result['confidence']
-#         label = result['label'] + " " + str(round(confidence, 3))
-#
-#         if confidence > 0.01:
-#             new_image = cv2.rectangle(new_image, (top_x, top_y), (btm_x, btm_y)
-#                                       , (255, 0, 0), 3)
-#             new_image = cv2.putText(new_image, label, (top_x, top_y - 5),
-#                                    cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,
-#                                    (0, 230, 0), 1, cv2.LINE_AA)
-#
-#             with open(annotation_file, mode='a') as file:
-#                 file_writer = csv.writer(file, delimiter=',', quotechar='"',
-#                                          quoting=csv.QUOTE_MINIMAL)
-#                 for item in predictions:
-#                     time_elapsed = (cap.get(cv2.CAP_PROP_POS_MSEC) / 1000)
-#                     labels = item['label']
-#                     conf = item['confidence']
-#                     top_x = item['topleft']['x']
-#                     top_y = item['topleft']['y']
-#                     btm_x = item['bottomright']['x']
-#                     btm_y = item['bottomright']['y']
-#                     file_writer.writerow([time_elapsed, labels, conf, top_x,
-#                                           top_y, btm_x, btm_y])
-#     return new_image
 
 
 def camera_compile(self, cmdstring):
@@ -316,14 +278,13 @@ def annotate(self):
             frame = np.asarray(frame)
             result = self.return_predict(frame)
             new_frame = self.draw_box(frame, result)
-            self.write_annotations(annotation_file, result)# Display the resulting frame
+            self.write_annotations(annotation_file, result)
             out.write(new_frame)
             if self.flags.kill:
                 break
         else:
             break
     # When everything done, release the capture
-    cap.release()
     out.release()
 
 

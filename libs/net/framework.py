@@ -5,11 +5,12 @@ from ..utils.flags import FlagIO
 from os.path import basename
 
 
-class framework(object):
+class framework(FlagIO, object):
     constructor = vanilla.constructor
     loss = vanilla.train.loss
     
     def __init__(self, meta, flags):
+        FlagIO.__init__(self, subprogram=True)
         model = basename(meta['model'])
         model = '.'.join(model.split('.')[:-1])
         meta['name'] = model

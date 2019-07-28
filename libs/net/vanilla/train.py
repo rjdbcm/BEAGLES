@@ -1,4 +1,5 @@
 import tensorflow as tf
+from ...utils.flags import FlagIO
 
 _LOSS_TYPE = ['sse','l2', 'smooth',
 			  'sparse', 'l1', 'softmax',
@@ -7,8 +8,13 @@ _LOSS_TYPE = ['sse','l2', 'smooth',
 def loss(self, net_out):
 	m = self.meta
 	loss_type = self.meta['type']
-	assert loss_type in _LOSS_TYPE, \
-	'Loss type {} not implemented'.format(loss_type)
+	try:
+		assert loss_type in _LOSS_TYPE, \
+		'Loss type {} not implemented'.format(loss_type)
+	except AssertionError as e:
+		self.flags.error = str(e)
+		FlagIO.send_flags(self)
+		raise
 
 	out = net_out
 	out_shape = out.get_shape()
