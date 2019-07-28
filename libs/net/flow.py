@@ -17,6 +17,18 @@ train_stats = (
 pool = ThreadPool()
 
 
+class GradientNaN(Exception):
+    """Raised in cases of exploding or vanishing gradient"""
+    def __init__(self, flags):
+        clip = "--clip argument" if flags.cli else "Clip Gradients checkbox"
+        option = "" if flags.clip else "and turning on gradient clipping" \
+                                       " using the {}".format(clip)
+        Exception.__init__(
+            self, "Looks like the neural net lost the gradient"
+                  " try restarting from the last checkpoint {}.".format(
+                   option))
+
+
 def _save_ckpt(self, step, loss_profile):
     file = '{}-{}{}'
     model = self.meta['name']
@@ -37,47 +49,60 @@ def train(self):
     loss_ph = self.framework.placeholders
     loss_mva = None
     profile = list()
-
+    goal = None
+    total_steps = None
+    step_pad = None
     batches = self.framework.shuffle()
     loss_op = self.framework.loss
+
     for i, (x_batch, datum) in enumerate(batches):
         self.flags = self.read_flags()
+        feed_dict = {
+            loss_ph[key]: datum[key]
+            for key in loss_ph}
+        feed_dict[self.inp] = x_batch
+        feed_dict.update(self.feed)
+        fetches = [self.train_op, loss_op]
+        if self.flags.summary:
+            fetches.append(self.summary_op)
+
+        # Start the session
+        try:
+            fetched = self.sess.run(fetches, feed_dict)
+        except tf.errors.ResourceExhaustedError as e:
+            self.flags.error = str(e.message)
+            self.send_flags()
+            raise
+        loss = fetched[1]
+
+        # single shot calculations
         if not i:
             self.logger.info(train_stats.format(
                 self.flags.lr, self.flags.batch,
                 self.flags.epoch, self.flags.save
             ))
             count = 0
+        if not goal:
+            goal = self.flags.size * self.flags.epoch
+        if not total_steps:
+            total_steps = goal // self.flags.batch
+            step_pad = len(str(total_steps))
+        if not loss_mva:
+            loss_mva = loss
 
-        feed_dict = {
-            loss_ph[key]: datum[key]
-            for key in loss_ph}
-        feed_dict[self.inp] = x_batch
-        feed_dict.update(self.feed)
-
-        fetches = [self.train_op, loss_op]
-
-        if self.flags.summary:
-            fetches.append(self.summary_op)
-
-        fetched = self.sess.run(fetches, feed_dict)
-        loss = fetched[1]
-
+        # Check for exploding/vanishing gradient
         if math.isnan(loss):
-            if self.flags.clip:
-                self.flags.error = "Looks like the neural net lost the gradient. Try restarting from your last " \
-                                   "checkpoint."
-            if not self.flags.clip:
-                self.flags.error = "Looks like the neural net lost the gradient. Try restarting from the last " \
-                                   "checkpoint. If this keeps happening try using the --clip argument when you " \
-                                   "restart from the last checkpoint."
+            try:
+                raise GradientNaN(self.flags)
+            except GradientNaN as e:
+                self.flags.error = str(e)
+                self.send_flags()
+                raise
 
-        if loss_mva is None: loss_mva = loss
         loss_mva = .9 * loss_mva + .1 * loss
         step_now = self.flags.load + i + 1
 
         count += self.flags.batch
-        goal = self.flags.size * self.flags.epoch
         self.flags.progress = count / goal * 100
         self.io_flags()
 
@@ -85,7 +110,10 @@ def train(self):
             self.writer.add_summary(fetched[2], step_now)
 
         form = 'step {} - loss {} - moving ave loss {}'
-        self.logger.info(form.format(step_now, loss, loss_mva))
+        self.logger.info(
+            form.format(str(step_now).zfill(step_pad),
+                        format(loss, '.14f'),
+                        format(loss_mva, '.14f')))
         profile += [(loss, loss_mva)]
 
         ckpt = (i + 1) % (self.flags.save // self.flags.batch)
