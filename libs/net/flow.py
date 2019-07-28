@@ -91,7 +91,7 @@ def train(self):
             loss_mva = loss
 
         # Check for exploding/vanishing gradient
-        if math.isnan(loss):
+        if math.isnan(loss) or math.isinf(loss):
             try:
                 raise GradientNaN(self.flags)
             except GradientNaN as e:
