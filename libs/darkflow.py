@@ -250,6 +250,9 @@ class FlowDialog(QDialog):
         l = list(map(str, l))
         self.loadCmb.addItems(l)
 
+    def editCkptFile(self):
+        """write selected checkpoint and model information to checkpoint"""
+
     def listCameras(self):
         self.refreshDevBtn.setDisabled(True)
         self.buttonOk.setDisabled(True)

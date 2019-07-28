@@ -2,6 +2,8 @@ import os
 import sys
 import time
 import math
+from typing import List, Any, Union
+
 import numpy as np
 import tensorflow as tf
 import pickle
@@ -102,6 +104,7 @@ def train(self):
         loss_mva = .9 * loss_mva + .1 * loss
         step_now = self.flags.load + i + 1
 
+        # Calculate and send progress
         count += self.flags.batch
         self.flags.progress = count / goal * 100
         self.io_flags()
@@ -109,11 +112,12 @@ def train(self):
         if self.flags.summary:
             self.writer.add_summary(fetched[2], step_now)
 
-        form = 'step {} - loss {} - moving ave loss {}'
+        form = 'step {} - loss {} - moving ave loss {} - progress {}'
         self.logger.info(
             form.format(str(step_now).zfill(step_pad),
                         format(loss, '.14f'),
-                        format(loss_mva, '.14f')))
+                        format(loss_mva, '.14f'),
+                        "{:=6.2f}%".format(self.flags.progress)))
         profile += [(loss, loss_mva)]
 
         ckpt = (i + 1) % (self.flags.save // self.flags.batch)

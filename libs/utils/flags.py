@@ -9,6 +9,7 @@ import os
 
 
 class FlagIO(object):
+    """Base object for logging and shared memory flag read/write operations"""
     def __init__(self, subprogram=False, delay=0.1):
         self.subprogram = subprogram
         self.delay = delay
