@@ -22,12 +22,12 @@ pool = ThreadPool()
 class GradientNaN(Exception):
     """Raised in cases of exploding or vanishing gradient"""
     def __init__(self, flags):
-        clip = "--clip argument" if flags.cli else "Clip Gradients checkbox"
-        option = "" if flags.clip else "and turning on gradient clipping" \
-                                       " using the {}".format(clip)
+        clip = "--clip argument" if flags.cli else "'Clip Gradients' checkbox"
+        option = "." if flags.clip else " and turning on gradient clipping" \
+                                       " using the {}.".format(clip)
         Exception.__init__(
             self, "Looks like the neural net lost the gradient"
-                  " try restarting from the last checkpoint {}.".format(
+                  " try restarting from the last checkpoint{}".format(
                    option))
 
 
@@ -91,6 +91,8 @@ def train(self):
             step_pad = len(str(total_steps))
         if not loss_mva:
             loss_mva = loss
+
+        loss = math.inf
 
         # Check for exploding/vanishing gradient
         if math.isnan(loss) or math.isinf(loss):

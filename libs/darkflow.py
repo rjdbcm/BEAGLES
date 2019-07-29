@@ -13,7 +13,6 @@ import time
 
 
 class Connection(QObject):
-
     progressUpdate = pyqtSignal(int)
 
 
@@ -312,10 +311,11 @@ class FlowDialog(QDialog):
             self.thresholdSpd.setDisabled(False)
 
     def accept(self):
-        """set self.flags for darkflow and prevent startup if errors anticipated"""
-        self.updateCkptFile()
+        """set flags for darkflow and prevent startup if errors anticipated"""
+        self.updateCkptFile()  # Make sure TFNet gets the correct checkpoint
         self.flags.get_defaults()  # Reset self.flags
-        self.flags.model = os.path.join(self.flags.config, self.modelCmb.currentText())
+        self.flags.model = os.path.join(
+            self.flags.config, self.modelCmb.currentText())
         try:
             self.flags.load = int(self.loadCmb.currentText())
         except ValueError:
@@ -342,23 +342,23 @@ class FlowDialog(QDialog):
 
         if not self.flowCmb.currentText() == "Train" and self.flags.load == 0:
             QMessageBox.warning(self, 'Error', "Invalid checkpoint",
-                                 QMessageBox.Ok)
+                                QMessageBox.Ok)
             return
         if self.flowCmb.currentText() == "Flow":
             pass
         if self.flowCmb.currentText() == "Train":
             if not self.flags.save % self.flags.batch == 0:
                 QMessageBox.warning(self, 'Error',
-                                     "The value of 'Save Every' should be "
-                                     "divisible by the value of 'Batch Size'",
-                                     QMessageBox.Ok)
+                                    "The value of 'Save Every' should be "
+                                    "divisible by the value of 'Batch Size'",
+                                    QMessageBox.Ok)
                 return
             dataset = [f for f in os.listdir(self.flags.dataset)
                        if not f.startswith('.')]
             if not dataset:
                 QMessageBox.warning(self, 'Error',
-                                     'No frames or annotations found',
-                                     QMessageBox.Ok)
+                                    'No frames or annotations found',
+                                    QMessageBox.Ok)
                 return
             else:
                 self.flags.train = True
@@ -436,11 +436,12 @@ class FlowDialog(QDialog):
         self.flags = self.flowthread.flags
         if self.flags.error:
             QMessageBox.critical(self, "Error Message", self.flags.error,
-                              QMessageBox.Ok)
+                                 QMessageBox.Ok)
         if self.flags.verbalise:
             QMessageBox.information(self, "Debug Message", "Process Stopped:\n"
                                     + "\n".join('{}: {}'.format(k, v)
-                                                for k, v in self.flags.items()),
+                                                for k, v in
+                                                self.flags.items()),
                                     QMessageBox.Ok)
         self.trainGroupBox.setEnabled(True)
         self.formGroupBox.setEnabled(True)

@@ -1662,7 +1662,17 @@ def get_main_app(argv=[]):
     try:
         import qdarkstyle
         os.environ["QT_API"] = 'pyqt5'
-        app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+        # detect system darkmode on macOS
+        if sys.platform == "Darwin":
+            # noinspection PyUnresolvedReferences
+            from Foundation import NSUserDefaults as NS
+            m = NS.standardUserDefaults().stringForKey_('AppleInterfaceStyle')
+            if m == 'Dark':
+                app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+            else:
+                pass
+        else:
+            app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
     except ImportError as e:
         print(" ".join([str(e), "falling back to system theme"]))
     app.setApplicationName(__appname__)

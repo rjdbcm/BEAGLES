@@ -87,9 +87,11 @@ class DarkWrapper(FlagIO):
                                 help='name of protobuf file to load')
             parser.add_argument('--metaLoad', default=Flags().metaLoad,
                                 metavar='',
-                                help='path to .meta file generated during --savepb that corresponds to .pb file')
+                                help='path to .meta file generated during'
+                                     ' --savepb that corresponds to .pb file')
             parser.add_argument('--gpu', default=Flags().gpu,
-                                metavar='[0 .. 1.0]', help='amount of GPU to use')
+                                metavar='[0 .. 1.0]',
+                                help='amount of GPU to use')
             parser.add_argument('--gpuName', default=Flags().gpuName,
                                 metavar='/gpu:N', help='GPU device name')
             parser.add_argument('-l', '--load', default=Flags().load,
