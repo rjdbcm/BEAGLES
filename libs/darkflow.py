@@ -3,6 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from .labelFile import LabelFile
 from .utils.flags import Flags, FlagIO
+import fileinput
 import subprocess
 import cv2
 import sys
@@ -250,8 +251,19 @@ class FlowDialog(QDialog):
         l = list(map(str, l))
         self.loadCmb.addItems(l)
 
-    def editCkptFile(self):
+    def updateCkptFile(self):
         """write selected checkpoint and model information to checkpoint"""
+        regex = re.compile('".*?"')
+        model_name = os.path.splitext(self.modelCmb.currentText())[0]
+        replacement = "-".join([model_name, self.loadCmb.currentText()])
+        file = (os.path.join(self.flags.backup, 'checkpoint'))
+        fh = open(file, 'r')
+        data = fh.read()
+        fh.close()
+        result = regex.sub('"{}"'.format(replacement), data)
+        fh = open(file, 'w')
+        fh.write(result)
+        fh.close()
 
     def listCameras(self):
         self.refreshDevBtn.setDisabled(True)
@@ -301,6 +313,7 @@ class FlowDialog(QDialog):
 
     def accept(self):
         """set self.flags for darkflow and prevent startup if errors anticipated"""
+        self.updateCkptFile()
         self.flags.get_defaults()  # Reset self.flags
         self.flags.model = os.path.join(self.flags.config, self.modelCmb.currentText())
         try:
