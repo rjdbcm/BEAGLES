@@ -1335,6 +1335,9 @@ class MainWindow(QMainWindow, WindowMixin):
         else:
             defaultOpenDirPath = os.path.dirname(self.filePath) if \
                 self.filePath else '.'
+        if defaultOpenDirPath == self.committedframesDataPath:
+            self.errorMessage("", "These files are already committed.")
+            return
 
         filelist = []
         for file in os.listdir(defaultOpenDirPath):
