@@ -437,6 +437,10 @@ class FlowDialog(QDialog):
         if self.flags.error:
             QMessageBox.critical(self, "Error Message", self.flags.error,
                                  QMessageBox.Ok)
+            if os.stat(self.flowthread.logfile.baseFilename).st_size > 0:
+                self.flowthread.logfile.doRollover()
+            if os.stat(self.flowthread.tf_logfile.baseFilename).st_size > 0:
+                self.flowthread.tf_logfile.doRollover()
         if self.flags.verbalise:
             QMessageBox.information(self, "Debug Message", "Process Stopped:\n"
                                     + "\n".join('{}: {}'.format(k, v)

@@ -92,14 +92,13 @@ def train(self):
         if not loss_mva:
             loss_mva = loss
 
-        loss = math.inf
-
         # Check for exploding/vanishing gradient
         if math.isnan(loss) or math.isinf(loss):
             try:
                 raise GradientNaN(self.flags)
             except GradientNaN as e:
                 self.flags.error = str(e)
+                self.logger.error(str(e))
                 self.send_flags()
                 raise
 

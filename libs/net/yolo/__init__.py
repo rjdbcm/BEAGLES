@@ -28,6 +28,7 @@ def constructor(self, meta, flags):
                 '{} and {} indicate inconsistent class numbers').format(flags.labels, meta['model'])
     except AssertionError as e:
         self.flags.error = str(e)
+        self.logger.error(str(e))
         FlagIO.send_flags(self)
         raise
 
