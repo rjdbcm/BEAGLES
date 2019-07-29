@@ -10,6 +10,7 @@ class framework(FlagIO, object):
     loss = vanilla.train.loss
     
     def __init__(self, meta, flags):
+        FlagIO.__init__(self, delay=0.5, subprogram=True)
         model = basename(meta['model'])
         model = '.'.join(model.split('.')[:-1])
         meta['name'] = model

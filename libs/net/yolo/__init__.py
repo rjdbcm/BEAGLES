@@ -10,7 +10,6 @@ import time
 
 
 def constructor(self, meta, flags):
-    FlagIO.__init__(self, delay=0.5, subprogram=True)
     self.flags = flags
 
     def _to_color(indx, base):
