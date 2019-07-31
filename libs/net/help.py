@@ -4,7 +4,9 @@ tfnet secondary (helper) methods
 from ..utils.loader import create_loader
 import tensorflow as tf
 import numpy as np
+from threading import Thread
 from datetime import datetime
+import math
 import time
 import sys
 import csv
@@ -55,8 +57,14 @@ def load_old_graph(self, ckpt):
         name = var.name.split(':')[0]
         args = [name, var.get_shape()]
         val = ckpt_loader(args)
-        assert val is not None, \
-            'Cannot find and load {}'.format(var.name)
+        try:
+            assert val is not None, \
+                'Cannot find and load {}'.format(var.name)
+        except AssertionError as e:
+            self.flags.error = str(e)
+            self.logger.error(str(e))
+            self.send_flags()
+            raise
         shp = val.shape
         plh = tf.placeholder(tf.float32, shp)
         op = tf.assign(var, plh)
@@ -65,12 +73,12 @@ def load_old_graph(self, ckpt):
 
 # def _get_fps(self, frame):
 #     elapsed = int()
-#     start = timer()
+#     start = time.time()
 #     preprocessed = self.framework.preprocess(frame)
 #     feed_dict = {self.inp: [preprocessed]}
 #     net_out = self.sess.run(self.out, feed_dict)[0]
 #     processed = self.framework.postprocess(net_out, frame, False)
-#     return timer() - start
+#     return time.time() - start
 
 
 def camera_compile(self, cmdstring):
@@ -88,20 +96,28 @@ def camera_exec(self, cmdlist):
 
 
 def camera(self):
+    '''
+    capture and annotate a list of devices
+    number of frames displayed scales with the number of devices
+    '''
     self.cams = self.flags.capdevs
-    self.logger.info("Camera capture started on devices {}".format(self.cams))
+    self.logger.info("Compiling capture code blocks")
+    start = time.time()
     get_caps = self.camera_compile(
         "global cap{0}\n"
         "cap{0} = cv2.VideoCapture({0})\n"
-        "cap{0}.set(cv2.CAP_PROP_FRAME_WIDTH, 144)\n"
-        "cap{0}.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)\n"
+        "cap{0}.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)\n"
+        "cap{0}.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)\n"
+        "cap{0}.set(cv2.CAP_PROP_BUFFERSIZE, 3)\n"
         "global annotation{0}\n"
         "annotation{0} = os.path.join("
         "self.flags.imgdir, 'video{0}_annotations.csv')")
     get_frames = self.camera_compile(
         "global ret{0}\n"
         "global frame{0}\n"
-        "ret{0}, frame{0} = cap{0}.read()")
+        "global stopped{0}\n"
+        "ret{0}, frame{0} = cap{0}.read()\n"
+        "stopped{0} = False")
     get_boxing = self.camera_compile(
         'if ret{0}:\n'
         '    global res{0}\n'
@@ -109,15 +125,58 @@ def camera(self):
         '    frame{0} = np.asarray(frame{0})\n'
         '    res{0} = self.return_predict(frame{0})\n'
         '    new_frame{0} = self.draw_box(frame{0}, res{0})\n'
-        '    self.write_annotations(annotation{0}, res{0})\n'
-        '    cv2.imshow("Cam {0}", new_frame{0})')
-    self.camera_exec(get_caps)
-    timeout = time.time() + self.flags.timeout
-    while True:
-        self.camera_exec(get_frames)
-        self.camera_exec(get_boxing)
+        '    self.write_annotations(annotation{0}, res{0})\n')
+    init_writer = self.camera_compile(
+        'global out{0}\n'
+        'fourcc = cv2.VideoWriter_fourcc(*"mp4v")\n'
+        'max_x = cap{0}.get(cv2.CAP_PROP_FRAME_WIDTH)\n'
+        'max_y = cap{0}.get(cv2.CAP_PROP_FRAME_HEIGHT)\n'
+        'out{0} = cv2.VideoWriter(os.path.splitext(annotation{0})[0] + ".avi",'
+        'fourcc, fps, (int(max_x), int(max_y)))')
+    write_frame = self.camera_compile('out{0}.write(new_frame{0})')
+    show_frame = self.camera_compile('cv2.imshow("Cam {0}", new_frame{0})')
+    end = time.time()
+    self.logger.info("Finished in {}s".format(end - start))
 
-        if cv2.waitKey(1) and time.time() > timeout:
+    self.camera_exec(get_caps)
+
+    start = time.time()
+    for i in range(0, 240):
+        t = Thread(target=self.camera_exec(get_frames), args=())
+        t.start()
+        t.join()
+        t = Thread(target=self.camera_exec(get_boxing), args=())
+        t.start()
+        t.join()
+        t = Thread(target=self.camera_exec(show_frame), args=())
+        t.start()
+        t.join()
+    end = time.time()
+    elapsed = end - start
+    global fps
+    fps = 240 / elapsed
+    self.logger.info("recording at {} FPS".format(fps))
+
+    self.camera_exec(init_writer)
+    begin = time.time()
+    timeout = begin + self.flags.timeout
+    self.logger.info("Camera capture started on devices {}".format(self.cams))
+    while True:
+        t = Thread(target=self.camera_exec(get_frames), args=())
+        t.start()
+        t.join()
+        t = Thread(target=self.camera_exec(get_boxing), args=())
+        t.start()
+        t.join()
+        t = Thread(target=self.camera_exec(write_frame), args=())
+        t.start()
+        t.join()
+        t = Thread(target=self.camera_exec(show_frame), args=())
+        t.start()
+        t.join()
+        self.flags.progress = 100 * (time.time() - begin)/(timeout - begin)
+        self.send_flags()
+        if cv2.waitKey(1) and time.time() >= timeout:
             self.logger.info("Camera capture done on devices {}".format(
                              self.flags.capdevs))
             break

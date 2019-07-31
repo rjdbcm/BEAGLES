@@ -57,6 +57,7 @@ class MultiCamThread(QThread):
 
     def enumDevs(self):
         index = 0
+        timeout = time.time() + 30
         while index < 32:
             cap = cv2.VideoCapture(index)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 144)
@@ -92,6 +93,8 @@ class FlowDialog(QDialog):
     def __init__(self, parent=None, labelfile=None):
         super(FlowDialog, self).__init__(parent)
         self.flags = Flags()
+        self.oldBatchValue = int(self.flags.batch)
+        self.oldSaveValue = int(self.flags.save)
 
         self.formGroupBox = QGroupBox("Select Model and Checkpoint")
         layout = QFormLayout()
@@ -158,9 +161,10 @@ class FlowDialog(QDialog):
         layout3.addRow(QLabel("Checkpoints to Keep"), self.keepSpb)
 
         self.batchSpb = QSpinBox()
-        self.batchSpb.setRange(2, 256)
+        self.batchSpb.setRange(1, 256)
         self.batchSpb.setValue(int(self.flags.batch))
-        self.batchSpb.setSingleStep(2)
+        self.batchSpb.setWrapping(True)
+        self.batchSpb.valueChanged.connect(self.onBatchValueChange)
         layout3.addRow(QLabel("Batch Size"), self.batchSpb)
 
         self.epochSpb = QSpinBox()
@@ -171,6 +175,8 @@ class FlowDialog(QDialog):
         self.saveSpb = QSpinBox()
         self.saveSpb.setRange(1, 65536)
         self.saveSpb.setValue(self.flags.save)
+        self.saveSpb.setWrapping(True)
+        self.saveSpb.valueChanged.connect(self.onSaveValueChange)
         layout3.addRow(QLabel("Save Every"), self.saveSpb)
 
         self.clipChb = QCheckBox()
@@ -208,12 +214,17 @@ class FlowDialog(QDialog):
 
         self.labelfile = labelfile
 
-        self.buttonOk = QDialogButtonBox(QDialogButtonBox.Ok)
-        self.buttonCancel = QDialogButtonBox(QDialogButtonBox.Cancel)
-        self.buttonOk.accepted.connect(self.accept)
-        self.buttonCancel.rejected.connect(self.close)
         self.flowPrg = QProgressBar()
         self.flowPrg.setRange(0, 100)
+        self.buttonOk = QDialogButtonBox(QDialogButtonBox.Ok)
+        self.buttonCancel = QDialogButtonBox(QDialogButtonBox.Cancel)
+        self.buttonStop = QPushButton("Stop")
+        self.buttonStop.setIcon(self.style().standardIcon(QStyle.SP_BrowserStop))
+        self.buttonStop.hide()
+        self.buttonOk.accepted.connect(self.accept)
+        self.buttonStop.clicked.connect(self.closeEvent)
+        self.buttonCancel.rejected.connect(self.close)
+
 
         main_layout = QGridLayout()
         main_layout.addWidget(self.formGroupBox, 0, 0)
@@ -222,6 +233,7 @@ class FlowDialog(QDialog):
         main_layout.addWidget(self.trainGroupBox, 3, 0)
         main_layout.setSizeConstraint(QLayout.SetFixedSize)
         main_layout.addWidget(self.buttonOk, 4, 0, Qt.AlignRight)
+        main_layout.addWidget(self.buttonStop, 4, 0, Qt.AlignRight)
         main_layout.addWidget(self.buttonCancel, 4, 0, Qt.AlignLeft)
         main_layout.addWidget(self.flowPrg, 4, 0, Qt.AlignCenter)
         self.setLayout(main_layout)
@@ -299,16 +311,18 @@ class FlowDialog(QDialog):
         else:
             self.flowGroupBox.hide()
 
-        if not self.flowCmb.currentText() == "Train":
+        if self.flowCmb.currentText() == "Freeze":
+            self.thresholdSpd.setDisabled(True)
+        else:
+            self.thresholdSpd.setDisabled(False)
+
+        if self.flowCmb.currentText() == "Train":
+            self.trainGroupBox.show()
+            self.thresholdSpd.setDisabled(True)
+        else:
             self.trainGroupBox.hide()
             self.loadCmb.setCurrentIndex(0)
-            if self.flowCmb.currentText() == "Freeze":
-                self.thresholdSpd.setDisabled(True)
-            else:
-                self.thresholdSpd.setDisabled(False)
-        else:
-            self.trainGroupBox.show()
-            self.thresholdSpd.setDisabled(False)
+
 
     def accept(self):
         """set flags for darkflow and prevent startup if errors anticipated"""
@@ -345,6 +359,7 @@ class FlowDialog(QDialog):
                                 QMessageBox.Ok)
             return
         if self.flowCmb.currentText() == "Flow":
+            self.flowGroupBox.setDisabled(True)
             pass
         if self.flowCmb.currentText() == "Train":
             if not self.flags.save % self.flags.batch == 0:
@@ -387,6 +402,7 @@ class FlowDialog(QDialog):
                                     "Please specify a record time",
                                     QMessageBox.Ok)
                 return
+            self.demoGroupBox.setDisabled(True)
             self.flags.demo = "camera"
         if [self.flowCmb.currentText() == "Train" or "Freeze"]:
             proc = subprocess.Popen([sys.executable, os.path.join(
@@ -400,37 +416,52 @@ class FlowDialog(QDialog):
             self.flowthread.start()
         self.flowPrg.setMaximum(0)
         self.buttonOk.setEnabled(False)
+        self.buttonOk.hide()
+        self.buttonStop.show()
         self.formGroupBox.setEnabled(False)
         self.trainGroupBox.setEnabled(False)
 
     def closeEvent(self, event):
+
+        def acceptEvent():
+            self.buttonOk.setDisabled(False)
+            self.buttonStop.hide()
+            self.buttonOk.show()
+            self.flowGroupBox.setEnabled(True)
+            self.demoGroupBox.setEnabled(True)
+            self.trainGroupBox.setEnabled(True)
+            self.formGroupBox.setEnabled(True)
+            try:
+                event.accept()
+            except AttributeError:
+                pass
+
         try:
             thread_running = self.flowthread.isRunning()
         except AttributeError:
             thread_running = False
         if thread_running:
-            msg = "Are you sure you want to close this dialog? " \
-                  "This will kill any running processes."
+            option = "close" if type(event) == QCloseEvent else "stop"
+            msg = "Are you sure you want to {} this dialog? " \
+                  "This will terminate any running processes.".format(option)
             reply = QMessageBox.question(self, 'Message', msg, QMessageBox.Yes,
                                          QMessageBox.No)
             if reply == QMessageBox.No:
-                event.ignore()
+                try:
+                    event.ignore()
+                except AttributeError:
+                    pass
             else:
                 try:
                     self.flowthread.stop()
                 except AttributeError:
                     pass
-                self.buttonOk.setDisabled(False)
-                self.trainGroupBox.setEnabled(True)
-                self.formGroupBox.setEnabled(True)
-                event.accept()
+                acceptEvent()
+
         else:
             self.flowPrg.setMaximum(100)
             self.flowPrg.reset()
-            self.buttonOk.setDisabled(False)
-            self.trainGroupBox.setEnabled(True)
-            self.formGroupBox.setEnabled(True)
-            event.accept()
+            acceptEvent()
 
     def onFinished(self):
         self.flags = self.flowthread.flags
@@ -447,11 +478,15 @@ class FlowDialog(QDialog):
                                                 for k, v in
                                                 self.flags.items()),
                                     QMessageBox.Ok)
+        self.flowGroupBox.setEnabled(True)
+        self.demoGroupBox.setEnabled(True)
         self.trainGroupBox.setEnabled(True)
         self.formGroupBox.setEnabled(True)
         self.flowPrg.setMaximum(100)
         self.flowPrg.reset()
         self.buttonOk.setDisabled(False)
+        self.buttonStop.hide()
+        self.buttonOk.show()
         self.findCkpt()
 
     @pyqtSlot(int)
@@ -461,6 +496,40 @@ class FlowDialog(QDialog):
         else:  # stop pulsing and set value
             self.flowPrg.setMaximum(100)
             self.flowPrg.setValue(value)
+
+    @pyqtSlot(int)
+    def onBatchValueChange(self, value):
+
+        def upOrDown():
+            if value > self.oldBatchValue:
+                self.saveSpb.stepUp()
+            elif value < self.oldBatchValue:
+                self.saveSpb.stepDown()
+            else:
+                pass
+
+        self.saveSpb.blockSignals(True)
+        if self.saveSpb.value() % self.batchSpb.value() == 0:
+            upOrDown()
+        else:
+            upOrDown()
+            self.saveSpb.setSingleStep(self.batchSpb.value())
+        self.saveSpb.blockSignals(False)
+
+    @pyqtSlot(int)
+    def onSaveValueChange(self, value):
+        print(value)
+        self.batchSpb.blockSignals(True)
+        if self.saveSpb.value() % self.batchSpb.value() == 0:
+            pass
+        else:
+            if value > self.oldSaveValue:
+                self.batchSpb.stepUp()
+            elif value < self.oldSaveValue:
+                self.batchSpb.stepDown()
+            else:
+                pass
+        self.batchSpb.blockSignals(False)
 
     # HELPERS
     @staticmethod

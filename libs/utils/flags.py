@@ -14,6 +14,7 @@ class FlagIO(object):
         self.subprogram = subprogram
         self.delay = delay
 
+        logging.captureWarnings(True)
         self.logger = logging.getLogger(type(self).__name__)
         formatter = logging.Formatter(
          '{asctime} | {levelname:7} | {name:<11} | {funcName:<20} | {message}',
