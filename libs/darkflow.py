@@ -280,7 +280,6 @@ class FlowDialog(QDialog):
         self.refreshDevBtn.setDisabled(True)
         self.buttonOk.setDisabled(True)
         model = self.deviceItemModel
-        pbar = self.flowPrg
         t = MultiCamThread(self, model)
         if t.isRunning():
             return

@@ -1329,6 +1329,14 @@ class MainWindow(QMainWindow, WindowMixin):
             pass
 
     def commitAnnotatedFrames(self, dirpath=None):
+        reply = QMessageBox.question(self, 'Message',
+                                     "Are you sure you want to commit all "
+                                     "open files?", QMessageBox.Yes,
+                                     QMessageBox.No)
+        if reply == QMessageBox.No:
+            return
+        else:
+            pass
         defaultOpenDirPath = dirpath if dirpath else '.'
         if self.lastOpenDir and os.path.exists(self.lastOpenDir):
             defaultOpenDirPath = self.lastOpenDir
@@ -1342,7 +1350,7 @@ class MainWindow(QMainWindow, WindowMixin):
         filelist = []
         for file in os.listdir(defaultOpenDirPath):
             filename = os.fsdecode(file)
-            if filename.endswith(".xml"):
+            if filename.endswith((".xml", ".txt")):
                 print("Moving {0} to data/committedframes/{0}".format(
                     filename))
                 filename = os.path.join(defaultOpenDirPath, filename)
