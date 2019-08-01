@@ -125,8 +125,7 @@ class Flags(dict):
     This allows compatibility with argparse.Namespace objects.
     """
     def __init__(self, defaults=True):
-        self.defaults = defaults
-        if self.defaults:
+        if defaults:
             self.get_defaults()
 
     def __getattr__(self, attr):

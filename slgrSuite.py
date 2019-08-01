@@ -5,6 +5,8 @@ import distutils.spawn
 import os.path
 import time
 import platform
+import random
+import argparse
 import re
 import sys
 import shutil
@@ -1670,10 +1672,20 @@ def get_main_app(argv=[]):
     -- so that we can test the application in one thread
     """
     app = QApplication(argv)
+    parser = argparse.ArgumentParser()
+    img_dir = Flags().imgdir
+    random_img = random.choice([os.path.join(img_dir, f) for f in
+                                os.listdir(img_dir) if
+                                os.path.isfile(os.path.join(img_dir, f))])
+    parser.add_argument('--img', default=random_img, help="image file to open")
+    parser.add_argument('--classes', default=Flags().labels,
+                        help="text file containing class names")
+    parser.add_argument('--saveDir', default=None, help="save directory")
+    args = parser.parse_args()
     try:
         import qdarkstyle
         os.environ["QT_API"] = 'pyqt5'
-        # detect system darkmode on macOS
+        # detect system theme on macOS
         if sys.platform == "Darwin":
             # noinspection PyUnresolvedReferences
             from Foundation import NSUserDefaults as NS
@@ -1688,13 +1700,7 @@ def get_main_app(argv=[]):
         print(" ".join([str(e), "falling back to system theme"]))
     app.setApplicationName(__appname__)
     app.setWindowIcon(newIcon("app"))
-    # Tzutalin 201705+: Accept extra agruments to change predefined class file
-    # Usage : slgrSuite.py image predefClassFile saveDir
-    win = MainWindow(argv[1] if len(argv) >= 2 else None,
-                     argv[2] if len(argv) >= 3 else os.path.join(
-                         os.path.dirname(sys.argv[0]),
-                         'data', 'predefined_classes.txt'),
-                     argv[3] if len(argv) >= 4 else None)
+    win = MainWindow(args.img, args.classes, args.saveDir)
     win.show()
     return app, win
 

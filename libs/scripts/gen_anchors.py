@@ -2,16 +2,12 @@
 Created on Feb 20, 2017
 @author: jumabek
 '''
-from os import listdir
-from os.path import isfile, join
+import os
 import argparse
-# import cv2
 import numpy as np
 import sys
 import os
-import shutil
 import random
-import math
 
 np.seterr(invalid='raise')
 width_in_cfg_file = 416.
@@ -40,7 +36,8 @@ def avg_IOU(X, centroids):
     n, d = X.shape
     sum = 0.
     for i in range(X.shape[0]):
-        # note IOU() will return array which contains IoU for each centroid and X[i] // slightly ineffective, but I am too lazy
+        # note IOU() will return array which contains IoU for each centroid
+        # and X[i] // slightly ineffective, but I am too lazy
         sum += max(IOU(X[i], centroids))
     return sum / n
 
@@ -64,7 +61,8 @@ def write_anchors_to_file(centroids, X, anchor_file):
             f.write('%0.2f,%0.2f, ' % (anchors[i, 0], anchors[i, 1]))
 
         # there should not be comma after last anchor, that's why
-        f.write('%0.2f,%0.2f\n' % (anchors[sorted_indices[-1:], 0], anchors[sorted_indices[-1:], 1]))
+        f.write('%0.2f,%0.2f\n' % (anchors[sorted_indices[-1:], 0],
+                                   anchors[sorted_indices[-1:], 1]))
 
         # f.write('%f\n' % (avg_IOU(X, centroids)))
 
@@ -152,15 +150,17 @@ def main(argv):
 
     if args.num_clusters == 0:
         for num_clusters in range(1, 11):  # we make 1 through 10 clusters
-            anchor_file = join(args.output, 'anchors%d.txt' % num_clusters)
+            anchor_file = os.path.join(args.output, 'anchors%d.txt' % num_clusters)
 
-            indices = [random.randrange(annotation_dims.shape[0]) for i in range(num_clusters)]
+            indices = [random.randrange(annotation_dims.shape[0]) for i in
+                       range(num_clusters)]
             centroids = annotation_dims[indices]
             kmeans(annotation_dims, centroids, anchor_file)
             print('centroids.shape', centroids.shape)
     else:
-        anchor_file = join(args.output, 'anchors%d.txt' % args.num_clusters)
-        indices = [random.randrange(annotation_dims.shape[0]) for i in range(args.num_clusters)]
+        anchor_file = os.path.join(args.output, 'anchors%d.txt' % args.num_clusters)
+        indices = [random.randrange(annotation_dims.shape[0]) for i in
+                   range(args.num_clusters)]
         centroids = annotation_dims[indices]
         kmeans(annotation_dims, centroids, anchor_file)
         print('centroids.shape', centroids.shape)
