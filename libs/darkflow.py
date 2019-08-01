@@ -95,6 +95,9 @@ class FlowDialog(QDialog):
         self.flags = Flags()
         self.oldBatchValue = int(self.flags.batch)
         self.oldSaveValue = int(self.flags.save)
+        # allow use of labels file passed by slgrSuite
+        self.labelfile = labelfile
+
 
         self.formGroupBox = QGroupBox("Select Model and Checkpoint")
         layout = QFormLayout()
@@ -212,7 +215,6 @@ class FlowDialog(QDialog):
         self.demoGroupBox.setLayout(layout4)
         self.demoGroupBox.hide()
 
-        self.labelfile = labelfile
 
         self.flowPrg = QProgressBar()
         self.flowPrg.setRange(0, 100)
@@ -343,7 +345,7 @@ class FlowDialog(QDialog):
         self.flags.batch = self.batchSpb.value()
         self.flags.save = self.saveSpb.value()
         self.flags.epoch = self.epochSpb.value()
-        self.flags.labels = self.labelfile
+        self.flags.labels = self.labelfile  # use labelfile set by slgrSuite
         self.flags.json = bool(self.jsonChb.checkState()) if \
             self.flowGroupBox.isEnabled() else self.flags.json
         self.flags.timeout = QTime(0, 0, 0).secsTo(self.timeoutTme.time())

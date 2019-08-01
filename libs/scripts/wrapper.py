@@ -46,7 +46,8 @@ class DarkWrapper(FlagIO):
                                 help='demo model on video or webcam')
             parser.add_argument('--fbf', default=Flags().fbf,
                                 help='generate frame-by-frame annotation')
-            parser.add_argument('--saveVideo', default=Flags().saveVideo,
+            parser.add_argument('--saveVideo', metavar='',
+                                default=Flags().saveVideo,
                                 help='filename of video output')
             parser.add_argument('--json', default=Flags().json,
                                 action='store_true',
@@ -64,7 +65,8 @@ class DarkWrapper(FlagIO):
                                 help='path to checkpoint directory')
             parser.add_argument('--labels', default=Flags().labels, metavar='',
                                 help='path to textfile containing labels')
-            parser.add_argument('--annotation', default=Flags().annotation, metavar='',
+            parser.add_argument('--annotation', default=Flags().annotation,
+                                metavar='',
                                 help='path to the annotation directory')
             parser.add_argument('--summary', default=Flags().summary,
                                 help='path to Tensorboard summaries directory')
@@ -87,15 +89,15 @@ class DarkWrapper(FlagIO):
                                 help='name of protobuf file to load')
             parser.add_argument('--metaLoad', default=Flags().metaLoad,
                                 metavar='',
-                                help='path to .meta file generated during'
-                                     ' --savepb that corresponds to .pb file')
+                                help='path to .meta file corresponding to .pb'
+                                     ' file')
             parser.add_argument('--gpu', default=Flags().gpu,
                                 metavar='[0 .. 1.0]',
                                 help='amount of GPU to use')
             parser.add_argument('--gpuName', default=Flags().gpuName,
                                 metavar='/gpu:N', help='GPU device name')
             parser.add_argument('-l', '--load', default=Flags().load,
-                                metavar='',
+                                metavar='', type=int,
                                 help='filename of checkpoint to load')
             parser.add_argument('-m', '--model', default=Flags().model,
                                 metavar='', help='filename of model to use')
@@ -110,7 +112,7 @@ class DarkWrapper(FlagIO):
             parser.add_argument('-v', '--verbalise', default=Flags().verbalise,
                                 action='store_true',
                                 help='show graph structure while building')
-            parser.add_argument('-timeout', default=Flags().timeout,
+            parser.add_argument('--timeout', default=Flags().timeout,
                                 metavar="SECONDS",
                                 help='capture record time')
             parser.add_argument('--cli', default=True, help=argparse.SUPPRESS)

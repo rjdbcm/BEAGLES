@@ -126,7 +126,47 @@ class Flags(dict):
     """
     def __init__(self, defaults=True):
         if defaults:
-            self.get_defaults()
+            # All paths are relative to slgrSuite.py
+            self.annotation = './data/committedframes/'
+            self.backup = './data/ckpt/'
+            self.batch = 16
+            self.binary = './data/bin/'
+            self.capdevs = []
+            self.cli = False
+            self.clip = False
+            self.config = './data/cfg/'
+            self.dataset = './data/committedframes/'
+            self.demo = ''
+            self.done = False
+            self.epoch = 1
+            self.error = ""
+            self.fbf = ''
+            self.gpu = 0.0
+            self.gpuName = '/gpu:0'
+            self.imgdir = './data/sample_img/'
+            self.json = False
+            self.keep = 20
+            self.kill = False
+            self.labels = './data/predefined_classes.txt'
+            self.load = -1
+            self.log = './data/logs/flow.log'
+            self.lr = 1e-5
+            self.metaLoad = ''
+            self.model = ''
+            self.momentum = 0.0
+            self.pbLoad = ''
+            self.progress = 0.0
+            self.save = 16000
+            self.savepb = False
+            self.saveVideo = True
+            self.size = 0
+            self.started = False
+            self.summary = './data/summaries/'
+            self.threshold = 0.4
+            self.timeout = 0
+            self.trainer = 'rmsprop'
+            self.verbalise = False
+            self.train = False
 
     def __getattr__(self, attr):
         return self[attr]
@@ -135,48 +175,9 @@ class Flags(dict):
         self[attr] = value
 
     def __getstate__(self):
-        pass
+       pass
 
     def get_defaults(self):
-        # All paths are relative to slgrSuite.py
-        self.annotation = './data/committedframes/'
-        self.backup = './data/ckpt/'
-        self.batch = 16
-        self.binary = './data/bin/'
-        self.capdevs = []
-        self.cli = False
-        self.clip = False
-        self.config = './data/cfg/'
-        self.dataset = './data/committedframes/'
-        self.demo = ''
-        self.done = False
-        self.epoch = 1
-        self.error = ""
-        self.fbf = ''
-        self.gpu = 0.0
-        self.gpuName = '/gpu:0'
-        self.imgdir = './data/sample_img/'
-        self.json = False
-        self.keep = 20
-        self.kill = False
-        self.labels = './data/predefined_classes.txt'
-        self.load = -1
-        self.log = './data/logs/flow.log'
-        self.lr = 1e-5
-        self.metaLoad = ''
-        self.model = ''
-        self.momentum = 0.0
-        self.pbLoad = ''
-        self.progress = 0.0
-        self.save = 16000
-        self.savepb = False
-        self.saveVideo = True
-        self.size = 0
-        self.started = False
-        self.summary = './data/summaries/'
-        self.threshold = 0.4
-        self.timeout = 0
-        self.trainer = 'rmsprop'
-        self.verbalise = False
-        self.train = False
+        self.__init__()
+
 
