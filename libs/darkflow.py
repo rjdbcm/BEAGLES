@@ -519,7 +519,6 @@ class FlowDialog(QDialog):
 
     @pyqtSlot(int)
     def onSaveValueChange(self, value):
-        print(value)
         self.batchSpb.blockSignals(True)
         if self.saveSpb.value() % self.batchSpb.value() == 0:
             pass

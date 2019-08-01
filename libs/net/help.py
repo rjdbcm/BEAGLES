@@ -106,8 +106,8 @@ def camera(self):
     get_caps = self.camera_compile(
         "global cap{0}\n"
         "cap{0} = cv2.VideoCapture({0})\n"
-        "cap{0}.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)\n"
-        "cap{0}.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)\n"
+        "cap{0}.set(cv2.CAP_PROP_FRAME_WIDTH, 144)\n"
+        "cap{0}.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)\n"
         "cap{0}.set(cv2.CAP_PROP_BUFFERSIZE, 3)\n"
         "global annotation{0}\n"
         "annotation{0} = os.path.join("
@@ -320,7 +320,7 @@ def annotate(self):
         self.logger.info("Overwriting existing annotations")
         os.remove(annotation_file)
 
-    fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     max_x = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     max_y = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
     out = cv2.VideoWriter(os.path.splitext(INPUT_VIDEO)[0] + '_annotated.avi',
@@ -330,7 +330,7 @@ def annotate(self):
     while True:  # Capture frame-by-frame
         FRAME_NUMBER += 1
         ret, frame = cap.read()
-        if ret == True:
+        if ret:
             self.flags.progress = round((100 * FRAME_NUMBER / total_frames), 0)
             if FRAME_NUMBER % 10 == 0:
                 self.io_flags()
