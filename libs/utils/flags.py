@@ -10,6 +10,7 @@ import os
 
 class FlagIO(object):
     """Base object for logging and shared memory flag read/write operations"""
+
     def __init__(self, subprogram=False, delay=0.1):
         self.subprogram = subprogram
         self.delay = delay
@@ -17,8 +18,8 @@ class FlagIO(object):
         logging.captureWarnings(True)
         self.logger = logging.getLogger(type(self).__name__)
         formatter = logging.Formatter(
-         '{asctime} | {levelname:7} | {name:<11} | {funcName:<20} | {message}',
-         style='{')
+            '{asctime} | {levelname:7} | {name:<11} | {funcName:<20} |'
+            ' {message}', style='{')
         self.logfile = logging.handlers.RotatingFileHandler(Flags().log,
                                                             backupCount=20)
         self.logstream = logging.StreamHandler()
@@ -29,7 +30,6 @@ class FlagIO(object):
         self.logfile.setFormatter(formatter)
         self.logstream.setFormatter(formatter)
         self.tf_logfile.setFormatter(formatter)
-
         self.logger.addHandler(self.logfile)
 
         self.flagpath = self.init_ramdisk()
@@ -92,8 +92,8 @@ class FlagIO(object):
             ramdisk = "/Volumes/RAMDisk"
             if not self.subprogram:
                 proc = subprocess.Popen(['./libs/scripts/RAMDisk', 'mount'],
-                                       stdout=subprocess.PIPE,
-                                       stderr=subprocess.STDOUT)
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT)
                 stdout, stderr = proc.communicate()
                 for line in stdout.decode('utf-8').splitlines():
                     self.logger.info(line)
@@ -121,9 +121,10 @@ class FlagIO(object):
 
 class Flags(dict):
     """
-    Allows you to set and get {key, value} pairs like attributes.
+    Allows you to set and get {key: value} pairs like attributes.
     This allows compatibility with argparse.Namespace objects.
     """
+
     def __init__(self, defaults=True):
         if defaults:
             # All paths are relative to slgrSuite.py
@@ -141,7 +142,7 @@ class Flags(dict):
             self.epoch = 1
             self.error = ""
             self.fbf = ''
-            self.gpu = 0.0
+            self.gpu = 1.0
             self.gpuName = '/gpu:0'
             self.imgdir = './data/sample_img/'
             self.json = False
@@ -175,9 +176,7 @@ class Flags(dict):
         self[attr] = value
 
     def __getstate__(self):
-       pass
+        pass
 
     def get_defaults(self):
         self.__init__()
-
-

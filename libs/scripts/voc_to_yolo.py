@@ -1,3 +1,7 @@
+'''
+This script converts PascalVOC xml to yolo txt files
+'''
+
 import glob
 import argparse
 import sys
@@ -55,8 +59,8 @@ def convertAnnotation(dir_path, output_path, image_path):
 
 def main(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--classfile', type=str)
-    parser.add_argument('--dir', type=str)
+    parser.add_argument('--classfile', type=str, required=True)
+    parser.add_argument('--dir', type=str, required=True)
     args = parser.parse_args()
     global classes
     with open(args.classfile, 'r') as file:
