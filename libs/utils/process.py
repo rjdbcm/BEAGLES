@@ -103,7 +103,8 @@ def cfg_yielder(model, binary):
                 padding = size // 2
             activation = d.get('activation', 'logistic')
             batch_norm = d.get('batch_normalize', 0) or conv
-            yield ['convolutional', i, size, c, n, stride, padding, batch_norm, activation]
+            yield ['convolutional', i, size, c, n, stride, padding, batch_norm,
+                   activation]
             if activation != 'linear':
                 yield [activation, i]
             w_ = (w + 2 * padding - size) // stride + 1
@@ -175,7 +176,8 @@ def cfg_yielder(model, binary):
                 l_ = layers[i - k]['output']
             else:
                 l_ = layers[i - k].get('old', [l])[-1]
-            yield ['select', i, l_, d['old_output'], activation, layer, d['output'], keep, train_from]
+            yield ['select', i, l_, d['old_output'], activation, layer,
+                   d['output'], keep, train_from]
             if activation != 'linear':
                 yield [activation, i]
             l = d['output']
@@ -208,7 +210,8 @@ def cfg_yielder(model, binary):
             w_ = (w + 2 * padding - size) // stride + 1
             h_ = (h + 2 * padding - size) // stride + 1
             c_ = len(keep_idx)
-            yield ['conv-select', i, size, c, n, stride, padding, batch_norm, activation, keep_idx, c_]
+            yield ['conv-select', i, size, c, n, stride, padding, batch_norm,
+                   activation, keep_idx, c_]
             w, h, c = w_, h_, c_
             l = w * h * c
         # -----------------------------------------------------
@@ -301,7 +304,7 @@ def cfg_yielder(model, binary):
                 routes = [int(x.strip()) for x in routes.split(',')]
             routes = [i + x if x < 0 else x for x in routes]
             for j, x in enumerate(routes):
-                lx = layers[x];
+                lx = layers[x]
                 xtype = lx['type']
                 _size = lx['_size'][:3]
                 if j == 0:
@@ -317,14 +320,16 @@ def cfg_yielder(model, binary):
         elif d['type'] == '[reorg]':
             stride = d.get('stride', 1)
             yield ['reorg', i, stride]
-            w = w // stride;
-            h = h // stride;
+            w = w // stride
+            h = h // stride
             c = c * (stride ** 2)
             l = w * h * c
         # -----------------------------------------------------
         else:
-            exit('Layer {} not implemented'.format(d['type']))
-
+            try:
+                raise TypeError('Layer {} not implemented'.format(d['type']))
+            except TypeError:
+                raise
         d['_size'] = list([h, w, c, l, flat])
 
     if not flat:

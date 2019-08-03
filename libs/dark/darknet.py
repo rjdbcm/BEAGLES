@@ -67,14 +67,22 @@ class Darknet(FlagIO, object):
         """
         args = [model, flags.binary]
         cfg_layers = cfg_yielder(*args)
+
         meta = dict()
         layers = list()
-        for i, info in enumerate(cfg_layers):
-            if i == 0:
-                meta = info; continue
-            else:
-                new = create_darkop(*info)
-            layers.append(new)
+        try:
+            for i, info in enumerate(cfg_layers):
+                if i == 0:
+                    meta = info
+                    continue
+                else:
+                    new = create_darkop(*info)
+                layers.append(new)
+        except TypeError as e:
+            self.flags.error = str(e)
+            self.logger.error(str(e))
+            self.send_flags()
+            raise
         return meta, layers
 
     def load_weights(self):
