@@ -30,13 +30,14 @@ class YOLO(framework):
     loss = yolo.train.loss
     is_inp = yolo.misc.is_inp
     profile = yolo.misc.profile
+    # noinspection PyProtectedMember
     _batch = yolo.data._batch
     resize_input = yolo.predict.resize_input
     findboxes = yolo.predict.findboxes
     process_box = yolo.predict.process_box
 
 
-class YOLOv2(framework, FlagIO):
+class YOLOv2(framework):
     constructor = yolo.constructor
     parse = yolo.data.parse
     shuffle = yolov2.data.shuffle
@@ -44,6 +45,7 @@ class YOLOv2(framework, FlagIO):
     loss = yolov2.train.loss
     is_inp = yolo.misc.is_inp
     postprocess = yolov2.predict.postprocess
+    # noinspection PyProtectedMember
     _batch = yolov2.data._batch
     resize_input = yolo.predict.resize_input
     findboxes = yolov2.predict.findboxes
@@ -58,9 +60,9 @@ class YOLOv3(framework):
     # loss = yolov3.train.loss  # TODO: yolov3.train
     is_inp = yolo.misc.is_inp
     # postprocess = yolov3.predict.postprocess  # TODO: yolov3.predict.postprocess
-    #batch = yolov3.data._batch  # TODO: yolov3.data._batch
+    # batch = yolov3.data._batch  # TODO: yolov3.data._batch
     resize_input = yolo.predict.resize_input
-    #findboxes = yolov3.predict.findboxes  # TODO: yolov3.predict.findboxes
+    # findboxes = yolov3.predict.findboxes  # TODO: yolov3.predict.findboxes
     process_box = yolo.predict.process_box
 
 """

@@ -2,14 +2,19 @@ from .layer import Layer
 from .convolution import *
 from .connected import *
 
+
 class avgpool_layer(Layer):
     pass
+
 
 class crop_layer(Layer):
     pass
 
-#class shortcut_layer(Layer):
-#    pass
+
+class shortcut_layer(Layer):
+    def setup(self, from_layer):
+        self.from_layer = from_layer
+
 
 class maxpool_layer(Layer):
     def setup(self, ksize, stride, pad):
@@ -17,9 +22,11 @@ class maxpool_layer(Layer):
         self.ksize = ksize
         self.pad = pad
 
+
 class softmax_layer(Layer):
     def setup(self, groups):
         self.groups = groups
+
 
 class dropout_layer(Layer):
     def setup(self, p):
@@ -29,9 +36,11 @@ class dropout_layer(Layer):
             'shape': ()
         })
 
+
 class route_layer(Layer):
     def setup(self, routes):
         self.routes = routes
+
 
 class reorg_layer(Layer):
     def setup(self, stride):
@@ -45,7 +54,7 @@ darkops = {
     'dropout': dropout_layer,
     'connected': connected_layer,
     'maxpool': maxpool_layer,
-    #'shortcut': shortcut_layer,
+    'shortcut': shortcut_layer,
     'convolutional': convolutional_layer,
     'avgpool': avgpool_layer,
     'softmax': softmax_layer,

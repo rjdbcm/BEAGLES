@@ -132,11 +132,16 @@ class leaky(BaseOp):
 
     def verbalise(self): pass
 
-# class shortcut(BaseOp):
-# 	def forward(self):
-# 		layer = self.lay
-# 		activation = layer.activation
-# 		index = self.lay.w['from']
+
+class shortcut(BaseOp):
+    def forward(self):
+        self.out = tf.add(self.inp.out,
+                          self.lay.from_layer,
+                          name=self.scope)
+
+    def speak(self):
+        l = self.lay
+        return 'shortcut from {}'.format(l.from_layer)
 
 
 # class upsample(BaseOp):

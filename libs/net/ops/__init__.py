@@ -8,6 +8,7 @@ op_types = {
 	'connected': connected,
 	'maxpool': maxpool,
 	'leaky': leaky,
+	'shortcut': shortcut,
 	'dropout': dropout,
 	'flatten': flatten,
 	'avgpool': avgpool,
@@ -21,6 +22,7 @@ op_types = {
 	'conv-extract': conv_extract,
 	'extract': extract
 }
+
 
 def op_create(*args):
 	layer_type = list(args)[0].type

@@ -8,7 +8,6 @@ import numpy as np
 import sys
 import os
 import random
-
 np.seterr(invalid='raise')
 width_in_cfg_file = 416.
 height_in_cfg_file = 416.

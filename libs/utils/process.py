@@ -312,10 +312,18 @@ def cfg_yielder(model, binary):
                 else:
                     h_, w_, c_ = _size
                     assert w_ == w and h_ == h, \
-                        'Routing incompatible conv sizes'
+                    'Routing incompatible conv sizes'
                     c += c_
             yield ['route', i, routes]
             l = w * h * c
+        # -----------------------------------------------------
+        elif d['type'] == '[shortcut]':
+            index = int(d['from'])
+            activation = d.get('activation', 'logistic')
+            assert activation == 'linear', \
+                'Layer {} can only use linear activation'.format(d['type'])
+            from_layer = layers[index]
+            yield ['shortcut', i, from_layer]
         # -----------------------------------------------------
         elif d['type'] == '[reorg]':
             stride = d.get('stride', 1)

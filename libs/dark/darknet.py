@@ -78,7 +78,7 @@ class Darknet(FlagIO, object):
                 else:
                     new = create_darkop(*info)
                 layers.append(new)
-        except TypeError as e:
+        except (TypeError, AssertionError) as e:
             self.flags.error = str(e)
             self.logger.error(str(e))
             self.send_flags()
