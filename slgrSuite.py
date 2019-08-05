@@ -27,7 +27,7 @@ from libs.stringBundle import StringBundle
 from libs.canvas import Canvas
 from libs.zoomWidget import ZoomWidget
 from libs.labelDialog import LabelDialog
-from libs.utils.flags import Flags
+from libs.utils.flags import Flags, FlagIO
 from libs.darkflow import FlowDialog
 from libs.colorDialog import ColorDialog
 from libs.labelFile import LabelFile, LabelFileError
@@ -63,13 +63,16 @@ class WindowMixin(object):
         return toolbar
 
 
-class MainWindow(QMainWindow, WindowMixin):
+class MainWindow(QMainWindow, WindowMixin, FlagIO):
     FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = list(range(3))
 
     def __init__(self, defaultFilename=None, defaultPrefdefClassFile=None,
                  defaultSaveDir=None):
         super(MainWindow, self).__init__()
+        FlagIO.__init__(self, subprogram=True)
+        self.logger.info("Initializing GUI")
         self.setWindowTitle(__appname__)
+
 
         # Load setting in the main thread
         self.settings = Settings()
@@ -705,7 +708,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.actions.editMode.setEnabled(not drawing)
         if not drawing and self.beginner():
             # Cancel creation.
-            print('Cancel creation.')
+            self.logger.info('Cancel creation.')
             self.canvas.setEditing(True)
             self.canvas.restoreCursor()
             self.actions.create.setEnabled(True)
@@ -901,8 +904,8 @@ class MainWindow(QMainWindow, WindowMixin):
                 self.labelFile.save(annotationFilePath, shapes, self.filePath,
                                     self.imageData, self.lineColor.getRgb(),
                                     self.fillColor.getRgb())
-            print('Image:{0} -> Annotation:{1}'.format(self.filePath,
-                                                       annotationFilePath))
+            self.logger.info('Image:{0} -> Annotation:{1}'.format(
+                self.filePath, annotationFilePath))
             return True
         except LabelFileError as e:
             self.errorMessage(u'Error saving label data', u'<b>%s</b>' % e)
@@ -1320,7 +1323,7 @@ class MainWindow(QMainWindow, WindowMixin):
         if filename[0] != '':
             if isinstance(filename, (tuple, list)):
                 video = shutil.copy2(filename[0], target)
-                print('Extracting frames from {} to {}'.format(
+                self.logger.info('Extracting frames from {} to {}'.format(
                     filename, target))
                 frame_capture(video)
                 self.importDirImages(target)
@@ -1353,8 +1356,8 @@ class MainWindow(QMainWindow, WindowMixin):
         for file in os.listdir(defaultOpenDirPath):
             filename = os.fsdecode(file)
             if filename.endswith((".xml", ".txt")):
-                print("Moving {0} to data/committedframes/{0}".format(
-                    filename))
+                self.logger.info(
+                    "Moving {0} to data/committedframes/{0}".format(filename))
                 filename = os.path.join(defaultOpenDirPath, filename)
                 basename = os.path.splitext(filename)[0]
                 filelist.append(filename)
@@ -1399,7 +1402,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 # If the labelling file does not exist yet, create if and
                 # re-save it with the verified attribute.
                 self.labelFile = LabelFile()
-                print(self.labelFile)
+                self.logger.info(self.labelFile)
                 if self.labelFile != None:
                     self.labelFile.toggleVerify()
                 else:
