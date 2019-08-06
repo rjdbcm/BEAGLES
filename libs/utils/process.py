@@ -42,7 +42,8 @@ def parser(model):
         else:
             try:
                 i = float(_parse(line))
-                if i == int(i): i = int(i)
+                if i == int(i):
+                    i = int(i)
                 layer[line.split('=')[0].strip()] = i
             except (IndexError, ValueError):
                 try:
@@ -66,9 +67,9 @@ def cfg_yielder(model, binary):
     """
     yielding each layer information to initialize `layer`
     """
-    layers, meta = parser(model);
-    yield meta;
-    h, w, c = meta['inp_size'];
+    layers, meta = parser(model)
+    yield meta
+    h, w, c = meta['inp_size']
     l = w * h * c
 
     # Start yielding
@@ -244,7 +245,8 @@ def cfg_yielder(model, binary):
             find = ['[convolutional]', '[conv-extract]']
             while layers[i - k]['type'] not in find:
                 k += 1
-                if i - k < 0: break
+                if i - k < 0:
+                    break
             if i - k >= 0:
                 previous_layer = layers[i - k]
                 c_ = previous_layer['filters']
@@ -254,7 +256,8 @@ def cfg_yielder(model, binary):
             yield ['conv-extract', i, size, c_, n,
                    stride, padding, batch_norm,
                    activation, inp_layer, out_layer]
-            if activation != 'linear': yield [activation, i]
+            if activation != 'linear':
+                yield [activation, i]
             w_ = (w + 2 * padding - size) // stride + 1
             h_ = (h + 2 * padding - size) // stride + 1
             w, h, c = w_, h_, len(out_layer)
@@ -312,18 +315,29 @@ def cfg_yielder(model, binary):
                 else:
                     h_, w_, c_ = _size
                     assert w_ == w and h_ == h, \
-                    'Routing incompatible conv sizes'
+                        'Routing incompatible conv sizes'
                     c += c_
             yield ['route', i, routes]
             l = w * h * c
         # -----------------------------------------------------
-        elif d['type'] == '[shortcut]':
-            index = int(d['from'])
-            activation = d.get('activation', 'logistic')
-            assert activation == 'linear', \
-                'Layer {} can only use linear activation'.format(d['type'])
-            from_layer = layers[index]
-            yield ['shortcut', i, from_layer]
+        # TODO
+        # elif d['type'] == '[shortcut]':
+        #     index = int(d['from'])
+        #     activation = d.get('activation', 'logistic')
+        #     assert activation == 'linear', \
+        #         'Layer {} can only use linear activation'.format(d['type'])
+        #     from_layer = l[index]
+        #     yield ['shortcut', i, from_layer]
+        #     l = w * h * c
+        # -----------------------------------------------------
+        elif d['type'] == '[upsample]':
+            stride = d.get('stride', 1)
+            assert stride == 2, \
+                'Layer {} can only be of stride 2'.format(d['type'])
+            w = w * stride
+            h = w * stride
+            yield ['upsample', i, stride, h, w]
+            l = w * h * c
         # -----------------------------------------------------
         elif d['type'] == '[reorg]':
             stride = d.get('stride', 1)

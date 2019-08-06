@@ -132,19 +132,32 @@ class leaky(BaseOp):
 
     def verbalise(self): pass
 
+# TODO
+# class shortcut(BaseOp):
+#     def forward(self):
+#         import sys
+#         print(self.lay.from_layer['_size'][:3], file=sys.stderr)
+#         print(self.inp.out.__dict__, file=sys.stderr)
+#         print(self.inp.out, file=sys.stderr)
+#         self.out = tf.add(self.inp.out,
+#                           3,
+#                           name=self.scope)
+#
+#     def speak(self):
+#         l = self.lay
+#         return 'shortcut from {}'.format(l.from_layer)
 
-class shortcut(BaseOp):
+
+class upsample(BaseOp):
     def forward(self):
-        self.out = tf.add(self.inp.out,
-                          self.lay.from_layer,
-                          name=self.scope)
+        size = (self.lay.height, self.lay.width)
+        self.out = tf.image.resize_nearest_neighbor(self.inp.out,
+                                                    size,
+                                                    name=self.scope)
 
     def speak(self):
-        l = self.lay
-        return 'shortcut from {}'.format(l.from_layer)
+        return 'upsample {}'.format(self.lay.stride)
 
-
-# class upsample(BaseOp):
 
 class identity(BaseOp):
     def __init__(self, inp):

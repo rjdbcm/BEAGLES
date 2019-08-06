@@ -18,6 +18,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 # Add internal libs
+from PyQt5.QtWidgets import QDockWidget
 from libs.resources import *
 from libs.constants import *
 from libs.qtUtils import *
@@ -41,6 +42,7 @@ from libs.version import __version__
 from libs.hashableQListWidgetItem import HashableQListWidgetItem
 
 __appname__ = 'SLGR-Suite'
+
 
 class WindowMixin(object):
 
@@ -258,7 +260,7 @@ class MainWindow(QMainWindow, WindowMixin):
         createMode = action(getStr('crtBox'), self.setCreateMode,
                             'w', 'new', getStr('crtBoxDetail'), enabled=False)
         editMode = action('&Edit\nRectBox', self.setEditMode,
-                          'Ctrl+J', 'edit', u'Move and edit Boxs',
+                          'Ctrl+J', 'edit', u'Move and edit boxes',
                           enabled=False)
 
         create = action(getStr('crtBox'), self.createShape,
