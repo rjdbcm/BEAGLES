@@ -1,7 +1,9 @@
+"""
+This wrapper can be used as a standalone CLI or as part of SLGR-Suite
+"""
 import os
 import sys
 import numpy as np
-import time
 from signal import signal, SIGTERM
 import argparse
 try:
@@ -15,8 +17,8 @@ else:
 try:
     from libs.net.build import TFNet
     from libs.utils.flags import Flags, FlagIO
-    # Move to the toplevel folder since flag paths are relative to slgrSuite.py
 except ModuleNotFoundError:
+    # Move to the top level dir since flag paths are relative to slgrSuite.py
     sys.path.append(EXEC_PATH)
 finally:
     from libs.net.build import TFNet
@@ -25,7 +27,6 @@ finally:
 
 
 class DarkWrapper(FlagIO):
-    """This wrapper can be used standalone as a CLI or as part of SLGR-Suite"""
     def __init__(self):
         FlagIO.__init__(self, subprogram=True)
         signal(SIGTERM, self.kill)
@@ -35,7 +36,7 @@ class DarkWrapper(FlagIO):
             argv = False
         if argv:
             parser = argparse.ArgumentParser(
-                description='[dark]flow translates darknet to tensorflow')
+                description=__doc__, usage="wrapper.py [optional arguments]")
             parser.add_argument('--train', default=Flags().train,
                                 action='store_true',
                                 help='train a model on annotated data')
@@ -51,7 +52,8 @@ class DarkWrapper(FlagIO):
                                 help='filename of video output')
             parser.add_argument('--json', default=Flags().json,
                                 action='store_true',
-                                help='output bounding box information in .json')
+                                help='output bounding box information in .json'
+                                )
             parser.add_argument('--imgdir', default=Flags().imgdir, metavar='',
                                 help='path to testing directory with images')
             parser.add_argument('--binary', default=Flags().binary, metavar='',
@@ -64,7 +66,7 @@ class DarkWrapper(FlagIO):
             parser.add_argument('--backup', default=Flags().backup, metavar='',
                                 help='path to checkpoint directory')
             parser.add_argument('--labels', default=Flags().labels, metavar='',
-                                help='path to textfile containing labels')
+                                help='path to text file containing labels')
             parser.add_argument('--annotation', default=Flags().annotation,
                                 metavar='',
                                 help='path to the annotation directory')
@@ -76,16 +78,20 @@ class DarkWrapper(FlagIO):
                                 metavar='', help='training algorithm')
             parser.add_argument('--momentum', default=Flags().momentum,
                                 metavar='',
-                                help='applicable for rmsprop and momentum optimizers')
+                                help='applicable for rmsprop and momentum '
+                                     'optimizers')
             parser.add_argument('--keep', default=Flags().keep, metavar='N',
-                                help='number of recent training results to save')
+                                help='number of recent training results to '
+                                     'save')
             parser.add_argument('--batch', default=Flags().batch, metavar='N',
                                 type=int, help='batch size')
             parser.add_argument('--epoch', default=Flags().epoch, type=int,
                                 metavar='N', help='number of epochs')
             parser.add_argument('--save', default=Flags().save, metavar='N',
-                                help='save a checkpoint ever N training examples')
-            parser.add_argument('--pbLoad', default=Flags().pbLoad, metavar='*.pb',
+                                help='save a checkpoint ever N training '
+                                     'examples')
+            parser.add_argument('--pbLoad', default=Flags().pbLoad,
+                                metavar='*.pb',
                                 help='name of protobuf file to load')
             parser.add_argument('--metaLoad', default=Flags().metaLoad,
                                 metavar='',
@@ -148,6 +154,7 @@ class DarkWrapper(FlagIO):
                 self.tf_logfile.doRollover()
             raise
 
+    # noinspection PyUnusedLocal
     def kill(self, sig, frame):
         self.logger.info("SIGTERM caught: exiting")
         exit(0)

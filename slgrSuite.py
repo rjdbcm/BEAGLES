@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import cv2
 import codecs
-import distutils.spawn
-import os.path
-import time
-import platform
 import random
-import argparse
-import re
-import sys
 import shutil
-import signal
+import os.path
+import argparse
+import platform
 import subprocess
 from functools import partial
-from collections import defaultdict
+# noinspection PyUnresolvedReferences
 from PyQt5.QtGui import *
+# noinspection PyUnresolvedReferences
 from PyQt5.QtCore import *
+# noinspection PyUnresolvedReferences
 from PyQt5.QtWidgets import *
 # Add internal libs
-from PyQt5.QtWidgets import QDockWidget
+# noinspection PyUnresolvedReferences
 from libs.resources import *
 from libs.constants import *
 from libs.qtUtils import *
@@ -44,6 +42,7 @@ from libs.hashableQListWidgetItem import HashableQListWidgetItem
 __appname__ = 'SLGR-Suite'
 
 
+# noinspection PyUnresolvedReferences
 class WindowMixin(object):
 
     def menu(self, title, actions=None):
@@ -65,9 +64,11 @@ class WindowMixin(object):
         return toolbar
 
 
+# noinspection PyUnresolvedReferences
 class MainWindow(QMainWindow, WindowMixin, FlagIO):
     FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = list(range(3))
 
+    # noinspection PyShadowingBuiltins
     def __init__(self, defaultFilename=None, defaultPrefdefClassFile=None,
                  defaultSaveDir=None):
         super(MainWindow, self).__init__()
@@ -75,17 +76,21 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.logger.info("Initializing GUI")
         self.setWindowTitle(__appname__)
 
-
         # Load setting in the main thread
+        self.imageData = None
+        self.labelFile = None
         self.settings = Settings()
         self.settings.load()
         settings = self.settings
 
         # Load string bundle for i18n
         self.stringBundle = StringBundle.getBundle()
-        getStr = lambda strId: self.stringBundle.getString(strId)
+
+        def getStr(strId):
+            return self.stringBundle.getString(strId)
 
         # Start tensorboard process
+        # noinspection PyTypeChecker
         self.tb_process = QProcess(self)
         self.tb_process.start("tensorboard", ["--logdir=data/summaries",
                                               "--debugger_port=6064"])
@@ -205,6 +210,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
 
         self.dockFeatures = \
             QDockWidget.DockWidgetClosable | QDockWidget.DockWidgetFloatable
+        # noinspection PyTypeChecker
         self.dock.setFeatures(self.dock.features() ^ self.dockFeatures)
 
         # Actions
@@ -362,7 +368,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         labels.setText(getStr('showHide'))
         labels.setShortcut('Ctrl+Shift+L')
 
-        # Lavel list context menu.
+        # Label list context menu.
         labelMenu = QMenu()
         addActions(labelMenu, (edit, delete))
         self.labelList.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -375,7 +381,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.drawSquaresOption.setCheckable(True)
         self.drawSquaresOption.setChecked(settings.get(SETTING_DRAW_SQUARE,
                                                        False))
-        self.drawSquaresOption.triggered.connect(self.toogleDrawSquare)
+        self.drawSquaresOption.triggered.connect(self.toggleDrawSquare)
 
         # Store actions for further handling.
         self.actions = struct(save=save, save_format=save_format,
@@ -491,16 +497,16 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.fillColor = None
         self.zoom_level = 100
         self.fit_window = False
-        # Add Chris
         self.difficult = False
 
-        ## Fix the compatible issue for qt4 and qt5. Convert the QStringList to python list
+        # Fix the compatible issue for qt4 and qt5.
+        # Convert the QStringList to python list
         if settings.get(SETTING_RECENT_FILES):
             if have_qstring():
                 recentFileQStringList = settings.get(SETTING_RECENT_FILES)
                 self.recentFiles = [ustr(i) for i in recentFileQStringList]
             else:
-                self.recentFiles = recentFileQStringList = settings.get(SETTING_RECENT_FILES)
+                self.recentFiles = settings.get(SETTING_RECENT_FILES)
 
         size = settings.get(SETTING_WIN_SIZE, QSize(600, 500))
         position = QPoint(0, 0)
@@ -557,9 +563,9 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.labelCoordinates = QLabel('')
         self.statusBar().addPermanentWidget(self.labelCoordinates)
 
-        # Open Dir if deafult file
+        # Open Dir if default file
         if self.filePath and os.path.isdir(self.filePath):
-            self.openDirDialog(dirpath=self.filePath)
+            self.openDirDialog()
 
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Control:
@@ -570,7 +576,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             # Draw rectangle if Ctrl is pressed
             self.canvas.setDrawingShapeToSquare(True)
 
-    ## Support Functions ##
+    # Support Functions #
     def set_format(self, save_format):
         if save_format == FORMAT_PASCALVOC:
             self.actions.save_format.setText(FORMAT_PASCALVOC)
@@ -595,6 +601,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
     def noShapes(self):
         return not self.itemsToShapes
 
+    # noinspection PyTypeChecker
     def toggleAdvancedMode(self, value=True):
         self._beginner = not value
         self.canvas.setEditing(True)
@@ -646,6 +653,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         for action in self.actions.onLoadActive:
             action.setEnabled(value)
 
+    # noinspection PyMethodMayBeStatic
     def queueEvent(self, function):
         QTimer.singleShot(0, function)
 
@@ -681,7 +689,8 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
     def advanced(self):
         return not self.beginner()
 
-    def getAvailableScreencastViewer(self):
+    @staticmethod
+    def getAvailableScreencastViewer():
         osName = platform.system()
 
         if osName == 'Windows':
@@ -691,7 +700,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         elif osName == 'Darwin':
             return ['open', '-a', 'Safari']
 
-    ## Callbacks ##
+    # Callbacks #
     def showTutorialDialog(self):
         subprocess.Popen(self.screencastViewer + [self.screencast])
 
@@ -771,7 +780,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                 self.loadFile(filename)
 
     # Add chris
-    def btnstate(self, item=None):
+    def btnstate(self):
         """ Function to handle difficult examples
         Update on each object """
         if not self.canvas.editing():
@@ -785,17 +794,18 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
 
         try:
             shape = self.itemsToShapes[item]
-        except:
+        except KeyError:
             pass
         # Checked and Update
         try:
+            # noinspection PyUnboundLocalVariable
             if difficult != shape.difficult:
                 shape.difficult = difficult
                 self.setDirty()
             else:  # User probably changed item visibility
                 self.canvas.setShapeVisible(
                     shape, item.checkState() == Qt.Checked)
-        except:
+        except UnboundLocalError:
             pass
 
     # React to canvas signals.
@@ -884,7 +894,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                         difficult=s.difficult)
 
         shapes = [format_shape(shape) for shape in self.canvas.shapes]
-        # Can add differrent annotation formats here
+        # Can add different annotation formats here
         try:
             if self.usingPascalVocFormat is True:
                 if annotationFilePath[-4:].lower() != ".xml":
@@ -1201,7 +1211,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         if self.tb_process.pid() > 0:
             self.tb_process.kill()
         settings = self.settings
-        # If it loads images from dir, don't load it at the begining
+        # If it loads images from dir, don't load it at the beginning
         if self.dirname is None:
             settings[SETTING_FILENAME] = self.filePath if self.filePath else ''
         else:
@@ -1233,7 +1243,8 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         if self.mayContinue():
             self.loadFile(filename)
 
-    def scanAllImages(self, folderPath):
+    @staticmethod
+    def scanAllImages(folderPath):
         extensions = ['.%s' % fmt.data().decode("ascii").lower() for
                       fmt in QImageReader.supportedImageFormats()]
         images = []
@@ -1285,11 +1296,10 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                     filename = filename[0]
             self.loadPascalXMLByFilename(filename)
 
-    def openDirDialog(self, _value=False, dirpath=None):
+    def openDirDialog(self, _value=False):
         if not self.mayContinue():
             return
 
-        defaultOpenDirPath = dirpath if dirpath else '.'
         if self.lastOpenDir and os.path.exists(self.lastOpenDir):
             defaultOpenDirPath = self.lastOpenDir
         else:
@@ -1301,9 +1311,9 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
         self.importDirImages(targetDirPath)
 
-    def impVideo(self, _value=False, dirpath=None):
-
-        defaultOpenDirPath = dirpath if dirpath else '.'
+    def impVideo(self, _value=False):
+        if not self.mayContinue():
+            return
         if self.lastOpenDir and os.path.exists(self.lastOpenDir):
             defaultOpenDirPath = self.lastOpenDir
         else:
@@ -1332,19 +1342,18 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         if target is not None and len(target) > 1:
             self.defaultSaveDir = target
         else:
-            print(filename, target)
             pass
 
-    def commitAnnotatedFrames(self, dirpath=None):
+    def commitAnnotatedFrames(self):
         reply = QMessageBox.question(self, 'Message',
                                      "Are you sure you want to commit all "
                                      "open files?", QMessageBox.Yes,
                                      QMessageBox.No)
-        if reply == QMessageBox.No:
+        if reply == QMessageBox.No or not self.mayContinue():
             return
         else:
             pass
-        defaultOpenDirPath = dirpath if dirpath else '.'
+
         if self.lastOpenDir and os.path.exists(self.lastOpenDir):
             defaultOpenDirPath = self.lastOpenDir
         else:
@@ -1396,7 +1405,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             self.fileListWidget.addItem(item)
 
     def verifyImg(self, _value=False):
-        # Proceding next image without dialog if having any label
+        # Proceeding next image without dialog if having any label
         if self.filePath is not None:
             try:
                 self.labelFile.toggleVerify()
@@ -1405,7 +1414,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                 # re-save it with the verified attribute.
                 self.labelFile = LabelFile()
                 self.logger.info(self.labelFile)
-                if self.labelFile != None:
+                if self.labelFile is not None:
                     self.labelFile.toggleVerify()
                 else:
                     return
@@ -1414,7 +1423,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             self.saveFile()
 
     def openPrevImg(self, _value=False):
-        # Proceding prev image without dialog if having any label
+        # Proceeding prev image without dialog if having any label
         if self.autoSaving.isChecked():
             if self.defaultSaveDir is not None:
                 if self.dirty is True:
@@ -1439,7 +1448,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                 self.loadFile(filename)
 
     def openNextImg(self, _value=False):
-        # Proceding prev image without dialog if having any label
+        # Proceeding prev image without dialog if having any label
         if self.autoSaving.isChecked():
             if self.defaultSaveDir is not None:
                 if self.dirty is True:
@@ -1639,7 +1648,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         for shape in self.canvas.shapes:
             shape.paintLabel = self.displayLabelOption.isChecked()
 
-    def toogleDrawSquare(self):
+    def toggleDrawSquare(self):
         self.canvas.setDrawingShapeToSquare(self.drawSquaresOption.isChecked())
 
 
@@ -1651,12 +1660,11 @@ def read(filename, default=None):
     try:
         with open(filename, 'rb') as f:
             return f.read()
-    except:
+    except FileNotFoundError:
         return default
 
 
 def frame_capture(path):
-    import cv2
     vidObj = cv2.VideoCapture(path)
     count = 1  # Start the frame index at 1 >.>
     success = 1
@@ -1670,12 +1678,14 @@ def frame_capture(path):
         count += 1
 
 
-def get_main_app(argv=[]):
+def get_main_app(argv=None):
     """
     Standard boilerplate Qt application code.
     Do everything but app.exec_()
     -- so that we can test the application in one thread
     """
+    if argv is None:
+        argv = []
     app = QApplication(argv)
     parser = argparse.ArgumentParser()
     img_dir = Flags().imgdir
@@ -1688,6 +1698,7 @@ def get_main_app(argv=[]):
     parser.add_argument('--saveDir', default=None, help="save directory")
     args = parser.parse_args()
     try:
+        # noinspection PyUnresolvedReferences
         import qdarkstyle
         os.environ["QT_API"] = 'pyqt5'
         # detect system theme on macOS
@@ -1696,10 +1707,12 @@ def get_main_app(argv=[]):
             from Foundation import NSUserDefaults as NS
             m = NS.standardUserDefaults().stringForKey_('AppleInterfaceStyle')
             if m == 'Dark':
+                # noinspection PyDeprecation
                 app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
             else:
                 pass
         else:
+            # noinspection PyDeprecation
             app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
     except ImportError as e:
         print(" ".join([str(e), "falling back to system theme"]))
@@ -1711,7 +1724,7 @@ def get_main_app(argv=[]):
 
 
 def main():
-    '''construct main app and run it'''
+    """construct main app and run it"""
     app, _win = get_main_app(sys.argv)
     return app.exec_()
 

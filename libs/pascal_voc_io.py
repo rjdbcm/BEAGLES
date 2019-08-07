@@ -130,6 +130,7 @@ class PascalVocReader:
         try:
             self.parseXML()
         except:
+            print("bewp")
             pass
 
     def getShapes(self):

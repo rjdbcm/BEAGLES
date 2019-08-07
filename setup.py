@@ -4,13 +4,13 @@ from Cython.Build import cythonize
 import numpy
 import sys
 import os
-import imp
+import importlib
 
-VERSION = imp.load_source('version', os.path.join('.', 'libs', 'version.py'))
+VERSION = importlib.import_module('.version', 'libs')
 VERSION = VERSION.__version__
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+with open("README.md", "r") as f:
+    long_description = f.read()
 
 if os.name == 'nt':
     ext_modules = [
@@ -36,10 +36,16 @@ elif os.name == 'posix':
     if sys.platform == 'darwin':
         compile_args = ''
         linker_args = ''
+        with open('requirements/requirements-osx.txt', 'r') as f:
+            lines = f.readlines()
+            requirements = [x.strip() for x in lines]
     else:
         # This gives a significant boost to postprocessing time
         compile_args = ['-fopenmp', '-funroll-loops']
         linker_args = ['-fopenmp']
+        with open('requirements/requirements-linux.txt', 'r') as f:
+            lines = f.readlines()
+            requirements = [x.strip() for x in lines]
     ext_modules = [
         Extension("libs.cython_utils.nms",
                   sources=["libs/cython_utils/nms.pyx"],
@@ -95,4 +101,5 @@ setup(
                  "Topic :: Scientific/Engineering :: Bio-Informatics",
                  "Intended Audience :: Science/Research",
                  "Development Status :: 2 - Pre-Alpha"],
+    install_requires=requirements
 )

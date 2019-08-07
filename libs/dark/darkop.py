@@ -1,3 +1,4 @@
+# noinspection PyUnresolvedReferences
 from .layer import Layer
 from .convolution import *
 from .connected import *
@@ -68,7 +69,7 @@ darkops = {
     'dropout': dropout_layer,
     'connected': connected_layer,
     'maxpool': maxpool_layer,
-    'shortcut': shortcut_layer,
+    # 'shortcut': shortcut_layer,
     'upsample': upsample_layer,
     'convolutional': convolutional_layer,
     'avgpool': avgpool_layer,

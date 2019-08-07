@@ -8,7 +8,7 @@ op_types = {
     'connected': connected,
     'maxpool': maxpool,
     'leaky': leaky,
-    'shortcut': shortcut,
+    # 'shortcut': shortcut,
     'upsample': upsample,
     'dropout': dropout,
     'flatten': flatten,
