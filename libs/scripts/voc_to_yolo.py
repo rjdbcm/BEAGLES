@@ -28,14 +28,21 @@ def convertBbox(size, box):
     w = w*dw
     y = y*dh
     h = h*dh
-    return (x, y, w, h)
+    return x, y, w, h
 
 
 def convertAnnotation(dir_path, output_path, image_path):
     basename = os.path.basename(image_path)
     basename_no_ext = os.path.splitext(basename)[0]
+    list_file = open(dir_path + '.txt', 'w')
 
-    in_file = open(dir_path + '/' + basename_no_ext + '.xml')
+    try:
+        in_file = open(dir_path + '/' + basename_no_ext + '.xml')
+        list_file.write(image_path + '\n')
+        list_file.close()
+    except FileNotFoundError:
+        print("No annotations found for {}. Skipping.".format(basename))
+        return
     out_file = open(output_path + basename_no_ext + '.txt', 'w')
     tree = ET.parse(in_file)
     root = tree.getroot()
@@ -58,7 +65,7 @@ def convertAnnotation(dir_path, output_path, image_path):
 
 
 def main(argv):
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--classfile', type=str, required=True)
     parser.add_argument('--dir', type=str, required=True)
     args = parser.parse_args()
@@ -69,20 +76,17 @@ def main(argv):
 
     for dir_path in dir:
         full_dir_path = os.path.abspath(dir_path)
-        print(full_dir_path)
+        print("Reading annotations from: ", full_dir_path)
         output_path = os.path.join(full_dir_path, 'yolo/')
-        print(output_path)
+        print("Outputting annotations to: ", output_path)
 
         if not os.path.exists(output_path):
             os.makedirs(output_path)
 
         image_paths = getImagesInDir(full_dir_path)
-        list_file = open(full_dir_path + '.txt', 'w')
 
         for image_path in image_paths:
-            list_file.write(image_path + '\n')
             convertAnnotation(full_dir_path, output_path, image_path)
-        list_file.close()
 
         print("Finished processing: " + dir_path)
 

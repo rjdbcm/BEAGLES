@@ -133,6 +133,7 @@ class Flags(dict):
             self.batch = 16
             self.binary = './data/bin/'
             self.capdevs = []
+            self.greyscale = False
             self.cli = False
             self.clip = False
             self.config = './data/cfg/'

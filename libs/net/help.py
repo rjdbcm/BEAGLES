@@ -294,15 +294,27 @@ def draw_box(self, original_img, predictions):
 
 def write_annotations(self, annotation_file, prediction):
 
+    def _center(x1, y1, x2, y2):
+        x, y = (x1 + x2) / 2, (y1 + y2) / 2
+        return x, y
+
     with open(annotation_file, mode='a') as file:
         file_writer = csv.writer(file, delimiter=',',
                                  quotechar='"',
                                  quoting=csv.QUOTE_MINIMAL)
         for result in prediction:
             if result['confidence'] > self.flags.threshold:
+
+                center_x, center_y = _center(result['topleft']['x'],
+                                             result['topleft']['y'],
+                                             result['bottomright']['x'],
+                                             result['bottomright']['y'])
+
                 file_writer.writerow([datetime.now(),
                                      result['label'],
                                      result['confidence'],
+                                     center_x,
+                                     center_y,
                                      result['topleft']['x'],
                                      result['topleft']['y'],
                                      result['bottomright']['x'],

@@ -1702,7 +1702,7 @@ def get_main_app(argv=None):
         import qdarkstyle
         os.environ["QT_API"] = 'pyqt5'
         # detect system theme on macOS
-        if sys.platform == "Darwin":
+        if sys.platform == "darwin":
             # noinspection PyUnresolvedReferences
             from Foundation import NSUserDefaults as NS
             m = NS.standardUserDefaults().stringForKey_('AppleInterfaceStyle')

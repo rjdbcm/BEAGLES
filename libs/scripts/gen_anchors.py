@@ -113,7 +113,7 @@ def kmeans(X, centroids, anchor_file):
 
 def main(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument('-filelist', default='test/list.txt',
+    parser.add_argument('--filelist', default='yolo/filelist.txt',
                         help='path to filelist\n')
     parser.add_argument('--output', default='anchors', type=str,
                         help='Output anchor directory\n')
