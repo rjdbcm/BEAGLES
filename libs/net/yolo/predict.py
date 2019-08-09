@@ -17,7 +17,7 @@ def resize_input(self, im):
 	h, w, c = self.meta['inp_size']
 	imsz = cv2.resize(im, (w, h))
 	imsz = imsz / 255.
-	imsz = imsz[:,:,::-1]
+	imsz = imsz[:, :, ::-1]
 	return imsz
 
 def process_box(self, b, h, w, threshold):
@@ -64,15 +64,17 @@ def preprocess(self, im, allobj = None):
 		scale, offs, flip = trans_param
 		for obj in allobj:
 			_fix(obj, dims, scale, offs)
-			if not flip: continue
-			obj_1_ =  obj[1]
+			if not flip:
+				continue
+			obj_1_ = obj[1]
 			obj[1] = dims[0] - obj[3]
 			obj[3] = dims[0] - obj_1_
 		im = imcv2_recolor(im)
 
 	im = self.resize_input(im)
-	if allobj is None: return im
-	return im#, np.array(im) # for unit testing
+	if allobj is None:
+		return im
+	return im  #, np.array(im) # for unit testing
 
 def postprocess(self, net_out, im, save = True):
 	"""

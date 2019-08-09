@@ -100,6 +100,7 @@ def camera(self):
     capture and annotate a list of devices
     number of frames displayed scales with the number of devices
     '''
+
     self.cams = self.flags.capdevs
     self.logger.info("Compiling capture code blocks")
     start = time.time()
@@ -118,10 +119,14 @@ def camera(self):
         "global stopped{0}\n"
         "ret{0}, frame{0} = cap{0}.read()\n"
         "stopped{0} = False")
+    # get boxing and convert to 3-channel grayscale
     get_boxing = self.camera_compile(
         'if ret{0}:\n'
         '    global res{0}\n'
         '    global new_frame{0}\n'
+        '    if self.flags.grayscale:\n'
+        '        frame{0} = cv2.cvtColor(frame{0}, cv2.COLOR_BGR2GRAY)\n'
+        '        frame{0} = cv2.cvtColor(frame{0}, cv2.COLOR_GRAY2BGR)\n'
         '    frame{0} = np.asarray(frame{0})\n'
         '    res{0} = self.return_predict(frame{0})\n'
         '    new_frame{0} = self.draw_box(frame{0}, res{0})\n'

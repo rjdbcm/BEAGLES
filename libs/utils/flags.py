@@ -133,7 +133,6 @@ class Flags(dict):
             self.batch = 16
             self.binary = './data/bin/'
             self.capdevs = []
-            self.greyscale = False
             self.cli = False
             self.clip = False
             self.config = './data/cfg/'
@@ -143,8 +142,9 @@ class Flags(dict):
             self.epoch = 1
             self.error = ""
             self.fbf = ''
-            self.gpu = 1.0
+            self.gpu = 0.0
             self.gpuName = '/gpu:0'
+            self.grayscale = False
             self.imgdir = './data/sample_img/'
             self.json = False
             self.keep = 20

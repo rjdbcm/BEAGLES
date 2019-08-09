@@ -57,7 +57,6 @@ class MultiCamThread(QThread):
 
     def enumDevs(self):
         index = 0
-        timeout = time.time() + 30
         while index < 32:
             cap = cv2.VideoCapture(index)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 144)
@@ -122,6 +121,7 @@ class FlowDialog(QDialog):
         self.thresholdSpd.setRange(0.0, .99)
         self.thresholdSpd.setSingleStep(0.01)
         self.thresholdSpd.setValue(self.flags.threshold)
+        self.thresholdSpd.setDisabled(True)
         layout.addRow(QLabel("Threshold"), self.thresholdSpd)
 
         self.verbaliseChb = QCheckBox()
@@ -134,6 +134,7 @@ class FlowDialog(QDialog):
         layout2 = QFormLayout()
 
         self.jsonChb = QCheckBox()
+        self.jsonChb.setChecked(self.flags.json)
 
         layout2.addRow(QLabel("Output JSON Annotations"), self.jsonChb)
 
@@ -193,6 +194,10 @@ class FlowDialog(QDialog):
         self.timeoutTme = QTimeEdit()
         self.timeoutTme.setDisplayFormat('hh:mm:ss')
         layout4.addRow(QLabel('Record Time (hh:mm:ss)'), self.timeoutTme)
+
+        self.grayscaleChb = QCheckBox()
+        self.grayscaleChb.setChecked(self.flags.grayscale)
+        layout4.addRow(QLabel('Convert to Grayscale'), self.grayscaleChb)
 
         self.lineFrm = QFrame()
         self.lineFrm.setFrameShape(QFrame.HLine)
@@ -337,6 +342,7 @@ class FlowDialog(QDialog):
             self.flags.load = 0
             pass
         self.flags.trainer = self.trainerCmb.currentText()
+        self.flags.grayscale = self.grayscaleChb.checkState()
         self.flags.threshold = self.thresholdSpd.value()
         self.flags.clip = bool(self.clipChb.checkState())
         self.flags.verbalise = bool(self.verbaliseChb.checkState())
