@@ -9,6 +9,7 @@ import tensorflow as tf
 import pickle
 from multiprocessing.pool import ThreadPool
 
+
 train_stats = (
     'Training statistics - '
     'Learning rate: {} '
