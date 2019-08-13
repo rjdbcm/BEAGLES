@@ -40,7 +40,7 @@ class YOLO(framework):
 class YOLOv2(framework):
     constructor = yolo.constructor
     parse = yolo.data.parse
-    shuffle = yolov2.data.shuffle
+    shuffle = yolo.data.shuffle
     preprocess = yolo.predict.preprocess
     loss = yolov2.train.loss
     is_inp = yolo.misc.is_inp

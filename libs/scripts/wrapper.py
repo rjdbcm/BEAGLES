@@ -40,7 +40,7 @@ class DarkWrapper(FlagIO):
             parser.add_argument('--train', default=Flags().train,
                                 action='store_true',
                                 help='train a model on annotated data')
-            parser.add_argument('--savepb', default=Flags().savepb,
+            parser.add_argument('--freeze', default=Flags().savepb,
                                 action='store_true',
                                 help='freeze the model to a .pb')
             parser.add_argument('--demo', default=Flags().demo,
@@ -136,8 +136,8 @@ class DarkWrapper(FlagIO):
         try:
             if self.flags.train:
                 TFNet(self.flags).train()
-            elif self.flags.savepb:
-                TFNet(self.flags).savepb()
+            elif self.flags.freeze:
+                TFNet(self.flags).freeze()
             elif self.flags.demo != '':
                 TFNet(self.flags).camera()
             elif self.flags.fbf != '':

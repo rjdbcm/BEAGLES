@@ -37,7 +37,6 @@ def loss(self, net_out):
     # Anchors logged as a list of ordered pairs for readability
     self.logger.info('anchors = {}'.format(list(zip(*[iter(anchors)]*2))))
 
-
     size1 = [None, HW, B, C]
     size2 = [None, HW, B]
 

@@ -22,13 +22,11 @@ class FlagIO(object):
             ' {message}', style='{')
         self.logfile = logging.handlers.RotatingFileHandler(Flags().log,
                                                             backupCount=20)
-        self.logstream = logging.StreamHandler()
         self.tf_logfile = logging.handlers.RotatingFileHandler(
             os.path.splitext(Flags().log)[0] + ".tf" +
             os.path.splitext(Flags().log)[1], backupCount=20)
 
         self.logfile.setFormatter(formatter)
-        self.logstream.setFormatter(formatter)
         self.tf_logfile.setFormatter(formatter)
         self.logger.addHandler(self.logfile)
 
@@ -36,6 +34,8 @@ class FlagIO(object):
 
         try:
             if self.read_flags().cli:
+                self.logstream = logging.StreamHandler()
+                self.logstream.setFormatter(formatter)
                 self.logger.addHandler(self.logstream)
         except AttributeError:
             pass
@@ -153,13 +153,11 @@ class Flags(dict):
             self.load = -1
             self.log = './data/logs/flow.log'
             self.lr = 1e-5
-            self.metaLoad = ''
             self.model = ''
             self.momentum = 0.0
-            self.pbLoad = ''
             self.progress = 0.0
             self.save = 16000
-            self.savepb = False
+            self.freeze = False
             self.saveVideo = True
             self.size = 0
             self.started = False
@@ -169,6 +167,8 @@ class Flags(dict):
             self.trainer = 'rmsprop'
             self.verbalise = False
             self.train = False
+            self.pbLoad = False
+            self.metaLoad = False
 
     def __getattr__(self, attr):
         return self[attr]

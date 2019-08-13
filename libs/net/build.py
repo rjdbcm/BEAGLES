@@ -209,7 +209,7 @@ class TFNet(FlagIO):
         if self.flags.summary:
             self.writer.add_graph(self.sess.graph)
 
-    def savepb(self):
+    def freeze(self):
         """
         Create a standalone const graph def that
         C++	can load and run.
@@ -480,7 +480,7 @@ class TFNet(FlagIO):
 
     def camera_compile(self, cmdstring):
         cmdlist = []
-        for n in self.cams:
+        for n in self.flags.capdevs:
             cmdlist.append(compile(cmdstring.format(n), 'cmd_{}'.format(n),
                                    'exec'))
         return cmdlist
@@ -496,7 +496,6 @@ class TFNet(FlagIO):
         number of frames displayed scales with the number of devices
         '''
 
-        self.cams = self.flags.capdevs
         self.logger.info("Compiling capture code blocks")
         start = time.time()
         get_caps = self.camera_compile(
@@ -532,48 +531,23 @@ class TFNet(FlagIO):
             'max_x = cap{0}.get(cv2.CAP_PROP_FRAME_WIDTH)\n'
             'max_y = cap{0}.get(cv2.CAP_PROP_FRAME_HEIGHT)\n'
             'out{0} = cv2.VideoWriter(os.path.splitext(annotation{0})[0] + ".avi",'
-            'fourcc, fps, (int(max_x), int(max_y)))')
+            'fourcc, self.flags.fps, (int(max_x), int(max_y)))')
         write_frame = self.camera_compile('out{0}.write(new_frame{0})')
         show_frame = self.camera_compile('cv2.imshow("Cam {0}", new_frame{0})')
         end = time.time()
         self.logger.info("Finished in {}s".format(end - start))
 
         self.camera_exec(get_caps)
-
-        start = time.time()
-        for i in range(0, 240):
-            t = Thread(target=self.camera_exec(get_frames), args=())
-            t.start()
-            t.join()
-            t = Thread(target=self.camera_exec(get_boxing), args=())
-            t.start()
-            t.join()
-            t = Thread(target=self.camera_exec(show_frame), args=())
-            t.start()
-            t.join()
-        end = time.time()
-        elapsed = end - start
-        global fps
-        fps = 240 / elapsed
-        self.logger.info("recording at {} FPS".format(fps))
-
+        self.logger.info("recording at {} FPS".format(self.flags.fps))
         self.camera_exec(init_writer)
         begin = time.time()
         timeout = begin + self.flags.timeout
-        self.logger.info("Camera capture started on devices {}".format(self.cams))
+        self.logger.info("Camera capture started on devices {}".format(self.flags.capdevs))
         while True:
-            t = Thread(target=self.camera_exec(get_frames), args=())
-            t.start()
-            t.join()
-            t = Thread(target=self.camera_exec(get_boxing), args=())
-            t.start()
-            t.join()
-            t = Thread(target=self.camera_exec(write_frame), args=())
-            t.start()
-            t.join()
-            t = Thread(target=self.camera_exec(show_frame), args=())
-            t.start()
-            t.join()
+            for i in [get_frames, get_boxing, write_frame, show_frame]:
+                t = Thread(target=self.camera_exec(i))
+                t.start()
+                t.join()
             self.flags.progress = 100 * (time.time() - begin)/(timeout - begin)
             self.send_flags()
             if cv2.waitKey(1) and time.time() >= timeout:

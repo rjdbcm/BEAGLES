@@ -52,21 +52,31 @@ class MultiCamThread(QThread):
     def __init__(self, parent, model):
         super(MultiCamThread, self).__init__(parent)
         self.devs = []
+        self.fps = []
         self.model = model
         self.stopped = False
 
+    def silence(self):
+        pass
+
     def enumDevs(self):
         index = 0
+        cv2.redirectError(self.silence)
         while index < 32:
+            start = time.time()
             cap = cv2.VideoCapture(index)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 144)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)
+            end = time.time()
+            elapsed = end - start
             if cap is None or not cap.isOpened():
                 pass
             else:
                 self.devs.append(index)
+                self.fps.append(index / elapsed)
             index += 1
-        self.devs = dict(enumerate(self.devs))
+        self.devs = dict(enumerate(self.devs, start=1))
+        self.fps = dict(enumerate(self.fps, start=1))
         self.model.clear()
         return self.devs  # Use whilenot-else to display cams in UI
 
@@ -74,17 +84,18 @@ class MultiCamThread(QThread):
         self.model.clear()
         self.model.appendRow(QStandardItem("Refreshing..."))
         self.enumDevs()
-        while not self.devs:
-            time.sleep(1)
-        else:
-            self.model.clear()
-            for k, v in self.devs.items():
-                item = QStandardItem(" ".join(["Camera",
-                                               str(k), "on",
-                                               "/dev/video{}".format(v)]))
-                item.setData(v)
-                item.setCheckable(True)
-                self.model.appendRow(item)
+        self.model.clear()
+        for (camera_no, dev_num), (camera_no, fps) in zip(
+                self.devs.items(), self.fps.items()):
+            item = QStandardItem(
+                " ".join(["Camera", str(camera_no), "on",
+                          "/dev/video{}".format(dev_num),
+                          ]))
+            item.setData([dev_num, fps])
+            item.setCheckable(True)
+            self.model.appendRow(item)
+        if not self.model.rowCount():
+            self.model.appendRow(QStandardItem("No Devices Found"))
 
 
 class FlowDialog(QDialog):
@@ -96,14 +107,12 @@ class FlowDialog(QDialog):
         self.oldSaveValue = int(self.flags.save)
         # allow use of labels file passed by slgrSuite
         self.labelfile = labelfile
-
-
         self.formGroupBox = QGroupBox("Select Model and Checkpoint")
         layout = QFormLayout()
 
         self.flowCmb = QComboBox()
         self.flowCmb.addItems(
-            ["Train", "Flow", "Freeze", "Capture", "Annotate"])
+            ["Train", "Predict", "Freeze", "Capture", "Annotate"])
         self.flowCmb.currentIndexChanged.connect(self.flowSelect)
         layout.addRow(QLabel("Mode"), self.flowCmb)
 
@@ -129,7 +138,7 @@ class FlowDialog(QDialog):
 
         self.formGroupBox.setLayout(layout)
 
-        self.flowGroupBox = QGroupBox("Select Flow Parameters")
+        self.flowGroupBox = QGroupBox("Select Predict Parameters")
 
         layout2 = QFormLayout()
 
@@ -168,7 +177,6 @@ class FlowDialog(QDialog):
         self.batchSpb.setRange(1, 256)
         self.batchSpb.setValue(int(self.flags.batch))
         self.batchSpb.setWrapping(True)
-        self.batchSpb.valueChanged.connect(self.onBatchValueChange)
         layout3.addRow(QLabel("Batch Size"), self.batchSpb)
 
         self.epochSpb = QSpinBox()
@@ -180,7 +188,6 @@ class FlowDialog(QDialog):
         self.saveSpb.setRange(1, 65536)
         self.saveSpb.setValue(self.flags.save)
         self.saveSpb.setWrapping(True)
-        self.saveSpb.valueChanged.connect(self.onSaveValueChange)
         layout3.addRow(QLabel("Save Every"), self.saveSpb)
 
         self.clipChb = QCheckBox()
@@ -312,7 +319,7 @@ class FlowDialog(QDialog):
         else:
             self.demoGroupBox.hide()
 
-        if self.flowCmb.currentText() == "Flow":
+        if self.flowCmb.currentText() == "Predict":
             self.flowGroupBox.show()
         else:
             self.flowGroupBox.hide()
@@ -328,7 +335,6 @@ class FlowDialog(QDialog):
         else:
             self.trainGroupBox.hide()
             self.loadCmb.setCurrentIndex(0)
-
 
     def accept(self):
         """set flags for darkflow and prevent startup if errors anticipated"""
@@ -355,17 +361,22 @@ class FlowDialog(QDialog):
         self.flags.json = bool(self.jsonChb.checkState()) if \
             self.flowGroupBox.isEnabled() else self.flags.json
         self.flags.timeout = QTime(0, 0, 0).secsTo(self.timeoutTme.time())
-
+        fps_list = list()
         for i in range(self.deviceItemModel.rowCount()):
             item = self.deviceItemModel.item(i)
             if item.checkState():
-                self.flags.capdevs.append(item.data())
+                self.flags.capdevs.append(item.data()[0])
+                fps_list.append(item.data()[1])
+        try:
+            self.flags.fps = min(fps_list)
+        except ValueError:
+            pass
 
         if not self.flowCmb.currentText() == "Train" and self.flags.load == 0:
             QMessageBox.warning(self, 'Error', "Invalid checkpoint",
                                 QMessageBox.Ok)
             return
-        if self.flowCmb.currentText() == "Flow":
+        if self.flowCmb.currentText() == "Predict":
             self.flowGroupBox.setDisabled(True)
             pass
         if self.flowCmb.currentText() == "Train":
@@ -503,39 +514,6 @@ class FlowDialog(QDialog):
         else:  # stop pulsing and set value
             self.flowPrg.setMaximum(100)
             self.flowPrg.setValue(value)
-
-    @pyqtSlot(int)
-    def onBatchValueChange(self, value):
-
-        def upOrDown():
-            if value > self.oldBatchValue:
-                self.saveSpb.stepUp()
-            elif value < self.oldBatchValue:
-                self.saveSpb.stepDown()
-            else:
-                pass
-
-        self.saveSpb.blockSignals(True)
-        if self.saveSpb.value() % self.batchSpb.value() == 0:
-            upOrDown()
-        else:
-            upOrDown()
-            self.saveSpb.setSingleStep(self.batchSpb.value())
-        self.saveSpb.blockSignals(False)
-
-    @pyqtSlot(int)
-    def onSaveValueChange(self, value):
-        self.batchSpb.blockSignals(True)
-        if self.saveSpb.value() % self.batchSpb.value() == 0:
-            pass
-        else:
-            if value > self.oldSaveValue:
-                self.batchSpb.stepUp()
-            elif value < self.oldSaveValue:
-                self.batchSpb.stepDown()
-            else:
-                pass
-        self.batchSpb.blockSignals(False)
 
     # HELPERS
     @staticmethod

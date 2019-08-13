@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import cv2
+import errno
 import codecs
 import random
 import shutil
@@ -1305,10 +1306,13 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         else:
             defaultOpenDirPath = os.path.dirname(self.filePath) if\
                 self.filePath else '.'
-
         targetDirPath = ustr(QFileDialog.getExistingDirectory(
             self, '%s - Open Directory' % __appname__, defaultOpenDirPath,
             QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
+        # set the annotation save directory to the target directory
+        self.defaultSaveDir = targetDirPath if targetDirPath != "" else \
+            self.defaultSaveDir
+        print(self.defaultSaveDir)
         self.importDirImages(targetDirPath)
 
     def impVideo(self, _value=False):
@@ -1366,7 +1370,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         filelist = []
         for file in os.listdir(defaultOpenDirPath):
             filename = os.fsdecode(file)
-            if filename.endswith((".xml", ".txt")):
+            if filename.endswith(".xml"):
                 self.logger.info(
                     "Moving {0} to data/committedframes/{0}".format(filename))
                 filename = os.path.join(defaultOpenDirPath, filename)
@@ -1377,8 +1381,16 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                 continue
 
         for i in filelist:
-            os.rename(i, os.path.join(
-                self.committedframesDataPath, os.path.split(i)[1]))
+            dest = os.path.join(self.committedframesDataPath,
+                                os.path.split(i)[1])
+            try:
+                os.rename(i, dest)
+            except OSError as e:
+                if e.errno == errno.EXDEV:
+                    shutil.copy2(i, dest)
+                    os.remove(i)
+                else:
+                    raise
 
         self.importDirImages(defaultOpenDirPath)
 
