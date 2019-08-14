@@ -139,10 +139,10 @@ class MultiCamThread(QThread):
         self.devs = dict(enumerate(self.devs, start=1))
         self.fps = dict(enumerate(self.fps, start=1))
         self.model.clear()
-        return self.devs  # Use whilenot-else to display cams in UI
+        return self.devs
 
     def run(self):
-        self.model.clear()
+        self.model.clear()  # Model is QObject so no issue outside main thread
         self.model.appendRow(QStandardItem("Refreshing..."))
         self.enumDevs()
         self.model.clear()
