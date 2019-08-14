@@ -43,36 +43,21 @@ class GradientNaN(Exception):
 
 
 class TFNet(FlagIO):
-
     _TRAINER = dict({
         'rmsprop': tf.train.RMSPropOptimizer,
         'adadelta': tf.train.AdadeltaOptimizer,
         'adagrad': tf.train.AdagradOptimizer,
         'adagradDA': tf.train.AdagradDAOptimizer,
         'momentum': tf.train.MomentumOptimizer,
+        'nesterov': tf.train.MomentumOptimizer,
         'adam': tf.train.AdamOptimizer,
         'ftrl': tf.train.FtrlOptimizer,
         'sgd': tf.train.GradientDescentOptimizer
     })
 
-    # imported methods
-    # camera_exec = help.camera_exec
-    # camera_compile = help.camera_compile
-    # draw_box = help.draw_box
-    # write_annotations = help.write_annotations
-    # train = flow.train
-    # camera = help.camera
-    # annotate = help.annotate
-    # predict = flow.predict
-    # return_predict = flow.return_predict
-    # to_darknet = help.to_darknet
-    # build_train_op = help.build_train_op
-    # load_from_ckpt = help.load_from_ckpt
-
     def __init__(self, flags, darknet=None):
         FlagIO.__init__(self, subprogram=True)
         speak = True if darknet is None else False
-
 
         #  Setup logging verbosity
         tf_logger = tf_logging.get_logger()
@@ -446,11 +431,20 @@ class TFNet(FlagIO):
         self.framework.loss(self.out)
         self.logger.info('Building {} train op'.format(self.meta['model']))
         self.global_step = tf.Variable(0, trainable=False)
+
+        kwargs = dict()
+        if self.flags.trainer == 'momentum' or 'rmsprop' or 'nesterov':
+            kwargs.update({'momentum': self.flags.momentum})
+        if self.flags.trainer == 'nesterov':
+            kwargs.update({'use_nesterov': True})
+        import sys
+        print(kwargs, file=sys.stderr)
+
         optimizer = self._TRAINER[self.flags.trainer](
             clr.cyclic_learning_rate(
                 global_step=self.global_step,
                 mode='triangular2',
-                learning_rate=self.flags.lr))
+                learning_rate=self.flags.lr), **kwargs)
         self.gradients = optimizer.compute_gradients(self.framework.loss)
         if self.flags.clip:
             # From github.com/thtrieu/darkflow/issues/557#issuecomment-377378352

@@ -217,7 +217,7 @@ class FlowDialog(QDialog):
 
         self.trainerCmb = QComboBox()
         self.trainerCmb.addItems(["rmsprop", "adadelta", "adagrad",
-                                  "adagradDA", "momentum", "adam",
+                                  "adagradDA", "momentum", "nesterov", "adam",
                                   "ftrl", "sgd"])
         self.trainerCmb.currentIndexChanged.connect(self.trainerSelect)
         layout3.addRow(QLabel("Training Algorithm"), self.trainerCmb)
@@ -375,7 +375,7 @@ class FlowDialog(QDialog):
 
     def trainerSelect(self):
         self.momentumSpd.setDisabled(True)
-        for trainer in ("rmsprop", "momentum"):
+        for trainer in ("rmsprop", "momentum", "nesterov"):
             if self.trainerCmb.currentText() == trainer:
                 self.momentumSpd.setDisabled(False)
 
