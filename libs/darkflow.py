@@ -3,7 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from .labelFile import LabelFile
 from .utils.flags import Flags, FlagIO
-import fileinput
+import numpy as np
 import subprocess
 import cv2
 import sys
@@ -12,8 +12,69 @@ import re
 import time
 
 
+_FLOAT_RE = re.compile(r'(([+-]?\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)')
+
+
 class Connection(QObject):
     progressUpdate = pyqtSignal(int)
+
+
+class FloatValidator(QValidator):
+
+    @staticmethod
+    def valid_float_string(string):
+        match = _FLOAT_RE.search(string)
+        return match.groups()[0] == string if match else False
+
+    def validate(self, string, position):
+        if self.valid_float_string(string):
+            state = self.Acceptable
+        elif string == "" or string[position-1] in 'e.-+':
+            state = self.Intermediate
+        else:
+            state = self.Invalid
+        return state, string, position
+
+    def fixup(self, text):
+        match = _FLOAT_RE.search(text)
+        return match.groups()[0] if match else ""
+
+
+class ScientificDoubleSpinBox(QDoubleSpinBox):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setMinimum(-np.inf)
+        self.setMaximum(np.inf)
+        self.validator = FloatValidator()
+        self.setDecimals(1000)
+
+    def validate(self, text, position):
+        return self.validator.validate(text, position)
+
+    def fixup(self, text):
+        return self.validator.fixup(text)
+
+    def valueFromText(self, text):
+        return float(text)
+
+    def textFromValue(self, value):
+        return self.format_float(value)
+
+    def stepBy(self, steps):
+        text = self.cleanText()
+        groups = _FLOAT_RE.search(text).groups()
+        decimal = float(groups[1])
+        decimal += steps
+        new_string = "{:g}".format(decimal) + (groups[3] if groups[3] else "")
+        self.lineEdit().setText(new_string)
+
+    @staticmethod
+    def format_float(value):
+        """Modified form of the 'g' format specifier."""
+        string = "{:g}".format(value).replace("e+", "e")
+        string = re.sub("e(-?)0*(\d+)", r"e\1\2", string)
+        return string
 
 
 class FlowThread(QThread, FlagIO):
@@ -167,6 +228,11 @@ class FlowDialog(QDialog):
         self.momentumSpd.setToolTip("Momentum setting for momentum and "
                                     "rmsprop optimizers")
         layout3.addRow(QLabel("Momentum"), self.momentumSpd)
+
+        self.learningRateSpd = ScientificDoubleSpinBox()
+        self.learningRateSpd.setRange(float(sys.float_info.min), 0.1)
+        self.learningRateSpd.setValue(self.flags.lr)
+        layout3.addRow(QLabel("Initial Learning Rate"), self.learningRateSpd)
 
         self.keepSpb = QSpinBox()
         self.keepSpb.setValue(self.flags.keep)
@@ -353,6 +419,7 @@ class FlowDialog(QDialog):
         self.flags.clip = bool(self.clipChb.checkState())
         self.flags.verbalise = bool(self.verbaliseChb.checkState())
         self.flags.momentum = self.momentumSpd.value()
+        self.flags.lr = self.learningRateSpd.value()
         self.flags.keep = self.keepSpb.value()
         self.flags.batch = self.batchSpb.value()
         self.flags.save = self.saveSpb.value()

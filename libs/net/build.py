@@ -205,10 +205,15 @@ class TFNet(FlagIO):
 
         if not self.ntrain:
             return
-
-        self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=self.flags.keep)
-        if self.flags.load != 0:
-            self.load_from_ckpt()
+        try:
+            self.saver = tf.train.Saver(tf.global_variables(),
+                                        max_to_keep=self.flags.keep)
+            if self.flags.load != 0:
+                self.load_from_ckpt()
+        except tf.errors.NotFoundError as e:
+            self.flags.error = str(e.message)
+            self.send_flags()
+            raise
 
         if self.flags.summary:
             self.writer.add_graph(self.sess.graph)
@@ -326,6 +331,9 @@ class TFNet(FlagIO):
             loss_mva = .9 * loss_mva + .1 * loss
             step_now = self.flags.load + i + 1
 
+            assign_op = self.global_step.assign(step_now)
+            self.sess.run(assign_op)
+
             # Calculate and send progress
             # noinspection PyUnboundLocalVariable
             count += self.flags.batch
@@ -434,18 +442,24 @@ class TFNet(FlagIO):
                 last, len(inp_feed), len(inp_feed) / last))
 
     def build_train_op(self):
+        from ..utils import clr
         self.framework.loss(self.out)
         self.logger.info('Building {} train op'.format(self.meta['model']))
-        optimizer = self._TRAINER[self.flags.trainer](self.flags.lr)
-        if self.flags.clip == False:
-            self.gradients = optimizer.compute_gradients(self.framework.loss)
-        if self.flags.clip == True:
+        self.global_step = tf.Variable(0, trainable=False)
+        optimizer = self._TRAINER[self.flags.trainer](
+            clr.cyclic_learning_rate(
+                global_step=self.global_step,
+                mode='triangular2',
+                learning_rate=self.flags.lr))
+        self.gradients = optimizer.compute_gradients(self.framework.loss)
+        if self.flags.clip:
             # From github.com/thtrieu/darkflow/issues/557#issuecomment-377378352
             # avoid gradient explosions late in training
             self.gradients = [(tf.clip_by_value(grad, -1., 1.), var) for
                          grad, var in optimizer.compute_gradients(
                     self.framework.loss)]
-        self.train_op = optimizer.apply_gradients(self.gradients)
+        self.train_op = optimizer.apply_gradients(self.gradients,
+                                                  global_step=self.global_step)
 
     def load_from_ckpt(self):
         if self.flags.load < 0:  # load lastest ckpt

@@ -155,7 +155,7 @@ class Flags(dict):
             self.labels = './data/predefined_classes.txt'
             self.load = -1
             self.log = './data/logs/flow.log'
-            self.lr = 1e-5
+            self.lr = 1.0e-5
             self.model = ''
             self.momentum = 0.0
             self.progress = 0.0
