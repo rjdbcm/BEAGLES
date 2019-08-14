@@ -71,7 +71,8 @@ class TFNet(FlagIO):
 
     def __init__(self, flags, darknet=None):
         FlagIO.__init__(self, subprogram=True)
-        self.ntrain = 0
+        speak = True if darknet is None else False
+
 
         #  Setup logging verbosity
         tf_logger = tf_logging.get_logger()
@@ -80,9 +81,11 @@ class TFNet(FlagIO):
         tf_logger.addHandler(self.tf_logfile)
         if os.stat(self.tf_logfile.baseFilename).st_size > 0:
             self.tf_logfile.doRollover()
-
         self.flags = self.read_flags()
         self.io_flags()
+
+        self.ntrain = 0
+
         if self.flags.verbalise:
             os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
             tf.logging.set_verbosity(tf.logging.DEBUG)
@@ -112,8 +115,8 @@ class TFNet(FlagIO):
         self.framework = create_framework(*args)
 
         self.meta = darknet.meta
-
-        self.logger.info('Building net ...')
+        if speak:
+            self.logger.info('Building net ...')
         start = time.time()
         self.graph = tf.Graph()
         if flags.gpu > 0.0:
@@ -121,7 +124,7 @@ class TFNet(FlagIO):
         else:
             device_name = None
         with tf.device(device_name):
-            with self.graph.as_default() as g:
+            with self.graph.as_default():
                 self.build_forward()
                 self.setup_meta_ops()
         self.logger.info('Finished in {}s'.format(
@@ -148,7 +151,6 @@ class TFNet(FlagIO):
         self.setup_meta_ops()
 
     def build_forward(self):
-        verbalise = self.flags.verbalise
 
         # Placeholders
         inp_size = [None] + self.meta['inp_size']
@@ -158,6 +160,7 @@ class TFNet(FlagIO):
         # Build the forward pass
         state = identity(self.inp)
         roof = self.num_layer - self.ntrain
+        self.logger.info(LINE)
         self.logger.info(HEADER)
         self.logger.info(LINE)
         for i, layer in enumerate(self.darknet.layers):
@@ -202,6 +205,7 @@ class TFNet(FlagIO):
 
         if not self.ntrain:
             return
+
         self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=self.flags.keep)
         if self.flags.load != 0:
             self.load_from_ckpt()
@@ -214,18 +218,30 @@ class TFNet(FlagIO):
         Create a standalone const graph def that
         C++	can load and run.
         """
-        
-        darknet_pb = self.to_darknet()
+        darknet_ckpt = self.darknet
+
+        with self.graph.as_default():
+            for var in tf.global_variables():
+                name = var.name.split(':')[0]
+                var_name = name.split('-')
+                l_idx = int(var_name[0])
+                w_sig = var_name[1].split('/')[-1]
+                l = darknet_ckpt.layers[l_idx]
+                l.w[w_sig] = var.eval(self.sess)
+
+        for layer in darknet_ckpt.layers:
+            for ph in layer.h:
+                layer.h[ph] = None
+
         flags_pb = self.flags
         flags_pb.verbalise = False
         flags_pb.train = False
         self.flags.progress = 25
-        # rebuild another tfnet. all const.
-        tfnet_pb = TFNet(flags_pb, darknet_pb)
+        self.logger.info("Reinitializing with static TFNet...")
+        tfnet_pb = TFNet(flags_pb, darknet_ckpt)
         tfnet_pb.sess = tf.Session(graph=tfnet_pb.graph)
         # tfnet_pb.predict() # uncomment for unit testing
         name = 'built_graph/{}.pb'.format(self.meta['name'])
-        os.makedirs(os.path.dirname(name), exist_ok=True)
         self.flags.progress = 50
         # Save dump of everything in meta
         with open('./data/built_graph/{}.meta'.format(self.meta['name']), 'w') as fp:
@@ -729,20 +745,3 @@ class TFNet(FlagIO):
         # When everything done, release the capture
         out.release()
 
-    def to_darknet(self):
-        darknet_ckpt = self.darknet
-
-        with self.graph.as_default() as g:
-            for var in tf.global_variables():
-                name = var.name.split(':')[0]
-                var_name = name.split('-')
-                l_idx = int(var_name[0])
-                w_sig = var_name[1].split('/')[-1]
-                l = darknet_ckpt.layers[l_idx]
-                l.w[w_sig] = var.eval(self.sess)
-
-        for layer in darknet_ckpt.layers:
-            for ph in layer.h:
-                layer.h[ph] = None
-
-        return darknet_ckpt

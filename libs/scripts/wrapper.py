@@ -28,7 +28,7 @@ finally:
 
 class DarkWrapper(FlagIO):
     def __init__(self):
-        FlagIO.__init__(self, subprogram=True)
+        FlagIO.__init__(self)
         signal(SIGTERM, self.kill)
         try:
             argv = sys.argv[1]
@@ -40,7 +40,7 @@ class DarkWrapper(FlagIO):
             parser.add_argument('--train', default=Flags().train,
                                 action='store_true',
                                 help='train a model on annotated data')
-            parser.add_argument('--freeze', default=Flags().savepb,
+            parser.add_argument('--freeze', default=Flags().freeze,
                                 action='store_true',
                                 help='freeze the model to a .pb')
             parser.add_argument('--demo', default=Flags().demo,

@@ -396,7 +396,7 @@ class FlowDialog(QDialog):
             else:
                 self.flags.train = True
         if self.flowCmb.currentText() == "Freeze":
-            self.flags.savepb = True
+            self.flags.freeze = True
         if self.flowCmb.currentText() == "Annotate":
             formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
             filters = "Video Files (%s)" % ' '.join(

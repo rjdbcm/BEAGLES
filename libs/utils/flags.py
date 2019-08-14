@@ -28,7 +28,9 @@ class FlagIO(object):
 
         self.logfile.setFormatter(formatter)
         self.tf_logfile.setFormatter(formatter)
-        self.logger.addHandler(self.logfile)
+        # don't re-add the same handler
+        if not str(self.logfile) in str(self.logger.handlers):
+            self.logger.addHandler(self.logfile)
 
         self.flagpath = self.init_ramdisk()
 
@@ -36,7 +38,8 @@ class FlagIO(object):
             if self.read_flags().cli:
                 self.logstream = logging.StreamHandler()
                 self.logstream.setFormatter(formatter)
-                self.logger.addHandler(self.logstream)
+                if not str(self.logstream) in str(self.logger.handlers):
+                    self.logger.addHandler(self.logstream)
         except AttributeError:
             pass
 
