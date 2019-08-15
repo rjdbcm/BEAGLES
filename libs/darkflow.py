@@ -44,8 +44,8 @@ class ScientificDoubleSpinBox(QDoubleSpinBox):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setMinimum(-np.inf)
-        self.setMaximum(np.inf)
+        self.setMinimum(float(sys.float_info.min))
+        self.setMaximum(float(sys.float_info.max))
         self.validator = FloatValidator()
         self.setDecimals(1000)
 
@@ -230,9 +230,12 @@ class FlowDialog(QDialog):
         layout3.addRow(QLabel("Momentum"), self.momentumSpd)
 
         self.learningRateSpd = ScientificDoubleSpinBox()
-        self.learningRateSpd.setRange(float(sys.float_info.min), 0.1)
         self.learningRateSpd.setValue(self.flags.lr)
         layout3.addRow(QLabel("Initial Learning Rate"), self.learningRateSpd)
+
+        self.maxLearningRateSpd = ScientificDoubleSpinBox()
+        self.maxLearningRateSpd.setValue(self.flags.max_lr)
+        layout3.addRow(QLabel("Maximum Learning Rate"), self.maxLearningRateSpd)
 
         self.keepSpb = QSpinBox()
         self.keepSpb.setValue(self.flags.keep)
@@ -293,7 +296,6 @@ class FlowDialog(QDialog):
         self.demoGroupBox.setLayout(layout4)
         self.demoGroupBox.hide()
 
-
         self.flowPrg = QProgressBar()
         self.flowPrg.setRange(0, 100)
         self.buttonOk = QDialogButtonBox(QDialogButtonBox.Ok)
@@ -304,7 +306,6 @@ class FlowDialog(QDialog):
         self.buttonOk.accepted.connect(self.accept)
         self.buttonStop.clicked.connect(self.closeEvent)
         self.buttonCancel.rejected.connect(self.close)
-
 
         main_layout = QGridLayout()
         main_layout.addWidget(self.formGroupBox, 0, 0)

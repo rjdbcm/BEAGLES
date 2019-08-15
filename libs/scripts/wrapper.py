@@ -47,8 +47,8 @@ class DarkWrapper(FlagIO):
                                 help='demo model on video or webcam')
             parser.add_argument('--fbf', default=Flags().fbf,
                                 help='generate frame-by-frame annotation')
-            parser.add_argument('--saveVideo', metavar='',
-                                default=Flags().saveVideo,
+            parser.add_argument('--save_video', metavar='',
+                                default=Flags().save_video,
                                 help='filename of video output')
             parser.add_argument('--json', default=Flags().json,
                                 action='store_true',
@@ -90,17 +90,17 @@ class DarkWrapper(FlagIO):
             parser.add_argument('--save', default=Flags().save, metavar='N',
                                 help='save a checkpoint ever N training '
                                      'examples')
-            parser.add_argument('--pbLoad', default=Flags().pbLoad,
+            parser.add_argument('--pb_load', default=Flags().pb_load,
                                 metavar='*.pb',
                                 help='name of protobuf file to load')
-            parser.add_argument('--metaLoad', default=Flags().metaLoad,
+            parser.add_argument('--meta_load', default=Flags().meta_load,
                                 metavar='',
                                 help='path to .meta file corresponding to .pb'
                                      ' file')
             parser.add_argument('--gpu', default=Flags().gpu,
                                 metavar='[0 .. 1.0]',
                                 help='amount of GPU to use')
-            parser.add_argument('--gpuName', default=Flags().gpuName,
+            parser.add_argument('--gpu_name', default=Flags().gpu_name,
                                 metavar='/gpu:N', help='GPU device name')
             parser.add_argument('-l', '--load', default=Flags().load,
                                 metavar='', type=int,

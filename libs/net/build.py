@@ -78,11 +78,11 @@ class TFNet(FlagIO):
             os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
             tf.logging.set_verbosity(tf.logging.FATAL)
 
-        if self.flags.pbLoad and self.flags.metaLoad:
+        if self.flags.pb_load and self.flags.meta_load:
             self.logger.info('Loading from .pb and .meta')
             self.graph = tf.Graph()
             if flags.gpu > 0.0:
-                device_name = flags.gpuName
+                device_name = flags.gpu_name
             else:
                 device_name = None
             with tf.device(device_name):
@@ -105,7 +105,7 @@ class TFNet(FlagIO):
         start = time.time()
         self.graph = tf.Graph()
         if flags.gpu > 0.0:
-            device_name = flags.gpuName
+            device_name = flags.gpu_name
         else:
             device_name = None
         with tf.device(device_name):
@@ -116,7 +116,7 @@ class TFNet(FlagIO):
             time.time() - start))
 
     def build_from_pb(self):
-        with tf.gfile.FastGFile(self.flags.pbLoad, "rb") as f:
+        with tf.gfile.FastGFile(self.flags.pb_load, "rb") as f:
             graph_def = tf.GraphDef()
             graph_def.ParseFromString(f.read())
 
@@ -124,7 +124,7 @@ class TFNet(FlagIO):
             graph_def,
             name=""
         )
-        with open(self.flags.metaLoad, 'r') as fp:
+        with open(self.flags.meta_load, 'r') as fp:
             self.meta = json.load(fp)
         self.framework = create_framework(self.meta, self.flags)
 
@@ -431,13 +431,14 @@ class TFNet(FlagIO):
         self.framework.loss(self.out)
         self.logger.info('Building {} train op'.format(self.meta['model']))
         self.global_step = tf.Variable(0, trainable=False)
-
-        kwargs = dict()
-        if self.flags.trainer == 'momentum' or 'rmsprop' or 'nesterov':
-            kwargs.update({'momentum': self.flags.momentum})
-        if self.flags.trainer == 'nesterov':
-            kwargs.update({'use_nesterov': True})
         import sys
+
+        print(self.flags.trainer, file=sys.stderr)
+        kwargs = dict()
+        if self.flags.trainer is ['momentum' or 'rmsprop' or 'nesterov']:
+            kwargs.update({'momentum': self.flags.momentum})
+        if self.flags.trainer is 'nesterov':
+            kwargs.update({'use_nesterov': True})
         print(kwargs, file=sys.stderr)
 
         optimizer = self._TRAINER[self.flags.trainer](
@@ -581,7 +582,7 @@ class TFNet(FlagIO):
         cv2.destroyAllWindows()
 
         # file = self.flags.demo  # TODO add asynchronous capture
-        # SaveVideo = self.flags.saveVideo
+        # save_video = self.flags.save_video
         #
         # if file == 'camera':
         #     file = 0
@@ -606,7 +607,7 @@ class TFNet(FlagIO):
         #     _, frame = camera.read()
         #     max_y, max_x, _ = frame.shape
         #
-        # if SaveVideo:
+        # if save_video:
         #     fourcc = cv2.VideoWriter_fourcc(*'XVID')
         #     if file == 0:  # camera window
         #         fps = 1 / self._get_fps(frame)
@@ -615,7 +616,7 @@ class TFNet(FlagIO):
         #     else:
         #         fps = round(camera.get(cv2.CAP_PROP_FPS))
         #     videoWriter = cv2.VideoWriter(
-        #         self.flags.saveVideo, fourcc, fps, (max_x, max_y))
+        #         self.flags.save_video, fourcc, fps, (max_x, max_y))
         #
         # # buffers for demo in batch
         # buffer_inp = list()
@@ -641,7 +642,7 @@ class TFNet(FlagIO):
         #         for img, single_out in zip(buffer_inp, net_out):
         #             postprocessed = self.framework.postprocess(
         #                 single_out, img, False)
-        #             if SaveVideo:
+        #             if save_video:
         #                 videoWriter.write(postprocessed)
         #             if file == 0:  # camera window
         #                 cv2.imshow('', postprocessed)
@@ -659,7 +660,7 @@ class TFNet(FlagIO):
         #         if choice == 27: break
         #
         # sys.stdout.write('\n')
-        # if SaveVideo:
+        # if save_video:
         #     videoWriter.release()
         # camera.release()
         # if file == 0:  # camera window

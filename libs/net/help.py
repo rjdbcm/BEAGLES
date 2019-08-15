@@ -188,7 +188,7 @@ def camera(self):
     cv2.destroyAllWindows()
 
     # file = self.flags.demo  # TODO add asynchronous capture
-    # SaveVideo = self.flags.saveVideo
+    # save_video = self.flags.save_video
     #
     # if file == 'camera':
     #     file = 0
@@ -213,7 +213,7 @@ def camera(self):
     #     _, frame = camera.read()
     #     max_y, max_x, _ = frame.shape
     #
-    # if SaveVideo:
+    # if save_video:
     #     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     #     if file == 0:  # camera window
     #         fps = 1 / self._get_fps(frame)
@@ -222,7 +222,7 @@ def camera(self):
     #     else:
     #         fps = round(camera.get(cv2.CAP_PROP_FPS))
     #     videoWriter = cv2.VideoWriter(
-    #         self.flags.saveVideo, fourcc, fps, (max_x, max_y))
+    #         self.flags.save_video, fourcc, fps, (max_x, max_y))
     #
     # # buffers for demo in batch
     # buffer_inp = list()
@@ -248,7 +248,7 @@ def camera(self):
     #         for img, single_out in zip(buffer_inp, net_out):
     #             postprocessed = self.framework.postprocess(
     #                 single_out, img, False)
-    #             if SaveVideo:
+    #             if save_video:
     #                 videoWriter.write(postprocessed)
     #             if file == 0:  # camera window
     #                 cv2.imshow('', postprocessed)
@@ -266,7 +266,7 @@ def camera(self):
     #         if choice == 27: break
     #
     # sys.stdout.write('\n')
-    # if SaveVideo:
+    # if save_video:
     #     videoWriter.release()
     # camera.release()
     # if file == 0:  # camera window

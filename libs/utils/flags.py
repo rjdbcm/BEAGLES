@@ -146,7 +146,7 @@ class Flags(dict):
             self.error = ""
             self.fbf = ''
             self.gpu = 0.0
-            self.gpuName = '/gpu:0'
+            self.gpu_name = '/gpu:0'
             self.grayscale = False
             self.imgdir = './data/sample_img/'
             self.json = False
@@ -156,22 +156,25 @@ class Flags(dict):
             self.load = -1
             self.log = './data/logs/flow.log'
             self.lr = 1.0e-5
+            self.max_lr = 1.0e-5
             self.model = ''
             self.momentum = 0.0
             self.progress = 0.0
+            self.project_name = "default"
             self.save = 16000
             self.freeze = False
-            self.saveVideo = True
+            self.save_video = True
             self.size = 0
             self.started = False
+            self.step_size_coefficient = 2
             self.summary = './data/summaries/'
             self.threshold = 0.4
             self.timeout = 0
             self.trainer = 'rmsprop'
             self.verbalise = False
             self.train = False
-            self.pbLoad = False
-            self.metaLoad = False
+            self.pb_load = False
+            self.meta_load = False
 
     def __getattr__(self, attr):
         return self[attr]
