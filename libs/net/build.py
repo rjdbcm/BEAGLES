@@ -445,7 +445,8 @@ class TFNet(FlagIO):
             clr.cyclic_learning_rate(
                 global_step=self.global_step,
                 mode='triangular2',
-                learning_rate=self.flags.lr), **kwargs)
+                learning_rate=self.flags.lr,
+                max_lr=self.flags.max_lr), **kwargs)
         self.gradients = optimizer.compute_gradients(self.framework.loss)
         if self.flags.clip:
             # From github.com/thtrieu/darkflow/issues/557#issuecomment-377378352

@@ -120,4 +120,5 @@ def cyclic_learning_rate(global_step,
 
         if not context.executing_eagerly():
             cyclic_lr = cyclic_lr()
+        tf.summary.scalar('learning_rate', cyclic_lr)
         return cyclic_lr

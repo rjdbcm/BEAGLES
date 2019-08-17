@@ -18,6 +18,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 # Add internal libs
 # noinspection PyUnresolvedReferences
+from tensorflow import version as tf_version
 from libs.resources import *
 from libs.constants import *
 from libs.qtUtils import *
@@ -706,8 +707,18 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         subprocess.Popen(self.screencastViewer + [self.screencast])
 
     def showInfoDialog(self):
-        msg = u'Name:{0} \nApp Version:{1} \n{2} '.format(
-            __appname__, __version__, sys.version_info)
+        msg = u'{0}\n' \
+              u'App Version: {1}\n' \
+              u'Python Version: {2}.{3}.{4}\n' \
+              u'Qt Version: {5}\n' \
+              u'PyQt Version: {6}\n' \
+              u'Tensorflow Version: {7}'.format(
+                                            __appname__,
+                                            __version__,
+                                            *sys.version_info[:3],
+                                            QT_VERSION_STR,
+                                            PYQT_VERSION_STR,
+                                            tf_version.VERSION)
         QMessageBox.information(self, u'Information', msg)
 
     def createShape(self):

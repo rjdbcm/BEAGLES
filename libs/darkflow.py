@@ -185,6 +185,7 @@ class FlowDialog(QDialog):
 
         self.loadCmb = QComboBox()
         self.loadCmb.setToolTip("Choose a checkpoint")
+        self.loadCmb.setMinimumWidth(100)
         layout.addRow(QLabel("Checkpoint"), self.loadCmb)
 
         self.thresholdSpd = QDoubleSpinBox()
@@ -237,6 +238,12 @@ class FlowDialog(QDialog):
         self.maxLearningRateSpd.setValue(self.flags.max_lr)
         layout3.addRow(QLabel("Maximum Learning Rate"), self.maxLearningRateSpd)
 
+        self.stepSizeCoefficient = QSpinBox()
+        self.stepSizeCoefficient.setRange(2, 10)
+        self.stepSizeCoefficient.setValue(self.flags.step_size_coefficient)
+        layout3.addRow(QLabel("Step Size Coefficient"),
+                       self.stepSizeCoefficient)
+
         self.keepSpb = QSpinBox()
         self.keepSpb.setValue(self.flags.keep)
         self.keepSpb.setRange(1, 256)
@@ -259,8 +266,17 @@ class FlowDialog(QDialog):
         self.saveSpb.setWrapping(True)
         layout3.addRow(QLabel("Save Every"), self.saveSpb)
 
+        self.clipLayout = QHBoxLayout()
+        self.clipNorm = QSpinBox()
+        self.clipNorm.setValue(5)
+        self.clipNorm.setDisabled(True)
         self.clipChb = QCheckBox()
-        layout3.addRow(QLabel("Clip Gradients"), self.clipChb)
+        self.clipChb.clicked.connect(self.clipNorm.setEnabled)
+        self.clipLayout.addWidget(self.clipChb)
+        self.clipLayout.addWidget(QLabel("Norm:"))
+        self.clipLayout.addWidget(self.clipNorm)
+        layout3.addRow(QLabel("Clip Gradients"), self.clipLayout)
+
 
         self.trainGroupBox.setLayout(layout3)
 
@@ -421,6 +437,7 @@ class FlowDialog(QDialog):
         self.flags.verbalise = bool(self.verbaliseChb.checkState())
         self.flags.momentum = self.momentumSpd.value()
         self.flags.lr = self.learningRateSpd.value()
+        self.flags.max_lr = self.maxLearningRateSpd.value()
         self.flags.keep = self.keepSpb.value()
         self.flags.batch = self.batchSpb.value()
         self.flags.save = self.saveSpb.value()
