@@ -17,6 +17,7 @@ from .framework import create_framework
 from ..dark.darknet import Darknet
 from ..utils.loader import create_loader
 from ..utils.flags import FlagIO
+from ..utils import clr
 
 train_stats = (
     'Training statistics - '
@@ -183,9 +184,15 @@ class TFNet(FlagIO):
 
         if self.flags.summary:
             self.summary_op = tf.summary.merge_all()
-            self.writer = tf.summary.FileWriter(self.flags.summary + 'train')
+            self.writer = tf.summary.FileWriter(
+                self.flags.summary + self.flags.project_name)
+
 
         self.sess = tf.Session(config=tf.ConfigProto(**cfg))
+        # uncomment next 3 lines to enable tb debugger
+        # from tensorflow.python import debug as tf_debug
+        # self.sess = tf_debug.TensorBoardDebugWrapperSession(self.sess,
+        #                                                     'localhost:6064')
         self.sess.run(tf.global_variables_initializer())
 
         if not self.ntrain:
@@ -282,7 +289,15 @@ class TFNet(FlagIO):
             # Start the session
             try:
                 fetched = self.sess.run(fetches, feed_dict)
-            except tf.errors.ResourceExhaustedError as e:
+            except tf.errors.OpError as e:
+                if e.error_code == 3 and "Nan" in e.message:
+                    try:
+                        raise GradientNaN(self.flags)
+                    except GradientNaN as e:
+                        self.flags.error = str(e)
+                        self.logger.error(str(e))
+                        self.send_flags()
+                        raise
                 self.flags.error = str(e.message)
                 self.send_flags()
                 raise
@@ -427,35 +442,46 @@ class TFNet(FlagIO):
                 last, len(inp_feed), len(inp_feed) / last))
 
     def build_train_op(self):
-        from ..utils import clr
+        def _l2_norm(t):
+            t = tf.sqrt(tf.reduce_sum(tf.pow(t, 2)))
+            return t
         self.framework.loss(self.out)
         self.logger.info('Building {} train op'.format(self.meta['model']))
         self.global_step = tf.Variable(0, trainable=False)
-        import sys
 
-        print(self.flags.trainer, file=sys.stderr)
+        # setup kwargs for trainer
         kwargs = dict()
-        if self.flags.trainer is ['momentum' or 'rmsprop' or 'nesterov']:
+        if self.flags.trainer in ['momentum', 'rmsprop', 'nesterov']:
             kwargs.update({'momentum': self.flags.momentum})
-        if self.flags.trainer is 'nesterov':
+        if self.flags.trainer == 'nesterov':
             kwargs.update({'use_nesterov': True})
-        print(kwargs, file=sys.stderr)
 
+        # setup trainer
         optimizer = self._TRAINER[self.flags.trainer](
             clr.cyclic_learning_rate(
+                flags=self.flags,
                 global_step=self.global_step,
                 mode='triangular2',
                 learning_rate=self.flags.lr,
                 max_lr=self.flags.max_lr), **kwargs)
-        self.gradients = optimizer.compute_gradients(self.framework.loss)
+
+        # setup gradients
+        self.gradients, self.variables = zip(
+            *optimizer.compute_gradients(self.framework.loss))
         if self.flags.clip:
-            # From github.com/thtrieu/darkflow/issues/557#issuecomment-377378352
-            # avoid gradient explosions late in training
-            self.gradients = [(tf.clip_by_value(grad, -1., 1.), var) for
-                         grad, var in optimizer.compute_gradients(
-                    self.framework.loss)]
-        self.train_op = optimizer.apply_gradients(self.gradients,
-                                                  global_step=self.global_step)
+            self.gradients, _ = tf.clip_by_global_norm(self.gradients,
+                                                    self.flags.clip_norm)
+        # create histogram summaries
+        for grad, var in zip(self.gradients, self.variables):
+            name = var.name.split('/')
+            with tf.variable_scope(name[0] + '/'):
+                tf.summary.histogram("gradients/" + name[1], _l2_norm(grad))
+                # tf.summary.histogram("variables/" + name[1], _l2_norm(var))
+
+        # create train op
+        self.train_op = optimizer.apply_gradients(
+            zip(self.gradients, self.variables),
+            global_step=self.global_step)
 
     def load_from_ckpt(self):
         if self.flags.load < 0:  # load lastest ckpt

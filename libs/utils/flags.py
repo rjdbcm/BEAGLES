@@ -138,6 +138,7 @@ class Flags(dict):
             self.capdevs = []
             self.cli = False
             self.clip = False
+            self.clip_norm = 5
             self.config = './data/cfg/'
             self.dataset = './data/committedframes/'
             self.demo = ''

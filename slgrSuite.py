@@ -1411,7 +1411,8 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.trainDialog.show()
 
     def visualize(self):
-        subprocess.Popen(self.screencastViewer + ['http://localhost:6006/'])
+        subprocess.Popen(self.screencastViewer +
+                         ['http://localhost:6006/#scalars&_smoothingWeight=0'])
 
     def importDirImages(self, dirpath):
         if not self.mayContinue() or not dirpath:

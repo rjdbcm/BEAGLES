@@ -171,6 +171,13 @@ class FlowDialog(QDialog):
         self.formGroupBox = QGroupBox("Select Model and Checkpoint")
         layout = QFormLayout()
 
+        self.projectCmb = QComboBox()
+        self.projectCmb.setEditable(True)
+        validator = QRegExpValidator(QRegExp('^[a-zA-z0-9\\_]+'))
+        self.projectCmb.setValidator(validator)
+        self.projectCmb.addItem(self.flags.project_name)
+        layout.addRow(QLabel("Project Name"), self.projectCmb)
+
         self.flowCmb = QComboBox()
         self.flowCmb.addItems(
             ["Train", "Predict", "Freeze", "Capture", "Annotate"])
@@ -277,7 +284,6 @@ class FlowDialog(QDialog):
         self.clipLayout.addWidget(self.clipNorm)
         layout3.addRow(QLabel("Clip Gradients"), self.clipLayout)
 
-
         self.trainGroupBox.setLayout(layout3)
 
         self.demoGroupBox = QGroupBox("Select Capture Parameters")
@@ -337,6 +343,15 @@ class FlowDialog(QDialog):
 
         self.setWindowTitle("SLGR-Suite - Machine Learning Tool")
         self.findCkpt()
+        self.findProject()
+
+    def findProject(self):
+        current_items = [self.projectCmb.itemText(i) for i in
+                         range(self.projectCmb.count())]
+        self.projectCmb.clear()
+        items = next(os.walk(self.flags.summary))[1]
+        items = list(set().union(current_items, items))
+        self.projectCmb.addItems(items)
 
     def findCkpt(self):
         self.loadCmb.clear()
@@ -423,6 +438,9 @@ class FlowDialog(QDialog):
         """set flags for darkflow and prevent startup if errors anticipated"""
         self.updateCkptFile()  # Make sure TFNet gets the correct checkpoint
         self.flags.get_defaults()  # Reset self.flags
+        self.flags.project_name = self.projectCmb.currentText() if \
+            self.projectCmb.currentText() is not "" else \
+            self.flags.project_name
         self.flags.model = os.path.join(
             self.flags.config, self.modelCmb.currentText())
         try:
@@ -434,6 +452,7 @@ class FlowDialog(QDialog):
         self.flags.grayscale = self.grayscaleChb.checkState()
         self.flags.threshold = self.thresholdSpd.value()
         self.flags.clip = bool(self.clipChb.checkState())
+        self.flags.clip_norm = self.clipNorm.value()
         self.flags.verbalise = bool(self.verbaliseChb.checkState())
         self.flags.momentum = self.momentumSpd.value()
         self.flags.lr = self.learningRateSpd.value()
@@ -534,6 +553,7 @@ class FlowDialog(QDialog):
             self.demoGroupBox.setEnabled(True)
             self.trainGroupBox.setEnabled(True)
             self.formGroupBox.setEnabled(True)
+            self.findProject()
             try:
                 event.accept()
             except AttributeError:
@@ -591,6 +611,7 @@ class FlowDialog(QDialog):
         self.buttonStop.hide()
         self.buttonOk.show()
         self.findCkpt()
+        self.findProject()
 
     @pyqtSlot(int)
     def updateProgress(self, value):

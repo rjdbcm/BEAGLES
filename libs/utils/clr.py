@@ -1,10 +1,12 @@
+import os
 import tensorflow as tf
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.eager import context
 
 
-def cyclic_learning_rate(global_step,
+def cyclic_learning_rate(flags,
+                         global_step,
                          learning_rate=0.01,
                          max_lr=0.1,
                          step_size=20.,
@@ -87,7 +89,7 @@ def cyclic_learning_rate(global_step,
   """
     if global_step is None:
         raise ValueError("global_step is required for cyclic_learning_rate.")
-    with ops.name_scope(name, "CyclicLearningRate",
+    with ops.name_scope(name, os.path.basename(flags.model),
                         [learning_rate, global_step]) as name:
         learning_rate = ops.convert_to_tensor(learning_rate,
                                               name="learning_rate")
@@ -120,5 +122,6 @@ def cyclic_learning_rate(global_step,
 
         if not context.executing_eagerly():
             cyclic_lr = cyclic_lr()
-        tf.summary.scalar('learning_rate', cyclic_lr)
+        tf.summary.scalar("/".join([flags.trainer,
+                                    'learning_rate']), cyclic_lr)
         return cyclic_lr
