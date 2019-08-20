@@ -68,7 +68,6 @@ def pascal_voc_clean_xml(self, ANN, pick, exclusive=False):
         self.logger.error(str(e))
         self.send_flags()
         raise
-
     self.logger.info('Dataset size: {}'.format(len(dumps)))
 
     os.chdir(cur_dir)

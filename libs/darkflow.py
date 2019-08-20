@@ -124,18 +124,19 @@ class MultiCamThread(QThread):
         index = 0
         cv2.redirectError(self.silence)
         while index < 32:
-            start = time.time()
             cap = cv2.VideoCapture(index)
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 144)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)
-            end = time.time()
-            elapsed = end - start
+            start = time.time()
+            if cap.isOpened():
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, 144)
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)
+            elapsed = time.time() - start
             if cap is None or not cap.isOpened():
                 pass
             else:
                 self.devs.append(index)
-                self.fps.append(index / elapsed)
+                self.fps.append(1.0 / elapsed)
             index += 1
+            cap.release()
         self.devs = dict(enumerate(self.devs, start=1))
         self.fps = dict(enumerate(self.fps, start=1))
         self.model.clear()
@@ -471,6 +472,7 @@ class FlowDialog(QDialog):
             if item.checkState():
                 self.flags.capdevs.append(item.data()[0])
                 fps_list.append(item.data()[1])
+        print(fps_list)
         try:
             self.flags.fps = min(fps_list)
         except ValueError:

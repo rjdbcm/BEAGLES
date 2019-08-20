@@ -457,11 +457,14 @@ class TFNet(FlagIO):
             kwargs.update({'use_nesterov': True})
 
         # setup trainer
+        step_size = int(self.flags.step_size_coefficient *
+                        (len(self.framework.parse()) // self.flags.batch))
         optimizer = self._TRAINER[self.flags.trainer](
             clr.cyclic_learning_rate(
                 flags=self.flags,
                 global_step=self.global_step,
                 mode='triangular2',
+                step_size=step_size,
                 learning_rate=self.flags.lr,
                 max_lr=self.flags.max_lr), **kwargs)
 
