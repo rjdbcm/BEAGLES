@@ -11,13 +11,15 @@ from threading import Thread
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.platform import tf_logging
+from tensorflow.python.framework import ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.eager import context
 from .ops import op_create, identity
 from .ops import HEADER, LINE
 from .framework import create_framework
 from ..dark.darknet import Darknet
 from ..utils.loader import create_loader
 from ..utils.flags import FlagIO
-from ..utils import clr
 
 train_stats = (
     'Training statistics - '
@@ -35,11 +37,11 @@ class GradientNaN(Exception):
     """Raised in cases of exploding or vanishing gradient"""
     def __init__(self, flags):
         clip = "--clip argument" if flags.cli else "'Clip Gradients' checkbox"
-        option = "." if flags.clip else " and turning on gradient clipping" \
+        option = "." if flags.clip else " or turning on gradient clipping" \
                                        " using the {}.".format(clip)
         Exception.__init__(
-            self, "Looks like the neural net lost the gradient"
-                  " try restarting from the last checkpoint{}".format(
+            self, "Looks like the neural net lost the gradient try restarting"
+                  " from the last checkpoint with a lower learning rate{}".format(
                    option))
 
 
@@ -187,7 +189,6 @@ class TFNet(FlagIO):
             self.writer = tf.summary.FileWriter(
                 self.flags.summary + self.flags.project_name)
 
-
         self.sess = tf.Session(config=tf.ConfigProto(**cfg))
         # uncomment next 3 lines to enable tb debugger
         # from tensorflow.python import debug as tf_debug
@@ -289,16 +290,17 @@ class TFNet(FlagIO):
             # Start the session
             try:
                 fetched = self.sess.run(fetches, feed_dict)
-            except tf.errors.OpError as e:
-                if e.error_code == 3 and "Nan" in e.message:
+            except tf.errors.OpError as oe:
+                if oe.error_code == 3 and "nan" in oe.message.lower():
                     try:
                         raise GradientNaN(self.flags)
                     except GradientNaN as e:
-                        self.flags.error = str(e)
+                        form = "{}\nOriginal Tensorflow Error: {}"
+                        self.flags.error = form.format(str(e), oe.message)
                         self.logger.error(str(e))
                         self.send_flags()
                         raise
-                self.flags.error = str(e.message)
+                self.flags.error = str(oe.message)
                 self.send_flags()
                 raise
             loss = fetched[1]
@@ -459,18 +461,17 @@ class TFNet(FlagIO):
         # setup trainer
         step_size = int(self.flags.step_size_coefficient *
                         (len(self.framework.parse()) // self.flags.batch))
-        optimizer = self._TRAINER[self.flags.trainer](
-            clr.cyclic_learning_rate(
-                flags=self.flags,
+        self.optimizer = self._TRAINER[self.flags.trainer](
+            self.cyclic_learning_rate(
                 global_step=self.global_step,
-                mode='triangular2',
+                mode='triangular',
                 step_size=step_size,
                 learning_rate=self.flags.lr,
                 max_lr=self.flags.max_lr), **kwargs)
 
         # setup gradients
         self.gradients, self.variables = zip(
-            *optimizer.compute_gradients(self.framework.loss))
+            *self.optimizer.compute_gradients(self.framework.loss))
         if self.flags.clip:
             self.gradients, _ = tf.clip_by_global_norm(self.gradients,
                                                     self.flags.clip_norm)
@@ -482,7 +483,7 @@ class TFNet(FlagIO):
                 # tf.summary.histogram("variables/" + name[1], _l2_norm(var))
 
         # create train op
-        self.train_op = optimizer.apply_gradients(
+        self.train_op = self.optimizer.apply_gradients(
             zip(self.gradients, self.variables),
             global_step=self.global_step)
 
@@ -523,15 +524,6 @@ class TFNet(FlagIO):
             plh = tf.placeholder(tf.float32, shp)
             op = tf.assign(var, plh)
             self.sess.run(op, {plh: val})
-
-    # def _get_fps(self, frame):
-    #     elapsed = int()
-    #     start = time.time()
-    #     preprocessed = self.framework.preprocess(frame)
-    #     feed_dict = {self.inp: [preprocessed]}
-    #     net_out = self.sess.run(self.out, feed_dict)[0]
-    #     processed = self.framework.postprocess(net_out, frame, False)
-    #     return time.time() - start
 
     def camera_compile(self, cmdstring):
         cmdlist = []
@@ -611,90 +603,130 @@ class TFNet(FlagIO):
                 break
         cv2.destroyAllWindows()
 
-        # file = self.flags.demo  # TODO add asynchronous capture
-        # save_video = self.flags.save_video
-        #
-        # if file == 'camera':
-        #     file = 0
-        # else:
-        #     assert os.path.isfile(file), \
-        #         'file {} does not exist'.format(file)
-        #
-        # camera = cv2.VideoCapture(file)
-        #
-        # if file == 0:
-        #     self.logger.info('Press [ESC] to quit demo')
-        #
-        # assert camera.isOpened(), \
-        #     'Cannot capture source'
-        #
-        # if file == 0:  # camera window
-        #     cv2.namedWindow('', 0)
-        #     _, frame = camera.read()
-        #     max_y, max_x, _ = frame.shape
-        #     cv2.resizeWindow('', max_x, max_y)
-        # else:
-        #     _, frame = camera.read()
-        #     max_y, max_x, _ = frame.shape
-        #
-        # if save_video:
-        #     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        #     if file == 0:  # camera window
-        #         fps = 1 / self._get_fps(frame)
-        #         if fps < 1:
-        #             fps = 1
-        #     else:
-        #         fps = round(camera.get(cv2.CAP_PROP_FPS))
-        #     videoWriter = cv2.VideoWriter(
-        #         self.flags.save_video, fourcc, fps, (max_x, max_y))
-        #
-        # # buffers for demo in batch
-        # buffer_inp = list()
-        # buffer_pre = list()
-        #
-        # elapsed = int()
-        # start = timer()
-        # # Loop through frames
-        # while camera.isOpened():
-        #     elapsed += 1
-        #     _, frame = camera.read()
-        #     if frame is None:
-        #         print('\nEnd of Video')
-        #         break
-        #     preprocessed = self.framework.preprocess(frame)
-        #     buffer_inp.append(frame)
-        #     buffer_pre.append(preprocessed)
-        #
-        #     # Only process and imshow when queue is full
-        #     if elapsed % self.flags.queue == 0:
-        #         feed_dict = {self.inp: buffer_pre}
-        #         net_out = self.sess.run(self.out, feed_dict)
-        #         for img, single_out in zip(buffer_inp, net_out):
-        #             postprocessed = self.framework.postprocess(
-        #                 single_out, img, False)
-        #             if save_video:
-        #                 videoWriter.write(postprocessed)
-        #             if file == 0:  # camera window
-        #                 cv2.imshow('', postprocessed)
-        #         # Clear Buffers
-        #         buffer_inp = list()
-        #         buffer_pre = list()
-        #
-        #     if elapsed % 5 == 0:
-        #         sys.stdout.write('\r')
-        #         sys.stdout.write('{0:3.3f} FPS'.format(
-        #             elapsed / (timer() - start)))
-        #         sys.stdout.flush()
-        #     if file == 0:  # camera window
-        #         choice = cv2.waitKey(1)
-        #         if choice == 27: break
-        #
-        # sys.stdout.write('\n')
-        # if save_video:
-        #     videoWriter.release()
-        # camera.release()
-        # if file == 0:  # camera window
-        #     cv2.destroyAllWindows()
+    def cyclic_learning_rate(self,
+                             global_step,
+                             learning_rate=0.01,
+                             max_lr=0.1,
+                             step_size=20.,
+                             gamma=0.99994,
+                             mode='triangular',
+                             name=None):
+        """Applies cyclic learning rate (CLR).
+         From the paper:
+         Smith, Leslie N. "Cyclical learning
+         rates for training neural networks." 2017.
+         [https://arxiv.org/pdf/1506.01186.pdf]
+          This method lets the learning rate cyclically
+         vary between reasonable boundary values
+         achieving improved classification accuracy and
+         often in fewer iterations.
+          This code varies the learning rate linearly between the
+         minimum (learning_rate) and the maximum (max_lr).
+          It returns the cyclic learning rate. It is computed as:
+           ```python
+           cycle = floor( 1 + global_step /
+            ( 2 * step_size ) )
+          x = abs( global_step / step_size – 2 * cycle + 1 )
+          clr = learning_rate +
+            ( max_lr – learning_rate ) * max( 0 , 1 - x )
+           ```
+          Polices:
+            'triangular':
+              Default, linearly increasing then linearly decreasing the
+              learning rate at each cycle.
+             'triangular2':
+              The same as the triangular policy except the learning
+              rate difference is cut in half at the end of each cycle.
+              This means the learning rate difference drops after each cycle.
+             'exp_range':
+              The learning rate varies between the minimum and maximum
+              boundaries and each boundary value declines by an exponential
+              factor of: gamma^global_step.
+           Example: 'triangular2' mode cyclic learning rate.
+            '''python
+            ...
+            global_step = tf.Variable(0, trainable=False)
+            self.optimizer = tf.train.Adamself.Optimizer(learning_rate=
+              clr.cyclic_learning_rate(global_step=global_step, mode='triangular2'))
+            train_op = self.optimizer.minimize(loss_op, global_step=global_step)
+            ...
+             with tf.Session() as sess:
+                sess.run(init)
+                for step in range(1, num_steps+1):
+                  assign_op = global_step.assign(step)
+                  sess.run(assign_op)
+            ...
+             '''
+           Args:
+            global_step: A scalar `int32` or `int64` `Tensor` or a Python number.
+              Global step to use for the cyclic computation.  Must not be negative.
+            learning_rate: A scalar `float32` or `float64` `Tensor` or a
+            Python number.  The initial learning rate which is the lower bound
+              of the cycle (default = 0.1).
+            max_lr:  A scalar. The maximum learning rate boundary.
+            step_size: A scalar. The number of iterations in half a cycle.
+              The paper suggests step_size = 2-8 x training iterations in epoch.
+            gamma: constant in 'exp_range' mode:
+              gamma**(global_step)
+            mode: one of {triangular, triangular2, exp_range}.
+                Default 'triangular'.
+                Values correspond to policies detailed above.
+            name: String.  Optional name of the operation.  Defaults to
+              'CyclicLearningRate'.
+           Returns:
+            A scalar `Tensor` of the same type as `learning_rate`.  The cyclic
+            learning rate.
+          Raises:
+            ValueError: if `global_step` is not supplied.
+          @compatibility(eager)
+          When eager execution is enabled, this function returns
+          a function which in turn returns the decayed learning
+          rate Tensor. This can be useful for changing the learning
+          rate value across different invocations of self.optimizer functions.
+          @end_compatibility
+      """
+        if global_step is None:
+            raise ValueError(
+                "global_step is required for cyclic_learning_rate.")
+        with ops.name_scope(name, os.path.basename(self.flags.model),
+                            [learning_rate, global_step]) as name:
+            learning_rate = ops.convert_to_tensor(learning_rate,
+                                                  name="learning_rate")
+            dtype = learning_rate.dtype
+            global_step = math_ops.cast(global_step, dtype)
+            step_size = math_ops.cast(step_size, dtype)
+
+            def cyclic_lr():
+                """Helper to recompute learning rate; most helpful in eager-mode."""
+                # computing: cycle = floor( 1 + global_step / ( 2 * step_size ) )
+                double_step = math_ops.multiply(2., step_size)
+                global_div_double_step = math_ops.divide(global_step,
+                                                         double_step)
+                cycle = math_ops.floor(
+                    math_ops.add(1., global_div_double_step))
+                # computing: x = abs( global_step / step_size – 2 * cycle + 1 )
+                double_cycle = math_ops.multiply(2., cycle)
+                global_div_step = math_ops.divide(global_step, step_size)
+                tmp = math_ops.subtract(global_div_step, double_cycle)
+                x = math_ops.abs(math_ops.add(1., tmp))
+                # computing: clr = learning_rate + ( max_lr – learning_rate ) * max( 0, 1 - x )
+                a1 = math_ops.maximum(0., math_ops.subtract(1., x))
+                a2 = math_ops.subtract(max_lr, learning_rate)
+                clr = math_ops.multiply(a1, a2)
+                if mode == 'triangular2':
+                    clr = math_ops.divide(clr, math_ops.cast(
+                        math_ops.pow(2, math_ops.cast(
+                            cycle - 1, tf.int32)), tf.float32))
+                if mode == 'exp_range':
+                    clr = math_ops.multiply(
+                        math_ops.pow(gamma, global_step), clr)
+                return math_ops.add(clr, learning_rate, name=name)
+
+            if not context.executing_eagerly():
+                cyclic_lr = cyclic_lr()
+            tf.summary.scalar("/".join([self.flags.trainer,
+                                        'cyclic_learning_rate']), cyclic_lr)
+            return cyclic_lr
 
     def draw_box(self, original_img, predictions):
         new_image = np.copy(original_img)
@@ -784,3 +816,96 @@ class TFNet(FlagIO):
         # When everything done, release the capture
         out.release()
 
+        # file = self.flags.demo  # TODO add asynchronous capture
+        # save_video = self.flags.save_video
+        #
+        # if file == 'camera':
+        #     file = 0
+        # else:
+        #     assert os.path.isfile(file), \
+        #         'file {} does not exist'.format(file)
+        #
+        # camera = cv2.VideoCapture(file)
+        #
+        # if file == 0:
+        #     self.logger.info('Press [ESC] to quit demo')
+        #
+        # assert camera.isOpened(), \
+        #     'Cannot capture source'
+        #
+        # if file == 0:  # camera window
+        #     cv2.namedWindow('', 0)
+        #     _, frame = camera.read()
+        #     max_y, max_x, _ = frame.shape
+        #     cv2.resizeWindow('', max_x, max_y)
+        # else:
+        #     _, frame = camera.read()
+        #     max_y, max_x, _ = frame.shape
+        #
+        # if save_video:
+        #     fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        #     if file == 0:  # camera window
+        #         fps = 1 / self._get_fps(frame)
+        #         if fps < 1:
+        #             fps = 1
+        #     else:
+        #         fps = round(camera.get(cv2.CAP_PROP_FPS))
+        #     videoWriter = cv2.VideoWriter(
+        #         self.flags.save_video, fourcc, fps, (max_x, max_y))
+        #
+        # # buffers for demo in batch
+        # buffer_inp = list()
+        # buffer_pre = list()
+        #
+        # elapsed = int()
+        # start = timer()
+        # # Loop through frames
+        # while camera.isOpened():
+        #     elapsed += 1
+        #     _, frame = camera.read()
+        #     if frame is None:
+        #         print('\nEnd of Video')
+        #         break
+        #     preprocessed = self.framework.preprocess(frame)
+        #     buffer_inp.append(frame)
+        #     buffer_pre.append(preprocessed)
+        #
+        #     # Only process and imshow when queue is full
+        #     if elapsed % self.flags.queue == 0:
+        #         feed_dict = {self.inp: buffer_pre}
+        #         net_out = self.sess.run(self.out, feed_dict)
+        #         for img, single_out in zip(buffer_inp, net_out):
+        #             postprocessed = self.framework.postprocess(
+        #                 single_out, img, False)
+        #             if save_video:
+        #                 videoWriter.write(postprocessed)
+        #             if file == 0:  # camera window
+        #                 cv2.imshow('', postprocessed)
+        #         # Clear Buffers
+        #         buffer_inp = list()
+        #         buffer_pre = list()
+        #
+        #     if elapsed % 5 == 0:
+        #         sys.stdout.write('\r')
+        #         sys.stdout.write('{0:3.3f} FPS'.format(
+        #             elapsed / (timer() - start)))
+        #         sys.stdout.flush()
+        #     if file == 0:  # camera window
+        #         choice = cv2.waitKey(1)
+        #         if choice == 27: break
+        #
+        # sys.stdout.write('\n')
+        # if save_video:
+        #     videoWriter.release()
+        # camera.release()
+        # if file == 0:  # camera window
+        #     cv2.destroyAllWindows()
+
+        # def _get_fps(self, frame):
+        #     elapsed = int()
+        #     start = time.time()
+        #     preprocessed = self.framework.preprocess(frame)
+        #     feed_dict = {self.inp: [preprocessed]}
+        #     net_out = self.sess.run(self.out, feed_dict)[0]
+        #     processed = self.framework.postprocess(net_out, frame, False)
+        #     return time.time() - start

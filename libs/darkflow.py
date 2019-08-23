@@ -238,6 +238,28 @@ class FlowDialog(QDialog):
                                     "rmsprop optimizers")
         layout3.addRow(QLabel("Momentum"), self.momentumSpd)
 
+        self.learningModeCmb = QComboBox()
+        self.learningModeCmb.addItems(["triangular", "triangular2",
+                                       "exp_range"])
+        self.learningModeCmb.setItemData(0,
+                                         "Default, linearly increasing then "
+                                         "linearly decreasing the learning "
+                                         "rate at each cycle.", Qt.ToolTipRole)
+        self.learningModeCmb.setItemData(1,
+                                         "The same as the triangular policy "
+                                         "except the learning rate difference "
+                                         "is cut in half at the end of each "
+                                         "cycle. This means the learning rate "
+                                         "difference drops after each cycle.",
+                                         Qt.ToolTipRole)
+        self.learningModeCmb.setItemData(2,
+                                         "The learning rate varies between "
+                                         "the minimum and maximum boundaries "
+                                         "and each boundary value declines by "
+                                         "an exponential factor of: "
+                                         "gamma^global_step.", Qt.ToolTipRole)
+        layout3.addRow(QLabel("Learning Mode"), self.learningModeCmb)
+
         self.learningRateSpd = ScientificDoubleSpinBox()
         self.learningRateSpd.setValue(self.flags.lr)
         layout3.addRow(QLabel("Initial Learning Rate"), self.learningRateSpd)
@@ -454,6 +476,7 @@ class FlowDialog(QDialog):
         self.flags.threshold = self.thresholdSpd.value()
         self.flags.clip = bool(self.clipChb.checkState())
         self.flags.clip_norm = self.clipNorm.value()
+        self.flags.clr_mode = self.learningModeCmb.currentText()
         self.flags.verbalise = bool(self.verbaliseChb.checkState())
         self.flags.momentum = self.momentumSpd.value()
         self.flags.lr = self.learningRateSpd.value()

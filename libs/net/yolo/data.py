@@ -112,6 +112,7 @@ def shuffle(self):
 
             for j in range(b*batch, b*batch+batch):
                 train_instance = data[shuffle_idx[j]]
+                self.logger.debug(train_instance[0])
                 try:
                     inp, new_feed = self._batch(train_instance)
                 except ZeroDivisionError:
@@ -120,7 +121,8 @@ def shuffle(self):
                     self.logger.error('Please remove or fix it then try again.')
                     raise
 
-                if inp is None: continue
+                if inp is None:
+                    continue
                 x_batch += [np.expand_dims(inp, 0)]
 
                 for key in new_feed:

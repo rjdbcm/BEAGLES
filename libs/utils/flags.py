@@ -139,6 +139,7 @@ class Flags(dict):
             self.cli = False
             self.clip = False
             self.clip_norm = 5
+            self.clr_mode = "triangular2"
             self.config = './data/cfg/'
             self.dataset = './data/committedframes/'
             self.demo = ''
