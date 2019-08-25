@@ -403,6 +403,7 @@ class FlowDialog(QDialog):
         model_name = os.path.splitext(self.modelCmb.currentText())[0]
         replacement = "-".join([model_name, self.loadCmb.currentText()])
         file = (os.path.join(self.flags.backup, 'checkpoint'))
+        open(file, 'a').close()  # touch
         fh = open(file, 'r')
         data = fh.read()
         fh.close()

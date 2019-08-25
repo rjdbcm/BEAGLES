@@ -464,7 +464,7 @@ class TFNet(FlagIO):
         self.optimizer = self._TRAINER[self.flags.trainer](
             self.cyclic_learning_rate(
                 global_step=self.global_step,
-                mode='triangular',
+                mode=self.flags.clr_mode,
                 step_size=step_size,
                 learning_rate=self.flags.lr,
                 max_lr=self.flags.max_lr), **kwargs)
@@ -646,7 +646,7 @@ class TFNet(FlagIO):
             '''python
             ...
             global_step = tf.Variable(0, trainable=False)
-            self.optimizer = tf.train.Adamself.Optimizer(learning_rate=
+            self.optimizer = tf.train.AdamOptimizer(learning_rate=
               clr.cyclic_learning_rate(global_step=global_step, mode='triangular2'))
             train_op = self.optimizer.minimize(loss_op, global_step=global_step)
             ...
@@ -729,6 +729,16 @@ class TFNet(FlagIO):
             return cyclic_lr
 
     def draw_box(self, original_img, predictions):
+        """
+        Args:
+            original_img: A numpy ndarray
+            predictions: A nested dictionary object of the form
+                        {"label": str, "confidence": float,
+                        "topleft": {"x": int, "y": int},
+                        "bottomright": {"x": int, "y": int}}
+        Returns:
+            A numpy ndarray with boxed detections
+        """
         new_image = np.copy(original_img)
 
         for result in predictions:
