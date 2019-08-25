@@ -19,11 +19,11 @@ class upsample_layer(Layer):
         self.height = h
         self.width = w
 
-# TODO
+
 # noinspection PyAttributeOutsideInit
-# class shortcut_layer(Layer):
-#     def setup(self, from_layer):
-#         self.from_layer = from_layer
+class shortcut_layer(Layer):
+    def setup(self, from_layer):
+        self.from_layer = from_layer
 
 
 # noinspection PyAttributeOutsideInit
@@ -69,7 +69,7 @@ darkops = {
     'dropout': dropout_layer,
     'connected': connected_layer,
     'maxpool': maxpool_layer,
-    # 'shortcut': shortcut_layer,
+    'shortcut': shortcut_layer,
     'upsample': upsample_layer,
     'convolutional': convolutional_layer,
     'avgpool': avgpool_layer,

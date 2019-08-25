@@ -1,7 +1,6 @@
 import tensorflow as tf
 from datetime import datetime
 import numpy as np
-from time import strftime
 
 FORM = '{:>6} | {:>6} | {:<32} | {}'
 FORM_ = '{}+{}+{}+{}'

@@ -132,20 +132,23 @@ class leaky(BaseOp):
 
     def verbalise(self): pass
 
-# TODO
-# class shortcut(BaseOp):
-#     def forward(self):
-#         import sys
-#         print(self.lay.from_layer['_size'][:3], file=sys.stderr)
-#         print(self.inp.out.__dict__, file=sys.stderr)
-#         print(self.inp.out, file=sys.stderr)
-#         self.out = tf.add(self.inp.out,
-#                           3,
-#                           name=self.scope)
-#
-#     def speak(self):
-#         l = self.lay
-#         return 'shortcut from {}'.format(l.from_layer)
+
+class shortcut(BaseOp):
+    def forward(self):
+        from_layer = self.lay.from_layer
+        this = self.inp
+        while this.lay.number != from_layer:
+            this = this.inp
+            assert this is not None, \
+                'Shortcut to non-existence {}'.format(self.lay.from_layer)
+        from_layer = this.inp.out
+        self.out = tf.add(self.inp.out,
+                          from_layer,
+                          name=self.scope)
+
+    def speak(self):
+        l = self.lay
+        return 'shortcut from {}'.format(l.from_layer)
 
 
 class upsample(BaseOp):

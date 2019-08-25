@@ -320,15 +320,14 @@ def cfg_yielder(model, binary):
             yield ['route', i, routes]
             l = w * h * c
         # -----------------------------------------------------
-        # TODO
-        # elif d['type'] == '[shortcut]':
-        #     index = int(d['from'])
-        #     activation = d.get('activation', 'logistic')
-        #     assert activation == 'linear', \
-        #         'Layer {} can only use linear activation'.format(d['type'])
-        #     from_layer = l[index]
-        #     yield ['shortcut', i, from_layer]
-        #     l = w * h * c
+        elif d['type'] == '[shortcut]':
+            index = int(d['from'])
+            activation = d.get('activation', 'logistic')
+            assert activation == 'linear', \
+                'Layer {} can only use linear activation'.format(d['type'])
+            from_layer = l[index]
+            yield ['shortcut', i, from_layer]
+            l = w * h * c
         # -----------------------------------------------------
         elif d['type'] == '[upsample]':
             stride = d.get('stride', 1)
