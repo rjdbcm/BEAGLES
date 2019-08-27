@@ -433,8 +433,7 @@ class TFNet(FlagIO):
             pool.map(lambda p: (lambda i, prediction:
                                 self.framework.postprocess(
                                     prediction,
-                                    os.path.join(inp_path, this_batch[i])))(
-                *p),
+                                    os.path.join(inp_path, this_batch[i])))(*p),
                      enumerate(out))
             stop = time.time()
             last = stop - start
@@ -551,9 +550,11 @@ class TFNet(FlagIO):
             "cap{0}.set(cv2.CAP_PROP_FRAME_WIDTH, 144)\n"
             "cap{0}.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)\n"
             "cap{0}.set(cv2.CAP_PROP_BUFFERSIZE, 3)\n"
+            "time_fmt = '%d_%b_%Y_%H_%M_%S'\n"
             "global annotation{0}\n"
             "annotation{0} = os.path.join("
-            "self.flags.imgdir, 'video{0}_annotations.csv')")
+            "self.flags.video_out, 'video{0}_annotations_%s.csv' "
+            "% datetime.now().strftime(time_fmt))")
         get_frames = self.camera_compile(
             "global ret{0}\n"
             "global frame{0}\n"
@@ -826,6 +827,8 @@ class TFNet(FlagIO):
         # When everything done, release the capture
         out.release()
 
+
+    # def camera(self):
         # file = self.flags.demo  # TODO add asynchronous capture
         # save_video = self.flags.save_video
         #

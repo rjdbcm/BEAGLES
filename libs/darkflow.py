@@ -147,12 +147,9 @@ class MultiCamThread(QThread):
         self.model.appendRow(QStandardItem("Refreshing..."))
         self.enumDevs()
         self.model.clear()
-        for (camera_no, dev_num), (camera_no, fps) in zip(
+        for (_, dev_num), (_, fps) in zip(
                 self.devs.items(), self.fps.items()):
-            item = QStandardItem(
-                " ".join(["Camera", str(camera_no), "on",
-                          "/dev/video{}".format(dev_num),
-                          ]))
+            item = QStandardItem("Camera on /dev/video{}".format(dev_num))
             item.setData([dev_num, fps])
             item.setCheckable(True)
             self.model.appendRow(item)
@@ -213,9 +210,13 @@ class FlowDialog(QDialog):
         layout2 = QFormLayout()
 
         self.jsonChb = QCheckBox()
-        self.jsonChb.setChecked(self.flags.json)
+        self.jsonChb.setChecked(False)
+
+        self.vocChb = QCheckBox()
+        self.vocChb.setChecked(True)
 
         layout2.addRow(QLabel("Output JSON Annotations"), self.jsonChb)
+        layout2.addRow(QLabel("Output VOC Annotations "), self.vocChb)
 
         self.flowGroupBox.setLayout(layout2)
         self.flowGroupBox.hide()
@@ -487,8 +488,11 @@ class FlowDialog(QDialog):
         self.flags.save = self.saveSpb.value()
         self.flags.epoch = self.epochSpb.value()
         self.flags.labels = self.labelfile  # use labelfile set by slgrSuite
-        self.flags.json = bool(self.jsonChb.checkState()) if \
-            self.flowGroupBox.isEnabled() else self.flags.json
+        if self.jsonChb.isChecked():
+            self.flags.output_type.append("json")
+        if self.vocChb.isChecked():
+            self.flags.output_type.append("voc")
+
         self.flags.timeout = QTime(0, 0, 0).secsTo(self.timeoutTme.time())
         fps_list = list()
         for i in range(self.deviceItemModel.rowCount()):
@@ -496,7 +500,6 @@ class FlowDialog(QDialog):
             if item.checkState():
                 self.flags.capdevs.append(item.data()[0])
                 fps_list.append(item.data()[1])
-        print(fps_list)
         try:
             self.flags.fps = min(fps_list)
         except ValueError:
@@ -508,6 +511,14 @@ class FlowDialog(QDialog):
             return
         if self.flowCmb.currentText() == "Predict":
             self.flowGroupBox.setDisabled(True)
+            options = QFileDialog.Options()
+            options = QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks
+            dirname = QFileDialog.getExistingDirectory(self,
+                                                       'SLGR-Suite Predict - '
+                                                       'Choose Image Folder',
+                                                       os.getcwd(),
+                                                       options)
+            self.flags.imgdir = dirname
             pass
         if self.flowCmb.currentText() == "Train":
             if not self.flags.save % self.flags.batch == 0:

@@ -151,7 +151,8 @@ class Flags(dict):
             self.gpu_name = '/gpu:0'
             self.grayscale = False
             self.imgdir = './data/sample_img/'
-            self.json = False
+            self.img_out = './data/img_out/'
+            self.output_type = []
             self.keep = 20
             self.kill = False
             self.labels = './data/predefined_classes.txt'
@@ -174,6 +175,7 @@ class Flags(dict):
             self.timeout = 0
             self.trainer = 'rmsprop'
             self.verbalise = False
+            self.video_out = "./data/video_out/"
             self.train = False
             self.pb_load = False
             self.meta_load = False

@@ -10,7 +10,7 @@ import json
 from ...utils.box import BoundBox
 from ...cython_utils.cy_yolo2_findboxes import box_constructor
 from ...yolo_io import YOLOWriter
-from ...pascal_voc_io import PascalVocWriter
+from ...pascal_voc_io import PascalVocWriter, XML_EXT
 
 
 def expit(x):
@@ -34,6 +34,15 @@ def findboxes(self, net_out):
 def postprocess(self, net_out, im, save=True):
     """
     Takes net output, draw net_out, save to disk
+    Args:
+        net_out: A single fetch from tf session.run
+        im: A path or pathlike object to an image file
+        save: A boolean. Whether to save predictions to disk
+            Default True
+    Returns:
+        imgcv: An annotated np.ndarray if save == False
+        or
+        None if salve
     """
     boxes = self.findboxes(net_out)
 
@@ -46,8 +55,9 @@ def postprocess(self, net_out, im, save=True):
         imgcv = cv2.imread(im)
     else:
         imgcv = im
-    h, w, _ = imgcv.shape
+    h, w, c = imgcv.shape
 
+    writer = PascalVocWriter(self.flags.img_out, im, [h, w, c])
     resultsForJSON = []
     for b in boxes:
         boxResults = self.process_box(b, h, w, threshold)
@@ -55,9 +65,14 @@ def postprocess(self, net_out, im, save=True):
             continue
         left, right, top, bot, mess, max_indx, confidence = boxResults
         thick = int((h + w) // 300)
-        if self.flags.json:
-            resultsForJSON.append({"label": mess, "confidence": float('%.2f' % confidence), "topleft": {"x": left, "y": top}, "bottomright": {"x": right, "y": bot}})
+        if self.flags.output_type:
+            resultsForJSON.append({"label": mess,
+                                   "confidence": float('%.2f' % confidence),
+                                   "topleft": {"x": left, "y": top},
+                                   "bottomright": {"x": right, "y": bot}})
+            writer.addBndBox(left, bot, right, top, mess, False)
             #continue
+
         mess = mess + " " + str(round(confidence, 3))
         cv2.rectangle(imgcv, (left, top), (right, bot), colors[max_indx], 3)
         cv2.putText(
@@ -66,13 +81,18 @@ def postprocess(self, net_out, im, save=True):
     if not save:
         return imgcv
 
-    outfolder = os.path.join(self.flags.imgdir, 'out')
-    img_name = os.path.join(outfolder, os.path.basename(im))
-    if self.flags.json:
+    img_name = os.path.join(self.flags.imgdir, os.path.basename(im))
+    if "json" in self.flags.output_type:
         textJSON = json.dumps(resultsForJSON)
         textFile = os.path.splitext(img_name)[0] + ".json"
         with open(textFile, 'w') as f:
             f.write(textJSON)
-    cv2.imwrite(img_name, imgcv)
+
+    if "voc" in self.flags.output_type:
+        writer.save(os.path.join(self.flags.imgdir,
+                                 os.path.splitext(os.path.basename(im))[
+                                     0]+ XML_EXT))
+    # uncomment to write annotated images
+    # cv2.imwrite(img_name + "out.jpg", imgcv)
 
 

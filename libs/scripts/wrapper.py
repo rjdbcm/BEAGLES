@@ -50,7 +50,7 @@ class DarkWrapper(FlagIO):
             parser.add_argument('--save_video', metavar='',
                                 default=Flags().save_video,
                                 help='filename of video output')
-            parser.add_argument('--json', default=Flags().json,
+            parser.add_argument('--output_type', default=Flags().output_type,
                                 action='store_true',
                                 help='output bounding box information in .json'
                                 )
