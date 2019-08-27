@@ -12,9 +12,10 @@ from libs.ustr import ustr
 XML_EXT = '.xml'
 ENCODE_METHOD = DEFAULT_ENCODING
 
+
 class PascalVocWriter:
 
-    def __init__(self, foldername, filename, imgSize,databaseSrc='Unknown'):
+    def __init__(self, foldername, filename, imgSize, databaseSrc='Unknown'):
         self.foldername = foldername
         self.filename = filename
         self.databaseSrc = databaseSrc
