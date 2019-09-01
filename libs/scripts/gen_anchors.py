@@ -18,14 +18,18 @@ np.seterr(invalid='raise')
 
 
 class Sections(OrderedDict):
-    """Mangles section names with a number for
-    editing duplicate sections with config parser"""
+    """
+    Mangles section names with a number for editing duplicate sections with
+    config parser. Non-duplicate entries retain their original name.
+    """
     _unique = 0
 
     def __setitem__(self, key, value):
         if isinstance(value, dict):
-            self._unique += 1
-            key += str(self._unique)
+                key += str(self._unique)
+                self._unique += 1
+                if key.endswith("0"):
+                    key = key.strip("0")
         OrderedDict.__setitem__(self, key, value)
 
 
@@ -58,12 +62,11 @@ def avg_IOU(X, centroids):
 
 
 def write_anchors_to_file(centroids, X, target_cfg):
-
     config = configparser.ConfigParser(strict=False, dict_type=Sections)
     config.read(target_cfg)
 
-    width_in_cfg_file = float(config.get('net1', 'width'))
-    height_in_cfg_file = float(config.get('net1', 'height'))
+    width_in_cfg_file = float(config.get('net', 'width'))
+    height_in_cfg_file = float(config.get('net', 'height'))
 
     anchors = centroids.copy()
     print(anchors.shape)
@@ -160,17 +163,12 @@ def main(argv):
                         help='path to filelist\n')
     parser.add_argument('--target_cfg',
                         default='../../data/cfg/tiny-yolo-2c.cfg')
-    parser.add_argument('--output', default='anchors', type=str,
-                        help='Output anchor directory\n')
     parser.add_argument('--num_clusters', default=5, type=int,
                         help='number of clusters\n')
 
     args = parser.parse_args()
 
     args.target_cfg = os.path.abspath(args.target_cfg)
-
-    if not os.path.exists(args.output):
-        os.mkdir(args.output)
 
     annotation_dims = []
 
@@ -200,15 +198,12 @@ def main(argv):
 
     if args.num_clusters == 0:
         for num_clusters in range(1, 11):  # we make 1 through 10 clusters
-            anchor_file = os.path.join(args.output, 'anchors%d.txt' % num_clusters)
-
             indices = [random.randrange(annotation_dims.shape[0]) for i in
                        range(num_clusters)]
             centroids = annotation_dims[indices]
             kmeans(annotation_dims, centroids, args.target_cfg)
             print('centroids.shape', centroids.shape)
     else:
-        anchor_file = os.path.join(args.output, 'anchors%d.txt' % args.num_clusters)
         indices = [random.randrange(annotation_dims.shape[0]) for i in
                    range(args.num_clusters)]
         centroids = annotation_dims[indices]

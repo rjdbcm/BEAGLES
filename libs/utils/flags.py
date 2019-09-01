@@ -135,6 +135,7 @@ class Flags(dict):
             self.backup = './data/ckpt/'
             self.batch = 16
             self.binary = './data/bin/'
+            self.built_graph = './data/built_graph/'
             self.capdevs = []
             self.cli = False
             self.clip = False

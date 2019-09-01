@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import cv2
+import glob
 import errno
 import codecs
 import random
 import shutil
 import os.path
+import tarfile
 import argparse
 import platform
 import subprocess
@@ -77,6 +79,10 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         FlagIO.__init__(self, subprogram=True)
         self.logger.info("Initializing GUI")
         self.setWindowTitle(__appname__)
+        # self.saveProject("default")
+        # items = next(os.walk(Flags().summary))[1]
+        # dialog = QInputDialog.getItem(self, "Open Project", "Projects", items, 0, False)
+        # self.loadProject("./data/summaries/{}.tar".format(dialog[0]))
 
         # Load setting in the main thread
         self.imageData = None
@@ -1083,6 +1089,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         for item, shape in self.itemsToShapes.items():
             item.setCheckState(Qt.Checked if value else Qt.Unchecked)
 
+
     def loadFile(self, filePath=None):
         """Load the specified file, or the last opened file if None."""
         self.resetState()
@@ -1514,6 +1521,31 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             if isinstance(filename, (tuple, list)):
                 filename = filename[0]
             self.loadFile(filename)
+
+    def loadProject(self, file):
+        with tarfile.TarFile(file, 'r', errorlevel=1) as archive:
+            for i in archive.getnames():
+                try:
+                    archive.extract(i)
+                except OSError:
+                    os.remove(i)
+                    archive.extract(i)
+
+    def saveProject(self, name):
+        archiveList = [Flags().binary,
+                       Flags().built_graph,
+                       Flags().backup,
+                       Flags().dataset,
+                       Flags().video_out,
+                       Flags().img_out,
+                       './data/rawframes/',
+                       self.labelFile]
+        archive = os.path.join(Flags().summary,
+                               name + '.tar')
+        with tarfile.open(archive, mode='w') as archive:
+            for i in archiveList:
+                archive.add(i)
+                shutil.rmtree(i)
 
     def saveFile(self, _value=False):
         if self.defaultSaveDir is not None and len(ustr(self.defaultSaveDir)):
