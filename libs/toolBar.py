@@ -2,6 +2,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
+
 class ToolBar(QToolBar):
 
     def __init__(self, title):

@@ -7,6 +7,8 @@ op_types = {
     'conv-select': conv_select,
     'connected': connected,
     'maxpool': maxpool,
+    'stair': stair,
+    'elu': elu,
     'leaky': leaky,
     # 'shortcut': shortcut,
     'upsample': upsample,

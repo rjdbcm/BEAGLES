@@ -73,16 +73,23 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
     FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = list(range(3))
 
     # noinspection PyShadowingBuiltins
-    def __init__(self, defaultFilename=None, defaultPrefdefClassFile=None,
+    def __init__(self, defaultFilename=None, defaultPredefClassFile=None,
                  defaultSaveDir=None):
         super(MainWindow, self).__init__()
         FlagIO.__init__(self, subprogram=True)
         self.logger.info("Initializing GUI")
         self.setWindowTitle(__appname__)
-        # self.saveProject("default")
-        # items = next(os.walk(Flags().summary))[1]
-        # dialog = QInputDialog.getItem(self, "Open Project", "Projects", items, 0, False)
-        # self.loadProject("./data/summaries/{}.tar".format(dialog[0]))
+
+        items = next(os.walk(Flags().summary))[1]
+        self.project, accept = QInputDialog.getItem(self, "Open Project",
+                                                    "Projects", items, 0, True)
+        if accept:
+            self.loadProject("./data/summaries/{0}/{0}.tar".format(self.project))
+        else:
+            self.project = os.path.join(Flags().summary,
+                                   Flags().project_name,
+                                   Flags().project_name + ".tar")
+            self.loadProject(self.project)
 
         # Load setting in the main thread
         self.imageData = None
@@ -123,12 +130,13 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.screencast = "https://youtu.be/p0nR2YsCY_U"
 
         # Load predefined classes to the list
-        self.loadPredefinedClasses(defaultPrefdefClassFile)
+        self.predefinedClasses = defaultPredefClassFile
+        self.loadPredefinedClasses()
 
         # Main widgets and related state.
         self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist)
         self.trainDialog = FlowDialog(parent=self,
-                                      labelfile=defaultPrefdefClassFile)
+                                      labelfile=defaultPredefClassFile)
 
         self.itemsToShapes = {}
         self.shapesToItems = {}
@@ -1229,6 +1237,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             event.ignore()
         if self.tb_process.pid() > 0:
             self.tb_process.kill()
+        self.saveProject(self.project)
         settings = self.settings
         # If it loads images from dir, don't load it at the beginning
         if self.dirname is None:
@@ -1523,13 +1532,23 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             self.loadFile(filename)
 
     def loadProject(self, file):
-        with tarfile.TarFile(file, 'r', errorlevel=1) as archive:
-            for i in archive.getnames():
-                try:
-                    archive.extract(i)
-                except OSError:
-                    os.remove(i)
-                    archive.extract(i)
+        cond = True
+        while cond:
+            try:
+                with tarfile.TarFile(file, 'r', errorlevel=1) as archive:
+                    for i in archive.getnames():
+                        try:
+                            archive.extract(i)
+                        except OSError:
+                            os.remove(i)
+                            archive.extract(i)
+                    cond = False
+            except FileNotFoundError:
+                os.mkdir(os.path.dirname(file))
+                shutil.copy(os.path.join(Flags().summary,
+                                    Flags().project_name,
+                                    Flags().project_name + ".tar"),
+                            file)
 
     def saveProject(self, name):
         archiveList = [Flags().binary,
@@ -1539,13 +1558,17 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                        Flags().video_out,
                        Flags().img_out,
                        './data/rawframes/',
-                       self.labelFile]
-        archive = os.path.join(Flags().summary,
+                       self.predefinedClasses]
+        archive = os.path.join(Flags().summary, name,
                                name + '.tar')
+        from multiprocessing.pool import ThreadPool
         with tarfile.open(archive, mode='w') as archive:
             for i in archiveList:
                 archive.add(i)
-                shutil.rmtree(i)
+                try:
+                    shutil.rmtree(i)
+                except NotADirectoryError:
+                    os.remove(i)
 
     def saveFile(self, _value=False):
         if self.defaultSaveDir is not None and len(ustr(self.defaultSaveDir)):
@@ -1664,7 +1687,8 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.canvas.endMove(copy=False)
         self.setDirty()
 
-    def loadPredefinedClasses(self, predefClassesFile):
+    def loadPredefinedClasses(self):
+        predefClassesFile = self.predefinedClasses
         if os.path.exists(predefClassesFile) is True:
             with codecs.open(predefClassesFile, 'r', 'utf8') as f:
                 for line in f:
