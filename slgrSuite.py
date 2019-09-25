@@ -80,16 +80,8 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.logger.info("Initializing GUI")
         self.setWindowTitle(__appname__)
 
-        items = next(os.walk(Flags().summary))[1]
-        self.project, accept = QInputDialog.getItem(self, "Open Project",
-                                                    "Projects", items, 0, True)
-        if accept:
-            self.loadProject("./data/summaries/{0}/{0}.tar".format(self.project))
-        else:
-            self.project = os.path.join(Flags().summary,
-                                   Flags().project_name,
-                                   Flags().project_name + ".tar")
-            self.loadProject(self.project)
+        self.predefinedClasses = defaultPredefClassFile
+        self.project = self.projectSelect()
 
         # Load setting in the main thread
         self.imageData = None
@@ -130,13 +122,13 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.screencast = "https://youtu.be/p0nR2YsCY_U"
 
         # Load predefined classes to the list
-        self.predefinedClasses = defaultPredefClassFile
         self.loadPredefinedClasses()
 
         # Main widgets and related state.
         self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist)
         self.trainDialog = FlowDialog(parent=self,
-                                      labelfile=defaultPredefClassFile)
+                                      labelfile=defaultPredefClassFile,
+                                      project=self.project)
 
         self.itemsToShapes = {}
         self.shapesToItems = {}
@@ -285,7 +277,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         createMode = action(getStr('crtBox'), self.setCreateMode,
                             'w', 'new', getStr('crtBoxDetail'), enabled=False)
         editMode = action('&Edit\nRectBox', self.setEditMode,
-                          'Ctrl+J', 'edit', u'Move and edit boxes',
+                          'e', 'edit', u'Move and edit boxes',
                           enabled=False)
 
         create = action(getStr('crtBox'), self.createShape,
@@ -344,7 +336,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                          'Ctrl+-', 'zoom-out', getStr('zoomoutDetail'),
                          enabled=False)
         zoomOrg = action(getStr('originalsize'), partial(self.setZoom, 100),
-                         'Ctrl+=', 'zoom', getStr('originalsizeDetail'),
+                         'Ctrl+Shift++', 'zoom', getStr('originalsizeDetail'),
                          enabled=False)
         fitWindow = action(getStr('fitWin'), self.setFitWindow,
                            'Ctrl+F', 'fit-window', getStr('fitWinDetail'),
@@ -1531,6 +1523,44 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                 filename = filename[0]
             self.loadFile(filename)
 
+    def projectSelect(self):
+        while True:
+            items = next(os.walk(Flags().summary))[1]
+            project, accept = QInputDialog.getItem(self, "Project Dialog",
+                                                   "Open or create a project:",
+                                                   items, 0, True)
+
+            if accept and project.isalnum():
+                self.loadProject("./data/summaries/{0}/{0}.tar".format(project))
+                break
+            elif accept and not project.isalnum():
+                reply = QMessageBox.question(self, "Message",
+                                             "Project name invalid. Would you "
+                                             "like to use the default project "
+                                             "name?", QMessageBox.Yes,
+                                             QMessageBox.No)
+                if reply == QMessageBox.Yes:
+                    project = os.path.join(Flags().summary,
+                                           Flags().project_name,
+                                           Flags().project_name + ".tar")
+                    self.loadProject(project)
+                    break
+            else:
+                break
+
+        with open(self.predefinedClasses) as classes:
+            data = classes.read()
+            input, accept = QInputDialog.getMultiLineText(self,
+                                                          "Project Classes",
+                                                          "Classes",
+                                                          data)
+        if len(data) != len(input):
+            file = open(self.predefinedClasses, "w")
+            file.write(input)
+            file.close()
+
+        return project
+
     def loadProject(self, file):
         cond = True
         while cond:
@@ -1753,8 +1783,8 @@ def frame_capture(path):
     while success:
         success, image = vidObj.read()
         fileno = str(count)
-        cv2.imwrite("{}_frame_{}.jpg".format(name,
-                                             fileno.zfill(total_zeros)), image)
+        cv2.imwrite("{}_frame_{}.jpg".format(name, fileno.zfill(total_zeros)),
+                    image)
         count += 1
 
 

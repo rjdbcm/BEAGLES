@@ -159,7 +159,7 @@ class MultiCamThread(QThread):
 
 class FlowDialog(QDialog):
 
-    def __init__(self, parent=None, labelfile=None):
+    def __init__(self, parent=None, labelfile=None, project=Flags().project_name):
         super(FlowDialog, self).__init__(parent)
         self.flags = Flags()
         self.oldBatchValue = int(self.flags.batch)
@@ -169,12 +169,8 @@ class FlowDialog(QDialog):
         self.formGroupBox = QGroupBox("Select Model and Checkpoint")
         layout = QFormLayout()
 
-        self.projectCmb = QComboBox()
-        self.projectCmb.setEditable(True)
-        validator = QRegExpValidator(QRegExp('^[a-zA-z0-9\\_]+'))
-        self.projectCmb.setValidator(validator)
-        self.projectCmb.addItem(self.flags.project_name)
-        layout.addRow(QLabel("Project Name"), self.projectCmb)
+        self.projectLbl = QLabel(project)
+        layout.addRow(QLabel("Project Name"), self.projectLbl)
 
         self.flowCmb = QComboBox()
         self.flowCmb.addItems(
@@ -367,15 +363,15 @@ class FlowDialog(QDialog):
 
         self.setWindowTitle("SLGR-Suite - Machine Learning Tool")
         self.findCkpt()
-        self.findProject()
+        # self.findProject()
 
-    def findProject(self):
-        current_items = [self.projectCmb.itemText(i) for i in
-                         range(self.projectCmb.count())]
-        self.projectCmb.clear()
-        items = next(os.walk(self.flags.summary))[1]
-        items = list(set().union(current_items, items))
-        self.projectCmb.addItems(items)
+    # def findProject(self):
+    #     current_items = [self.projectCmb.itemText(i) for i in
+    #                      range(self.projectCmb.count())]
+    #     self.projectCmb.clear()
+    #     items = next(os.walk(self.flags.summary))[1]
+    #     items = list(set().union(current_items, items))
+    #     self.projectCmb.addItems(items)
 
     def findCkpt(self):
         self.loadCmb.clear()
@@ -463,9 +459,7 @@ class FlowDialog(QDialog):
         """set flags for darkflow and prevent startup if errors anticipated"""
         self.updateCkptFile()  # Make sure TFNet gets the correct checkpoint
         self.flags.get_defaults()  # Reset self.flags
-        self.flags.project_name = self.projectCmb.currentText() if \
-            self.projectCmb.currentText() is not "" else \
-            self.flags.project_name
+        self.flags.project_name = self.projectLbl.text()
         self.flags.model = os.path.join(
             self.flags.config, self.modelCmb.currentText())
         try:
@@ -590,7 +584,7 @@ class FlowDialog(QDialog):
             self.demoGroupBox.setEnabled(True)
             self.trainGroupBox.setEnabled(True)
             self.formGroupBox.setEnabled(True)
-            self.findProject()
+            # self.findProject()
             try:
                 event.accept()
             except AttributeError:
@@ -648,7 +642,7 @@ class FlowDialog(QDialog):
         self.buttonStop.hide()
         self.buttonOk.show()
         self.findCkpt()
-        self.findProject()
+        # self.findProject()
 
     @pyqtSlot(int)
     def updateProgress(self, value):

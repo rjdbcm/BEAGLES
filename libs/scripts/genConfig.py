@@ -1,9 +1,3 @@
-"""
-Created on Feb 20, 2017
-@author: jumabek
-"""
-import os
-import argparse
 import configparser
 import numpy as np
 import sys
@@ -12,7 +6,6 @@ import random
 from collections import OrderedDict
 import xml.etree.ElementTree as ET
 import re
-
 
 np.seterr(invalid='raise')
 
@@ -26,11 +19,18 @@ class Sections(OrderedDict):
 
     def __setitem__(self, key, value):
         if isinstance(value, dict):
+            if key not in ["net", "region", "detection"]:
                 key += str(self._unique)
-                self._unique += 1
-                if key.endswith("0"):
-                    key = key.strip("0")
+            self._unique += 1
         OrderedDict.__setitem__(self, key, value)
+
+
+def fix(target):
+    with open(target, 'r') as f:
+        content = f.read()
+        replace = re.sub("(\d+)\]", r']', content)
+    with open(target, 'w') as f:
+        f.write(replace)
 
 
 def IOU(x, centroids):
@@ -61,7 +61,7 @@ def avg_IOU(X, centroids):
     return sum / n
 
 
-def write_anchors_to_file(centroids, X, target_cfg):
+def write_anchors_to_file(centroids, target_cfg):
     config = configparser.ConfigParser(strict=False, dict_type=Sections)
     config.read(target_cfg)
 
@@ -69,7 +69,7 @@ def write_anchors_to_file(centroids, X, target_cfg):
     height_in_cfg_file = float(config.get('net', 'height'))
 
     anchors = centroids.copy()
-    print(anchors.shape)
+    # print(anchors.shape)
 
     for i in range(anchors.shape[0]):
         anchors[i][0] *= width_in_cfg_file / 32.
@@ -78,7 +78,7 @@ def write_anchors_to_file(centroids, X, target_cfg):
     widths = anchors[:, 0]
     sorted_indices = np.argsort(widths)
 
-    print('Anchors =\n', anchors[sorted_indices])
+    # print('Anchors =\n', anchors[sorted_indices])
 
     s = ""
     for i in sorted_indices[:-1]:
@@ -95,13 +95,7 @@ def write_anchors_to_file(centroids, X, target_cfg):
          config.write(f)
 
     # strip off number tags from duplicate sections
-    with open(target_cfg, 'r') as f:
-        content = f.read()
-        replace = re.sub("(\d+)\]", r']', content)
-    with open(target_cfg, 'w') as f:
-        f.write(replace)
-
-    # f.write('%f\n' % (avg_IOU(X, centroids)))
+    fix(target_cfg)
 
 
 def kmeans(X, centroids, target_cfg):
@@ -121,14 +115,14 @@ def kmeans(X, centroids, target_cfg):
 
         dists = np.sum(np.abs(old_D - D))
 
-        print("iter {}: dists = {}".format(iter, dists))
+        # print("iter {}: dists = {}".format(iter, dists))
 
         # assign samples to centroids
         assignments = np.argmin(D, axis=1)
 
         if (assignments == prev_assignments).all():
-            print("Centroids =\n", centroids)
-            write_anchors_to_file(centroids, X, target_cfg)
+            # print("Centroids =\n", centroids)
+            write_anchors_to_file(centroids, target_cfg)
             return
 
         # calculate new centroids
@@ -148,6 +142,7 @@ def kmeans(X, centroids, target_cfg):
             print("error", file=sys.stderr)
             exit(1)
 
+
 def convertBbox(size, box):
     dw = 1./(size[0])
     dh = 1./(size[1])
@@ -157,24 +152,32 @@ def convertBbox(size, box):
     h = h*dh
     return w, h
 
-def main(argv):
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--folder', default='../../data/committedframes/',
-                        help='path to filelist\n')
-    parser.add_argument('--target_cfg',
-                        default='../../data/cfg/tiny-yolo-2c.cfg')
-    parser.add_argument('--num_clusters', default=5, type=int,
-                        help='number of clusters\n')
 
-    args = parser.parse_args()
+def setNumClassesYOLOv2(target_cfg, num_classes):
+    config = configparser.ConfigParser(strict=False, dict_type=Sections)
+    config.read(target_cfg)
+    go = True
+    # get the section just before region
+    while go:
+        for section in config.sections():
+            if section.startswith('region'):
+                go = False
+                break
+            _section = section
+    config.set('region', 'classes', str(num_classes))
+    config.set(_section, 'filters', str(5 * (num_classes + 5)))
+    with open(target_cfg, 'w') as f:
+        config.write(f)
+    fix(target_cfg)
 
-    args.target_cfg = os.path.abspath(args.target_cfg)
 
+def genConfigYOLOv2(folder, target_cfg, num_clusters, num_classes):
+    target_cfg = os.path.abspath(target_cfg)
     annotation_dims = []
 
-    for file in os.listdir(args.folder):
+    for file in os.listdir(folder):
         if file.endswith(".xml"):
-            tree = ET.parse(args.folder + file)
+            tree = ET.parse(folder + file)
             root = tree.getroot()
             size = root.find('size')
             w = int(size.find('width').text)
@@ -196,21 +199,21 @@ def main(argv):
                 annotation_dims.append(tuple(map(float, (w, h))))
     annotation_dims = np.array(annotation_dims)
 
-    if args.num_clusters == 0:
-        for num_clusters in range(1, 11):  # we make 1 through 10 clusters
+    if num_clusters == 0:
+        for clusters in range(1, 11):  # we make 1 through 10 clusters
             indices = [random.randrange(annotation_dims.shape[0]) for i in
-                       range(num_clusters)]
+                       range(clusters)]
             centroids = annotation_dims[indices]
-            kmeans(annotation_dims, centroids, args.target_cfg)
-            print('centroids.shape', centroids.shape)
+            kmeans(annotation_dims, centroids, target_cfg)
+            # print('centroids.shape', centroids.shape)
     else:
         indices = [random.randrange(annotation_dims.shape[0]) for i in
-                   range(args.num_clusters)]
+                   range(num_clusters)]
         centroids = annotation_dims[indices]
-        kmeans(annotation_dims, centroids, args.target_cfg)
-        print('centroids.shape', centroids.shape)
+        kmeans(annotation_dims, centroids, target_cfg)
+        # print('centroids.shape', centroids.shape)
+
+    setNumClassesYOLOv2(target_cfg, num_classes)
 
 
-if __name__ == "__main__":
-    main(sys.argv)
-
+genConfigYOLOv2("../../data/committedframes/", "../../data/cfg/tiny-yolov2.cfg", 5, 4)
