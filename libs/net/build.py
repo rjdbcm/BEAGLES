@@ -762,7 +762,7 @@ class TFNet(FlagIO):
                                         (0, 230, 0), 1, cv2.LINE_AA)
         return new_image
 
-    def write_annotations(self, annotation_file, prediction):
+    def write_annotations(self, annotation_file, prediction, time_elapsed, epoch):
 
         def _center(x1, y1, x2, y2):
             x, y = (x1 + x2) / 2, (y1 + y2) / 2
@@ -780,7 +780,7 @@ class TFNet(FlagIO):
                                                  result['bottomright']['x'],
                                                  result['bottomright']['y'])
 
-                    file_writer.writerow([datetime.now(),
+                    file_writer.writerow([datetime.fromtimestamp(epoch + time_elapsed),
                                          result['label'],
                                          result['confidence'],
                                          center_x,
@@ -808,6 +808,8 @@ class TFNet(FlagIO):
                               fourcc, 20.0, (int(max_x), int(max_y)))
         self.logger.info('Annotating ' + INPUT_VIDEO)
 
+        start_time = time.time()
+
         while True:  # Capture frame-by-frame
             FRAME_NUMBER += 1
             ret, frame = cap.read()
@@ -818,7 +820,12 @@ class TFNet(FlagIO):
                 frame = np.asarray(frame)
                 result = self.return_predict(frame)
                 new_frame = self.draw_box(frame, result)
-                self.write_annotations(annotation_file, result)
+                epoch = datetime(1970, 1, 1, 0, 0).timestamp()
+                time_elapsed = time.time() - start_time
+                self.write_annotations(annotation_file,
+                                       result,
+                                       time_elapsed,
+                                       epoch)
                 out.write(new_frame)
                 if self.flags.kill:
                     break

@@ -3,6 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from .labelFile import LabelFile
 from .utils.flags import Flags, FlagIO
+#from .scripts.genConfig import genConfigYOLOv2
 import numpy as np
 import subprocess
 import cv2
