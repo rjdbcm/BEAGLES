@@ -1,5 +1,7 @@
 #!/bin/sh
 # To be run from the build-tools/ directory
+# These scripts are here for those interested in attempting a binary build.
+# It NOT RECOMMENDED, please use build-venv.sh
 
 which -s brew
 if [[ $? != 0 ]] ; then

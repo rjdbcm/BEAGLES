@@ -1,4 +1,6 @@
 #!/bin/sh
+# These scripts are here for those interested in attempting a binary build.
+# It NOT RECOMMENDED, please use build-venv.sh
 
 cd ..
 rm -r build
