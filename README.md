@@ -10,97 +10,16 @@ formatted ```.txt``` files.
 
 ## Installation
 
-### Binary Build Requirements
-#### Ubuntu Linux
+### Source Install (virtualenv)
 
-* libomp-dev 
-
-* pyqt5-dev-tools
-
-* python3-pip
-
-* Python 3.6 or above
-
-* The following PyPi packages from ```requirements/requirements-linux.txt```:
-```python
-pyqt5>=5.10.1
-lxml==4.2.4
-Cython==0.29.6
-opencv-contrib-python==4.0.0.21
-tensorflow==1.13.1
-numpy==1.16.2
-traces==0.4.2
 ```
-##### Build Binary:
-```bash
-cd build_tools
-./build_ubuntu_binary.sh
+cd build/
+./build-venv.sh
 ```
 
-#### MacOS
-* [Homebrew](https://brew.sh)
+### Binary Build
 
-* qt
-
-* libxml2
-
-* Python 3.6 or above
-
-* The following PyPi packages from ```requirements/requirements-osx-mojave.txt```
-```python
-pyqt5>=5.12
-lxml==4.2.4
-Cython==0.29.6
-opencv-contrib-python-headless==4.0.0.21
-tensorflow==1.13.1
-numpy==1.16.2
-```
-##### Build Binary: (NOT WORKING)
-```bash
-cd build_tools
-./build_for_macos.sh
-```
-
-### Download prebuilt binaries
-
--  Binaries are not yet available but the build isn't hard.
-
-### Build from and run as a source distribution
-
-- Linux/Ubuntu has been tested with [Python 3.6](https://www.python.org/getit/) & [PyQt 5.10.1](https://www.riverbankcomputing.com/software/pyqt/intro)
-
-- MacOS has been tested with [Python
-3.7](https://www.python.org/getit/) & [PyQt
-5.12](https://www.riverbankcomputing.com/software/pyqt/intro) installed using [homebrew](https://brew.sh).
-
-
-#### Ubuntu Linux
-
-* Run as a source distribution:
-
-```bash
-sudo apt-get install python3-pip
-sudo apt-get install pyqt5-dev-tools
-sudo apt-get install libomp-dev
-sudo pip3 install -r requirements/requirements-linux-python3.txt
-make qt5py3
-python3 slgrSuite.py
-python3 slgrSuite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
-```
-
-#### macOS
-
-
-* Python 3 + Qt5 (Recommended)
-
-```bash
-brew install qt  # Install qt-5.x.x by Homebrew
-brew install libxml2
-pip3 install -r requirements/requirements-osx-mojave.txt
-make qt5py3
-python3 slgrSuite.py
-python3 slgrSuite.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
-```
+Scripts are included in `build/` for those interested but are **NOT** **RECOMMENDED**.
 
 ## Usage
 
@@ -134,7 +53,7 @@ to load pre-defined classes of your own.
 
 *Important Notes:*
 
-- Your label list shall not change in the middle of processing a list of images, this includes the order. When you save a image, classes.txt will also get updated, while previous annotations will not be updated.
+- Your label list shall not change in the middle of processing a list of images, this includes the order. When you save an image, classes.txt will also get updated, while previous annotations will not be updated.
 
 - You shouldn't use "default class" function when saving to YOLO format, it will not be referred.
 
