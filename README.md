@@ -79,6 +79,7 @@ to load pre-defined classes of your own.
 | s        | Previous Image                                 |
 | del      | Delete the selected bounding box               |
 | ↑→↓←     | Move the selected bounding box                 |
+|:--------:|:----------------------------------------------:|
 
 ### Verify Image
 
