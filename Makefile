@@ -1,8 +1,13 @@
 # ex: set ts=8 noet:
 
-all: qt5
+all: virtualenv qt5
 
 test: testpy3
+
+virtualenv:
+	virtualenv --python=python3 .
+	source bin/activate
+	pip install -r requirements/requirements-linux.txt
 
 qt5:
 	pyrcc5 -o libs/resources.py resources.qrc
@@ -19,5 +24,9 @@ clean:
 	rm -f ./libs/cython_utils/*.so
 	rm -rf ./build
 	rm -rf ./dist
+	rm -rf ./bin
+	rm -f .Python
 
 .PHONY: test
+
+.PHONY: virtualenv

@@ -34,8 +34,4 @@ else
 fi
 
 cd ../
-virtualenv --python=python3
-source bin/activate
-pip install -r requirements/requirements-linux-python3.txt
 make
-python3 slgrSuite.py
