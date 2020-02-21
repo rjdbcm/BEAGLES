@@ -115,7 +115,7 @@ class Canvas(QWidget):
                 self.parent().window().labelCoordinates.setText(
                     'Width: %d, Height: %d / X: %d; Y: %d' % (
                     currentWidth, currentHeight, pos.x(), pos.y()))
-            color = self.drawingLineColor
+                color = self.drawingLineColor
                 if self.outOfPixmap(pos):
                     # Don't allow the user to draw outside the pixmap.
                     # Project the point to the pixmap's edges.
