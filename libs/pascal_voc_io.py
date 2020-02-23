@@ -12,9 +12,10 @@ from libs.ustr import ustr
 XML_EXT = '.xml'
 ENCODE_METHOD = DEFAULT_ENCODING
 
+
 class PascalVocWriter:
 
-    def __init__(self, foldername, filename, imgSize,databaseSrc='Unknown'):
+    def __init__(self, foldername, filename, imgSize, databaseSrc='Unknown'):
         self.foldername = foldername
         self.filename = filename
         self.databaseSrc = databaseSrc
@@ -30,8 +31,8 @@ class PascalVocWriter:
         root = etree.fromstring(rough_string)
         return etree.tostring(root, pretty_print=True, encoding=ENCODE_METHOD).replace("  ".encode(), "\t".encode())
         # minidom does not support UTF-8
-        '''reparsed = minidom.parseString(rough_string)
-        return reparsed.toprettyxml(indent="\t", encoding=ENCODE_METHOD)'''
+        # reparsed = minidom.parseString(rough_string)
+        # return reparsed.toprettyxml(indent="\t", encoding=ENCODE_METHOD)
 
     def genXML(self):
         """
@@ -123,13 +124,14 @@ class PascalVocReader:
 
     def __init__(self, filepath):
         # shapes type:
-        # [labbel, [(x1,y1), (x2,y2), (x3,y3), (x4,y4)], color, color, difficult]
+        # [label, [(x1,y1), (x2,y2), (x3,y3), (x4,y4)], color, color, difficult]
         self.shapes = []
         self.filepath = filepath
         self.verified = False
         try:
             self.parseXML()
         except:
+            print("bewp")
             pass
 
     def getShapes(self):

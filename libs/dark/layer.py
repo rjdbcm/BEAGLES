@@ -9,11 +9,11 @@ class Layer(object):
         self.type = list(args)[0]
         self.number = list(args)[1]
 
-        self.w = dict() # weights
-        self.h = dict() # placeholders
-        self.wshape = dict() # weight shape
-        self.wsize = dict() # weight size
-        self.setup(*args[2:]) # set attr up
+        self.w = dict()  # weights
+        self.h = dict()  # placeholders
+        self.wshape = dict()  # weight shape
+        self.wsize = dict()  # weight size
+        self.setup(*args[2:])  # set attr up
         self.present()
         for var in self.wshape:
             shp = self.wshape[var]

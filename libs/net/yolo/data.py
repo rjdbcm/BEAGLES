@@ -11,7 +11,7 @@ import os
 def parse(self, exclusive = False):
     meta = self.meta
     ext = '.parsed'
-    ann = self.FLAGS.annotation
+    ann = self.flags.annotation
     if not os.path.isdir(ann):
         msg = 'Annotation directory not found {} .'
         exit('Error: {}'.format(msg.format(ann)))
@@ -33,7 +33,7 @@ def _batch(self, chunk):
     # preprocess
     jpg = chunk[0]; w, h, allobj_ = chunk[1]
     allobj = deepcopy(allobj_)
-    path = os.path.join(self.FLAGS.dataset, jpg)
+    path = os.path.join(self.flags.dataset, jpg)
     img = self.preprocess(path, allobj)
 
     # Calculate regression target
@@ -94,17 +94,17 @@ def _batch(self, chunk):
     return inp_feed_val, loss_feed_val
 
 def shuffle(self):
-    batch = self.FLAGS.batch
+    batch = self.flags.batch
     data = self.parse()
-    self.FLAGS.size = len(data)
+    self.flags.size = len(data)
     self.io_flags()
-    self.logger.info('Dataset of {} instance(s)'.format(self.FLAGS.size))
-    if batch > self.FLAGS.size:
-        self.FLAGS.batch = batch = self.FLAGS.size
-    batch_per_epoch = int(self.FLAGS.size / batch)
+    self.logger.info('Dataset of {} instance(s)'.format(self.flags.size))
+    if batch > self.flags.size:
+        self.flags.batch = batch = self.flags.size
+    batch_per_epoch = int(self.flags.size / batch)
 
-    for i in range(self.FLAGS.epoch):
-        shuffle_idx = perm(np.arange(self.FLAGS.size))
+    for i in range(self.flags.epoch):
+        shuffle_idx = perm(np.arange(self.flags.size))
         for b in range(batch_per_epoch):
             # yield these
             x_batch = list()
@@ -112,6 +112,7 @@ def shuffle(self):
 
             for j in range(b*batch, b*batch+batch):
                 train_instance = data[shuffle_idx[j]]
+                self.logger.debug(train_instance[0])
                 try:
                     inp, new_feed = self._batch(train_instance)
                 except ZeroDivisionError:
@@ -120,7 +121,8 @@ def shuffle(self):
                     self.logger.error('Please remove or fix it then try again.')
                     raise
 
-                if inp is None: continue
+                if inp is None:
+                    continue
                 x_batch += [np.expand_dims(inp, 0)]
 
                 for key in new_feed:

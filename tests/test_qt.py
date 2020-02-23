@@ -4,6 +4,7 @@ from unittest import TestCase
 from slgrSuite import get_main_app
 
 
+# TODO rewrite get_main_app to test
 class TestMainWindow(TestCase):
 
     app = None

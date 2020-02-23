@@ -5,16 +5,17 @@ from ..utils.flags import FlagIO
 from os.path import basename
 
 
-class framework(object):
+class framework(FlagIO, object):
     constructor = vanilla.constructor
     loss = vanilla.train.loss
     
-    def __init__(self, meta, FLAGS):
+    def __init__(self, meta, flags):
+        FlagIO.__init__(self, delay=0.5, subprogram=True)
         model = basename(meta['model'])
         model = '.'.join(model.split('.')[:-1])
         meta['name'] = model
         self.meta = meta
-        self.constructor(meta, FLAGS)
+        self.constructor(meta, flags)
 
     def is_inp(self, file_name):
         return True
@@ -29,20 +30,22 @@ class YOLO(framework):
     loss = yolo.train.loss
     is_inp = yolo.misc.is_inp
     profile = yolo.misc.profile
+    # noinspection PyProtectedMember
     _batch = yolo.data._batch
     resize_input = yolo.predict.resize_input
     findboxes = yolo.predict.findboxes
     process_box = yolo.predict.process_box
 
 
-class YOLOv2(framework, FlagIO):
+class YOLOv2(framework):
     constructor = yolo.constructor
     parse = yolo.data.parse
-    shuffle = yolov2.data.shuffle
+    shuffle = yolo.data.shuffle
     preprocess = yolo.predict.preprocess
     loss = yolov2.train.loss
     is_inp = yolo.misc.is_inp
     postprocess = yolov2.predict.postprocess
+    # noinspection PyProtectedMember
     _batch = yolov2.data._batch
     resize_input = yolo.predict.resize_input
     findboxes = yolov2.predict.findboxes
@@ -57,9 +60,9 @@ class YOLOv3(framework):
     # loss = yolov3.train.loss  # TODO: yolov3.train
     is_inp = yolo.misc.is_inp
     # postprocess = yolov3.predict.postprocess  # TODO: yolov3.predict.postprocess
-    #batch = yolov3.data._batch  # TODO: yolov3.data._batch
+    # batch = yolov3.data._batch  # TODO: yolov3.data._batch
     resize_input = yolo.predict.resize_input
-    #findboxes = yolov3.predict.findboxes  # TODO: yolov3.predict.findboxes
+    # findboxes = yolov3.predict.findboxes  # TODO: yolov3.predict.findboxes
     process_box = yolo.predict.process_box
 
 """
@@ -73,7 +76,7 @@ types = {
 }
 
 
-def create_framework(meta, FLAGS):
+def create_framework(meta, flags):
     net_type = meta['type']
     this = types.get(net_type, framework)
-    return this(meta, FLAGS)
+    return this(meta, flags)

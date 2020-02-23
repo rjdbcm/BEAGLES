@@ -1,7 +1,6 @@
 import tensorflow as tf
 from datetime import datetime
 import numpy as np
-from time import strftime
 
 FORM = '{:>6} | {:>6} | {:<32} | {}'
 FORM_ = '{}+{}+{}+{}'
@@ -94,9 +93,13 @@ class BaseOp(object):
         msg = str()
         inp = _name(self.inp.out)
         if inp == 'input':
+            #  imitating log format from utils.flags
             msg = FORM.format(
                 '', '', 'input',
-                _shape(self.inp.out)) + '\n' + '{} | {} | {}.{} | '.format(datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3], 'INFO', 'TFNet', 'build_forward')
+                _shape(self.inp.out)) + '\n' + \
+                  '{} | {:7} | {:<11} | {:<20} | '.format(
+                      datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3],
+                      'INFO', 'TFNet', 'build_forward')
         if not self.act:
             return msg
         return msg + FORM.format(

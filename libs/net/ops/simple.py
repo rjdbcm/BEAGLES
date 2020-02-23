@@ -122,6 +122,50 @@ class maxpool(BaseOp):
             l.ksize, l.ksize, l.pad, l.stride)
 
 
+# ---Activations---
+
+
+class stair(BaseOp):
+    def forward(self):
+        n = tf.floor(self.inp.out)
+        f = tf.floor(tf.divide(self.inp.out, 2), name=self.scope)
+        if n % 2 == 0:
+            self.out = f
+        else:
+            self.out = tf.add(tf.subtract(self.inp.out, n), f, name=self.scope)
+
+    def verbalise(self):
+        pass
+
+
+class hardtan(BaseOp):
+    def forward(self):
+        # self.out = 1 if x > -1 and x < 1 else 0
+        t = tf.shape(self.inp.out)
+        cond = tf.less(self.inp.out, tf.ones(t)) and \
+            tf.greater(self.inp.out, tf.negative(tf.ones(t)))
+        self.out = tf.where(cond, tf.ones(t), tf.zeros(t), name=self.scope)
+
+    def verbalise(self):
+        pass
+
+
+class relu(BaseOp):
+    def forward(self):
+        self.out = tf.nn.relu(self.inp.out, name=self.scope)
+
+    def verbalise(self):
+        pass
+
+
+class elu(BaseOp):
+    def forward(self):
+        self.out = tf.nn.elu(self.inp.out, name=self.scope)
+
+    def verbalise(self):
+        pass
+
+
 class leaky(BaseOp):
     def forward(self):
         self.out = tf.maximum(
@@ -130,16 +174,38 @@ class leaky(BaseOp):
             name=self.scope
         )
 
-    def verbalise(self): pass
-
-# class shortcut(BaseOp):
-# 	def forward(self):
-# 		layer = self.lay
-# 		activation = layer.activation
-# 		index = self.lay.w['from']
+    def verbalise(self):
+        pass
 
 
-# class upsample(BaseOp):
+class shortcut(BaseOp):
+    def forward(self):
+        from_layer = self.lay.from_layer
+        this = self.inp
+        while this.lay.number != from_layer:
+            this = this.inp
+            assert this is not None, \
+                'Shortcut to non-existence {}'.format(self.lay.from_layer)
+        from_layer = this.inp.out
+        self.out = tf.add(self.inp.out,
+                          from_layer,
+                          name=self.scope)
+
+    def speak(self):
+        l = self.lay
+        return 'shortcut from {}'.format(l.from_layer)
+
+
+class upsample(BaseOp):
+    def forward(self):
+        size = (self.lay.height, self.lay.width)
+        self.out = tf.image.resize_nearest_neighbor(self.inp.out,
+                                                    size,
+                                                    name=self.scope)
+
+    def speak(self):
+        return 'upsample {}'.format(self.lay.stride)
+
 
 class identity(BaseOp):
     def __init__(self, inp):

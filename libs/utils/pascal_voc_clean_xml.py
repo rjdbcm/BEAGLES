@@ -2,9 +2,9 @@
 parse PASCAL VOC xml annotations
 """
 import os
-import sys
 import xml.etree.ElementTree as ET
 import glob
+
 
 def pascal_voc_clean_xml(self, ANN, pick, exclusive=False):
     self.logger.info('Parsing for {} {}'.format(
@@ -18,44 +18,32 @@ def pascal_voc_clean_xml(self, ANN, pick, exclusive=False):
     size = len(annotations)
 
     for i, file in enumerate(annotations):
-        # progress bar that awakens deep magic from the dawn of time causing
-        # train ops to hang when started from the GUI on linux platforms
-        
-        # sys.stdout.write('\r')
-        # percentage = 1. * (i+1) / size
-        # progress = int(percentage * 20)
-        # bar_arg = [progress*'=', ' '*(19-progress), percentage*100]
-        # bar_arg += [file]
-        # sys.stdout.write('[{}>{}]{:.0f}%  {}'.format(*bar_arg))
-        # sys.stdout.flush()
-        
-        # actual parsing 
-        in_file = open(file)
-        tree = ET.parse(in_file)
-        root = tree.getroot()
-        jpg = str(root.find('filename').text)
-        imsize = root.find('size')
-        w = int(imsize.find('width').text)
-        h = int(imsize.find('height').text)
-        all = list()
+        with open(file) as in_file:
+            tree = ET.parse(in_file)
+            root = tree.getroot()
+            jpg = str(root.find('filename').text)
+            imsize = root.find('size')
+            w = int(imsize.find('width').text)
+            h = int(imsize.find('height').text)
+            all = list()
 
-        for obj in root.iter('object'):
+            for obj in root.iter('object'):
+                # noinspection PyUnusedLocal
                 current = list()
                 name = obj.find('name').text
                 if name not in pick:
-                        continue
+                    continue
 
                 xmlbox = obj.find('bndbox')
                 xn = int(float(xmlbox.find('xmin').text))
                 xx = int(float(xmlbox.find('xmax').text))
                 yn = int(float(xmlbox.find('ymin').text))
                 yx = int(float(xmlbox.find('ymax').text))
-                current = [name,xn,yn,xx,yx]
+                current = [name, xn, yn, xx, yx]
                 all += [current]
 
-        add = [[jpg, [w, h, all]]]
-        dumps += add
-        in_file.close()
+            add = [[jpg, [w, h, all]]]
+            dumps += add
 
     # gather all stats
     stat = dict()
@@ -64,11 +52,22 @@ def pascal_voc_clean_xml(self, ANN, pick, exclusive=False):
         for current in all:
             if current[0] in pick:
                 if current[0] in stat:
-                    stat[current[0]]+=1
+                    stat[current[0]] += 1
                 else:
-                    stat[current[0]] =1
+                    stat[current[0]] = 1
+    count = 0
     for i in stat:
         self.logger.info('{}: {}'.format(i, stat[i]))
+        count += stat[i]
+    try:
+        assert count >= len(dumps), \
+            "There are {} images but only {} annotations".format(
+                len(dumps), count)
+    except AssertionError as e:
+        self.flags.error = str(e)
+        self.logger.error(str(e))
+        self.send_flags()
+        raise
     self.logger.info('Dataset size: {}'.format(len(dumps)))
 
     os.chdir(cur_dir)

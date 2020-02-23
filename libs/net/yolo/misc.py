@@ -20,19 +20,19 @@ coco_models = ['tiny-coco', 'yolo-coco',  # <- v1.1
 coco_names = 'coco.names'
 nine_names = '9k.names'
 
-def labels(meta, FLAGS):    
+def labels(meta, flags):
     model = os.path.basename(meta['name'])
     if model in voc_models: 
         print("Model has a VOC model name, loading VOC labels.")
         meta['labels'] = labels20
     else:
-        file = FLAGS.labels
+        file = flags.labels
         if model in coco_models:
             print("Model has a coco model name, loading coco labels.")
-            file = os.path.join(FLAGS.config, coco_names)
+            file = os.path.join(flags.config, coco_names)
         elif model == 'yolo9000':
             print("Model has name yolo9000, loading yolo9000 labels.")
-            file = os.path.join(FLAGS.config, nine_names)
+            file = os.path.join(flags.config, nine_names)
         with open(file, 'r') as f:
             meta['labels'] = list()
             labs = [l.strip() for l in f.readlines()]
@@ -79,10 +79,10 @@ _MVA = .05
 def profile(self, net):
     pass
 #     data = self.parse(exclusive = True)
-#     size = len(data); batch = self.FLAGS.batch
+#     size = len(data); batch = self.flags.batch
 #     all_inp_ = [x[0] for x in data]
 #     net.say('Will cycle through {} examples {} times'.format(
-#         len(all_inp_), net.FLAGS.epoch))
+#         len(all_inp_), net.flags.epoch))
 
 #     fetch = list(); mvave = list(); names = list();
 #     this = net.top
@@ -95,16 +95,16 @@ def profile(self, net):
 #         this = this.inp
 #     print(names)
 
-#     total = int(); allofthem = len(all_inp_) * net.FLAGS.epoch
-#     batch = min(net.FLAGS.batch, len(all_inp_))
-#     for count in range(net.FLAGS.epoch):
+#     total = int(); allofthem = len(all_inp_) * net.flags.epoch
+#     batch = min(net.flags.batch, len(all_inp_))
+#     for count in range(net.flags.epoch):
 #         net.say('EPOCH {}'.format(count))
 #         for j in range(len(all_inp_)/batch):
 #             inp_feed = list(); new_all = list()
 #             all_inp = all_inp_[j*batch: (j*batch+batch)]
 #             for inp in all_inp:
 #                 new_all += [inp]
-#                 this_inp = os.path.join(net.FLAGS.dataset, inp)
+#                 this_inp = os.path.join(net.flags.dataset, inp)
 #                 this_inp = net.framework.preprocess(this_inp)
 #                 expanded = np.expand_dims(this_inp, 0)
 #                 inp_feed.append(expanded)

@@ -1,6 +1,7 @@
 from .layer import Layer
 import numpy as np
 
+
 class local_layer(Layer):
     def setup(self, ksize, c, n, stride, 
               pad, w_, h_, activation):
@@ -24,6 +25,7 @@ class local_layer(Layer):
         weights = weights.reshape(self.dnshape)
         weights = weights.transpose([0,3,4,2,1])
         self.w['kernels'] = weights
+
 
 class conv_extract_layer(Layer):
     def setup(self, ksize, c, n, stride, 
@@ -120,6 +122,7 @@ class conv_select_layer(Layer):
             self.w['moving_mean'] = np.take(m, idx)
             self.w['moving_variance'] = np.take(v, idx)
             self.w['gamma'] = np.take(g, idx)
+
 
 class convolutional_layer(Layer):
     def setup(self, ksize, c, n, stride, 

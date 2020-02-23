@@ -56,19 +56,23 @@ class weights_loader(loader):
         walker = weights_walker(path)
 
         for i, layer in enumerate(src_layers):
-            if layer.type not in self.VAR_LAYER: continue
+            if layer.type not in self.VAR_LAYER:
+                continue
             self.src_key.append([layer])
             
-            if walker.eof: new = None
+            if walker.eof:
+                new = None
             else: 
                 args = layer.signature
                 new = dark.darknet.create_darkop(*args)
             self.vals.append(new)
 
-            if new is None: continue
+            if new is None:
+                continue
             order = self._W_ORDER[new.type]
             for par in order:
-                if par not in new.wshape: continue
+                if par not in new.wshape:
+                    continue
                 val = walker.walk(new.wsize[par])
                 new.w[par] = val
             new.finalize(walker.transpose)
@@ -79,6 +83,7 @@ class weights_loader(loader):
                 walker.offset, walker.size)
             print('Successfully identified {} bytes'.format(
                 walker.offset))
+
 
 class checkpoint_loader(loader):
     """

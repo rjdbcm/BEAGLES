@@ -4,12 +4,13 @@ from . import data
 from . import misc
 from ...utils.flags import FlagIO
 import numpy as np
+import time
 
 """ YOLO framework __init__ equivalent"""
 
 
-def constructor(self, meta, FLAGS):
-    FlagIO.__init__(self, delay=0.5, subprogram=True)
+def constructor(self, meta, flags):
+    self.flags = flags
 
     def _to_color(indx, base):
         """ return (b, r, g) tuple"""
@@ -20,16 +21,16 @@ def constructor(self, meta, FLAGS):
         return (b * 127, r * 127, g * 127)
 
     if 'labels' not in meta:
-        misc.labels(meta, FLAGS)  # We're not loading from a .pb so we do need to load the labels
+        misc.labels(meta, flags)  # We're not loading from a .pb so we do need to load the labels
     try:
         assert len(meta['labels']) == meta['classes'], (
-                '{} and {} indicate inconsistent class numbers').format(FLAGS.labels, meta['model'])
+                '{} and {} indicate inconsistent class numbers').format(flags.labels, meta['model'])
     except AssertionError as e:
-        FLAGS.error = str(e)
-        FLAGS.done = True
-        self.flags = FLAGS
+        self.flags.error = str(e)
+        self.logger.error(str(e))
         FlagIO.send_flags(self)
         raise
+
 
     # assign a color for each label
     colors = list()
@@ -38,9 +39,8 @@ def constructor(self, meta, FLAGS):
         colors += [_to_color(x, base)]
     meta['colors'] = colors
     self.fetch = list()
-    self.meta, self.FLAGS = meta, FLAGS
-    self.flags = self.FLAGS
+    self.meta, self.flags = meta, flags
 
-    # over-ride the threshold in meta if FLAGS has it.
-    if FLAGS.threshold > 0.0:
-        self.meta['thresh'] = FLAGS.threshold
+    # over-ride the threshold in meta if flags has it.
+    if flags.threshold > 0.0:
+        self.meta['thresh'] = flags.threshold

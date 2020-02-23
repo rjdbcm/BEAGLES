@@ -29,11 +29,13 @@ def loss(self, net_out):
     anchors = m['anchors']
 
     self.logger.info('{} loss hyper-parameters:'.format(m['model']))
-    self.logger.info('\tH       = {}'.format(H))
-    self.logger.info('\tW       = {}'.format(W))
-    self.logger.info('\tbox     = {}'.format(m['num']))
-    self.logger.info('\tclasses = {}'.format(m['classes']))
-    self.logger.info('\tscales  = {}'.format([sprob, sconf, snoob, scoor]))
+    self.logger.info('H       = {}'.format(H))
+    self.logger.info('W       = {}'.format(W))
+    self.logger.info('box     = {}'.format(m['num']))
+    self.logger.info('classes = {}'.format(m['classes']))
+    self.logger.info('scales  = {}'.format([sprob, sconf, snoob, scoor]))
+    # Anchors logged as a list of ordered pairs for readability
+    self.logger.info('anchors = {}'.format(list(zip(*[iter(anchors)]*2))))
 
     size1 = [None, HW, B, C]
     size2 = [None, HW, B]
@@ -106,4 +108,6 @@ def loss(self, net_out):
     loss = tf.reshape(loss, [-1, H*W*B*(4 + 1 + C)])
     loss = tf.reduce_sum(loss, 1)
     self.loss = .5 * tf.reduce_mean(loss)
-    tf.summary.scalar('{} loss'.format(m['model']), self.loss)
+    tf.summary.scalar("/".join([os.path.basename(m['model']),
+                                self.flags.trainer,
+                                "loss"]), self.loss)

@@ -19,7 +19,7 @@ class LabelFileError(Exception):
 class LabelFile(object):
     # It might be changed as window creates. By default, using XML ext
     # suffix = '.lif'
-    suffix = XML_EXT
+    suffix: str = XML_EXT
 
     def __init__(self, filename=None):
         self.shapes = ()
