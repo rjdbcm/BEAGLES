@@ -3,7 +3,7 @@
 echo Installing platform specific requirements...
 
 if [[ $OSTYPE == "linux-gnu" ]]; then
-    sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev
+    sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev build-essential
 
 elif [[ $OSTYPE == "darwin"* ]]; then
     which -s brew

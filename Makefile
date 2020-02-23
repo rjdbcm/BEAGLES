@@ -6,8 +6,8 @@ test: testpy3
 
 virtualenv:
 	virtualenv --python=python3 .
-	source bin/activate
-	pip install -r requirements/requirements-linux.txt
+	. bin/activate
+	pip3 install -r requirements/requirements-linux.txt
 
 qt5:
 	pyrcc5 -o libs/resources.py resources.qrc
@@ -15,6 +15,8 @@ qt5:
 
 testpy3:
 	python3 -m unittest discover tests
+
+distclean: clean clean_site_packages
 
 clean:
 	rm -f ~/.SLGR-SuiteSettings.pkl ./libs/resources.py
@@ -26,6 +28,9 @@ clean:
 	rm -rf ./dist
 	rm -rf ./bin
 	rm -f .Python
+
+clean_site_packages:
+	rm -rf ./lib
 
 .PHONY: test
 

@@ -12,9 +12,13 @@ formatted ```.txt``` files.
 
 ### Source Install (virtualenv)
 
+Navigate to the source directory and run the following commands:
+
 ```
 cd build/
 ./build-venv.sh
+cd ..
+make
 ```
 
 ### Binary Build
@@ -23,43 +27,10 @@ Scripts are included in `build/` for those interested but are **NOT** **RECOMMEN
 
 ## Usage
 
-### Create pre-defined classes
-
-Edit the
-[data/predefined_classes.txt](https://github.com/rjdbcm/slgr-suite/blob/master/data/predefined_classes.txt)
-to load pre-defined classes of your own.
-
-### Steps
-
-1. In `data/predefined_classes.txt` define the list of classes that will be used for your training.
-
-2. Build and launch using the instructions above.
-
-3. Right next to the "Save" button in toolbar you can choose PascalVOC `.xml` or YOLO `.txt` the default is PascalVOC.
-
-4. You may use Open/Open Folder to process single or multiple images. You may also use Import Video Frames from advanced mode to import every frame from a selected video file into `data/rawframes`. When finished with single image, click save or you can activate autosave mode.
-
-    A `.txt` or `.xml` file of the annotations will be saved in the same folder as your image with same name. A file named "classes.txt" is saved to that folder too. "classes.txt" defines the list of class names that your yolo label refers to.
-
-5. When finished annotating commit the images and corresponding annotation files to the `data/committedframes` folder by pressing the Commit Frames button on the advanced mode toolbar.
-
-6. (OPTIONAL) Download [pretrained weights](https://drive.google.com/drive/folders/0B1tW_VtY7onidEwyQ2FtQVplWEU) for the model configurations provided by [thtrieu](https://github.com/thtrieu) which include yolo-full and yolo-tiny of v1.0, tiny-yolo-v1.1 of v1.1 and yolo, tiny-yolo-voc of v2.
-
-7. Press Ctrl+T (&#8984;T) to start the machine learning interface.
-
-8. Enter parameters and start training a model.
-
-9. Annotate video files using your trained model.
-
-*Important Notes:*
-
-- Your label list shall not change in the middle of processing a list of images, this includes the order. When you save an image, classes.txt will also get updated, while previous annotations will not be updated.
-
-- You shouldn't use "default class" function when saving to YOLO format, it will not be referred.
-
-- When saving as YOLO format, "difficult" flag is discarded.
-
-- The PascalVOC annotation `.xml` output from SLGR-Suite does not include the `<path>` element.
+From the source directory run:
+```
+./slgrSuite.py
+```
 
 ## Controls
 |  Hotkey  |                     Action                     |
@@ -79,7 +50,7 @@ to load pre-defined classes of your own.
 | s        | Previous Image                                 |
 | del      | Delete the selected bounding box               |
 | ↑→↓←     | Move the selected bounding box                 |
-|:--------:|:----------------------------------------------:|
+
 
 ### Verify Image
 
@@ -118,14 +89,18 @@ Send a pull request
 
 License
 -------
-Free software: [GPLv3](https://github.com/rjdbcm/slgrSuite/blob/master/LICENSE)
+Free software:
+- [GPLv3](https://github.com/rjdbcm/slgrSuite/blob/master/LICENSE)
+- [MIT NOTICE](https://github.com/rjdbcm/slgrSuite/blob/master/NOTICE)
 
-[NOTICE](https://github.com/rjdbcm/slgrSuite/blob/master/NOTICE):
-Based on original code by: Tzutalin. LabelImg. Git code (2015). https://github.com/tzutalin/labelImg
+Based in part on original code by: 
+- Tzutalin. LabelImg. Git code (2015). https://github.com/tzutalin/labelImg
+- Mahmoud Aslan. Cyclic Learning Rate. Git code (2018). https://github.com/mhmoodlan/cyclic-learning-rate
+
 
 Related
 -------
 
 1. [labelImg](https://github.com/tzutalin/labelImg) the original image annotation software SLGR-Suite is forked from
 2. [darkflow](https://github.com/thtrieu/darkflow) the original basis of the machine learning backend
-
+3. [cyclic-learning-rate](https://github.com/mhmoodlan/cyclic-learning-rate) the implementation of cyclic learning rates used
