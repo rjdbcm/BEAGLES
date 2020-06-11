@@ -1592,8 +1592,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         archive = os.path.join(Flags().summary, name,
                                name + '.tar')
         with tarfile.open(archive, mode='w') as archive:
-            if name is 'default':
-                sandbox = True
+            sandbox = True if name is 'default' else False
             for i in archiveList:
                 if not sandbox:
                     archive.add(i)
