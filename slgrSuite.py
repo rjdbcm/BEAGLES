@@ -1591,10 +1591,12 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                        self.predefinedClasses]
         archive = os.path.join(Flags().summary, name,
                                name + '.tar')
-        from multiprocessing.pool import ThreadPool
         with tarfile.open(archive, mode='w') as archive:
+            if name is 'default':
+                sandbox = True
             for i in archiveList:
-                archive.add(i)
+                if not sandbox:
+                    archive.add(i)
                 try:
                     shutil.rmtree(i)
                 except NotADirectoryError:

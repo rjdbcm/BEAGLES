@@ -337,6 +337,7 @@ class FlowDialog(QDialog):
         layout4.addRow(self.refreshDevBtn)
 
         self.demoGroupBox.setLayout(layout4)
+        self.demoGroupBox.setDisabled(True)
         self.demoGroupBox.hide()
 
         self.flowPrg = QProgressBar()
@@ -436,6 +437,7 @@ class FlowDialog(QDialog):
     def flowSelect(self):
         if self.flowCmb.currentText() == "Capture":
             self.demoGroupBox.show()
+            self.demoGroupBox.setDisabled(True)
         else:
             self.demoGroupBox.hide()
 
@@ -546,6 +548,9 @@ class FlowDialog(QDialog):
                                                    filters, options=options)
             self.flags.fbf = filename[0]
         if self.flowCmb.currentText() == "Capture":
+            QMessageBox.warning(self, 'Error', 'Using Capture is not the '
+                                               'recommended recording method.')
+            return
             if not self.flags.capdevs:
                 QMessageBox.warning(self, 'Error',
                                     'No capture device is selected',
