@@ -175,7 +175,7 @@ class FlowDialog(QDialog):
 
         self.flowCmb = QComboBox()
         self.flowCmb.addItems(
-            ["Train", "Predict", "Freeze", "Capture", "Annotate"])
+            ["Train", "Predict", "Annotate"])
         self.flowCmb.currentIndexChanged.connect(self.flowSelect)
         layout.addRow(QLabel("Mode"), self.flowCmb)
 
@@ -548,9 +548,6 @@ class FlowDialog(QDialog):
                                                    filters, options=options)
             self.flags.fbf = filename[0]
         if self.flowCmb.currentText() == "Capture":
-            QMessageBox.warning(self, 'Error', 'Using Capture is not the '
-                                               'recommended recording method.')
-            return
             if not self.flags.capdevs:
                 QMessageBox.warning(self, 'Error',
                                     'No capture device is selected',
