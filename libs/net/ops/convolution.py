@@ -1,4 +1,4 @@
-import tensorflow.contrib.slim as slim
+import tensorflow.compat.v1.layers as slim
 from .baseop import BaseOp
 import tensorflow as tf
 import numpy as np
@@ -86,12 +86,9 @@ class convolutional(BaseOp):
                 'center': False,
                 'scale': True,
                 'epsilon': 1e-5,
-                'scope': self.scope,
-                'updates_collections': None,
-                'is_training': layer.h['is_training'],
-                'param_initializers': layer.w
+                'name': self.scope,
                 })
-            return slim.batch_norm(inp, **args)
+            return tf.keras.layers.BatchNormalization(**args)(inp)
 
     def speak(self):
         l = self.lay

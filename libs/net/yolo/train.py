@@ -1,4 +1,4 @@
-import tensorflow.contrib.slim as slim
+import tensorflow.compat.v1.layers as slim
 import pickle
 import tensorflow as tf
 from .misc import show

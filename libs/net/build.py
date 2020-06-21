@@ -22,6 +22,8 @@ from ..utils.loader import create_loader
 from ..utils.flags import FlagIO
 from ..utils.postprocess import BehaviorIndex
 
+tf.compat.v1.disable_eager_execution()
+
 train_stats = (
     'Training statistics - '
     'Learning rate: {} '
@@ -48,15 +50,15 @@ class GradientNaN(Exception):
 
 class TFNet(FlagIO):
     _TRAINER = dict({
-        'rmsprop': tf.train.RMSPropOptimizer,
-        'adadelta': tf.train.AdadeltaOptimizer,
-        'adagrad': tf.train.AdagradOptimizer,
-        'adagradDA': tf.train.AdagradDAOptimizer,
-        'momentum': tf.train.MomentumOptimizer,
-        'nesterov': tf.train.MomentumOptimizer,
-        'adam': tf.train.AdamOptimizer,
-        'ftrl': tf.train.FtrlOptimizer,
-        'sgd': tf.train.GradientDescentOptimizer
+        'rmsprop': tf.compat.v1.train.RMSPropOptimizer,
+        'adadelta': tf.compat.v1.train.AdadeltaOptimizer,
+        'adagrad': tf.compat.v1.train.AdagradOptimizer,
+        'adagradDA': tf.compat.v1.train.AdagradDAOptimizer,
+        'momentum': tf.compat.v1.train.MomentumOptimizer,
+        'nesterov': tf.compat.v1.train.MomentumOptimizer,
+        'adam': tf.compat.v1.train.AdamOptimizer,
+        'ftrl': tf.compat.v1.train.FtrlOptimizer,
+        'sgd': tf.compat.v1.train.GradientDescentOptimizer
     })
 
     def __init__(self, flags, darknet=None):
@@ -77,19 +79,19 @@ class TFNet(FlagIO):
 
         if self.flags.verbalise:
             os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
-            tf.logging.set_verbosity(tf.logging.DEBUG)
+            tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.DEBUG)
         else:
             os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-            tf.logging.set_verbosity(tf.logging.FATAL)
+            tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.FATAL)
 
         if self.flags.pb_load and self.flags.meta_load:
             self.logger.info('Loading from .pb and .meta')
-            self.graph = tf.Graph()
+            self.graph = tf.compat.v1.Graph()
             if flags.gpu > 0.0:
                 device_name = flags.gpu_name
             else:
                 device_name = None
-            with tf.device(device_name):
+            with tf.compat.v1.device(device_name):
                 with self.graph.as_default() as g:
                     self.build_from_pb()
             return
@@ -119,31 +121,12 @@ class TFNet(FlagIO):
         self.logger.info('Finished in {}s'.format(
             time.time() - start))
 
-    def build_from_pb(self):
-        with tf.gfile.FastGFile(self.flags.pb_load, "rb") as f:
-            graph_def = tf.GraphDef()
-            graph_def.ParseFromString(f.read())
-
-        tf.import_graph_def(
-            graph_def,
-            name=""
-        )
-        with open(self.flags.meta_load, 'r') as fp:
-            self.meta = json.load(fp)
-        self.framework = create_framework(self.meta, self.flags)
-
-        # Placeholders
-        self.inp = tf.get_default_graph().get_tensor_by_name('input:0')
-        self.feed = dict()  # other placeholders
-        self.out = tf.get_default_graph().get_tensor_by_name('output:0')
-
-        self.setup_meta_ops()
 
     def build_forward(self):
 
         # Placeholders
         inp_size = [None] + self.meta['inp_size']
-        self.inp = tf.placeholder(tf.float32, inp_size, 'input')
+        self.inp = tf.compat.v1.placeholder(tf.compat.v1.float32, inp_size, 'input')
         self.feed = dict()  # other placeholders
 
         # Build the forward pass
@@ -164,7 +147,12 @@ class TFNet(FlagIO):
         self.logger.info(LINE)
 
         self.top = state
-        self.out = tf.identity(state.out, name='output')
+        self.out = tf.compat.v1.identity(state.out, name='output')
+
+    def _get_ckpt(self):
+        model = self.meta['name']
+        ckpt = os.path.join(self.flags.backup, model)
+        return ckpt
 
     def setup_meta_ops(self):
         cfg = dict({
@@ -186,22 +174,22 @@ class TFNet(FlagIO):
             self.build_train_op()
 
         if self.flags.summary:
-            self.summary_op = tf.summary.merge_all()
-            self.writer = tf.summary.FileWriter(
+            self.summary_op = tf.compat.v1.summary.merge_all()
+            self.writer = tf.compat.v1.summary.FileWriter(
                 self.flags.summary + self.flags.project_name)
 
-        self.sess = tf.Session(config=tf.ConfigProto(**cfg))
+        self.sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(**cfg))
         # uncomment next 3 lines to enable tb debugger
         # from tensorflow.python import debug as tf_debug
         # self.sess = tf_debug.TensorBoardDebugWrapperSession(self.sess,
         #                                                     'localhost:6064')
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         if not self.ntrain:
             return
         try:
-            self.saver = tf.train.Saver(tf.global_variables(),
-                                        max_to_keep=self.flags.keep)
+            self.saver = tf.compat.v1.train.Saver(tf.compat.v1.global_variables())
+
             if self.flags.load != 0:
                 self.load_from_ckpt()
         except tf.errors.NotFoundError as e:
@@ -212,45 +200,6 @@ class TFNet(FlagIO):
         if self.flags.summary:
             self.writer.add_graph(self.sess.graph)
 
-    def freeze(self):
-        """
-        Create a standalone const graph def that
-        C++	can load and run.
-        """
-        darknet_ckpt = self.darknet
-
-        with self.graph.as_default():
-            for var in tf.global_variables():
-                name = var.name.split(':')[0]
-                var_name = name.split('-')
-                l_idx = int(var_name[0])
-                w_sig = var_name[1].split('/')[-1]
-                l = darknet_ckpt.layers[l_idx]
-                l.w[w_sig] = var.eval(self.sess)
-
-        for layer in darknet_ckpt.layers:
-            for ph in layer.h:
-                layer.h[ph] = None
-
-        flags_pb = self.flags
-        flags_pb.verbalise = False
-        flags_pb.train = False
-        self.flags.progress = 25
-        self.logger.info("Reinitializing with static TFNet...")
-        tfnet_pb = TFNet(flags_pb, darknet_ckpt)
-        tfnet_pb.sess = tf.Session(graph=tfnet_pb.graph)
-        # tfnet_pb.predict() # uncomment for unit testing
-        name = self.flags.built_graph + '{}.pb'.format(self.meta['name'])
-        self.flags.progress = 50
-        # Save dump of everything in meta
-        with open(self.flags.built_graph + '{}.meta'.format(self.meta['name']), 'w') as fp:
-            json.dump(self.meta, fp)
-        fp.close()
-        self.logger.info('Saving const graph def to {}'.format(name))
-        graph_def = tfnet_pb.sess.graph_def
-        tf.train.write_graph(graph_def, '', name, False)
-        self.flags.progress = 90
-        self.flags.done = True
 
     def _save_ckpt(self, step, loss_profile):
         file = '{}-{}{}'
@@ -334,8 +283,8 @@ class TFNet(FlagIO):
             loss_mva = .9 * loss_mva + .1 * loss
             step_now = self.flags.load + i + 1
 
-            assign_op = self.global_step.assign(step_now)
-            self.sess.run(assign_op)
+            # assign_op = global_step.assign(step_now)
+            # self.sess.run(assign_op)
 
             # Calculate and send progress
             # noinspection PyUnboundLocalVariable
@@ -449,8 +398,7 @@ class TFNet(FlagIO):
             return t
         self.framework.loss(self.out)
         self.logger.info('Building {} train op'.format(self.meta['model']))
-        self.global_step = tf.Variable(0, trainable=False)
-
+        self.global_step = tf.compat.v1.Variable(0, trainable=False)
         # setup kwargs for trainer
         kwargs = dict()
         if self.flags.trainer in ['momentum', 'rmsprop', 'nesterov']:
@@ -478,7 +426,7 @@ class TFNet(FlagIO):
         # create histogram summaries
         for grad, var in zip(self.gradients, self.variables):
             name = var.name.split('/')
-            with tf.variable_scope(name[0] + '/'):
+            with tf.compat.v1.variable_scope(name[0] + '/'):
                 tf.summary.histogram("gradients/" + name[1], _l2_norm(grad))
                 # tf.summary.histogram("variables/" + name[1], _l2_norm(var))
 
@@ -493,6 +441,7 @@ class TFNet(FlagIO):
                 last = f.readlines()[-1].strip()
                 load_point = last.split(' ')[1]
                 load_point = load_point.split('"')[1]
+                print(load_point)
                 load_point = load_point.split('-')[-1]
                 self.flags.load = int(load_point)
 
