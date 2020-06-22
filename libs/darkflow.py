@@ -386,7 +386,6 @@ class FlowDialog(QDialog):
         l = ['0']
         # a dash followed by a number or numbers followed by a dot
         _regex = re.compile("\-[0-9]+\.")
-        print("Checkpoints: ", checkpoints)
         for f in checkpoints:
             if f[:len(_model[0])] == _model[0]:
                 _ckpt = re.search(_regex, f)

@@ -22,7 +22,6 @@ from ..utils.loader import create_loader
 from ..utils.flags import FlagIO
 from ..utils.postprocess import BehaviorIndex
 
-tf.compat.v1.disable_eager_execution()
 
 train_stats = (
     'Training statistics - '
@@ -64,6 +63,9 @@ class TFNet(FlagIO):
     def __init__(self, flags, darknet=None):
         FlagIO.__init__(self, subprogram=True)
         speak = True if darknet is None else False
+
+        # disable eager mode for TF1-dependent code
+        tf.compat.v1.disable_eager_execution()
 
         #  Setup logging verbosity
         tf_logger = tf_logging.get_logger()
