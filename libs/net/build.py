@@ -84,18 +84,6 @@ class TFNet(FlagIO):
             os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
             tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.FATAL)
 
-        if self.flags.pb_load and self.flags.meta_load:
-            self.logger.info('Loading from .pb and .meta')
-            self.graph = tf.compat.v1.Graph()
-            if flags.gpu > 0.0:
-                device_name = flags.gpu_name
-            else:
-                device_name = None
-            with tf.compat.v1.device(device_name):
-                with self.graph.as_default() as g:
-                    self.build_from_pb()
-            return
-
         if darknet is None:
             darknet = Darknet(flags)
             self.ntrain = len(darknet.layers)
@@ -123,7 +111,6 @@ class TFNet(FlagIO):
 
 
     def build_forward(self):
-
         # Placeholders
         inp_size = [None] + self.meta['inp_size']
         self.inp = tf.compat.v1.placeholder(tf.compat.v1.float32, inp_size, 'input')
@@ -148,11 +135,6 @@ class TFNet(FlagIO):
 
         self.top = state
         self.out = tf.compat.v1.identity(state.out, name='output')
-
-    def _get_ckpt(self):
-        model = self.meta['name']
-        ckpt = os.path.join(self.flags.backup, model)
-        return ckpt
 
     def setup_meta_ops(self):
         cfg = dict({
@@ -199,7 +181,6 @@ class TFNet(FlagIO):
 
         if self.flags.summary:
             self.writer.add_graph(self.sess.graph)
-
 
     def _save_ckpt(self, step, loss_profile):
         file = '{}-{}{}'
@@ -457,7 +438,7 @@ class TFNet(FlagIO):
         ckpt_loader = create_loader(ckpt)
         self.logger.info(old_graph_msg.format(ckpt))
 
-        for var in tf.global_variables():
+        for var in tf.compat.v1.global_variables():
             name = var.name.split(':')[0]
             args = [name, var.get_shape()]
             val = ckpt_loader(args)
@@ -470,90 +451,9 @@ class TFNet(FlagIO):
                 self.send_flags()
                 raise
             shp = val.shape
-            plh = tf.placeholder(tf.float32, shp)
-            op = tf.assign(var, plh)
+            plh = tf.compat.v1.placeholder(tf.float32, shp)
+            op = tf.compat.v1.assign(var, plh)
             self.sess.run(op, {plh: val})
-
-    def camera_compile(self, cmdstring):
-        cmdlist = []
-        for n in self.flags.capdevs:
-            cmdlist.append(compile(cmdstring.format(n), 'cmd_{}'.format(n),
-                                   'exec'))
-        return cmdlist
-
-    def camera_exec(self, cmdlist):
-        localdict = {'cv2': cv2, 'os': os, 'self': self, 'c': None}
-        for cmd in cmdlist:
-            exec(cmd, globals(), localdict)
-
-    def camera(self):
-        # TODO: make this actually work properly
-        '''
-        capture and annotate a list of devices
-        number of frames displayed scales with the number of devices
-        '''
-
-        self.logger.info("Compiling capture code blocks")
-        start = time.time()
-        get_caps = self.camera_compile(
-            "global cap{0}\n"
-            "cap{0} = cv2.VideoCapture({0})\n"
-            "cap{0}.set(cv2.CAP_PROP_FRAME_WIDTH, 144)\n"
-            "cap{0}.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)\n"
-            "cap{0}.set(cv2.CAP_PROP_BUFFERSIZE, 3)\n"
-            "time_fmt = '%d_%b_%Y_%H_%M_%S'\n"
-            "global annotation{0}\n"
-            "annotation{0} = os.path.join("
-            "self.flags.video_out, 'video{0}_annotations_%s.csv' "
-            "% datetime.now().strftime(time_fmt))")
-        get_frames = self.camera_compile(
-            "global ret{0}\n"
-            "global frame{0}\n"
-            "global stopped{0}\n"
-            "ret{0}, frame{0} = cap{0}.read()\n"
-            "stopped{0} = False")
-        # get boxing and convert to 3-channel grayscale
-        get_boxing = self.camera_compile(
-            'if ret{0}:\n'
-            '    global res{0}\n'
-            '    global new_frame{0}\n'
-            '    if self.flags.grayscale:\n'
-            '        frame{0} = cv2.cvtColor(frame{0}, cv2.COLOR_BGR2GRAY)\n'
-            '        frame{0} = cv2.cvtColor(frame{0}, cv2.COLOR_GRAY2BGR)\n'
-            '    frame{0} = np.asarray(frame{0})\n'
-            '    res{0} = self.return_predict(frame{0})\n'
-            '    new_frame{0} = self.draw_box(frame{0}, res{0})\n'
-            '    self.write_annotations(annotation{0}, res{0})\n')
-        init_writer = self.camera_compile(
-            'global out{0}\n'
-            'fourcc = cv2.VideoWriter_fourcc(*"mp4v")\n'
-            'max_x = cap{0}.get(cv2.CAP_PROP_FRAME_WIDTH)\n'
-            'max_y = cap{0}.get(cv2.CAP_PROP_FRAME_HEIGHT)\n'
-            'out{0} = cv2.VideoWriter(os.path.splitext(annotation{0})[0] + ".avi",'
-            'fourcc, self.flags.fps, (int(max_x), int(max_y)))')
-        write_frame = self.camera_compile('out{0}.write(new_frame{0})')
-        show_frame = self.camera_compile('cv2.imshow("Cam {0}", new_frame{0})')
-        end = time.time()
-        self.logger.info("Finished in {}s".format(end - start))
-
-        self.camera_exec(get_caps)
-        self.logger.info("recording at {} FPS".format(self.flags.fps))
-        self.camera_exec(init_writer)
-        begin = time.time()
-        timeout = begin + self.flags.timeout
-        self.logger.info("Camera capture started on devices {}".format(self.flags.capdevs))
-        while True:
-            for i in [get_frames, get_boxing, write_frame, show_frame]:
-                t = Thread(target=self.camera_exec(i))
-                t.start()
-                t.join()
-            self.flags.progress = 100 * (time.time() - begin)/(timeout - begin)
-            self.send_flags()
-            if cv2.waitKey(1) and time.time() >= timeout:
-                self.logger.info("Camera capture done on devices {}".format(
-                                 self.flags.capdevs))
-                break
-        cv2.destroyAllWindows()
 
     def cyclic_learning_rate(self,
                              global_step,
@@ -759,10 +659,6 @@ class TFNet(FlagIO):
             with open(analysis_file, mode='a') as file:
                 file.write(bi.individual_total_beh())
                 file.write(bi.individual_single_beh())
-
-
-
-
 
     def annotate(self):
         INPUT_VIDEO = self.flags.fbf
