@@ -1536,8 +1536,9 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             elif accept and not project.isalnum():
                 reply = QMessageBox.question(self, "Message",
                                              "Project name invalid. Would you "
-                                             "like to use the default project "
-                                             "name?", QMessageBox.Yes,
+                                             "like to use the default sandbox "
+                                             "project? (Changes will not be "
+                                             "saved.)", QMessageBox.Yes,
                                              QMessageBox.No)
                 if reply == QMessageBox.Yes:
                     project = os.path.join(Flags().summary,
@@ -1553,7 +1554,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             input, accept = QInputDialog.getMultiLineText(self,
                                                           "Project Classes",
                                                           "Classes",
-                                                          data)
+                                                          data,)
         if len(data) != len(input):
             file = open(self.predefinedClasses, "w")
             file.write(input)
@@ -1591,10 +1592,12 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                        self.predefinedClasses]
         archive = os.path.join(Flags().summary, name,
                                name + '.tar')
-        from multiprocessing.pool import ThreadPool
-        with tarfile.open(archive, mode='w') as archive:
+        sandbox = True if name is 'default' else False
+        mode = 'r' if sandbox else 'w'
+        with tarfile.open(archive, mode=mode) as archive:
             for i in archiveList:
-                archive.add(i)
+                if not sandbox:
+                    archive.add(i)
                 try:
                     shutil.rmtree(i)
                 except NotADirectoryError:

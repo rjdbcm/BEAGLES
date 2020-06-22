@@ -20,6 +20,8 @@ from .framework import create_framework
 from ..dark.darknet import Darknet
 from ..utils.loader import create_loader
 from ..utils.flags import FlagIO
+from ..utils.postprocess import BehaviorIndex
+
 
 train_stats = (
     'Training statistics - '
@@ -47,20 +49,23 @@ class GradientNaN(Exception):
 
 class TFNet(FlagIO):
     _TRAINER = dict({
-        'rmsprop': tf.train.RMSPropOptimizer,
-        'adadelta': tf.train.AdadeltaOptimizer,
-        'adagrad': tf.train.AdagradOptimizer,
-        'adagradDA': tf.train.AdagradDAOptimizer,
-        'momentum': tf.train.MomentumOptimizer,
-        'nesterov': tf.train.MomentumOptimizer,
-        'adam': tf.train.AdamOptimizer,
-        'ftrl': tf.train.FtrlOptimizer,
-        'sgd': tf.train.GradientDescentOptimizer
+        'rmsprop': tf.compat.v1.train.RMSPropOptimizer,
+        'adadelta': tf.compat.v1.train.AdadeltaOptimizer,
+        'adagrad': tf.compat.v1.train.AdagradOptimizer,
+        'adagradDA': tf.compat.v1.train.AdagradDAOptimizer,
+        'momentum': tf.compat.v1.train.MomentumOptimizer,
+        'nesterov': tf.compat.v1.train.MomentumOptimizer,
+        'adam': tf.compat.v1.train.AdamOptimizer,
+        'ftrl': tf.compat.v1.train.FtrlOptimizer,
+        'sgd': tf.compat.v1.train.GradientDescentOptimizer
     })
 
     def __init__(self, flags, darknet=None):
         FlagIO.__init__(self, subprogram=True)
         speak = True if darknet is None else False
+
+        # disable eager mode for TF1-dependent code
+        tf.compat.v1.disable_eager_execution()
 
         #  Setup logging verbosity
         tf_logger = tf_logging.get_logger()
@@ -76,22 +81,10 @@ class TFNet(FlagIO):
 
         if self.flags.verbalise:
             os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
-            tf.logging.set_verbosity(tf.logging.DEBUG)
+            tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.DEBUG)
         else:
             os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-            tf.logging.set_verbosity(tf.logging.FATAL)
-
-        if self.flags.pb_load and self.flags.meta_load:
-            self.logger.info('Loading from .pb and .meta')
-            self.graph = tf.Graph()
-            if flags.gpu > 0.0:
-                device_name = flags.gpu_name
-            else:
-                device_name = None
-            with tf.device(device_name):
-                with self.graph.as_default() as g:
-                    self.build_from_pb()
-            return
+            tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.FATAL)
 
         if darknet is None:
             darknet = Darknet(flags)
@@ -118,31 +111,11 @@ class TFNet(FlagIO):
         self.logger.info('Finished in {}s'.format(
             time.time() - start))
 
-    def build_from_pb(self):
-        with tf.gfile.FastGFile(self.flags.pb_load, "rb") as f:
-            graph_def = tf.GraphDef()
-            graph_def.ParseFromString(f.read())
-
-        tf.import_graph_def(
-            graph_def,
-            name=""
-        )
-        with open(self.flags.meta_load, 'r') as fp:
-            self.meta = json.load(fp)
-        self.framework = create_framework(self.meta, self.flags)
-
-        # Placeholders
-        self.inp = tf.get_default_graph().get_tensor_by_name('input:0')
-        self.feed = dict()  # other placeholders
-        self.out = tf.get_default_graph().get_tensor_by_name('output:0')
-
-        self.setup_meta_ops()
 
     def build_forward(self):
-
         # Placeholders
         inp_size = [None] + self.meta['inp_size']
-        self.inp = tf.placeholder(tf.float32, inp_size, 'input')
+        self.inp = tf.compat.v1.placeholder(tf.compat.v1.float32, inp_size, 'input')
         self.feed = dict()  # other placeholders
 
         # Build the forward pass
@@ -163,7 +136,7 @@ class TFNet(FlagIO):
         self.logger.info(LINE)
 
         self.top = state
-        self.out = tf.identity(state.out, name='output')
+        self.out = tf.compat.v1.identity(state.out, name='output')
 
     def setup_meta_ops(self):
         cfg = dict({
@@ -185,22 +158,22 @@ class TFNet(FlagIO):
             self.build_train_op()
 
         if self.flags.summary:
-            self.summary_op = tf.summary.merge_all()
-            self.writer = tf.summary.FileWriter(
+            self.summary_op = tf.compat.v1.summary.merge_all()
+            self.writer = tf.compat.v1.summary.FileWriter(
                 self.flags.summary + self.flags.project_name)
 
-        self.sess = tf.Session(config=tf.ConfigProto(**cfg))
+        self.sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(**cfg))
         # uncomment next 3 lines to enable tb debugger
         # from tensorflow.python import debug as tf_debug
         # self.sess = tf_debug.TensorBoardDebugWrapperSession(self.sess,
         #                                                     'localhost:6064')
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         if not self.ntrain:
             return
         try:
-            self.saver = tf.train.Saver(tf.global_variables(),
-                                        max_to_keep=self.flags.keep)
+            self.saver = tf.compat.v1.train.Saver(tf.compat.v1.global_variables())
+
             if self.flags.load != 0:
                 self.load_from_ckpt()
         except tf.errors.NotFoundError as e:
@@ -210,46 +183,6 @@ class TFNet(FlagIO):
 
         if self.flags.summary:
             self.writer.add_graph(self.sess.graph)
-
-    def freeze(self):
-        """
-        Create a standalone const graph def that
-        C++	can load and run.
-        """
-        darknet_ckpt = self.darknet
-
-        with self.graph.as_default():
-            for var in tf.global_variables():
-                name = var.name.split(':')[0]
-                var_name = name.split('-')
-                l_idx = int(var_name[0])
-                w_sig = var_name[1].split('/')[-1]
-                l = darknet_ckpt.layers[l_idx]
-                l.w[w_sig] = var.eval(self.sess)
-
-        for layer in darknet_ckpt.layers:
-            for ph in layer.h:
-                layer.h[ph] = None
-
-        flags_pb = self.flags
-        flags_pb.verbalise = False
-        flags_pb.train = False
-        self.flags.progress = 25
-        self.logger.info("Reinitializing with static TFNet...")
-        tfnet_pb = TFNet(flags_pb, darknet_ckpt)
-        tfnet_pb.sess = tf.Session(graph=tfnet_pb.graph)
-        # tfnet_pb.predict() # uncomment for unit testing
-        name = self.flags.built_graph + '{}.pb'.format(self.meta['name'])
-        self.flags.progress = 50
-        # Save dump of everything in meta
-        with open(self.flags.built_graph + '{}.meta'.format(self.meta['name']), 'w') as fp:
-            json.dump(self.meta, fp)
-        fp.close()
-        self.logger.info('Saving const graph def to {}'.format(name))
-        graph_def = tfnet_pb.sess.graph_def
-        tf.train.write_graph(graph_def, '', name, False)
-        self.flags.progress = 90
-        self.flags.done = True
 
     def _save_ckpt(self, step, loss_profile):
         file = '{}-{}{}'
@@ -333,8 +266,8 @@ class TFNet(FlagIO):
             loss_mva = .9 * loss_mva + .1 * loss
             step_now = self.flags.load + i + 1
 
-            assign_op = self.global_step.assign(step_now)
-            self.sess.run(assign_op)
+            # assign_op = global_step.assign(step_now)
+            # self.sess.run(assign_op)
 
             # Calculate and send progress
             # noinspection PyUnboundLocalVariable
@@ -448,8 +381,7 @@ class TFNet(FlagIO):
             return t
         self.framework.loss(self.out)
         self.logger.info('Building {} train op'.format(self.meta['model']))
-        self.global_step = tf.Variable(0, trainable=False)
-
+        self.global_step = tf.compat.v1.Variable(0, trainable=False)
         # setup kwargs for trainer
         kwargs = dict()
         if self.flags.trainer in ['momentum', 'rmsprop', 'nesterov']:
@@ -477,7 +409,7 @@ class TFNet(FlagIO):
         # create histogram summaries
         for grad, var in zip(self.gradients, self.variables):
             name = var.name.split('/')
-            with tf.variable_scope(name[0] + '/'):
+            with tf.compat.v1.variable_scope(name[0] + '/'):
                 tf.summary.histogram("gradients/" + name[1], _l2_norm(grad))
                 # tf.summary.histogram("variables/" + name[1], _l2_norm(var))
 
@@ -492,6 +424,7 @@ class TFNet(FlagIO):
                 last = f.readlines()[-1].strip()
                 load_point = last.split(' ')[1]
                 load_point = load_point.split('"')[1]
+                print(load_point)
                 load_point = load_point.split('-')[-1]
                 self.flags.load = int(load_point)
 
@@ -507,7 +440,7 @@ class TFNet(FlagIO):
         ckpt_loader = create_loader(ckpt)
         self.logger.info(old_graph_msg.format(ckpt))
 
-        for var in tf.global_variables():
+        for var in tf.compat.v1.global_variables():
             name = var.name.split(':')[0]
             args = [name, var.get_shape()]
             val = ckpt_loader(args)
@@ -520,89 +453,9 @@ class TFNet(FlagIO):
                 self.send_flags()
                 raise
             shp = val.shape
-            plh = tf.placeholder(tf.float32, shp)
-            op = tf.assign(var, plh)
+            plh = tf.compat.v1.placeholder(tf.float32, shp)
+            op = tf.compat.v1.assign(var, plh)
             self.sess.run(op, {plh: val})
-
-    def camera_compile(self, cmdstring):
-        cmdlist = []
-        for n in self.flags.capdevs:
-            cmdlist.append(compile(cmdstring.format(n), 'cmd_{}'.format(n),
-                                   'exec'))
-        return cmdlist
-
-    def camera_exec(self, cmdlist):
-        localdict = {'cv2': cv2, 'os': os, 'self': self, 'c': None}
-        for cmd in cmdlist:
-            exec(cmd, globals(), localdict)
-
-    def camera(self):
-        '''
-        capture and annotate a list of devices
-        number of frames displayed scales with the number of devices
-        '''
-
-        self.logger.info("Compiling capture code blocks")
-        start = time.time()
-        get_caps = self.camera_compile(
-            "global cap{0}\n"
-            "cap{0} = cv2.VideoCapture({0})\n"
-            "cap{0}.set(cv2.CAP_PROP_FRAME_WIDTH, 144)\n"
-            "cap{0}.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)\n"
-            "cap{0}.set(cv2.CAP_PROP_BUFFERSIZE, 3)\n"
-            "time_fmt = '%d_%b_%Y_%H_%M_%S'\n"
-            "global annotation{0}\n"
-            "annotation{0} = os.path.join("
-            "self.flags.video_out, 'video{0}_annotations_%s.csv' "
-            "% datetime.now().strftime(time_fmt))")
-        get_frames = self.camera_compile(
-            "global ret{0}\n"
-            "global frame{0}\n"
-            "global stopped{0}\n"
-            "ret{0}, frame{0} = cap{0}.read()\n"
-            "stopped{0} = False")
-        # get boxing and convert to 3-channel grayscale
-        get_boxing = self.camera_compile(
-            'if ret{0}:\n'
-            '    global res{0}\n'
-            '    global new_frame{0}\n'
-            '    if self.flags.grayscale:\n'
-            '        frame{0} = cv2.cvtColor(frame{0}, cv2.COLOR_BGR2GRAY)\n'
-            '        frame{0} = cv2.cvtColor(frame{0}, cv2.COLOR_GRAY2BGR)\n'
-            '    frame{0} = np.asarray(frame{0})\n'
-            '    res{0} = self.return_predict(frame{0})\n'
-            '    new_frame{0} = self.draw_box(frame{0}, res{0})\n'
-            '    self.write_annotations(annotation{0}, res{0})\n')
-        init_writer = self.camera_compile(
-            'global out{0}\n'
-            'fourcc = cv2.VideoWriter_fourcc(*"mp4v")\n'
-            'max_x = cap{0}.get(cv2.CAP_PROP_FRAME_WIDTH)\n'
-            'max_y = cap{0}.get(cv2.CAP_PROP_FRAME_HEIGHT)\n'
-            'out{0} = cv2.VideoWriter(os.path.splitext(annotation{0})[0] + ".avi",'
-            'fourcc, self.flags.fps, (int(max_x), int(max_y)))')
-        write_frame = self.camera_compile('out{0}.write(new_frame{0})')
-        show_frame = self.camera_compile('cv2.imshow("Cam {0}", new_frame{0})')
-        end = time.time()
-        self.logger.info("Finished in {}s".format(end - start))
-
-        self.camera_exec(get_caps)
-        self.logger.info("recording at {} FPS".format(self.flags.fps))
-        self.camera_exec(init_writer)
-        begin = time.time()
-        timeout = begin + self.flags.timeout
-        self.logger.info("Camera capture started on devices {}".format(self.flags.capdevs))
-        while True:
-            for i in [get_frames, get_boxing, write_frame, show_frame]:
-                t = Thread(target=self.camera_exec(i))
-                t.start()
-                t.join()
-            self.flags.progress = 100 * (time.time() - begin)/(timeout - begin)
-            self.send_flags()
-            if cv2.waitKey(1) and time.time() >= timeout:
-                self.logger.info("Camera capture done on devices {}".format(
-                                 self.flags.capdevs))
-                break
-        cv2.destroyAllWindows()
 
     def cyclic_learning_rate(self,
                              global_step,
@@ -790,6 +643,25 @@ class TFNet(FlagIO):
                                          result['bottomright']['x'],
                                          result['bottomright']['y']])
 
+    def analyze(self, file_list):
+
+        bi = BehaviorIndex(file_list)
+        if len(file_list) > 1:
+            for i in file_list:
+                analysis_file = os.path.splitext(i)[0] + '_analysis.json'
+                with open(analysis_file, mode='a') as file:
+                    file.write(bi.individual_total_beh())
+                    file.write(bi.individual_single_beh())
+            analysis_file = 'group_analysis.json'
+            with open(analysis_file, mode='a') as file:
+                file.write(bi.group_total_beh())
+                file.write(bi.group_single_beh())
+        else:
+            analysis_file = os.path.splitext(file_list[0])[0] + '_analysis.json'
+            with open(analysis_file, mode='a') as file:
+                file.write(bi.individual_total_beh())
+                file.write(bi.individual_single_beh())
+
     def annotate(self):
         INPUT_VIDEO = self.flags.fbf
         FRAME_NUMBER = 0
@@ -820,6 +692,9 @@ class TFNet(FlagIO):
                 frame = np.asarray(frame)
                 result = self.return_predict(frame)
                 new_frame = self.draw_box(frame, result)
+
+                # This is a hackish way of making sure we can quantify videos
+                # taken at different times
                 epoch = datetime(1970, 1, 1, 0, 0).timestamp()
                 time_elapsed = time.time() - start_time
                 self.write_annotations(annotation_file,
@@ -833,99 +708,3 @@ class TFNet(FlagIO):
                 break
         # When everything done, release the capture
         out.release()
-
-
-    # def camera(self):
-        # file = self.flags.demo  # TODO add asynchronous capture
-        # save_video = self.flags.save_video
-        #
-        # if file == 'camera':
-        #     file = 0
-        # else:
-        #     assert os.path.isfile(file), \
-        #         'file {} does not exist'.format(file)
-        #
-        # camera = cv2.VideoCapture(file)
-        #
-        # if file == 0:
-        #     self.logger.info('Press [ESC] to quit demo')
-        #
-        # assert camera.isOpened(), \
-        #     'Cannot capture source'
-        #
-        # if file == 0:  # camera window
-        #     cv2.namedWindow('', 0)
-        #     _, frame = camera.read()
-        #     max_y, max_x, _ = frame.shape
-        #     cv2.resizeWindow('', max_x, max_y)
-        # else:
-        #     _, frame = camera.read()
-        #     max_y, max_x, _ = frame.shape
-        #
-        # if save_video:
-        #     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        #     if file == 0:  # camera window
-        #         fps = 1 / self._get_fps(frame)
-        #         if fps < 1:
-        #             fps = 1
-        #     else:
-        #         fps = round(camera.get(cv2.CAP_PROP_FPS))
-        #     videoWriter = cv2.VideoWriter(
-        #         self.flags.save_video, fourcc, fps, (max_x, max_y))
-        #
-        # # buffers for demo in batch
-        # buffer_inp = list()
-        # buffer_pre = list()
-        #
-        # elapsed = int()
-        # start = timer()
-        # # Loop through frames
-        # while camera.isOpened():
-        #     elapsed += 1
-        #     _, frame = camera.read()
-        #     if frame is None:
-        #         print('\nEnd of Video')
-        #         break
-        #     preprocessed = self.framework.preprocess(frame)
-        #     buffer_inp.append(frame)
-        #     buffer_pre.append(preprocessed)
-        #
-        #     # Only process and imshow when queue is full
-        #     if elapsed % self.flags.queue == 0:
-        #         feed_dict = {self.inp: buffer_pre}
-        #         net_out = self.sess.run(self.out, feed_dict)
-        #         for img, single_out in zip(buffer_inp, net_out):
-        #             postprocessed = self.framework.postprocess(
-        #                 single_out, img, False)
-        #             if save_video:
-        #                 videoWriter.write(postprocessed)
-        #             if file == 0:  # camera window
-        #                 cv2.imshow('', postprocessed)
-        #         # Clear Buffers
-        #         buffer_inp = list()
-        #         buffer_pre = list()
-        #
-        #     if elapsed % 5 == 0:
-        #         sys.stdout.write('\r')
-        #         sys.stdout.write('{0:3.3f} FPS'.format(
-        #             elapsed / (timer() - start)))
-        #         sys.stdout.flush()
-        #     if file == 0:  # camera window
-        #         choice = cv2.waitKey(1)
-        #         if choice == 27: break
-        #
-        # sys.stdout.write('\n')
-        # if save_video:
-        #     videoWriter.release()
-        # camera.release()
-        # if file == 0:  # camera window
-        #     cv2.destroyAllWindows()
-
-        # def _get_fps(self, frame):
-        #     elapsed = int()
-        #     start = time.time()
-        #     preprocessed = self.framework.preprocess(frame)
-        #     feed_dict = {self.inp: [preprocessed]}
-        #     net_out = self.sess.run(self.out, feed_dict)[0]
-        #     processed = self.framework.postprocess(net_out, frame, False)
-        #     return time.time() - start

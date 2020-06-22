@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import *
 from .labelFile import LabelFile
 from .utils.flags import Flags, FlagIO
 #from .scripts.genConfig import genConfigYOLOv2
+from absl import logging
 import numpy as np
 import subprocess
 import cv2
@@ -175,7 +176,7 @@ class FlowDialog(QDialog):
 
         self.flowCmb = QComboBox()
         self.flowCmb.addItems(
-            ["Train", "Predict", "Freeze", "Capture", "Annotate"])
+            ["Train", "Predict", "Annotate"])
         self.flowCmb.currentIndexChanged.connect(self.flowSelect)
         layout.addRow(QLabel("Mode"), self.flowCmb)
 
@@ -305,6 +306,9 @@ class FlowDialog(QDialog):
         self.clipLayout.addWidget(self.clipNorm)
         layout3.addRow(QLabel("Clip Gradients"), self.clipLayout)
 
+        self.updateAnchorChb = QCheckBox()
+        layout3.addRow(QLabel("Update Anchors"), self.updateAnchorChb)
+
         self.trainGroupBox.setLayout(layout3)
 
         self.demoGroupBox = QGroupBox("Select Capture Parameters")
@@ -337,6 +341,7 @@ class FlowDialog(QDialog):
         layout4.addRow(self.refreshDevBtn)
 
         self.demoGroupBox.setLayout(layout4)
+        self.demoGroupBox.setDisabled(True)
         self.demoGroupBox.hide()
 
         self.flowPrg = QProgressBar()
@@ -436,6 +441,7 @@ class FlowDialog(QDialog):
     def flowSelect(self):
         if self.flowCmb.currentText() == "Capture":
             self.demoGroupBox.show()
+            self.demoGroupBox.setDisabled(True)
         else:
             self.demoGroupBox.hide()
 
@@ -455,6 +461,10 @@ class FlowDialog(QDialog):
         else:
             self.trainGroupBox.hide()
             self.loadCmb.setCurrentIndex(0)
+    #
+    # def updateAnchors(self):
+    #     pass
+    #     genConfigYOLOv2()
 
     def accept(self):
         """set flags for darkflow and prevent startup if errors anticipated"""
@@ -559,6 +569,7 @@ class FlowDialog(QDialog):
             self.demoGroupBox.setDisabled(True)
             self.flags.demo = "camera"
         if [self.flowCmb.currentText() == "Train" or "Freeze"]:
+            # create backend subprocess
             proc = subprocess.Popen([sys.executable, os.path.join(
                 os.getcwd(), "libs/scripts/wrapper.py")],
                                     stdout=subprocess.PIPE, shell=False)
@@ -657,7 +668,7 @@ class FlowDialog(QDialog):
     @staticmethod
     def listFiles(path):
         path = QDir(path)
-        filters = ["*.cfg", "*.meta"]
+        filters = ["*.cfg", "*.index"]
         path.setNameFilters(filters)
         files = path.entryList()
         return files

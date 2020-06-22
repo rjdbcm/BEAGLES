@@ -1,4 +1,4 @@
-import tensorflow.contrib.slim as slim
+import tensorflow.compat.v1.layers as slim
 import pickle
 import tensorflow as tf
 from ..yolo.misc import show
@@ -8,7 +8,7 @@ import math
 
 
 def expit_tensor(x):
-    return 1. / (1. + tf.exp(-x))
+    return 1. / (1. + tf.compat.v1.exp(-x))
 
 
 def loss(self, net_out):
@@ -41,15 +41,15 @@ def loss(self, net_out):
     size2 = [None, HW, B]
 
     # return the below placeholders
-    _probs = tf.placeholder(tf.float32, size1)
-    _confs = tf.placeholder(tf.float32, size2)
-    _coord = tf.placeholder(tf.float32, size2 + [4])
+    _probs = tf.compat.v1.placeholder(tf.compat.v1.float32, size1)
+    _confs = tf.compat.v1.placeholder(tf.compat.v1.float32, size2)
+    _coord = tf.compat.v1.placeholder(tf.compat.v1.float32, size2 + [4])
     # weights term for L2 loss
-    _proid = tf.placeholder(tf.float32, size1)
+    _proid = tf.compat.v1.placeholder(tf.compat.v1.float32, size1)
     # material calculating IOU
-    _areas = tf.placeholder(tf.float32, size2)
-    _upleft = tf.placeholder(tf.float32, size2 + [2])
-    _botright = tf.placeholder(tf.float32, size2 + [2])
+    _areas = tf.compat.v1.placeholder(tf.compat.v1.float32, size2)
+    _upleft = tf.compat.v1.placeholder(tf.compat.v1.float32, size2 + [2])
+    _botright = tf.compat.v1.placeholder(tf.compat.v1.float32, size2 + [2])
 
     self.placeholders = {
         'probs': _probs, 'confs': _confs, 'coord': _coord, 'proid': _proid,
@@ -57,57 +57,57 @@ def loss(self, net_out):
     }
 
     # Extract the coordinate prediction from net.out
-    net_out_reshape = tf.reshape(net_out, [-1, H, W, B, (4 + 1 + C)])
+    net_out_reshape = tf.compat.v1.reshape(net_out, [-1, H, W, B, (4 + 1 + C)])
     coords = net_out_reshape[:, :, :, :, :4]
-    coords = tf.reshape(coords, [-1, H*W, B, 4])
+    coords = tf.compat.v1.reshape(coords, [-1, H*W, B, 4])
     adjusted_coords_xy = expit_tensor(coords[:, :, :, 0:2])
-    adjusted_coords_wh = tf.sqrt(tf.exp(coords[:, :, :, 2:4]) * np.reshape(anchors, [1, 1, B, 2]) / np.reshape([W, H], [1, 1, 1, 2]))
-    coords = tf.concat([adjusted_coords_xy, adjusted_coords_wh], 3)
+    adjusted_coords_wh = tf.compat.v1.sqrt(tf.compat.v1.exp(coords[:, :, :, 2:4]) * np.reshape(anchors, [1, 1, B, 2]) / np.reshape([W, H], [1, 1, 1, 2]))
+    coords = tf.compat.v1.concat([adjusted_coords_xy, adjusted_coords_wh], 3)
 
     adjusted_c = expit_tensor(net_out_reshape[:, :, :, :, 4])
-    adjusted_c = tf.reshape(adjusted_c, [-1, H*W, B, 1])
+    adjusted_c = tf.compat.v1.reshape(adjusted_c, [-1, H*W, B, 1])
 
-    adjusted_prob = tf.nn.softmax(net_out_reshape[:, :, :, :, 5:])
-    adjusted_prob = tf.reshape(adjusted_prob, [-1, H*W, B, C])
+    adjusted_prob = tf.compat.v1.nn.softmax(net_out_reshape[:, :, :, :, 5:])
+    adjusted_prob = tf.compat.v1.reshape(adjusted_prob, [-1, H*W, B, C])
 
-    adjusted_net_out = tf.concat([adjusted_coords_xy, adjusted_coords_wh, adjusted_c, adjusted_prob], 3)
+    adjusted_net_out = tf.compat.v1.concat([adjusted_coords_xy, adjusted_coords_wh, adjusted_c, adjusted_prob], 3)
 
-    wh = tf.pow(coords[:, :, :, 2:4], 2) * np.reshape([W, H], [1, 1, 1, 2])
+    wh = tf.compat.v1.pow(coords[:, :, :, 2:4], 2) * np.reshape([W, H], [1, 1, 1, 2])
     area_pred = wh[:, :, :, 0] * wh[:, :, :, 1]
     centers = coords[:, :, :, 0:2]
     floor = centers - (wh * .5)
     ceil  = centers + (wh * .5)
 
     # calculate the intersection areas
-    intersect_upleft   = tf.maximum(floor, _upleft)
-    intersect_botright = tf.minimum(ceil, _botright)
+    intersect_upleft   = tf.compat.v1.maximum(floor, _upleft)
+    intersect_botright = tf.compat.v1.minimum(ceil, _botright)
     intersect_wh = intersect_botright - intersect_upleft
-    intersect_wh = tf.maximum(intersect_wh, 0.0)
-    intersect = tf.multiply(intersect_wh[:, :, :, 0], intersect_wh[:, :, :, 1])
+    intersect_wh = tf.compat.v1.maximum(intersect_wh, 0.0)
+    intersect = tf.compat.v1.multiply(intersect_wh[:, :, :, 0], intersect_wh[:, :, :, 1])
 
     # calculate the best IOU, set 0.0 confidence for worse boxes
-    iou = tf.truediv(intersect, _areas + area_pred - intersect)
-    best_box = tf.equal(iou, tf.reduce_max(iou, [2], True))
-    best_box = tf.cast(best_box, tf.float32)
-    confs = tf.multiply(best_box, _confs)
+    iou = tf.compat.v1.truediv(intersect, _areas + area_pred - intersect)
+    best_box = tf.compat.v1.equal(iou, tf.compat.v1.reduce_max(iou, [2], True))
+    best_box = tf.compat.v1.cast(best_box, tf.compat.v1.float32)
+    confs = tf.compat.v1.multiply(best_box, _confs)
 
     # take care of the weight terms
     conid = snoob * (1. - confs) + sconf * confs
-    weight_coo = tf.concat(4 * [tf.expand_dims(confs, -1)], 3)
+    weight_coo = tf.compat.v1.concat(4 * [tf.compat.v1.expand_dims(confs, -1)], 3)
     cooid = scoor * weight_coo
-    weight_pro = tf.concat(C * [tf.expand_dims(confs, -1)], 3)
+    weight_pro = tf.compat.v1.concat(C * [tf.compat.v1.expand_dims(confs, -1)], 3)
     proid = sprob * weight_pro
 
     self.fetch += [_probs, confs, conid, cooid, proid]
-    true = tf.concat([_coord, tf.expand_dims(confs, 3), _probs], 3)
-    wght = tf.concat([cooid, tf.expand_dims(conid, 3), proid], 3)
+    true = tf.compat.v1.concat([_coord, tf.compat.v1.expand_dims(confs, 3), _probs], 3)
+    wght = tf.compat.v1.concat([cooid, tf.compat.v1.expand_dims(conid, 3), proid], 3)
 
     self.logger.info('Building {} loss'.format(m['model']))
-    loss = tf.pow(adjusted_net_out - true, 2)
-    loss = tf.multiply(loss, wght)
-    loss = tf.reshape(loss, [-1, H*W*B*(4 + 1 + C)])
-    loss = tf.reduce_sum(loss, 1)
-    self.loss = .5 * tf.reduce_mean(loss)
-    tf.summary.scalar("/".join([os.path.basename(m['model']),
+    loss = tf.compat.v1.pow(adjusted_net_out - true, 2)
+    loss = tf.compat.v1.multiply(loss, wght)
+    loss = tf.compat.v1.reshape(loss, [-1, H*W*B*(4 + 1 + C)])
+    loss = tf.compat.v1.reduce_sum(loss, 1)
+    self.loss = .5 * tf.compat.v1.reduce_mean(loss)
+    tf.compat.v1.summary.scalar("/".join([os.path.basename(m['model']),
                                 self.flags.trainer,
                                 "loss"]), self.loss)
