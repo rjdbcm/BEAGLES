@@ -4,9 +4,24 @@ classification system extended for behavioral analysis and quantification. SLGR-
 tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and frontend for a fork of 
 [darkflow](https://github.com/thtrieu/darkflow). 
 
-Written in Python, SLGR-Suite uses Qt for its graphical interface.
-By default annotations are saved as ```.xml``` files in PASCAL VOC format but there is also support for saving YOLO 
-formatted ```.txt``` files.
+Written in Python, SLGR-Suite uses Qt for its graphical interface and TensorFlow for its backend.
+
+##### Features:
+
+- Darknet-style configuration files 
+- TensorFlow checkpoint files
+- YOLO and VOC annotation formats
+- Automatic anchor box generation
+- Preconfigured to output training data to TensorBoard
+- Fixed or cyclic learning rates 
+- Command-line backend interface 
+- Human-in-the-loop prediction and dataset expansion
+
+##### Future Goals:
+
+1. TensorFlow 2 native code 
+2. All darknet layer types implemented
+3. YOLOv3 detection
 
 ## Installation
 
@@ -25,8 +40,7 @@ make
 
 Scripts are included in `build/` for those interested but are **NOT** **RECOMMENDED**.
 
-## Usage
-
+### Open SLGR-Suite
 From the source directory run:
 ```
 ./slgrSuite.py
@@ -34,7 +48,7 @@ From the source directory run:
 
 ## Controls
 |  Hotkey  |                     Action                     |
-|:--------:|:----------------------------------------------:|
+|----------|------------------------------------------------|
 | Ctrl ⇧ a | Toggle advanced mode toolbar                   |
 | Ctrl +   | Zoom in                                        |
 | Ctrl -   | Zoom out                                       |
@@ -51,11 +65,11 @@ From the source directory run:
 | del      | Delete the selected bounding box               |
 | ↑→↓←     | Move the selected bounding box                 |
 
-
+## Image Annotation
 ### Verify Image
 
 When pressing space, the user can flag the image as verified, a green background will appear.
-This is used when creating a dataset automatically, the user can then through all the pictures and flag them instead of annotate them.
+This is used when expanding a training dataset automatically, the user can then through all the pictures and flag them instead of annotate them.
 
 ### Difficult
 
@@ -104,3 +118,7 @@ Related
 1. [labelImg](https://github.com/tzutalin/labelImg) the original image annotation software SLGR-Suite is forked from
 2. [darkflow](https://github.com/thtrieu/darkflow) the original basis of the machine learning backend
 3. [cyclic-learning-rate](https://github.com/mhmoodlan/cyclic-learning-rate) the implementation of cyclic learning rates used
+4. [You Only Look Once:Unified, Real-Time Object Detection](https://pjreddie.com/media/files/papers/yolo_1.pdf)
+5. [YOLO9000: Better, Faster, Stronger](https://pjreddie.com/media/files/papers/YOLO9000.pdf)
+6. [A Framework for the Analysis of Unevenly Spaced Time Series Data](http://www.eckner.com/papers/unevenly_spaced_time_series_analysis.pdf)
+7. [Interactive machine learning: experimental evidence for the human in the algorithmic loop](https://link.springer.com/content/pdf/10.1007/s10489-018-1361-5.pdf)
