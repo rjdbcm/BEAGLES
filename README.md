@@ -17,11 +17,14 @@ Written in Python, SLGR-Suite uses Qt for its graphical interface and TensorFlow
 - Command-line backend interface 
 - Human-in-the-loop prediction and dataset expansion
 
-##### Future Goals:
+##### Development Goals:
 
-1. TensorFlow 2 native code 
-2. All darknet layer types implemented
-3. YOLOv3 detection
+- Statistical report generation using [traces](https://github.com/datascopeanalytics/traces)
+- TensorFlow 2 native code
+- All darknet layer types implemented
+- YOLOv3 detection
+- Take advantage of python 3.8's multiprocessing.shared_memory
+
 
 ## Installation
 
@@ -118,7 +121,8 @@ Related
 1. [labelImg](https://github.com/tzutalin/labelImg) the original image annotation software SLGR-Suite is forked from
 2. [darkflow](https://github.com/thtrieu/darkflow) the original basis of the machine learning backend
 3. [cyclic-learning-rate](https://github.com/mhmoodlan/cyclic-learning-rate) the implementation of cyclic learning rates used
-4. [You Only Look Once:Unified, Real-Time Object Detection](https://pjreddie.com/media/files/papers/yolo_1.pdf)
-5. [YOLO9000: Better, Faster, Stronger](https://pjreddie.com/media/files/papers/YOLO9000.pdf)
-6. [A Framework for the Analysis of Unevenly Spaced Time Series Data](http://www.eckner.com/papers/unevenly_spaced_time_series_analysis.pdf)
-7. [Interactive machine learning: experimental evidence for the human in the algorithmic loop](https://link.springer.com/content/pdf/10.1007/s10489-018-1361-5.pdf)
+4. [traces](https://github.com/datascopeanalytics/traces) library for non-transformative unevenly-spaced timeseries analysis
+5. [You Only Look Once:Unified, Real-Time Object Detection](https://pjreddie.com/media/files/papers/yolo_1.pdf)
+6. [YOLO9000: Better, Faster, Stronger](https://pjreddie.com/media/files/papers/YOLO9000.pdf)
+7. [A Framework for the Analysis of Unevenly Spaced Time Series Data](http://www.eckner.com/papers/unevenly_spaced_time_series_analysis.pdf)
+8. [Interactive machine learning: experimental evidence for the human in the algorithmic loop](https://link.springer.com/content/pdf/10.1007/s10489-018-1361-5.pdf)
