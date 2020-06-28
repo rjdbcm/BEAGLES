@@ -19,8 +19,9 @@ Written in Python, SLGR-Suite uses Qt for its graphical interface and TensorFlow
 
 ##### Development Goals:
 
-- Statistical report generation using [traces](https://github.com/datascopeanalytics/traces)
-- TensorFlow 2 native code
+- [OBS](https://github.com/obsproject/obs-studio) utility for USB camera arrays
+- Statistical report generation using [traces](https://github.com/datascopeanalytics/traces) (in progress)
+- TensorFlow 2 native code (separate development branch created)
 - All darknet layer types implemented
 - YOLOv3 detection
 - Take advantage of python 3.8's multiprocessing.shared_memory
@@ -99,18 +100,17 @@ According to your deep neural network implementation, you can include or exclude
 * Image sets to annotate are stored in ```data/sample_img```
 
 
-How to contribute
------------------
+## How to contribute
 
 Send a pull request
 
-License
--------
-Free software:
+## License
+
+### Free software:
 - [GPLv3](https://github.com/rjdbcm/slgrSuite/blob/master/LICENSE)
 - [MIT NOTICE](https://github.com/rjdbcm/slgrSuite/blob/master/NOTICE)
 
-Based in part on original code by: 
+### Based in part on original code by: 
 - Tzutalin. LabelImg. Git code (2015). https://github.com/tzutalin/labelImg
 - Mahmoud Aslan. Cyclic Learning Rate. Git code (2018). https://github.com/mhmoodlan/cyclic-learning-rate
 
@@ -125,4 +125,5 @@ Related
 5. [You Only Look Once:Unified, Real-Time Object Detection](https://pjreddie.com/media/files/papers/yolo_1.pdf)
 6. [YOLO9000: Better, Faster, Stronger](https://pjreddie.com/media/files/papers/YOLO9000.pdf)
 7. [A Framework for the Analysis of Unevenly Spaced Time Series Data](http://www.eckner.com/papers/unevenly_spaced_time_series_analysis.pdf)
+8. [Unevenly-spaced data is actually pretty great](https://datascopeanalytics.com/blog/unevenly-spaced-time-series/) 
 8. [Interactive machine learning: experimental evidence for the human in the algorithmic loop](https://link.springer.com/content/pdf/10.1007/s10489-018-1361-5.pdf)
