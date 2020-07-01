@@ -87,10 +87,6 @@ class DarkWrapper(FlagIO):
         self.io_flags()
         if self.flags.train:
             TFNet(self.flags).train()
-        elif self.flags.savepb:
-            TFNet(self.flags).savepb()
-        elif self.flags.demo != '':
-            TFNet(self.flags).camera()
         elif self.flags.fbf != '':
             TFNet(self.flags).annotate()
         else:

@@ -226,7 +226,7 @@ class FlowDialog(QDialog):
         self.trainerCmb = QComboBox()
         self.trainerCmb.addItems(["rmsprop", "adadelta", "adagrad",
                                   "adagradDA", "momentum", "nesterov", "adam",
-                                  "ftrl", "sgd"])
+                                  "AMSGrad", "ftrl", "sgd"])
         self.trainerCmb.currentIndexChanged.connect(self.trainerSelect)
         layout3.addRow(QLabel("Training Algorithm"), self.trainerCmb)
 
@@ -544,7 +544,7 @@ class FlowDialog(QDialog):
         if self.flowCmb.currentText() == "Freeze":
             self.flags.freeze = True
         if self.flowCmb.currentText() == "Annotate":
-            formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
+            formats = ['*.avi', '*.mp4', '*.wmv', '*.mkv', '*.mpeg']
             filters = "Video Files (%s)" % ' '.join(
                 formats + ['*%s' % LabelFile.suffix])
             options = QFileDialog.Options()

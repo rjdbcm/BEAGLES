@@ -56,6 +56,7 @@ class TFNet(FlagIO):
         'momentum': tf.compat.v1.train.MomentumOptimizer,
         'nesterov': tf.compat.v1.train.MomentumOptimizer,
         'adam': tf.compat.v1.train.AdamOptimizer,
+        'AMSGrad': tf.compat.v1.AdamOptimizer(amsgrad=True),
         'ftrl': tf.compat.v1.train.FtrlOptimizer,
         'sgd': tf.compat.v1.train.GradientDescentOptimizer
     })

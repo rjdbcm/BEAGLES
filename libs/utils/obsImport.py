@@ -2,13 +2,22 @@ import cv2
 import math
 import os
 import subprocess
-from PyQt5.QtCore import *
+from .flags import FlagIO
 
 
-class VideoGrid:
-
-    def __init__(self, numVideos, video):
-        self.div = math.sqrt(numVideos)
+class TiledCaptureArray(FlagIO):
+    """Object definition for tiled capture arrays.
+    __init__ Args:
+            num_divisions: number of tiles to process
+            video: path to source video
+            unused_cameras: list of camera sources to skip during processing
+    Methods:
+        crop:
+            stream copies processed tiles to labeled files
+    """
+    def __init__(self, num_divisions: int, video, unused_cameras: list):
+        FlagIO.__init__(self, subprogram=True)
+        self.div = math.sqrt(num_divisions)
         try:  # make sure the number of camera divisions is always an integer
             assert isinstance(self.div, int)
         except AssertionError:
@@ -16,11 +25,13 @@ class VideoGrid:
 
         self.video = video
 
-        self.numVideos = self.div ** 2
+        self.num_videos = self.div ** 2
 
-        self.obsFolder = os.path.dirname(video)
+        self.unused_cameras = unused_cameras
 
-        self.w, self.h = self._get_resolution(video)
+        self.folder = os.path.dirname(video)
+
+        self.width, self.height = self._get_resolution(video)
 
     @staticmethod
     def _get_resolution(target):
@@ -32,8 +43,8 @@ class VideoGrid:
     def crop(self):
         xs = list()
         ys = list()
-        h_inc = self.h / self.div
-        w_inc = self.w / self.div
+        h_inc = int(self.height / self.div)
+        w_inc = int(self.width / self.div)
 
         # setup ys
         for i in range(1, self.div + 1):
@@ -47,26 +58,19 @@ class VideoGrid:
             for j in range(1, self.div):
                 xs.append(j * w_inc)
 
-        cmd = 'ffmpeg -i "{}" -filter:v "crop={}:{}:{}:{}" -c:a copy "{}"'
+        # open ffmpeg subprocesses
+        cmd = 'ffmpeg -y -i "{}" -filter:v "crop={}:{}:{}:{}" -c:a copy "{}"'
         form = '{}_camera_{}{}'
-        for i in range(1, self.numVideos + 1):
+        msg = 'Started ffmpeg PID: {} Output: {}'
+        for i in range(1, self.num_videos + 1):
+            if i in self.unused_cameras:
+                continue
             name, ext = os.path.splitext(self.video)
             output = form.format(name, i, ext)
             x = xs[i-1]
             y = ys[i-1]
-            print('Running: ',
-                  cmd.format(self.video, w_inc, h_inc, x, y, output))
-            subprocess.Popen(cmd.format(
-                self.video, w_inc, h_inc, x, y, output), shell=True)
-
-
-class OBSConfig:
-    '''Methods for writing OBS profiles and scene collections'''
-    def __init__(self, numCameras, obsFolder=QDir):
-        pass
-
-    def write_profile(self):
-        pass
-
-    def write_scene_collection(self):
-        pass
+            self.logger.debug(cmd.format(self.video, w_inc, h_inc, x, y, output))
+            proc = subprocess.Popen(cmd.format(
+                self.video, w_inc, h_inc, x, y, output),
+                stdout=subprocess.PIPE, shell=True)
+            self.logger.info(msg.format(proc.pid, output))

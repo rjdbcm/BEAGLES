@@ -1344,7 +1344,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                 if self.filePath else '.'
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        formats = ['*.avi', '*.mp4', '*.wmv', '*.mpeg']
+        formats = ['*.avi', '*.mp4', '*.wmv', '*.mkv', '*.mpeg']
         filters = "Video Files (%s)" % ' '.join(
             formats + ['*%s' % LabelFile.suffix])
         filename = QFileDialog.getOpenFileName(
