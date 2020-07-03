@@ -6,6 +6,10 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 
 Written in Python, SLGR-Suite uses Qt for its graphical interface and TensorFlow for its backend.
 
+##### *Known Issues:*
+
+- Cython extensions leak memory in some cases
+
 ##### Features:
 
 - Darknet-style configuration files 

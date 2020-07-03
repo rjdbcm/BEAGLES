@@ -56,7 +56,7 @@ class TFNet(FlagIO):
         'momentum': tf.compat.v1.train.MomentumOptimizer,
         'nesterov': tf.compat.v1.train.MomentumOptimizer,
         'adam': tf.compat.v1.train.AdamOptimizer,
-        'AMSGrad': tf.compat.v1.AdamOptimizer(amsgrad=True),
+        'AMSGrad': tf.compat.v1.keras.optimizers.Adam,
         'ftrl': tf.compat.v1.train.FtrlOptimizer,
         'sgd': tf.compat.v1.train.GradientDescentOptimizer
     })
@@ -389,6 +389,8 @@ class TFNet(FlagIO):
             kwargs.update({'momentum': self.flags.momentum})
         if self.flags.trainer == 'nesterov':
             kwargs.update({'use_nesterov': True})
+        if self.flags.trainer == 'AMSGrad':
+            kwargs.update({'amsgrad': True})
 
         # setup trainer
         step_size = int(self.flags.step_size_coefficient *

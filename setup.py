@@ -72,7 +72,7 @@ else:
                   libraries=["m"]  # Unix-like specific
                   ),
         Extension("libs.cython_utils.cy_yolo2_findboxes",
-                  sources=["libs/cython_utils/cy_yolo24findboxes.pyx"],
+                  sources=["libs/cython_utils/cy_yolo2_findboxes.pyx"],
                   libraries=["m"]  # Unix-like specific
                   ),
         Extension("libs.cython_utils.cy_yolo_findboxes",
