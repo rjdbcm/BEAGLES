@@ -3,6 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from .labelFile import LabelFile
 from .utils.flags import Flags, FlagIO
+from .project import ProjectDialog
 #from .scripts.genConfig import genConfigYOLOv2
 from absl import logging
 import numpy as np
@@ -111,59 +112,13 @@ class FlowThread(QThread, FlagIO):
             self.read_flags()
 
 
-class MultiCamThread(QThread):
-    def __init__(self, parent, model):
-        super(MultiCamThread, self).__init__(parent)
-        self.devs = []
-        self.fps = []
-        self.model = model
-        self.stopped = False
-
-    def silence(self):
-        pass
-
-    def enumDevs(self):
-        index = 0
-        cv2.redirectError(self.silence)
-        while index < 32:
-            cap = cv2.VideoCapture(index)
-            start = time.time()
-            if cap.isOpened():
-                cap.set(cv2.CAP_PROP_FRAME_WIDTH, 144)
-                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)
-            elapsed = time.time() - start
-            if cap is None or not cap.isOpened():
-                pass
-            else:
-                self.devs.append(index)
-                self.fps.append(1.0 / elapsed)
-            index += 1
-            cap.release()
-        self.devs = dict(enumerate(self.devs, start=1))
-        self.fps = dict(enumerate(self.fps, start=1))
-        self.model.clear()
-        return self.devs
-
-    def run(self):
-        self.model.clear()  # Model is QObject so no issue outside main thread
-        self.model.appendRow(QStandardItem("Refreshing..."))
-        self.enumDevs()
-        self.model.clear()
-        for (_, dev_num), (_, fps) in zip(
-                self.devs.items(), self.fps.items()):
-            item = QStandardItem("Camera on /dev/video{}".format(dev_num))
-            item.setData([dev_num, fps])
-            item.setCheckable(True)
-            self.model.appendRow(item)
-        if not self.model.rowCount():
-            self.model.appendRow(QStandardItem("No Devices Found"))
-
-
 class FlowDialog(QDialog):
 
-    def __init__(self, parent=None, labelfile=None, project=Flags().project_name):
+    def __init__(self, parent=None, labelfile=None):
         super(FlowDialog, self).__init__(parent)
         self.flags = Flags()
+        self.project = ProjectDialog(self)
+        self.project.accepted.connect(self.get_project_name)
         self.oldBatchValue = int(self.flags.batch)
         self.oldSaveValue = int(self.flags.save)
         # allow use of labels file passed by slgrSuite
@@ -171,8 +126,13 @@ class FlowDialog(QDialog):
         self.formGroupBox = QGroupBox("Select Model and Checkpoint")
         layout = QFormLayout()
 
-        self.projectLbl = QLabel(project)
-        layout.addRow(QLabel("Project Name"), self.projectLbl)
+        self.projectLayout = QHBoxLayout()
+        self.projectLbl = QLabel(self.project.default)
+        self.projectBtn = QPushButton("Select Project")
+        self.projectBtn.clicked.connect(self.project.open)
+        self.projectLayout.addWidget(self.projectLbl)
+        self.projectLayout.addWidget(self.projectBtn)
+        layout.addRow(QLabel("Project Name"), self.projectLayout)
 
         self.flowCmb = QComboBox()
         self.flowCmb.addItems(
@@ -369,15 +329,9 @@ class FlowDialog(QDialog):
 
         self.setWindowTitle("SLGR-Suite - Machine Learning Tool")
         self.findCkpt()
-        # self.findProject()
 
-    # def findProject(self):
-    #     current_items = [self.projectCmb.itemText(i) for i in
-    #                      range(self.projectCmb.count())]
-    #     self.projectCmb.clear()
-    #     items = next(os.walk(self.flags.summary))[1]
-    #     items = list(set().union(current_items, items))
-    #     self.projectCmb.addItems(items)
+    def selectProject(self):
+        self.project.exec_()
 
     def findCkpt(self):
         self.loadCmb.clear()
@@ -465,6 +419,9 @@ class FlowDialog(QDialog):
     # def updateAnchors(self):
     #     pass
     #     genConfigYOLOv2()
+
+    def get_project_name(self):
+        self.projectLbl.setText(self.project.name)
 
     def accept(self):
         """set flags for darkflow and prevent startup if errors anticipated"""

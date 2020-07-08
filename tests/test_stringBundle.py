@@ -1,7 +1,7 @@
 import os
-import sys
 import unittest
 from stringBundle import StringBundle
+
 
 class TestStringBundle(unittest.TestCase):
 
@@ -14,14 +14,19 @@ class TestStringBundle(unittest.TestCase):
         self.assertEqual(strBundle.getString("openDir"), u'\u958B\u555F\u76EE\u9304', 'Fail to load the zh-TW bundle')
 
     def test_setInvalidLocaleToEnv_printErrorMsg(self):
-        prev_lc = os.environ['LC_ALL']
-        prev_lang = os.environ['LANG']
+        try:
+            prev_lc = os.environ['LC_ALL']
+            prev_lang = os.environ['LANG']
+        except KeyError:
+            prev_lc = ""
+            prev_lang= ""
         os.environ['LC_ALL'] = 'UTF-8'
         os.environ['LANG'] = 'UTF-8'
         strBundle = StringBundle.getBundle()
-        self.assertEqual(strBundle.getString("openDir"), 'Open Dir', 'Fail to load the default bundle')
+        self.assertEqual(strBundle.getString("openDir"), 'Open Folder', 'Fail to load the default bundle')
         os.environ['LC_ALL'] = prev_lc
         os.environ['LANG'] = prev_lang
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,50 +1,86 @@
 import os
+import pickle
 import shutil
 import tarfile
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from .utils.flags import Flags
+from libs.utils.flags import Flags
 
 
-class projectSignal(QObject):
-    saveFilename = pyqtSignal(str)
-    loadFilename = pyqtSignal(str)
+class ProjectDialog(QDialog):
 
-
-class projectDialog(QDialog):
     def __init__(self, parent):
-        super(projectDialog, self).__init__(parent)
-        self.signals = projectSignal()
-        self.signals.loadFilename.connect(self.load)
-        self.signals.saveFilename.connect(self.save)
-        self.default = os.path.join(Flags().summary, "default", "default.tar")
+        super(ProjectDialog, self).__init__(parent)
+        self.setModal(True)
+        self.archive_list = [Flags().binary,
+                             Flags().built_graph,
+                             Flags().backup,
+                             Flags().dataset,
+                             Flags().video_out,
+                             Flags().img_out,
+                             './data/rawframes/',
+                             Flags().labels]
+        self.default = "Sandbox Mode"
         self.projects = next(os.walk(Flags().summary))[1]
 
         layout = QFormLayout()
         self.formGroupBox = QGroupBox()
         self.projectCmb = QComboBox()
         self.projectCmb.addItems(self.projects)
+        self.projectCmb.setEditable(True)
+        self.projectCmb.currentTextChanged.connect(self._change_name)
         layout.addRow("Project Name", self.projectCmb)
         self.projectClasses = QTextEdit()
+        self.projectClasses.setText(self._read_classes())
         layout.addRow("Class List", self.projectClasses)
         self.formGroupBox.setLayout(layout)
 
-        self.buttonOk = QDialogButtonBox(QDialogButtonBox.Ok)
-        self.buttonOk.clicked.connect(self.accept)
+        self.buttonCancel = QPushButton("Cancel")
+        self.buttonCancel.clicked.connect(self.reject)
+        self.buttonSave = QPushButton("Save to Archive")
+        self.buttonSave.clicked.connect(self.save)
+        self.buttonLoad = QPushButton("Load Project")
+        self.buttonLoad.clicked.connect(self.load)
+        self.buttonLoad.clicked.connect(self.accept)
 
         main_layout = QGridLayout()
         main_layout.addWidget(self.formGroupBox, 0, 0)
-        main_layout.addWidget(self.buttonOk, 4, 0, Qt.AlignRight)
+        main_layout.addWidget(self.buttonCancel, 4, 0, Qt.AlignLeft)
+        main_layout.addWidget(self.buttonSave, 4, 0, Qt.AlignCenter)
+        main_layout.addWidget(self.buttonLoad, 4, 0, Qt.AlignRight)
 
+        self.setLayout(main_layout)
+        self.name = "default"
         self.setWindowTitle("SLGR-Suite - Load a Project")
 
-    @pyqtSlot(str)
-    def load(self, file):
+    def _change_name(self):
+        self.name = self.projectCmb.currentText()
+
+    @staticmethod
+    def _read_classes():
+        with open(Flags().labels) as classes:
+            try:
+                data = classes.read()
+            except TypeError:
+                pass
+        return data
+
+    def write_class_list(self):
+        data = self.projectClasses.toPlainText()
+        if len(data) != len(Flags().labels):
+            file = open(Flags().labels, "w")
+            file.write(data)
+            file.close()
+
+    def load(self):
+        file = self.projectCmb.currentText()
+        archive = os.path.join(Flags().summary, file,
+                            file + ".tar")
         cond = True
         while cond:
             try:
-                with tarfile.TarFile(file, 'r', errorlevel=1) as archive:
+                with tarfile.TarFile(archive, 'r', errorlevel=1) as archive:
                     for i in archive.getnames():
                         try:
                             archive.extract(i)
@@ -53,49 +89,30 @@ class projectDialog(QDialog):
                             archive.extract(i)
                     cond = False
             except FileNotFoundError:
-                os.mkdir(os.path.dirname(file))
-                shutil.copy(os.path.join(Flags().summary,
-                                         Flags().project_name,
-                                         Flags().project_name + ".tar"), file)
+                os.mkdir(os.path.dirname(archive))
+                shutil.copy(archive, file)
 
-    # def restore(self):
+    def clear_sandbox(self):
+        for i in self.archive_list:
+            if os.path.isdir(i):
+                [os.remove(j.path) for j in os.scandir(i)]
+            elif os.path.isfile(i):
+                open(i, "w").close()
 
-    @pyqtSlot(str)
-    def save(self, name):
-        archiveList = [Flags().binary,
-                       Flags().built_graph,
-                       Flags().backup,
-                       Flags().dataset,
-                       Flags().video_out,
-                       Flags().img_out,
-                       './data/rawframes/',
-                       self.predefinedClasses]
-        archive = os.path.join(Flags().summary, name,
-                               name + '.tar')
-        with tarfile.open(archive, mode='w') as archive:
-            for i in archiveList:
-                archive.add(i)
+    def archive(self):
+        name = self.projectCmb.currentText()
+        if name != Flags().project_name:
+            archive = os.path.join(Flags().summary, name,
+                                   name + '.tar')
+            while True:
                 try:
-                    shutil.rmtree(i)
-                except NotADirectoryError:
-                    os.remove(i)
+                    with tarfile.TarFile(archive, mode='w', errorlevel=1) as archive:
+                        for i in self.archive_list:
+                            archive.add(i)
+                        break
+                except FileNotFoundError:
+                    os.mkdir(os.path.join(Flags().summary, name))
 
-        # reload default dirs
-        self.signals.loadFilename.emit(self.default)
-
-    def accept(self):
-        name, ext = [self.projectCmb.currentText(), ".tar"]
-        projectFile = os.path.join(Flags().summary, name, name + ext)
-        self.signals.loadFilename.emit(projectFile)
-
-    def closeEvent(self, event):
-        msg = "Are you sure you want to close the project selection dialog?"
-        reply = QMessageBox.question(self, 'Message', msg, QMessageBox.Yes,
-                                     QMessageBox.No)
-        if reply == QMessageBox.No:
-            try:
-                event.ignore()
-            except AttributeError:
-                pass
-        else:
-            event.accept()
+    def save(self):
+        self.write_class_list()
+        self.archive()

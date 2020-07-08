@@ -2,8 +2,6 @@
 
 all: virtualenv qt5
 
-test: testpy3
-
 virtualenv:
 	virtualenv --python=python3 .
 	. bin/activate
@@ -13,8 +11,8 @@ qt5:
 	pyrcc5 -o libs/resources.py resources.qrc
 	python3 setup.py build_ext --inplace
 
-testpy3:
-	python3 -m unittest discover tests
+test:
+	python3 -m unittest discover ./tests
 
 distclean: clean clean_site_packages
 

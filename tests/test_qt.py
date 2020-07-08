@@ -1,16 +1,20 @@
-
-from unittest import TestCase
-
+from unittest import TestCase, mock
 from slgrSuite import get_main_app
+import argparse
+from libs.utils.flags import Flags
 
 
-# TODO rewrite get_main_app to test
 class TestMainWindow(TestCase):
 
     app = None
     win = None
 
-    def setUp(self):
+    @mock.patch('argparse.ArgumentParser.parse_args',
+                return_value=argparse.Namespace(
+                    defaultFilename='data/sample_img/sample_dog.jpg',
+                    defaultPredefClassFile=Flags().labels,
+                    defaultSaveDir=None))
+    def setUp(self, args):
         self.app, self.win = get_main_app()
 
     def tearDown(self):

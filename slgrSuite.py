@@ -33,6 +33,7 @@ from libs.labelDialog import LabelDialog
 from libs.utils.flags import Flags, FlagIO
 from libs.darkflow import FlowDialog
 from libs.colorDialog import ColorDialog
+from libs.project import ProjectDialog
 from libs.labelFile import LabelFile, LabelFileError
 from libs.toolBar import ToolBar
 from libs.pascal_voc_io import PascalVocReader
@@ -81,7 +82,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.setWindowTitle(__appname__)
 
         self.predefinedClasses = defaultPredefClassFile
-        self.project = self.projectSelect()
+        self.project = ProjectDialog(self)
 
         # Load setting in the main thread
         self.imageData = None
@@ -127,8 +128,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         # Main widgets and related state.
         self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist)
         self.trainDialog = FlowDialog(parent=self,
-                                      labelfile=defaultPredefClassFile,
-                                      project=self.project)
+                                      labelfile=defaultPredefClassFile)
 
         self.itemsToShapes = {}
         self.shapesToItems = {}
@@ -1229,7 +1229,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             event.ignore()
         if self.tb_process.pid() > 0:
             self.tb_process.kill()
-        self.saveProject(self.project)
+#        self.saveProject(self.project)
         settings = self.settings
         # If it loads images from dir, don't load it at the beginning
         if self.dirname is None:
@@ -1523,45 +1523,6 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                 filename = filename[0]
             self.loadFile(filename)
 
-    def projectSelect(self):
-        while True:
-            items = next(os.walk(Flags().summary))[1]
-            project, accept = QInputDialog.getItem(self, "Project Dialog",
-                                                   "Open or create a project:",
-                                                   items, 0, True)
-
-            if accept and project.isalnum():
-                self.loadProject("./data/summaries/{0}/{0}.tar".format(project))
-                break
-            elif accept and not project.isalnum():
-                reply = QMessageBox.question(self, "Message",
-                                             "Project name invalid. Would you "
-                                             "like to use the default sandbox "
-                                             "project? (Changes will not be "
-                                             "saved.)", QMessageBox.Yes,
-                                             QMessageBox.No)
-                if reply == QMessageBox.Yes:
-                    project = os.path.join(Flags().summary,
-                                           Flags().project_name,
-                                           Flags().project_name + ".tar")
-                    self.loadProject(project)
-                    break
-            else:
-                break
-
-        with open(self.predefinedClasses) as classes:
-            data = classes.read()
-            input, accept = QInputDialog.getMultiLineText(self,
-                                                          "Project Classes",
-                                                          "Classes",
-                                                          data,)
-        if len(data) != len(input):
-            file = open(self.predefinedClasses, "w")
-            file.write(input)
-            file.close()
-
-        return project
-
     def loadProject(self, file):
         cond = True
         while cond:
@@ -1602,6 +1563,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                     shutil.rmtree(i)
                 except NotADirectoryError:
                     os.remove(i)
+
 
     def saveFile(self, _value=False):
         if self.defaultSaveDir is not None and len(ustr(self.defaultSaveDir)):
@@ -1791,6 +1753,19 @@ def frame_capture(path):
         count += 1
 
 
+def parse_args(args):
+    parser = argparse.ArgumentParser()
+    img_dir = Flags().imgdir
+    random_img = random.choice([os.path.join(img_dir, f) for f in
+                                os.listdir(img_dir) if
+                                os.path.isfile(os.path.join(img_dir, f))])
+    parser.add_argument('-i', '--defaultFilename', default=random_img, help="image file to open")
+    parser.add_argument('-c', '--defaultPredefClassFile', default=Flags().labels,
+                        help="text file containing class names")
+    parser.add_argument('-s', '--defaultSaveDir', default=None, help="save directory")
+    return parser.parse_args(args)
+
+
 def get_main_app(argv=None):
     """
     Standard boilerplate Qt application code.
@@ -1800,16 +1775,8 @@ def get_main_app(argv=None):
     if argv is None:
         argv = []
     app = QApplication(argv)
-    parser = argparse.ArgumentParser()
-    img_dir = Flags().imgdir
-    random_img = random.choice([os.path.join(img_dir, f) for f in
-                                os.listdir(img_dir) if
-                                os.path.isfile(os.path.join(img_dir, f))])
-    parser.add_argument('--img', default=random_img, help="image file to open")
-    parser.add_argument('--classes', default=Flags().labels,
-                        help="text file containing class names")
-    parser.add_argument('--saveDir', default=None, help="save directory")
-    args = parser.parse_args()
+    args = parse_args(sys.argv[1:])
+
     try:
         # noinspection PyUnresolvedReferences
         import qdarkstyle
@@ -1831,14 +1798,14 @@ def get_main_app(argv=None):
         print(" ".join([str(e), "falling back to system theme"]))
     app.setApplicationName(__appname__)
     app.setWindowIcon(newIcon("app"))
-    win = MainWindow(args.img, args.classes, args.saveDir)
+    win = MainWindow(**vars(args))
     win.show()
     return app, win
 
 
 def main():
     """construct main app and run it"""
-    app, _win = get_main_app(sys.argv)
+    app, _win = get_main_app()
     return app.exec_()
 
 
