@@ -12,6 +12,7 @@ jobs:
       services: xvfb
       language: generic
     - os: linux
+      dist: bionic
       services: xvfb
       python: 3.6
 
@@ -25,5 +26,6 @@ install:
   - pip3 install codecov
 script:
   - xvfb-run --auto-servernum make test
+  - make coverage
   - codecov
   - exit 0
