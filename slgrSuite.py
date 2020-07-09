@@ -70,7 +70,7 @@ class WindowMixin(object):
 
 
 # noinspection PyUnresolvedReferences
-class MainWindow(QMainWindow, s, FlagIO):
+class MainWindow(QMainWindow, WindowMixin, FlagIO):
     FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = list(range(3))
 
     # noinspection PyShadowingBuiltins
