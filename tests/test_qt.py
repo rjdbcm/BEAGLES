@@ -17,6 +17,9 @@ class TestMainWindow(TestCase):
     def setUp(self, args):
         self.app, self.win = get_main_app()
 
+    def testCanvas(self):
+        self.canvas = self.win.canvas
+
     def tearDown(self):
         self.win.close()
         self.app.quit()
