@@ -1,4 +1,4 @@
-# SLGR-Suite
+# SLGR-Suite [![codecov](https://codecov.io/gh/rjdbcm/SLGR-Suite/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/SLGR-Suite)[![Build Status](https://travis-ci.org/rjdbcm/SLGR-Suite.svg?branch=dev)](https://travis-ci.org/rjdbcm/SLGR-Suite)
 SLGR stands for Single-Look Gesture Recognition and is an implementation of the YOLO(You Only Look Once) object 
 classification system extended for behavioral analysis and quantification. SLGR-Suite is a graphical image annotation 
 tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and frontend for a fork of 
@@ -111,8 +111,8 @@ Send a pull request
 ## License
 
 ### Free software:
-- [GPLv3](https://github.com/rjdbcm/slgrSuite/blob/master/LICENSE)
-- [MIT NOTICE](https://github.com/rjdbcm/slgrSuite/blob/master/NOTICE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/rjdbcm/slgrSuite/blob/master/NOTICE)
 
 ### Based in part on original code by: 
 - Tzutalin. LabelImg. Git code (2015). https://github.com/tzutalin/labelImg

@@ -18,6 +18,9 @@ test:
 
 distclean: clean clean_site_packages
 
+coverage:
+    coverage run -m unittest discover tests
+
 clean:
 	rm -f ~/.SLGR-SuiteSettings.pkl ./libs/resources.py
 	rm -f ./libs/cython_utils/*.c

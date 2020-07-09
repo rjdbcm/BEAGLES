@@ -24,4 +24,5 @@ install:
   - python3 setup.py build_ext --inplace
 script:
   - xvfb-run --auto-servernum make test
+  - codecov
   - exit 0
