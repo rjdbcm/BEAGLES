@@ -7,18 +7,13 @@ matrix:
   include:
 
     # Python 3 + QT5 - Build .app
-      - os: osx
+    - os: osx
       language: python
-      python:
-        - "3.5"
-        - "3.6"
-        - "3.7"
-        - "3.8"
-      before_install:
+      python: "3.6"
+      install:
         - pip3 install -r requirements/requirements-osx.txt
         - pyrcc5 -o libs/resources.py resources.qrc
         - python3 setup.py build_ext --inplace
-      script:
-        - python3 -m unittest discover ./tests
-        - exit 0
 
+script:
+  - exit 0
