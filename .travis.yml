@@ -8,8 +8,12 @@ matrix:
 
     # Python 3 + QT5 - Build .app
       - os: osx
-      language: generic
-      python: "3.6"
+      language: python
+      python:
+        - "3.5"
+        - "3.6"
+        - "3.7"
+        - "3.8"
       install:
         - pip3 install -r requirements/requirements-osx.txt
         - pyrcc5 -o libs/resources.py resources.qrc
