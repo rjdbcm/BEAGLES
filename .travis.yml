@@ -5,16 +5,18 @@
 
 language: python
 
-matrix:
+jobs:
   include:
-
     # Python 3 + QT5 - Build .app
     - os: osx
-      python: "3.6"
-      install:
-        - pip3 install -r requirements/requirements-osx.txt
-        - pyrcc5 -o libs/resources.py resources.qrc
-        - python3 setup.py build_ext --inplace
+      language: generic
+    - os: linux
+      python: 3.6
 
+install:
+  - pip3 install -r requirements/requirements-osx.txt
+  - pyrcc5 -o libs/resources.py resources.qrc
+  - python3 setup.py build_ext --inplace
 script:
+  - python3 -m unittest discover ./tests
   - exit 0
