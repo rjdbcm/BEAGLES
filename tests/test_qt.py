@@ -23,9 +23,12 @@ class TestMainWindow(TestCase):
 
     def testFileLoad(self):
         self.win.loadFile('data/sample_img/sample_dog.jpg')
+        self.win.closeFile()
 
     def testImportDirImages(self):
         self.win.importDirImages('data/sample_img')
+        self.win.openNextImg()
+        self.win.openPrevImg()
 
     def tearDown(self):
         self.win.close()

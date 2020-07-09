@@ -1523,48 +1523,6 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                 filename = filename[0]
             self.loadFile(filename)
 
-    def loadProject(self, file):
-        cond = True
-        while cond:
-            try:
-                with tarfile.TarFile(file, 'r', errorlevel=1) as archive:
-                    for i in archive.getnames():
-                        try:
-                            archive.extract(i)
-                        except OSError:
-                            os.remove(i)
-                            archive.extract(i)
-                    cond = False
-            except FileNotFoundError:
-                os.mkdir(os.path.dirname(file))
-                shutil.copy(os.path.join(Flags().summary,
-                                    Flags().project_name,
-                                    Flags().project_name + ".tar"),
-                            file)
-
-    def saveProject(self, name):
-        archiveList = [Flags().binary,
-                       Flags().built_graph,
-                       Flags().backup,
-                       Flags().dataset,
-                       Flags().video_out,
-                       Flags().img_out,
-                       './data/rawframes/',
-                       self.predefinedClasses]
-        archive = os.path.join(Flags().summary, name,
-                               name + '.tar')
-        sandbox = True if name is 'default' else False
-        mode = 'r' if sandbox else 'w'
-        with tarfile.open(archive, mode=mode) as archive:
-            for i in archiveList:
-                if not sandbox:
-                    archive.add(i)
-                try:
-                    shutil.rmtree(i)
-                except NotADirectoryError:
-                    os.remove(i)
-
-
     def saveFile(self, _value=False):
         if self.defaultSaveDir is not None and len(ustr(self.defaultSaveDir)):
             if self.filePath:
