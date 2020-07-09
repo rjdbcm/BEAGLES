@@ -9,8 +9,10 @@ jobs:
   include:
     # Python 3 + QT5 - Build .app
     - os: osx
+      services: xvfb
       language: generic
     - os: linux
+      services: xvfb
       python: 3.6
 
 before_install:
@@ -21,5 +23,5 @@ install:
   - pyrcc5 -o libs/resources.py resources.qrc
   - python3 setup.py build_ext --inplace
 script:
-  - python3 -m unittest discover ./tests
+  - xvfb-run -s '-screen 0 1600x1200x24+32' make test
   - exit 0
