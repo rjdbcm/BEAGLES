@@ -23,5 +23,5 @@ install:
   - pyrcc5 -o libs/resources.py resources.qrc
   - python3 setup.py build_ext --inplace
 script:
-  - xvfb-run -s '-screen 0 1600x1200x24+32' make test
+  - xvfb-run --auto-servernum make test
   - exit 0
