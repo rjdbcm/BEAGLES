@@ -19,7 +19,7 @@ test:
 distclean: clean clean_site_packages
 
 coverage:
-    coverage run -m unittest discover tests
+	coverage run -m unittest discover tests
 
 clean:
 	rm -f ~/.SLGR-SuiteSettings.pkl ./libs/resources.py
@@ -36,5 +36,7 @@ clean_site_packages:
 	rm -rf ./lib
 
 .PHONY: test
+
+.PHONY: coverage
 
 .PHONY: virtualenv

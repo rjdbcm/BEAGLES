@@ -22,6 +22,7 @@ before_install:
 install:
   - pyrcc5 -o libs/resources.py resources.qrc
   - python3 setup.py build_ext --inplace
+  - pip3 install codecov
 script:
   - xvfb-run --auto-servernum make test
   - codecov
