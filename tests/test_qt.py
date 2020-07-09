@@ -19,6 +19,13 @@ class TestMainWindow(TestCase):
 
     def testCanvas(self):
         self.canvas = self.win.canvas
+        self.assertRaises(AssertionError, self.canvas.resetAllLines)
+
+    def testFileLoad(self):
+        self.win.loadFile('data/sample_img/sample_dog.jpg')
+
+    def testImportDirImages(self):
+        self.win.importDirImages('data/sample_img')
 
     def tearDown(self):
         self.win.close()
