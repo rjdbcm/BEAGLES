@@ -53,7 +53,9 @@ cdef float box_union_c(float ax, float ay, float aw, float ah, float bx, float b
 cdef float box_iou_c(float ax, float ay, float aw, float ah, float bx, float by, float bw, float bh):
     return box_intersection_c(ax, ay, aw, ah, bx, by, bw, bh) / box_union_c(ax, ay, aw, ah, bx, by, bw, bh);
 
-
+#Wrapper for IOU Testing
+def box_iou(ax, ay, aw, ah, bx, by, bw, bh):
+    return box_iou_c(ax, ay, aw, ah, bx, by, bw, bh)
 
 
 #NMS

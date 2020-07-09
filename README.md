@@ -1,14 +1,14 @@
-# SLGR-Suite [![codecov](https://codecov.io/gh/rjdbcm/SLGR-Suite/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/SLGR-Suite)[![Build Status](https://travis-ci.org/rjdbcm/SLGR-Suite.svg?branch=dev)](https://travis-ci.org/rjdbcm/SLGR-Suite)
+# SLGR-Suite 
 SLGR stands for Single-Look Gesture Recognition and is an implementation of the YOLO(You Only Look Once) object 
 classification system extended for behavioral analysis and quantification. SLGR-Suite is a graphical image annotation 
 tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and frontend for a fork of 
 [darkflow](https://github.com/thtrieu/darkflow). 
 
-Written in Python, SLGR-Suite uses Qt for its graphical interface and TensorFlow for its backend.
-
-##### *Known Issues:*
-
-- Cython extensions leak memory in some cases
+##### Build Status:
+|  Branch  |                     Status                     |
+|----------|------------------------------------------------|
+| master |[![codecov](https://codecov.io/gh/rjdbcm/SLGR-Suite/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/SLGR-Suite)[![Build Status](https://travis-ci.org/rjdbcm/SLGR-Suite.svg?branch=master)](https://travis-ci.org/rjdbcm/SLGR-Suite)
+| dev    |[![codecov](https://codecov.io/gh/rjdbcm/SLGR-Suite/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/SLGR-Suite)[![Build Status](https://travis-ci.org/rjdbcm/SLGR-Suite.svg?branch=dev)](https://travis-ci.org/rjdbcm/SLGR-Suite)
 
 ##### Features:
 
@@ -23,10 +23,11 @@ Written in Python, SLGR-Suite uses Qt for its graphical interface and TensorFlow
 
 ##### Development Goals:
 
+- \>60% Code Coverage
 - [OBS Studio](https://github.com/obsproject/obs-studio) utility for USB camera arrays (*in progress*)
 - Statistical report generation using [traces](https://github.com/datascopeanalytics/traces) (*in progress*)
 - TensorFlow 2 native code (*separate development branch created*)
-- All darknet layer types implemented
+- All darknet layer types implemented as Keras Layers
 - YOLOv3 detection
 - Take advantage of python 3.8's multiprocessing.shared_memory
 
