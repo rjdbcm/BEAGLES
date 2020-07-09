@@ -2,6 +2,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from .labelFile import LabelFile
+from .stringBundle import StringBundle
 from .utils.flags import Flags, FlagIO
 from .project import ProjectDialog
 #from .scripts.genConfig import genConfigYOLOv2
@@ -118,25 +119,34 @@ class FlowDialog(QDialog):
         super(FlowDialog, self).__init__(parent)
         self.flags = Flags()
         self.project = ProjectDialog(self)
-        self.project.accepted.connect(self.get_project_name)
+        self.project.accepted.connect(self.set_project_name)
         self.oldBatchValue = int(self.flags.batch)
         self.oldSaveValue = int(self.flags.save)
         # allow use of labels file passed by slgrSuite
+
+        self.stringBundle = StringBundle.getBundle("zh_CN")
+
+        def getStr(strId):
+            return self.stringBundle.getString(strId)
+
         self.labelfile = labelfile
         self.formGroupBox = QGroupBox("Select Model and Checkpoint")
         layout = QFormLayout()
 
         self.projectLayout = QHBoxLayout()
         self.projectLbl = QLabel(self.project.default)
-        self.projectBtn = QPushButton("Select Project")
+        self.projectBtn = QPushButton(getStr('selectProject'))
         self.projectBtn.clicked.connect(self.project.open)
         self.projectLayout.addWidget(self.projectLbl)
         self.projectLayout.addWidget(self.projectBtn)
-        layout.addRow(QLabel("Project Name"), self.projectLayout)
+        layout.addRow(QLabel(getStr('projectName')), self.projectLayout)
 
         self.flowCmb = QComboBox()
         self.flowCmb.addItems(
-            ["Train", "Predict", "Annotate"])
+            [getStr('train'),
+             getStr('predict'),
+             getStr('annotate'),
+             getStr('analyze')])
         self.flowCmb.currentIndexChanged.connect(self.flowSelect)
         layout.addRow(QLabel("Mode"), self.flowCmb)
 
@@ -193,30 +203,21 @@ class FlowDialog(QDialog):
         self.momentumSpd = QDoubleSpinBox()
         self.momentumSpd.setRange(0.0, .99)
         self.momentumSpd.setSingleStep(0.01)
-        self.momentumSpd.setToolTip("Momentum setting for momentum and "
-                                    "rmsprop optimizers")
+        self.momentumSpd.setToolTip(getStr('momentumTip'))
         layout3.addRow(QLabel("Momentum"), self.momentumSpd)
 
         self.learningModeCmb = QComboBox()
         self.learningModeCmb.addItems(["triangular", "triangular2",
                                        "exp_range"])
         self.learningModeCmb.setItemData(0,
-                                         "Default, linearly increasing then "
-                                         "linearly decreasing the learning "
-                                         "rate at each cycle.", Qt.ToolTipRole)
+                                         getStr('triangularTip'),
+                                         Qt.ToolTipRole)
         self.learningModeCmb.setItemData(1,
-                                         "The same as the triangular policy "
-                                         "except the learning rate difference "
-                                         "is cut in half at the end of each "
-                                         "cycle. This means the learning rate "
-                                         "difference drops after each cycle.",
+                                         getStr('triangular2Tip'),
                                          Qt.ToolTipRole)
         self.learningModeCmb.setItemData(2,
-                                         "The learning rate varies between "
-                                         "the minimum and maximum boundaries "
-                                         "and each boundary value declines by "
-                                         "an exponential factor of: "
-                                         "gamma^global_step.", Qt.ToolTipRole)
+                                         getStr('expRangeTip'),
+                                         Qt.ToolTipRole)
         layout3.addRow(QLabel("Learning Mode"), self.learningModeCmb)
 
         self.learningRateSpd = ScientificDoubleSpinBox()
@@ -296,8 +297,6 @@ class FlowDialog(QDialog):
         layout4.addRow(self.deviceLsV)
 
         self.refreshDevBtn = QPushButton()
-        self.refreshDevBtn.setText("Refresh Device List")
-        self.refreshDevBtn.clicked.connect(self.listCameras)
         layout4.addRow(self.refreshDevBtn)
 
         self.demoGroupBox.setLayout(layout4)
@@ -369,23 +368,6 @@ class FlowDialog(QDialog):
         fh.write(result)
         fh.close()
 
-    def listCameras(self):
-        self.refreshDevBtn.setDisabled(True)
-        self.buttonOk.setDisabled(True)
-        model = self.deviceItemModel
-        t = MultiCamThread(self, model)
-        if t.isRunning():
-            return
-        else:
-            self.flowPrg.setMaximum(0)
-            t.start()
-            t.finished.connect(self._list_cameras_finished)
-
-    def _list_cameras_finished(self):
-        self.refreshDevBtn.setDisabled(False)
-        self.buttonOk.setDisabled(False)
-        self.flowPrg.setMaximum(100)
-
     def trainerSelect(self):
         self.momentumSpd.setDisabled(True)
         for trainer in ("rmsprop", "momentum", "nesterov"):
@@ -420,7 +402,7 @@ class FlowDialog(QDialog):
     #     pass
     #     genConfigYOLOv2()
 
-    def get_project_name(self):
+    def set_project_name(self):
         self.projectLbl.setText(self.project.name)
 
     def accept(self):

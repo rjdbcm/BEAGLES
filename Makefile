@@ -1,6 +1,6 @@
 # ex: set ts=8 noet:
 
-all: virtualenv qt5
+all: virtualenv qt5 cython
 
 virtualenv:
 	virtualenv --python=python3 .
@@ -9,6 +9,8 @@ virtualenv:
 
 qt5:
 	pyrcc5 -o libs/resources.py resources.qrc
+
+cython:
 	python3 setup.py build_ext --inplace
 
 test:
