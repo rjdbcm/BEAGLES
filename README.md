@@ -8,7 +8,7 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 [![tensorflow](https://raw.githubusercontent.com/aleen42/badges/master/src/tensorflow.svg?)](https://www.tensorflow.org/)
 
 [![pyqt5](https://img.shields.io/badge/PyQt-v5-41cd52.svg)](https://pypi.org/project/PyQt5/)[![Python 3.6](https://img.shields.io/badge/python-v3-blue.svg)](https://www.python.org/downloads/release/python-360/)
-[![https://img.shields.io/badge/NumPy-v1.18-013243](https://numpy.org/)]
+[![numpy](https://img.shields.io/badge/NumPy-v1.18-013243)](https://numpy.org/)
 ##### Build Status:
 
 |  Branch  |                     Status                     |
