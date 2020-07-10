@@ -38,7 +38,7 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 - Take advantage of python 3.8's multiprocessing.shared_memory
 
 <details>
-  <h5><summary>Table of Contents</summary></h5>
+  <summary>Table of Contents</summary>
 
 ## Table of Contents
 * [Installation](#installation)
