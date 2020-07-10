@@ -34,8 +34,11 @@ class YOLOWriter:
         ymin = box['ymin']
         ymax = box['ymax']
 
-        xcen = float((xmin + xmax)) / 2 / self.imgSize[1]
-        ycen = float((ymin + ymax)) / 2 / self.imgSize[0]
+        def center(min, max, size):
+            return float((min + max)) / 2 / size
+
+        xcen = center(xmin, xmax, self.imgSize[1])
+        ycen = center(ymin, ymax, self.imgSize[0])
 
         w = float((xmax - xmin)) / self.imgSize[1]
         h = float((ymax - ymin)) / self.imgSize[0]

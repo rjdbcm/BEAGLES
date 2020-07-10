@@ -5,6 +5,8 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 [darkflow](https://github.com/thtrieu/darkflow). 
 
 ##### Build Status:
+[![Maintainability](https://api.codeclimate.com/v1/badges/4a252ae7978e72fe850a/maintainability)](https://codeclimate.com/github/rjdbcm/SLGR-Suite/maintainability)
+
 |  Branch  |                     Status                     |
 |----------|------------------------------------------------|
 | master |[![codecov](https://codecov.io/gh/rjdbcm/SLGR-Suite/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/SLGR-Suite)[![Build Status](https://travis-ci.org/rjdbcm/SLGR-Suite.svg?branch=master)](https://travis-ci.org/rjdbcm/SLGR-Suite)
