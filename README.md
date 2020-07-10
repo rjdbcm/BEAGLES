@@ -37,6 +37,9 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 - YOLOv3 detection
 - Take advantage of python 3.8's multiprocessing.shared_memory
 
+<details>
+  <summary>Table of Contents</summary>
+
 ## Table of Contents
 * [Installation](#installation)
     * [Source Install](#source-install-virtualenv)
@@ -50,6 +53,8 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 * [How to Contribute](#how-to-contribute)
 * [License](#license)
 * [Related](#related)
+
+</details>
 
 ## Installation
 
