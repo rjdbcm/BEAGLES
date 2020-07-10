@@ -22,6 +22,6 @@ def _batch(self, chunk):
     C = meta['classes']
     anchors = meta['anchors']
 
-    return get_feed_vals(H, W, C, B)
+    return get_feed_vals(H, W, C, B, labels)
 
 

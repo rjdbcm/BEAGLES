@@ -32,10 +32,10 @@ def _batch(self, chunk):
     B = meta['num']
     C = meta['classes']
 
-    return self.get_feed_vals(S, S, C, B)
+    return self.get_feed_vals(S, S, C, B, labels)
 
 
-def get_feed_vals(self, dim1, dim2, classes, num):
+def get_feed_vals(self, dim1, dim2, classes, num, labels):
 
     H = dim1
     W = dim2
