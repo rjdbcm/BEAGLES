@@ -63,6 +63,16 @@ def parser(model):
     return layers, meta
 
 
+def load_profile(file):
+    with open(file, 'rb') as f:
+        profiles = pickle.load(f, encoding='latin1')[0]
+    return profiles
+
+
+def list_keep(inp):
+    return [int(x) for x in inp.split(',')]
+
+
 def cfg_yielder(model, binary):
     """
     yielding each layer information to initialize `layer`
@@ -152,15 +162,14 @@ def cfg_yielder(model, binary):
             if type(inp) is str:
                 file = inp.split(',')[0]
                 layer_num = int(inp.split(',')[1])
-                with open(file, 'rb') as f:
-                    profiles = pickle.load(f, encoding='latin1')[0]
+                profiles = load_profile(d['profile'])
                 layer = profiles[layer_num]
             else:
                 layer = inp
             activation = d.get('activation', 'logistic')
             d['keep'] = d['keep'].split('/')
             classes = int(d['keep'][-1])
-            keep = [int(c) for c in d['keep'][0].split(',')]
+            keep = list_keep(d['keep'][0])
             keep_n = len(keep)
             train_from = classes * d['bins']
             for count in range(d['bins'] - 1):
@@ -195,7 +204,7 @@ def cfg_yielder(model, binary):
             batch_norm = d.get('batch_normalize', 0) or conv
             d['keep'] = d['keep'].split('/')
             classes = int(d['keep'][-1])
-            keep = [int(x) for x in d['keep'][0].split(',')]
+            keep = list_keep(d['keep'][0])
 
             segment = classes + 5
             assert n % segment == 0, \
@@ -217,9 +226,7 @@ def cfg_yielder(model, binary):
             l = w * h * c
         # -----------------------------------------------------
         elif d['type'] == '[conv-extract]':
-            file = d['profile']
-            with open(file, 'rb') as f:
-                profiles = pickle.load(f, encoding='latin1')[0]
+            profiles = load_profile(d['profile'])
             inp_layer = None
             inp = d['input']
             out = d['output']
@@ -268,9 +275,7 @@ def cfg_yielder(model, binary):
                 yield ['flatten', i]
                 flat = True
             activation = d.get('activation', 'logistic')
-            file = d['profile']
-            with open(file, 'rb') as f:
-                profiles = pickle.load(f, encoding='latin1')[0]
+            profiles = load_profile(d['profile'])
             inp_layer = None
             inp = d['input']
             out = d['output']
