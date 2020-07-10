@@ -1,17 +1,19 @@
-# SLGR-Suite 
+# SLGR-Suite [![GitHub version](https://badge.fury.io/gh/rjdbcm%2FSLGR-Suite.svg)](https://badge.fury.io/gh/rjdbcm%2FSLGR-Suite)[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)[![Maintainability](https://api.codeclimate.com/v1/badges/4a252ae7978e72fe850a/maintainability)](https://codeclimate.com/github/rjdbcm/SLGR-Suite/maintainability)
 SLGR stands for Single-Look Gesture Recognition and is an implementation of the YOLO(You Only Look Once) object 
 classification system extended for behavioral analysis and quantification. SLGR-Suite is a graphical image annotation 
 tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and frontend for a fork of 
 [darkflow](https://github.com/thtrieu/darkflow). 
 
+##### Created Using:
+[![tensorflow](https://raw.githubusercontent.com/aleen42/badges/master/src/tensorflow.svg?)](https://www.tensorflow.org/)
+
+[![pyqt5](https://img.shields.io/badge/PyQt-v5-41cd52.svg)](https://pypi.org/project/PyQt5/)[![Python 3.6](https://img.shields.io/badge/python-v3-blue.svg)](https://www.python.org/downloads/release/python-360/)
 ##### Build Status:
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
-[![Maintainability](https://api.codeclimate.com/v1/badges/4a252ae7978e72fe850a/maintainability)](https://codeclimate.com/github/rjdbcm/SLGR-Suite/maintainability)
 
 |  Branch  |                     Status                     |
-|----------|------------------------------------------------|
-| master |[![codecov](https://codecov.io/gh/rjdbcm/SLGR-Suite/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/SLGR-Suite)[![Build Status](https://travis-ci.org/rjdbcm/SLGR-Suite.svg?branch=master)](https://travis-ci.org/rjdbcm/SLGR-Suite)
-| dev    |[![codecov](https://codecov.io/gh/rjdbcm/SLGR-Suite/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/SLGR-Suite)[![Build Status](https://travis-ci.org/rjdbcm/SLGR-Suite.svg?branch=dev)](https://travis-ci.org/rjdbcm/SLGR-Suite)
+|:---------:|:------------------------------------------------:|
+| master   |[![codecov](https://codecov.io/gh/rjdbcm/SLGR-Suite/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/SLGR-Suite)[![Build Status](https://travis-ci.org/rjdbcm/SLGR-Suite.svg?branch=master)](https://travis-ci.org/rjdbcm/SLGR-Suite)
+| dev      |[![codecov](https://codecov.io/gh/rjdbcm/SLGR-Suite/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/SLGR-Suite)[![Build Status](https://travis-ci.org/rjdbcm/SLGR-Suite.svg?branch=dev)](https://travis-ci.org/rjdbcm/SLGR-Suite)
 
 ##### Features:
 
@@ -35,6 +37,19 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 - YOLOv3 detection
 - Take advantage of python 3.8's multiprocessing.shared_memory
 
+## Table of Contents
+* [Installation](#installation)
+    * [Source Install](#source-install-virtualenv)
+    * [Binary Build](#binary-build)
+    * [Open SLGR-Suite](#open-slgr-suite)
+* [Controls](#controls)
+* [Image Annotation](#image-annotation)
+    * [Verify Image](#verify-image)
+    * [Difficult](#difficult)
+* [Important Directories](#important-directories)
+* [How to Contribute](#how-to-contribute)
+* [License](#license)
+* [Related](#related)
 
 ## Installation
 
@@ -124,8 +139,7 @@ Send a pull request
 - Mahmoud Aslan. Cyclic Learning Rate. Git code (2018). https://github.com/mhmoodlan/cyclic-learning-rate
 
 
-Related
--------
+## Related
 
 1. [labelImg](https://github.com/tzutalin/labelImg) the original image annotation software SLGR-Suite is forked from
 2. [darkflow](https://github.com/thtrieu/darkflow) the original basis of the machine learning backend
@@ -138,3 +152,4 @@ Related
 9. [Unevenly-spaced data is actually pretty great](https://datascopeanalytics.com/blog/unevenly-spaced-time-series/) 
 10. [Interactive machine learning: experimental evidence for the human in the algorithmic loop](https://link.springer.com/content/pdf/10.1007/s10489-018-1361-5.pdf)
 11. [Why Momentum Really Works](https://distill.pub/2017/momentum/)
+

@@ -17,8 +17,5 @@ class TestBackend(TestCase, FlagIO):
         iou = box_iou(3, 4, 4, 3, 4, 3, 3, 4)
         self.assertEqual(0.35211268067359924, iou), "cython_utils math failure"
 
-    # def testTFNet(self):
-    #     self.tfnet = TFNet(self.flags)
-
     def tearDown(self):
         self.cleanup_ramdisk()
