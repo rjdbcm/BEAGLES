@@ -59,7 +59,7 @@ class YOLOv3(framework):
     preprocess = yolo.predict.preprocess
     # loss = yolov3.train.loss  # TODO: yolov3.train
     is_inp = yolo.misc.is_inp
-    # postprocess = yolov3.predict.postprocess  # TODO: yolov3.predict.postprocess
+    postprocess = yolo.predict.postprocess
     # batch = yolov3.data._batch  # TODO: yolov3.data._batch
     resize_input = yolo.predict.resize_input
     # findboxes = yolov3.predict.findboxes  # TODO: yolov3.predict.findboxes
