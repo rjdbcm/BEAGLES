@@ -44,7 +44,7 @@ class YOLOv2(framework):
     preprocess = yolo.predict.preprocess
     loss = yolov2.train.loss
     is_inp = yolo.misc.is_inp
-    postprocess = yolov2.predict.postprocess
+    postprocess = yolo.predict.postprocess
     # noinspection PyProtectedMember
     _batch = yolov2.data._batch
     resize_input = yolo.predict.resize_input

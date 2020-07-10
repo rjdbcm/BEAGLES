@@ -5,6 +5,7 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 [darkflow](https://github.com/thtrieu/darkflow). 
 
 ##### Build Status:
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 [![Maintainability](https://api.codeclimate.com/v1/badges/4a252ae7978e72fe850a/maintainability)](https://codeclimate.com/github/rjdbcm/SLGR-Suite/maintainability)
 
 |  Branch  |                     Status                     |
@@ -25,7 +26,8 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 
 ##### Development Goals:
 
-- \>60% Code Coverage
+- Code coverage of \>60%
+- Improved maintainability
 - [OBS Studio](https://github.com/obsproject/obs-studio) utility for USB camera arrays (*in progress*)
 - Statistical report generation using [traces](https://github.com/datascopeanalytics/traces) (*in progress*)
 - TensorFlow 2 native code (*separate development branch created*)

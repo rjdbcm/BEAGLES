@@ -96,12 +96,13 @@ def postprocess(self, net_out, im, save=True):
         or
         None if salve
     """
-    meta, flags = self.meta, self.flags
-    threshold = flags.threshold
-    colors, labels = meta['colors'], meta['labels']
-
     boxes = self.findboxes(net_out)
 
+    # meta
+    meta = self.meta
+    threshold = meta['thresh']
+    colors = meta['colors']
+    labels = meta['labels']
     if type(im) is not np.ndarray:
         imgcv = cv2.imread(im)
     else:
@@ -122,14 +123,14 @@ def postprocess(self, net_out, im, save=True):
                                    "topleft": {"x": left, "y": top},
                                    "bottomright": {"x": right, "y": bot}})
             writer.addBndBox(left, bot, right, top, mess, False)
-            continue
-        cv2.rectangle(imgcv,
-                      (left, top), (right, bot),
-                      self.meta['colors'][max_indx], thick)
+            #continue
+
+        mess = mess + " " + str(round(confidence, 3))
+        cv2.rectangle(imgcv, (left, top), (right, bot), colors[max_indx], 3)
         cv2.putText(
             imgcv, mess, (left, top - 12),
             0, 1e-3 * h, self.meta['colors'][max_indx],
-               thick // 3)
+            thick // 3)
 
     if not save:
         return imgcv
