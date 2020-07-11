@@ -8,7 +8,7 @@ import numpy as np
 import os 
 
 
-def parse(self, exclusive = False):
+def parse(self, exclusive=False):
     meta = self.meta
     ext = '.parsed'
     ann = self.flags.annotation
@@ -27,27 +27,31 @@ def _batch(self, chunk):
     input & loss layer correspond to this chunk
     """
     meta = self.meta
-    labels = meta['labels']
     S = meta['side']
-    B = meta['num']
     C = meta['classes']
 
-    return self.get_feed_vals(S, S, C, B, labels)
+    return self.get_feed_vals(chunk, S, S, C)
 
 
-def get_feed_vals(self, dim1, dim2, classes, num, labels):
-
-    H = dim1
-    W = dim2
-    C = classes
-    B = num
-
-    # preprocess
+def get_preprocessed_img(self, chunk):
     jpg = chunk[0]
     w, h, allobj_ = chunk[1]
     allobj = deepcopy(allobj_)
     path = os.path.join(self.flags.dataset, jpg)
     img = self.preprocess(path, allobj)
+    return img, w, h, allobj
+
+
+def get_feed_values(chunk, dim1, dim2, meta):
+
+    H = dim1
+    W = dim2
+    C = meta['classes']
+    B = meta['num']
+    labels = meta['labels']
+
+    # preprocess
+    img, w, h, allobj = get_preprocessed_img(chunk)
 
     # Calculate regression target
     cellx = 1. * w / W
@@ -65,7 +69,7 @@ def get_feed_vals(self, dim1, dim2, classes, num, labels):
         obj[4] = np.sqrt(obj[4])
         obj[1] = cx - np.floor(cx)  # centerx
         obj[2] = cy - np.floor(cy)  # centery
-        obj += [int(np.floor(cy) * S + np.floor(cx))]
+        obj += [int(np.floor(cy) * W + np.floor(cx))]
 
     # show(im, allobj, S, w, h, cellx, celly) # unit test
 

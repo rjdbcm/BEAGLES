@@ -124,7 +124,7 @@ class FlowDialog(QDialog):
         self.oldSaveValue = int(self.flags.save)
         # allow use of labels file passed by slgrSuite
 
-        self.stringBundle = StringBundle.getBundle("zh_CN")
+        self.stringBundle = StringBundle.getBundle()
 
         def getStr(strId):
             return self.stringBundle.getString(strId)
