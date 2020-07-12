@@ -15,8 +15,10 @@ class TestPascalVocRW(unittest.TestCase):
         # Test Write/Read
         writer = PascalVocWriter('tests', 'test', (512, 512, 1))
         difficult = 1
-        writer.addBndBox(60, 40, 430, 504, 'person', difficult)
-        writer.addBndBox(113, 40, 450, 403, 'face', difficult)
+        person_box = [60, 40, 430, 504]
+        face_box = [113, 40, 450, 403]
+        writer.addBndBox(person_box, 'person', difficult)
+        writer.addBndBox(face_box, 'face', difficult)
         writer.save('tests/test.xml')
 
         reader = PascalVocReader('tests/test.xml')

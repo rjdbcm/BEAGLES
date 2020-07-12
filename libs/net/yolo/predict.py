@@ -116,13 +116,14 @@ def postprocess(self, net_out, im, save=True):
         if boxResults is None:
             continue
         left, right, top, bot, mess, max_indx, confidence = boxResults
+        box = [left, bot, right, top]
         thick = int((h + w) // 300)
         if self.flags.output_type:
             resultsForJSON.append({"label": mess,
                                    "confidence": float('%.2f' % confidence),
                                    "topleft": {"x": left, "y": top},
                                    "bottomright": {"x": right, "y": bot}})
-            writer.addBndBox(left, bot, right, top, mess, False)
+            writer.addBndBox(box, mess, False)
             #continue
 
         mess = mess + " " + str(round(confidence, 3))
