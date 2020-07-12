@@ -7,26 +7,22 @@ from xml.etree.ElementTree import Element, SubElement
 from lxml import etree
 import codecs
 from libs.constants import DEFAULT_ENCODING
+from libs.boundingBox import BoundingBox
 
 TXT_EXT = '.txt'
 ENCODE_METHOD = DEFAULT_ENCODING
 
-class YOLOWriter:
+
+class YOLOWriter(BoundingBox):
 
     def __init__(self, foldername, filename, imgSize, databaseSrc='Unknown', localImgPath=None):
+        super(YOLOWriter, self).__init__()
         self.foldername = foldername
         self.filename = filename
         self.databaseSrc = databaseSrc
         self.imgSize = imgSize
-        self.boxlist = []
         self.localImgPath = localImgPath
         self.verified = False
-
-    def addBndBox(self, xmin, ymin, xmax, ymax, name, difficult):
-        bndbox = {'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax}
-        bndbox['name'] = name
-        bndbox['difficult'] = difficult
-        self.boxlist.append(bndbox)
 
     def BndBox2YoloLine(self, box, classList=[]):
         xmin = box['xmin']

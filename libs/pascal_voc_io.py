@@ -7,20 +7,20 @@ from lxml import etree
 import codecs
 from libs.constants import DEFAULT_ENCODING
 from libs.ustr import ustr
-
+from libs.boundingBox import BoundingBox
 
 XML_EXT = '.xml'
 ENCODE_METHOD = DEFAULT_ENCODING
 
 
-class PascalVocWriter:
+class PascalVocWriter(BoundingBox):
 
     def __init__(self, foldername, filename, imgSize, databaseSrc='Unknown'):
+        super(PascalVocWriter, self).__init__()
         self.foldername = foldername
         self.filename = filename
         self.databaseSrc = databaseSrc
         self.imgSize = imgSize
-        self.boxlist = []
         self.verified = False
 
     def prettify(self, elem):
@@ -72,12 +72,6 @@ class PascalVocWriter:
         segmented = SubElement(top, 'segmented')
         segmented.text = '0'
         return top
-
-    def addBndBox(self, xmin, ymin, xmax, ymax, name, difficult):
-        bndbox = {'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax}
-        bndbox['name'] = name
-        bndbox['difficult'] = difficult
-        self.boxlist.append(bndbox)
 
     def appendObjects(self, top):
         for each_object in self.boxlist:
