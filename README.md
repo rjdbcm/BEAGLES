@@ -7,8 +7,15 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 ##### Created Using:
 [![tensorflow](https://raw.githubusercontent.com/aleen42/badges/master/src/tensorflow.svg?)](https://www.tensorflow.org/)
 
-[![pyqt5](https://img.shields.io/badge/PyQt-v5-41cd52.svg)](https://pypi.org/project/PyQt5/)[![Python 3.6](https://img.shields.io/badge/python-v3-blue.svg)](https://www.python.org/downloads/release/python-360/)
+[![Python 3.6](https://img.shields.io/badge/python-v3-blue.svg)](https://www.python.org/downloads/release/python-360/)
+
 [![numpy](https://img.shields.io/badge/NumPy-v1.18-013243)](https://numpy.org/)
+
+[![cython](https://img.shields.io/badge/Cython-v0.29.6-%23646464)](https://cython.org)
+
+[![pyqt5](https://img.shields.io/badge/PyQt-v5.12-41cd52.svg)](https://pypi.org/project/PyQt5/)
+
+
 ##### Build Status:
 
 |  Branch  |                     Status                     |
@@ -39,7 +46,7 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 - Take advantage of python 3.8's multiprocessing.shared_memory
 
 <details>
-  <summary>Table of Contents</summary>
+  <summary>Table of Contents:</summary>
 
 ## Table of Contents
 * [Installation](#installation)
