@@ -21,6 +21,7 @@ class ProjectDialog(QDialog):
                              Flags().img_out,
                              './data/rawframes/',
                              Flags().labels]
+        self.dirty = False
         self.default = "Sandbox Mode"
         self.projects = next(os.walk(Flags().summary))[1]
 
@@ -32,7 +33,6 @@ class ProjectDialog(QDialog):
         self.projectCmb.currentTextChanged.connect(self._change_name)
         layout.addRow("Project Name", self.projectCmb)
         self.projectClasses = QTextEdit()
-        self.projectClasses.setText(self._read_classes())
         layout.addRow("Class List", self.projectClasses)
         self.formGroupBox.setLayout(layout)
 
@@ -57,8 +57,12 @@ class ProjectDialog(QDialog):
     def _change_name(self):
         self.name = self.projectCmb.currentText()
 
+    def show_classes(self):
+        classes = self.read_class_list()
+        self.projectClasses.setText(classes)
+
     @staticmethod
-    def _read_classes():
+    def read_class_list():
         with open(Flags().labels) as classes:
             try:
                 data = classes.read()
@@ -74,6 +78,11 @@ class ProjectDialog(QDialog):
             file.close()
 
     def load(self):
+        if self.dirty:
+            QMessageBox.warning(self, 'Project Load Error',
+                                'Save changes before loading a new project')
+            return
+        self.clear_sandbox()
         file = self.projectCmb.currentText()
         archive = os.path.join(Flags().summary, file,
                             file + ".tar")
@@ -91,6 +100,8 @@ class ProjectDialog(QDialog):
             except FileNotFoundError:
                 os.mkdir(os.path.dirname(archive))
                 shutil.copy(archive, file)
+        self.show_classes()
+        self.dirty = True
 
     def clear_sandbox(self):
         for i in self.archive_list:
@@ -116,3 +127,4 @@ class ProjectDialog(QDialog):
     def save(self):
         self.write_class_list()
         self.archive()
+        self.dirty = False

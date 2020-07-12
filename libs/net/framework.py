@@ -32,6 +32,8 @@ class YOLO(framework):
     profile = yolo.misc.profile
     # noinspection PyProtectedMember
     _batch = yolo.data._batch
+    get_preprocessed_img = yolo.data.get_preprocessed_img
+    get_feed_values = yolo.data.get_feed_values
     resize_input = yolo.predict.resize_input
     findboxes = yolo.predict.findboxes
     process_box = yolo.predict.process_box
@@ -47,6 +49,8 @@ class YOLOv2(framework):
     postprocess = yolo.predict.postprocess
     # noinspection PyProtectedMember
     _batch = yolov2.data._batch
+    get_preprocessed_img = yolo.data.get_preprocessed_img
+    get_feed_values = yolo.data.get_feed_values
     resize_input = yolo.predict.resize_input
     findboxes = yolov2.predict.findboxes
     process_box = yolo.predict.process_box

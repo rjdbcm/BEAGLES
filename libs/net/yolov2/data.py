@@ -15,10 +15,9 @@ def _batch(self, chunk):
     returns value for placeholders of net's 
     input & loss layer correspond to this chunk
     """
-    meta = self.meta
-    H, W, _ = meta['out_size']
-    C = meta['classes']
-
-    return get_feed_values(chunk, H, W, C)
+    # sizes are passed to avoid having duplicate get_feed_values methods for
+    # YOLO and YOLOv2
+    H, W, _ = self.meta['out_size']
+    return self.get_feed_values(chunk, H, W)
 
 

@@ -26,11 +26,10 @@ def _batch(self, chunk):
     returns value for placeholders of net's 
     input & loss layer correspond to this chunk
     """
-    meta = self.meta
-    S = meta['side']
-    C = meta['classes']
-
-    return self.get_feed_vals(chunk, S, S, C)
+    # sizes are passed to avoid having separate get_feed_values methods for
+    # YOLO and YOLOv2
+    S = self.meta['side']
+    return self.get_feed_values(chunk, S, S)
 
 
 def get_preprocessed_img(self, chunk):
@@ -42,16 +41,16 @@ def get_preprocessed_img(self, chunk):
     return img, w, h, allobj
 
 
-def get_feed_values(chunk, dim1, dim2, meta):
+def get_feed_values(self, chunk, dim1, dim2):
 
     H = dim1
     W = dim2
-    C = meta['classes']
-    B = meta['num']
-    labels = meta['labels']
+    C = self.meta['classes']
+    B = self.meta['num']
+    labels = self.meta['labels']
 
     # preprocess
-    img, w, h, allobj = get_preprocessed_img(chunk)
+    img, w, h, allobj = self.get_preprocessed_img(chunk)
 
     # Calculate regression target
     cellx = 1. * w / W
