@@ -1,5 +1,5 @@
 pyqt5>=5.12
-lxml==4.2.4
+defusedxml>=0.6.0
 Cython==0.29.6
 opencv-contrib-python-headless==4.0.0.21
 tensorflow>=2.0

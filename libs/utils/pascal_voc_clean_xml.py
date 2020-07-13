@@ -2,7 +2,7 @@
 parse PASCAL VOC xml annotations
 """
 import os
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 import glob
 
 

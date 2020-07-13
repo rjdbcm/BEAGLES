@@ -5,15 +5,18 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 [darkflow](https://github.com/thtrieu/darkflow). 
 
 ##### Created Using:
+
+[![python](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7%20|%203.8-blue.svg)](https://www.python.org/downloads/release/python-360/)
+
 [![tensorflow](https://raw.githubusercontent.com/aleen42/badges/master/src/tensorflow.svg?)](https://www.tensorflow.org/)
 
-[![Python 3.6](https://img.shields.io/badge/python-v3-blue.svg)](https://www.python.org/downloads/release/python-360/)
+[![cython](https://img.shields.io/badge/Cython-0.29.6-%23646464)](https://cython.org)
 
-[![numpy](https://img.shields.io/badge/NumPy-v1.18-013243)](https://numpy.org/)
+[![numpy](https://img.shields.io/badge/NumPy-1.18-013243)](https://numpy.org/)
 
-[![cython](https://img.shields.io/badge/Cython-v0.29.6-%23646464)](https://cython.org)
+[![opencv](https://img.shields.io/badge/OpenCV-4.0-%233a6aeb)](https://opencv.org/)
 
-[![pyqt5](https://img.shields.io/badge/PyQt-v5.12-41cd52.svg)](https://pypi.org/project/PyQt5/)
+[![pyqt5](https://img.shields.io/badge/PyQt-5.12-41cd52.svg)](https://pypi.org/project/PyQt5/)
 
 
 ##### Build Status:
