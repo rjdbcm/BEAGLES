@@ -81,6 +81,20 @@ def _local_pad(dimension, padding, size, stride):
     return (dimension - 1 - (1 - padding) * (size - 1)) // stride + 1
 
 
+def _extract_new_input_layer(input_layer,
+                             colors: list,
+                             heights: list,
+                             widths: list):
+    new_inp = list()
+    for p in range(colors[1]):
+        for q in range(heights[1]):
+            for r in range(widths[1]):
+                if p not in input_layer:
+                    continue
+                new_inp += [r + widths[0] * (q + heights[0] * p)]
+    return new_inp
+
+
 def cfg_yielder(model, binary):
     """
     yielding each layer information to initialize `layer`
@@ -295,14 +309,10 @@ def cfg_yielder(model, binary):
             if inp_layer is not None:
                 if len(old) > 2:
                     h_, w_, c_, n_ = old
-                    new_inp = list()
-                    for p in range(c_):
-                        for q in range(h_):
-                            for r in range(w_):
-                                if p not in inp_layer:
-                                    continue
-                                new_inp += [r + w * (q + h * p)]
-                    inp_layer = new_inp
+                    inp_layer = _extract_new_input_layer(inp_layer,
+                                                         [c_, c],
+                                                         [h_, h],
+                                                         [w_, w])
                     old = [h_ * w_ * c_, n_]
                 assert len(inp_layer) == l, \
                     'Extract does not match input dimension'
