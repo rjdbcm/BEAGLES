@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 import sys
-from xml.etree import ElementTree
+from defusedxml import ElementTree
 from xml.etree.ElementTree import Element, SubElement
-from lxml import etree
+from lxml import etree  # nosec
 import codecs
 from libs.constants import DEFAULT_ENCODING
 from libs.ustr import ustr
