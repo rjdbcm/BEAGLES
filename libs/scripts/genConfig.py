@@ -4,7 +4,7 @@ import sys
 import os
 import random
 from collections import OrderedDict
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 import re
 
 np.seterr(invalid='raise')
