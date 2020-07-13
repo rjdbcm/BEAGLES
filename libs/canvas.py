@@ -556,14 +556,21 @@ class Canvas(QWidget):
         with the line segment `(x1,y1) - (x2,y2)`, if it exists.
         Also return the distance of `(x2,y2)' to the middle of the
         edge along with its index, so that the one closest can be chosen."""
+        def _difference_of_products(term_one: list, term_two: list):
+            return (term_one[0]-term_one[1])*(term_one[2]-term_one[3]) - \
+                   (term_two[0]-term_two[1])*(term_two[2]-term_two[3])
+
         x1, y1 = x1y1
         x2, y2 = x2y2
         for i in range(4):
             x3, y3 = points[i]
             x4, y4 = points[(i + 1) % 4]
-            denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
-            nua = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)
-            nub = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)
+            denom = _difference_of_products([y4, y3, x2, x1], [x4, x3, y2, y1])
+            # denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
+            nua = _difference_of_products([x4, x3, y1, y3], [y4, y3, x1, x3])
+            # nua = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)
+            nub = _difference_of_products([x2, x1, y1, y3], [y2, y1, x1, x3])
+            # nub = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)
             if denom == 0:
                 # This covers two cases:
                 #   nua == nub == 0: Coincident
