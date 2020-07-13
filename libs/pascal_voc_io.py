@@ -76,17 +76,19 @@ class PascalVocWriter(BoundingBox):
     def appendObjects(self, top):
         for each_object in self.boxlist:
             object_item = SubElement(top, 'object')
+            truncated = SubElement(object_item, 'truncated')
+            height = int(float(self.imgSize[0]))
+            width = int(float(self.imgSize[1]))
+            minx = int(float(each_object['xmin']))
+            miny = int(float(each_object['ymin']))
+            maxy = int(float(each_object['ymax']))
+            maxx = int(float(each_object['xmax']))
+            truncated.text = "1" if maxy == height or miny == 1 else "0"
+            truncated.text = "1" if maxx == width or minx == 1 else "0"
             name = SubElement(object_item, 'name')
             name.text = ustr(each_object['name'])
             pose = SubElement(object_item, 'pose')
             pose.text = "Unspecified"
-            truncated = SubElement(object_item, 'truncated')
-            if int(float(each_object['ymax'])) == int(float(self.imgSize[0])) or (int(float(each_object['ymin']))== 1):
-                truncated.text = "1" # max == height or min
-            elif (int(float(each_object['xmax']))==int(float(self.imgSize[1]))) or (int(float(each_object['xmin']))== 1):
-                truncated.text = "1" # max == width or min
-            else:
-                truncated.text = "0"
             difficult = SubElement(object_item, 'difficult')
             difficult.text = str( bool(each_object['difficult']) & 1 )
             bndbox = SubElement(object_item, 'bndbox')
