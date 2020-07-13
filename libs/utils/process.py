@@ -77,6 +77,10 @@ def _pad(dimension, padding, size, stride):
     return (dimension + 2 * padding - size) // stride + 1
 
 
+def _local_pad(dimension, padding, size, stride):
+    return (dimension - 1 - (1 - padding) * (size - 1)) // stride + 1
+
+
 def cfg_yielder(model, binary):
     """
     yielding each layer information to initialize `layer`
@@ -100,8 +104,8 @@ def cfg_yielder(model, binary):
             stride = d.get('stride', 1)
             pad = d.get('pad', 0)
             activation = d.get('activation', 'logistic')
-            w_ = (w - 1 - (1 - pad) * (size - 1)) // stride + 1
-            h_ = (h - 1 - (1 - pad) * (size - 1)) // stride + 1
+            w_ = _local_pad(w, pad, size, stride)
+            h_ = _local_pad(w, pad, size, stride)
             yield ['local', i, size, c, n, stride, pad, w_, h_, activation]
             if activation != 'linear':
                 yield [activation, i]
@@ -122,8 +126,8 @@ def cfg_yielder(model, binary):
                    activation]
             if activation != 'linear':
                 yield [activation, i]
-            w_ = (w + 2 * padding - size) // stride + 1
-            h_ = (h + 2 * padding - size) // stride + 1
+            w_ = _pad(w, padding, size, stride)
+            h_ = _pad(h, padding, size, stride)
             w, h, c = w_, h_, n
             l = w * h * c
         # -----------------------------------------------------
@@ -221,8 +225,8 @@ def cfg_yielder(model, binary):
                     keep_idx += [offset + k]
                 for k in keep:
                     keep_idx += [offset + 5 + k]
-            w_ = (w + 2 * padding - size) // stride + 1
-            h_ = (h + 2 * padding - size) // stride + 1
+            w_ = _pad(w, padding, size, stride)
+            h_ = _pad(h, padding, size, stride)
             c_ = len(keep_idx)
             yield ['conv-select', i, size, c, n, stride, padding, batch_norm,
                    activation, keep_idx, c_]
@@ -269,8 +273,8 @@ def cfg_yielder(model, binary):
                    activation, inp_layer, out_layer]
             if activation != 'linear':
                 yield [activation, i]
-            w_ = (w + 2 * padding - size) // stride + 1
-            h_ = (h + 2 * padding - size) // stride + 1
+            w_ = _pad(w, padding, size, stride)
+            h_ = _pad(h, padding, size, stride)
             w, h, c = w_, h_, len(out_layer)
             l = w * h * c
         # -----------------------------------------------------
