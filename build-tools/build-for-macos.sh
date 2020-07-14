@@ -32,7 +32,7 @@ rm -rf dist
 
 # build SLGR-Suite
 pip3 install pyinstaller
-pip3 install -r requirements/requirements-osx-mojave.txt
+pip3 install -r requirements/requirements.txt
 make qt5py3
 pyinstaller -w --hidden-import=xml \
             --hidden-import=xml.etree \

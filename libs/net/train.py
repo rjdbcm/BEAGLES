@@ -1,3 +1,18 @@
+import os
+import math
+import pickle
+import tensorflow as tf
+from ..utils.errors import GradientNaN
+from ..utils.cyclic_learning_rate import cyclic_learning_rate
+
+train_stats = (
+    'Training statistics - '
+    'Learning rate: {} '
+    'Batch size: {}    '
+    'Epoch number: {}  '
+    'Backup every: {}  '
+)
+
 
 def train(self):
     self.io_flags()
@@ -83,6 +98,7 @@ def train(self):
         # noinspection PyUnboundLocalVariable
         self._save_ckpt(*args)
 
+
 def _save_ckpt(self, step, loss_profile):
     file = '{}-{}{}'
     model = self.meta['name']
@@ -97,47 +113,4 @@ def _save_ckpt(self, step, loss_profile):
     self.logger.info('Checkpoint at step {}'.format(step))
     self.saver.save(self.sess, ckpt)
 
-def build_train_op(self):
-    def _l2_norm(t):
-        t = tf.sqrt(tf.reduce_sum(tf.pow(t, 2)))
-        return t
-    self.framework.loss(self.out)
-    self.logger.info('Building {} train op'.format(self.meta['model']))
-    self.global_step = tf.compat.v1.Variable(0, trainable=False)
-    # setup kwargs for trainer
-    kwargs = dict()
-    if self.flags.trainer in ['momentum', 'rmsprop', 'nesterov']:
-        kwargs.update({'momentum': self.flags.momentum})
-    if self.flags.trainer == 'nesterov':
-        kwargs.update({'use_nesterov': True})
-    if self.flags.trainer == 'AMSGrad':
-        kwargs.update({'amsgrad': True})
 
-    # setup trainer
-    step_size = int(self.flags.step_size_coefficient *
-                    (len(self.framework.parse()) // self.flags.batch))
-    self.optimizer = self._TRAINER[self.flags.trainer](
-        self.cyclic_learning_rate(
-            global_step=self.global_step,
-            mode=self.flags.clr_mode,
-            step_size=step_size,
-            learning_rate=self.flags.lr,
-            max_lr=self.flags.max_lr), **kwargs)
-
-    # setup gradients
-    self.gradients, self.variables = zip(
-        *self.optimizer.compute_gradients(self.framework.loss))
-    if self.flags.clip:
-        self.gradients, _ = tf.clip_by_global_norm(self.gradients,
-                                                self.flags.clip_norm)
-    # create histogram summaries
-    for grad, var in zip(self.gradients, self.variables):
-        name = var.name.split('/')
-        with tf.compat.v1.variable_scope(name[0] + '/'):
-            tf.summary.histogram("gradients/" + name[1], _l2_norm(grad))
-            # tf.summary.histogram("variables/" + name[1], _l2_norm(var))
-
-    # create train op
-    self.train_op = self.optimizer.apply_gradients(
-        zip(self.gradients, self.variables),
-        global_step=self.global_step)

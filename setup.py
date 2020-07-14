@@ -12,6 +12,10 @@ VERSION = VERSION.__version__
 with open("README.md", "r") as f:
     long_description = f.read()
 
+with open('requirements/requirements.txt', 'r') as f:
+    lines = f.readlines()
+    requirements = [x.strip() for x in lines]
+
 if os.name == 'nt':
     ext_modules = [
         Extension("libs.cython_utils.nms",
@@ -36,16 +40,11 @@ elif os.name == 'posix':
     if sys.platform == 'darwin':
         compile_args = ''
         linker_args = ''
-        with open('requirements/requirements-osx.txt', 'r') as f:
-            lines = f.readlines()
-            requirements = [x.strip() for x in lines]
     else:
         # This gives a significant boost to postprocessing time
         compile_args = ['-fopenmp', '-funroll-loops']
         linker_args = ['-fopenmp']
-        with open('requirements/requirements-linux.txt', 'r') as f:
-            lines = f.readlines()
-            requirements = [x.strip() for x in lines]
+
     ext_modules = [
         Extension("libs.cython_utils.nms",
                   sources=["libs/cython_utils/nms.pyx"],

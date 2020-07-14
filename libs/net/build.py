@@ -10,19 +10,13 @@ from ..utils.loader import create_loader
 from ..utils.flags import FlagIO
 from ..utils.errors import *
 from ..utils.postprocess import BehaviorIndex
-from .train import train, build_train_op, _save_ckpt
-from .annotate import annotate, draw_box, write_annotations, return_predict
-from .predict import predict
-from .analyze import analyze
+from . import train
+from . import annotate
+from . import predict
+from . import analyze
+from ..utils.cyclic_learning_rate import cyclic_learning_rate
 
 
-train_stats = (
-    'Training statistics - '
-    'Learning rate: {} '
-    'Batch size: {}    '
-    'Epoch number: {}  '
-    'Backup every: {}  '
-)
 
 old_graph_msg = 'Resolving old graph def {} (no guarantee)'
 
@@ -41,24 +35,19 @@ class TFNet(FlagIO):
         'sgd': tf.compat.v1.train.GradientDescentOptimizer
     })
 
+    # Interface Methods:
+    train, _save_ckpt = train.train, \
+                        train._save_ckpt
+    annotate, draw_box, write_annotations, return_predict = annotate.annotate,\
+                                                            annotate.draw_box,\
+                                                            annotate.write_annotations, \
+                                                            annotate.return_predict
+    predict = predict.predict
+    analyze = analyze.analyze
+
     def __init__(self, flags, darknet=None):
         FlagIO.__init__(self, subprogram=True)
         speak = True if darknet is None else False
-
-        # from .train import train, build_train_op, _save_ckpt
-        self.train = train
-        self.build_train_op = build_train_op
-        self._save_ckpt = _save_ckpt
-        # from .annotate import annotate, draw_box, write_annotations, return_predict
-        self.annotate = annotate
-        self.write_annotations = write_annotations
-        self.draw_box = draw_box
-        self.return_predict = return_predict
-        # from .predict import predict
-        self.predict = predict
-        # from .analyze import analyze
-        self.analyze = analyze
-
         # disable eager mode for TF1-dependent code
         tf.compat.v1.disable_eager_execution()
 
@@ -225,5 +214,47 @@ class TFNet(FlagIO):
             op = tf.compat.v1.assign(var, plh)
             self.sess.run(op, {plh: val})
 
+    def build_train_op(self):
+        def _l2_norm(t):
+            t = tf.sqrt(tf.reduce_sum(tf.pow(t, 2)))
+            return t
+        self.framework.loss(self.out)
+        self.logger.info('Building {} train op'.format(self.meta['model']))
+        self.global_step = tf.compat.v1.Variable(0, trainable=False)
+        # setup kwargs for trainer
+        kwargs = dict()
+        if self.flags.trainer in ['momentum', 'rmsprop', 'nesterov']:
+            kwargs.update({'momentum': self.flags.momentum})
+        if self.flags.trainer == 'nesterov':
+            kwargs.update({'use_nesterov': True})
+        if self.flags.trainer == 'AMSGrad':
+            kwargs.update({'amsgrad': True})
 
+        # setup trainer
+        step_size = int(self.flags.step_size_coefficient *
+                        (len(self.framework.parse()) // self.flags.batch))
+        self.optimizer = self._TRAINER[self.flags.trainer](
+            cyclic_learning_rate(self,
+                global_step=self.global_step,
+                mode=self.flags.clr_mode,
+                step_size=step_size,
+                learning_rate=self.flags.lr,
+                max_lr=self.flags.max_lr), **kwargs)
 
+        # setup gradients
+        self.gradients, self.variables = zip(
+            *self.optimizer.compute_gradients(self.framework.loss))
+        if self.flags.clip:
+            self.gradients, _ = tf.clip_by_global_norm(self.gradients,
+                                                    self.flags.clip_norm)
+        # create histogram summaries
+        for grad, var in zip(self.gradients, self.variables):
+            name = var.name.split('/')
+            with tf.compat.v1.variable_scope(name[0] + '/'):
+                tf.summary.histogram("gradients/" + name[1], _l2_norm(grad))
+                # tf.summary.histogram("variables/" + name[1], _l2_norm(var))
+
+        # create train op
+        self.train_op = self.optimizer.apply_gradients(
+            zip(self.gradients, self.variables),
+            global_step=self.global_step)

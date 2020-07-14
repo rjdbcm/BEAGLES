@@ -9,7 +9,7 @@ rm SLGR-Suite.spec
 pip3 install pyinstaller
 PYINSTALLER=$(find / -name pyinstaller 2> /dev/null)
 
-pip3 install -r requirements/requirements-linux.txt
+pip3 install -r requirements/requirements.txt
 make all
 ${PYINSTALLER} --hidden-import=xml \
             --hidden-import=xml.etree \

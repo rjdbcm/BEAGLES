@@ -5,7 +5,7 @@ all: virtualenv qt5 cython
 virtualenv:
 	virtualenv --python=python3 .
 	. bin/activate
-	pip3 install -r requirements/requirements-linux.txt
+	pip3 install -r requirements/requirements.txt
 
 qt5:
 	pyrcc5 -o libs/resources.py resources.qrc
