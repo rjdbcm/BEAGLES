@@ -46,7 +46,6 @@ class GradientNaN(Exception):
                   " from the last checkpoint with a lower learning rate{}".format(
                    option))
 
-
 class TFNet(FlagIO):
     _TRAINER = dict({
         'rmsprop': tf.compat.v1.train.RMSPropOptimizer,
@@ -112,6 +111,19 @@ class TFNet(FlagIO):
         self.logger.info('Finished in {}s'.format(
             time.time() - start))
 
+    def raise_error(self, error: Exception, tf_traceback=None):
+        form = "{}\nOriginal Tensorflow Error: {}"
+        try:
+            raise error
+        except Exception as e:
+            if tf_traceback:
+                oe = tf_traceback.message
+                self.flags.error = form.format(str(e), oe)
+            else:
+                self.flags.error = str(e)
+            self.logger.error(str(e))
+            self.send_flags()
+            raise
 
     def build_forward(self):
         # Placeholders
@@ -226,16 +238,7 @@ class TFNet(FlagIO):
                 fetched = self.sess.run(fetches, feed_dict)
             except tf.errors.OpError as oe:
                 if oe.error_code == 3 and "nan" in oe.message.lower():
-                    try:
-                        raise GradientNaN(self.flags)
-                    except GradientNaN as e:
-                        form = "{}\nOriginal Tensorflow Error: {}"
-                        self.flags.error = form.format(str(e), oe.message)
-                        self.logger.error(str(e))
-                        self.send_flags()
-                        raise
-                self.flags.error = str(oe.message)
-                self.send_flags()
+                    self.raise_error(GradientNaN(self.flags), tf_traceback=oe)
                 raise
             loss = fetched[1]
 
@@ -256,13 +259,7 @@ class TFNet(FlagIO):
 
             # Check for exploding/vanishing gradient
             if math.isnan(loss) or math.isinf(loss):
-                try:
-                    raise GradientNaN(self.flags)
-                except GradientNaN as e:
-                    self.flags.error = str(e)
-                    self.logger.error(str(e))
-                    self.send_flags()
-                    raise
+                self.raise_error(GradientNaN(self.flags))
 
             loss_mva = .9 * loss_mva + .1 * loss
             step_now = self.flags.load + i + 1
