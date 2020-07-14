@@ -327,6 +327,9 @@ class TFNet(FlagIO):
         return boxesInfo
 
     def predict(self):
+        def _speak_total_time(last, inp_feed):
+            self.logger.info('Total time = {}s / {} inps = {} ips'.format(
+                            last, len(inp_feed), len(inp_feed) / last))
         self.flags = self.read_flags()
         inp_path = self.flags.imgdir
         all_inps = os.listdir(inp_path)
@@ -357,8 +360,7 @@ class TFNet(FlagIO):
             out = self.sess.run(self.out, feed_dict)
             stop = time.time()
             last = stop - start
-            self.logger.info('Total time = {}s / {} inps = {} ips'.format(
-                last, len(inp_feed), len(inp_feed) / last))
+            _speak_total_time(last, inp_feed)
 
             # Post processing
             self.logger.info(
@@ -371,10 +373,7 @@ class TFNet(FlagIO):
                      enumerate(out))
             stop = time.time()
             last = stop - start
-
-            # Timing
-            self.logger.info('Total time = {}s / {} inps = {} ips'.format(
-                last, len(inp_feed), len(inp_feed) / last))
+            _speak_total_time(last, inp_feed)
 
     def build_train_op(self):
         def _l2_norm(t):
@@ -648,22 +647,23 @@ class TFNet(FlagIO):
 
     def analyze(self, file_list):
 
+        def _writer(analysis_file, items):
+            with open(analysis_file, mode='a') as file:
+                file.write(items[0])
+                file.write(items[1])
+            return
+
         bi = BehaviorIndex(file_list)
         if len(file_list) > 1:
             for i in file_list:
                 analysis_file = os.path.splitext(i)[0] + '_analysis.json'
-                with open(analysis_file, mode='a') as file:
-                    file.write(bi.individual_total_beh())
-                    file.write(bi.individual_single_beh())
+                _writer(analysis_file,
+                        bi.individual_behs())
             analysis_file = 'group_analysis.json'
-            with open(analysis_file, mode='a') as file:
-                file.write(bi.group_total_beh())
-                file.write(bi.group_single_beh())
+            _writer(analysis_file, bi.group_behs())
         else:
             analysis_file = os.path.splitext(file_list[0])[0] + '_analysis.json'
-            with open(analysis_file, mode='a') as file:
-                file.write(bi.individual_total_beh())
-                file.write(bi.individual_single_beh())
+            _writer(analysis_file, bi.individual_behs())
 
     def annotate(self):
         INPUT_VIDEO = self.flags.fbf

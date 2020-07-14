@@ -56,6 +56,12 @@ class BehaviorIndex:
             l.append(bi)
         return dict(zip(self.file_list, l))
 
+    def individual_behs(self):
+        return [self.individual_total_beh(), self.individual_single_beh()]
+
+    def group_behs(self):
+        return [self.group_total_beh(), self.group_single_beh()]
+
     def beh_slice(self, ts):
         d = dict()
         for k, v in ts.distribution().items():
