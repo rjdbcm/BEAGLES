@@ -46,6 +46,12 @@ class GradientNaN(Exception):
                   " from the last checkpoint with a lower learning rate{}".format(
                    option))
 
+
+class VariableIsNone(Exception):
+    def __init__(self, var):
+        Exception.__init__(self, "Cannot find and load: {}".format(var.name))
+
+
 class TFNet(FlagIO):
     _TRAINER = dict({
         'rmsprop': tf.compat.v1.train.RMSPropOptimizer,
@@ -443,14 +449,8 @@ class TFNet(FlagIO):
             name = var.name.split(':')[0]
             args = [name, var.get_shape()]
             val = ckpt_loader(args)
-            try:
-                assert val is not None, \
-                    'Cannot find and load {}'.format(var.name)
-            except AssertionError as e:
-                self.flags.error = str(e)
-                self.logger.error(str(e))
-                self.send_flags()
-                raise
+            if val is None:
+                self.raise_error(VariableIsNone(var))
             shp = val.shape
             plh = tf.compat.v1.placeholder(tf.float32, shp)
             op = tf.compat.v1.assign(var, plh)
