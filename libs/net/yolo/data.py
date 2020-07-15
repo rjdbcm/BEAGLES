@@ -78,6 +78,7 @@ def get_feed_values(self, chunk, dim1, dim2):
     coord = np.zeros([H * W, B, 4])
     proid = np.zeros([H * W, B, C])
     prear = np.zeros([H * W, 4])
+    # TODO: use np.put instead
     for obj in allobj:
         probs[obj[5], :, :] = [[0.] * C] * B
         probs[obj[5], :, labels.index(obj[0])] = 1.

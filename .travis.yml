@@ -17,7 +17,7 @@ jobs:
       python: 3.6
 
 before_install:
-  - pip3 -r requirements/requirements.txt
+  - pip3 install -r requirements/requirements.txt
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev build-essential; fi
 install:
   - pyrcc5 -o libs/resources.py resources.qrc

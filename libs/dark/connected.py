@@ -1,6 +1,7 @@
 from .layer import Layer
 import numpy as np
 
+
 class extract_layer(Layer):
     def setup(self, old_inp, old_out,
               activation, inp, out):
@@ -40,7 +41,6 @@ class extract_layer(Layer):
         self.w['weights'] = w
         self.w['biases'] = b
     
-
 
 class select_layer(Layer):
     def setup(self, inp, old, 
