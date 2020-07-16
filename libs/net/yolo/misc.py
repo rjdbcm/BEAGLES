@@ -1,5 +1,3 @@
-import pickle
-import numpy as np
 # import filetype
 import cv2
 import os

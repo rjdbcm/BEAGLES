@@ -23,6 +23,21 @@ class TestMainWindow(TestCase):
         self.canvas = self.win.canvas
         self.assertRaises(AssertionError, self.canvas.resetAllLines)
 
+    def testToggleAdvancedMode(self):
+        self.win.toggleAdvancedMode()
+        self.win.toggleAdvancedMode()
+
+    def testChangeFormat(self):
+        self.win.change_format()
+        self.win.change_format()
+
+    def testToggleDrawMode(self):
+        self.win.toggleDrawMode()
+        self.win.toggleDrawMode()
+
+    def testLoadPascalXMLByFilename(self):
+        self.win.loadPascalXMLByFilename('test.xml')
+
     def testFileLoad(self):
         self.win.loadFile('data/sample_img/sample_dog.jpg')
         self.win.closeFile()
