@@ -9,7 +9,6 @@ from libs.utils.flags import Flags
 
 
 class ProjectDialog(QDialog):
-
     def __init__(self, parent):
         super(ProjectDialog, self).__init__(parent)
         self.setModal(True)
@@ -22,7 +21,8 @@ class ProjectDialog(QDialog):
                              './data/rawframes/',
                              Flags().labels]
         self.dirty = False
-        self.default = Flags().project_name
+        self.default = "None"
+        self._name = str
         self.projects = next(os.walk(Flags().summary))[1]
 
         layout = QFormLayout()
@@ -56,19 +56,37 @@ class ProjectDialog(QDialog):
         main_layout.addWidget(self.buttonLoad, 4, 0, Qt.AlignRight)
 
         self.setLayout(main_layout)
-        self.name = "default"
         self.setWindowTitle("SLGR-Suite - Load a Project")
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, new_name):
+        self._name = new_name
+
+    def _change_name(self):
+        self.name = self.projectCmb.currentText()
 
     def disable_class_list(self):
         self.projectClasses.setDisabled(True)
         self.projectClasses.setText("Load a Project to edit it's class list")
 
-    def _change_name(self):
-        self.name = self.projectCmb.currentText()
-
     def show_classes(self):
         classes = self.read_class_list()
         self.projectClasses.setText(classes)
+
+    @staticmethod
+    def check_open_project():
+        with open(Flags().labels) as f:
+            for i, line in enumerate(f):
+                if i == 0 and line.startswith('#'):
+                    line = line.strip('#')
+                    return line.strip('\n')
+                if i > 0:
+                    break
+        return False
 
     @staticmethod
     def read_class_list():

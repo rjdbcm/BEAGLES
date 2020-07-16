@@ -147,6 +147,7 @@ class FlowDialog(QDialog):
              getStr('predict'),
              getStr('annotate'),
              getStr('analyze')])
+        self.flowCmb.setMinimumWidth(100)
         self.flowCmb.currentIndexChanged.connect(self.flowSelect)
         layout.addRow(QLabel("Mode"), self.flowCmb)
 
@@ -305,12 +306,12 @@ class FlowDialog(QDialog):
 
         self.flowPrg = QProgressBar()
         self.flowPrg.setRange(0, 100)
-        self.buttonOk = QDialogButtonBox(QDialogButtonBox.Ok)
+        self.buttonRun = QPushButton("Run")
         self.buttonCancel = QDialogButtonBox(QDialogButtonBox.Cancel)
         self.buttonStop = QPushButton("Stop")
         self.buttonStop.setIcon(self.style().standardIcon(QStyle.SP_BrowserStop))
         self.buttonStop.hide()
-        self.buttonOk.accepted.connect(self.accept)
+        self.buttonRun.clicked.connect(self.accept)
         self.buttonStop.clicked.connect(self.closeEvent)
         self.buttonCancel.rejected.connect(self.close)
 
@@ -320,13 +321,20 @@ class FlowDialog(QDialog):
         main_layout.addWidget(self.demoGroupBox, 2, 0)
         main_layout.addWidget(self.trainGroupBox, 3, 0)
         main_layout.setSizeConstraint(QLayout.SetFixedSize)
-        main_layout.addWidget(self.buttonOk, 4, 0, Qt.AlignRight)
+        main_layout.addWidget(self.buttonRun, 4, 0, Qt.AlignRight)
         main_layout.addWidget(self.buttonStop, 4, 0, Qt.AlignRight)
         main_layout.addWidget(self.buttonCancel, 4, 0, Qt.AlignLeft)
         main_layout.addWidget(self.flowPrg, 4, 0, Qt.AlignCenter)
         self.setLayout(main_layout)
 
         self.setWindowTitle("SLGR-Suite - Machine Learning Tool")
+        if self.project.check_open_project():
+            self.project.name = self.project.check_open_project()
+            self.project.show_classes()
+            # swapButtons method fails here
+            self.project.buttonLoad.hide()
+            self.project.buttonOk.show()
+            self.set_project_name()
         self.findCkpt()
 
     def selectProject(self):
@@ -345,7 +353,7 @@ class FlowDialog(QDialog):
                 start, end = _ckpt.span()
                 n = f[start + 1:end - 1]
                 l.append(n)
-                self.buttonOk.setDisabled(False)
+                self.buttonRun.setDisabled(False)
             # else:
             #     self.buttonOk.setDisabled(True)
         l = list(map(int, l))
@@ -519,8 +527,8 @@ class FlowDialog(QDialog):
                 self.updateProgress)
             self.flowthread.start()
         self.flowPrg.setMaximum(0)
-        self.buttonOk.setEnabled(False)
-        self.buttonOk.hide()
+        self.buttonRun.setEnabled(False)
+        self.buttonRun.hide()
         self.buttonStop.show()
         self.formGroupBox.setEnabled(False)
         self.trainGroupBox.setEnabled(False)
@@ -528,9 +536,9 @@ class FlowDialog(QDialog):
     def closeEvent(self, event):
 
         def acceptEvent():
-            self.buttonOk.setDisabled(False)
+            self.buttonRun.setDisabled(False)
             self.buttonStop.hide()
-            self.buttonOk.show()
+            self.buttonRun.show()
             self.flowGroupBox.setEnabled(True)
             self.demoGroupBox.setEnabled(True)
             self.trainGroupBox.setEnabled(True)
@@ -589,9 +597,9 @@ class FlowDialog(QDialog):
         self.formGroupBox.setEnabled(True)
         self.flowPrg.setMaximum(100)
         self.flowPrg.reset()
-        self.buttonOk.setDisabled(False)
+        self.buttonRun.setDisabled(False)
         self.buttonStop.hide()
-        self.buttonOk.show()
+        self.buttonRun.show()
         self.findCkpt()
         # self.findProject()
 
