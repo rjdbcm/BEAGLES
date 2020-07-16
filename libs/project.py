@@ -82,6 +82,7 @@ class ProjectDialog(QDialog):
 
     def write_class_list(self):
         data = self.projectClasses.toPlainText()
+        data = "#" + self.projectCmb.currentText() + "\n" + data
         if len(data) != len(Flags().labels):
             file = open(Flags().labels, "w")
             file.write(data)
@@ -128,6 +129,8 @@ class ProjectDialog(QDialog):
                 [os.remove(j.path) for j in os.scandir(i)]
             elif os.path.isfile(i):
                 open(i, "w").close()
+                with open(i, "a") as f:
+                    f.write("#default\n")
 
     def archive(self):
         name = self.projectCmb.currentText()
