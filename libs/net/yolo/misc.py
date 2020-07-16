@@ -41,3 +41,6 @@ def show(im, allobj, S, w, h, cellx, celly):
     cv2.waitKey()
     cv2.destroyAllWindows()
 
+
+def profile(self):
+    pass

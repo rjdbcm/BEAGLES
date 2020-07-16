@@ -2,6 +2,8 @@ from unittest import TestCase, mock
 from slgrSuite import get_main_app
 import argparse
 from libs.utils.flags import Flags
+from libs.project import ProjectDialog
+from PyQt5.QtWidgets import QMainWindow
 
 
 class TestMainWindow(TestCase):
@@ -29,6 +31,9 @@ class TestMainWindow(TestCase):
         self.win.importDirImages('data/sample_img')
         self.win.openNextImg()
         self.win.openPrevImg()
+
+    def testClearSandbox(self):
+        self.win.project.clear_sandbox()
 
     def tearDown(self):
         self.win.close()
