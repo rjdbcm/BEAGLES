@@ -8,7 +8,7 @@ nor will the minor version or patch version bump for any alpha pre-releases.
 * Initial alpha version mainly combines functionality of the original 
 repos labelImg and darkflow.
 
-2.0.0a 'caucaphony'
+1.0.0a2 'caucaphony'
 ------------------
 
 * Major version bumped due to adding global_step tf.Variable to 

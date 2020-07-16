@@ -1,5 +1,5 @@
 from math import sqrt
-from libs.ustr import ustr
+
 import hashlib
 import re
 import sys
@@ -73,7 +73,7 @@ def fmtShortcut(text):
 
 
 def generateColorByText(text):
-    s = ustr(text)
+    s = str(text)
     hashCode = int(hashlib.sha256(s.encode('utf-8')).hexdigest(), 16)
     r = int((hashCode / 255) % 255)
     g = int((hashCode / 65025)  % 255)

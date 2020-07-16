@@ -6,7 +6,7 @@ from xml.etree.ElementTree import Element, SubElement
 from lxml import etree  # nosec
 import codecs
 from libs.constants import DEFAULT_ENCODING
-from libs.ustr import ustr
+
 from libs.boundingBox import BoundingBox
 
 XML_EXT = '.xml'
@@ -86,7 +86,7 @@ class PascalVocWriter(BoundingBox):
             truncated.text = "1" if maxy == height or miny == 1 else "0"
             truncated.text = "1" if maxx == width or minx == 1 else "0"
             name = SubElement(object_item, 'name')
-            name.text = ustr(each_object['name'])
+            name.text = str(each_object['name'])
             pose = SubElement(object_item, 'pose')
             pose.text = "Unspecified"
             difficult = SubElement(object_item, 'difficult')

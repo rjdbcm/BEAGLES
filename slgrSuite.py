@@ -40,7 +40,6 @@ from libs.pascal_voc_io import PascalVocReader
 from libs.pascal_voc_io import XML_EXT
 from libs.yolo_io import YoloReader
 from libs.yolo_io import TXT_EXT
-from libs.ustr import ustr
 from libs.version import __version__
 from libs.hashableQListWidgetItem import HashableQListWidgetItem
 
@@ -498,7 +497,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
 
         # Application state.
         self.image = QImage()
-        self.filePath = ustr(defaultFilename)
+        self.filePath = str(defaultFilename)
         self.recentFiles = []
         self.maxRecent = 7
         self.lineColor = None
@@ -512,7 +511,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         if settings.get(SETTING_RECENT_FILES):
             if have_qstring():
                 recentFileQStringList = settings.get(SETTING_RECENT_FILES)
-                self.recentFiles = [ustr(i) for i in recentFileQStringList]
+                self.recentFiles = [str(i) for i in recentFileQStringList]
             else:
                 self.recentFiles = settings.get(SETTING_RECENT_FILES)
 
@@ -526,8 +525,8 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                 break
         self.resize(size)
         self.move(position)
-        saveDir = ustr(settings.get(SETTING_SAVE_DIR, None))
-        self.lastOpenDir = ustr(settings.get(SETTING_LAST_OPEN_DIR, None))
+        saveDir = str(settings.get(SETTING_SAVE_DIR, None))
+        self.lastOpenDir = str(settings.get(SETTING_LAST_OPEN_DIR, None))
         if self.defaultSaveDir is None and saveDir is not None and os.path.exists(saveDir):
             self.defaultSaveDir = saveDir
             self.statusBar().showMessage(
@@ -898,7 +897,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.canvas.loadShapes(s)
 
     def saveLabels(self, annotationFilePath):
-        annotationFilePath = ustr(annotationFilePath)
+        annotationFilePath = str(annotationFilePath)
         if self.labelFile is None:
             self.labelFile = LabelFile()
             self.labelFile.verified = self.canvas.verified
@@ -1098,8 +1097,8 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             filePath = self.settings.get(SETTING_FILENAME)
 
         # Make sure that filePath is a regular python string, rather than QString
-        filePath = ustr(filePath)
-        unicodeFilePath = ustr(filePath)
+        filePath = str(filePath)
+        unicodeFilePath = str(filePath)
         # Tzutalin 20160906 : Add file list and dock to move faster
         # Highlight the file item
         if unicodeFilePath and self.fileListWidget.count() > 0:
@@ -1244,7 +1243,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         settings[SETTING_RECENT_FILES] = self.recentFiles
         settings[SETTING_ADVANCE_MODE] = not self._beginner
         if self.defaultSaveDir and os.path.exists(self.defaultSaveDir):
-            settings[SETTING_SAVE_DIR] = ustr(self.defaultSaveDir)
+            settings[SETTING_SAVE_DIR] = str(self.defaultSaveDir)
         else:
             settings[SETTING_SAVE_DIR] = ''
 
@@ -1273,18 +1272,18 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             for file in files:
                 if file.lower().endswith(tuple(extensions)):
                     relativePath = os.path.join(root, file)
-                    path = ustr(os.path.abspath(relativePath))
+                    path = str(os.path.abspath(relativePath))
                     images.append(path)
         natural_sort(images, key=lambda x: x.lower())
         return images
 
     def changeSavedirDialog(self, _value=False):
         if self.defaultSaveDir is not None:
-            path = ustr(self.defaultSaveDir)
+            path = str(self.defaultSaveDir)
         else:
             path = '.'
 
-        dirpath = ustr(QFileDialog.getExistingDirectory(
+        dirpath = str(QFileDialog.getExistingDirectory(
             self, '%s - Save annotations to the directory' % __appname__, path,
             QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
 
@@ -1302,13 +1301,13 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             self.statusBar().show()
             return
 
-        path = os.path.dirname(ustr(self.filePath)) \
+        path = os.path.dirname(str(self.filePath)) \
             if self.filePath else '.'
         if self.usingPascalVocFormat:
             filters = "Open Annotation XML file (%s)" % ' '.join(['*.xml'])
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
-            filename = ustr(QFileDialog.getOpenFileName(
+            filename = str(QFileDialog.getOpenFileName(
                 self, '%s - Choose a xml file' % __appname__, path, filters,
                 options=options))
             if filename:
@@ -1325,7 +1324,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         else:
             defaultOpenDirPath = os.path.dirname(self.filePath) if\
                 self.filePath else '.'
-        targetDirPath = ustr(QFileDialog.getExistingDirectory(
+        targetDirPath = str(QFileDialog.getExistingDirectory(
             self, '%s - Open Directory' % __appname__, defaultOpenDirPath,
             QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
         # set the annotation save directory to the target directory
@@ -1509,7 +1508,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
     def openFile(self, _value=False):
         if not self.mayContinue():
             return
-        path = os.path.dirname(ustr(self.filePath)) if self.filePath else '.'
+        path = os.path.dirname(str(self.filePath)) if self.filePath else '.'
         formats = ['*.%s' % fmt.data().decode("ascii").lower()
                    for fmt in QImageReader.supportedImageFormats()]
         options = QFileDialog.Options()
@@ -1524,11 +1523,11 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             self.loadFile(filename)
 
     def saveFile(self, _value=False):
-        if self.defaultSaveDir is not None and len(ustr(self.defaultSaveDir)):
+        if self.defaultSaveDir is not None and len(str(self.defaultSaveDir)):
             if self.filePath:
                 imgFileName = os.path.basename(self.filePath)
                 savedFileName = os.path.splitext(imgFileName)[0]
-                savedPath = os.path.join(ustr(self.defaultSaveDir),
+                savedPath = os.path.join(str(self.defaultSaveDir),
                                          savedFileName)
                 self._saveFile(savedPath)
         else:
@@ -1554,7 +1553,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         dlg.selectFile(filenameWithoutExtension)
         dlg.setOption(QFileDialog.DontUseNativeDialog, False)
         if dlg.exec_():
-            fullFilePath = ustr(dlg.selectedFiles()[0])
+            fullFilePath = str(dlg.selectedFiles()[0])
             if removeExt:
                 # Return file path without the extension.
                 return os.path.splitext(fullFilePath)[0]
