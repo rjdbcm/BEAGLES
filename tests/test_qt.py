@@ -35,11 +35,17 @@ class TestMainWindow(TestCase):
         self.win.toggleDrawMode()
         self.win.toggleDrawMode()
 
+    def testTrainModel(self):
+        self.win.trainModel()
+
     def testLoadPascalXMLByFilename(self):
         self.win.loadPascalXMLByFilename('test.xml')
 
-    def testFileLoad(self):
+    def testFileLoadZoom(self):
         self.win.loadFile('data/sample_img/sample_dog.jpg')
+        self.win.setFitWindow()
+        self.win.setFitWidth()
+        self.win.setZoom(50)
         self.win.closeFile()
 
     def testImportDirImages(self):
