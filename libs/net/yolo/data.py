@@ -1,5 +1,4 @@
 from ...utils.pascal_voc_clean_xml import pascal_voc_clean_xml
-from numpy.random import permutation as perm
 from .predict import preprocess
 # from .misc import show
 from copy import deepcopy
@@ -123,7 +122,7 @@ def shuffle(self):
     batch_per_epoch = int(self.flags.size / batch)
 
     for i in range(self.flags.epoch):
-        shuffle_idx = perm(np.arange(self.flags.size))
+        shuffle_idx = np.random.permutation(np.arange(self.flags.size))
         for b in range(batch_per_epoch):
             # yield these
             x_batch = list()

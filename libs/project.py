@@ -1,5 +1,5 @@
 import os
-import pickle
+import json
 import shutil
 import tarfile
 from PyQt5.QtGui import *
@@ -22,17 +22,19 @@ class ProjectDialog(QDialog):
                              './data/rawframes/',
                              Flags().labels]
         self.dirty = False
-        self.default = "Sandbox Mode"
+        self.default = Flags().project_name
         self.projects = next(os.walk(Flags().summary))[1]
 
         layout = QFormLayout()
         self.formGroupBox = QGroupBox()
+        self.projectHBox = QHBoxLayout()
         self.projectCmb = QComboBox()
         self.projectCmb.addItems(self.projects)
         self.projectCmb.setEditable(True)
         self.projectCmb.currentTextChanged.connect(self._change_name)
         layout.addRow("Project Name", self.projectCmb)
         self.projectClasses = QTextEdit()
+        self.projectCmb.currentIndexChanged.connect(self.disable_class_list)
         layout.addRow("Class List", self.projectClasses)
         self.formGroupBox.setLayout(layout)
 
@@ -42,17 +44,24 @@ class ProjectDialog(QDialog):
         self.buttonSave.clicked.connect(self.save)
         self.buttonLoad = QPushButton("Load Project")
         self.buttonLoad.clicked.connect(self.load)
-        self.buttonLoad.clicked.connect(self.accept)
+        self.buttonOk = QPushButton("Ok")
+        self.buttonOk.hide()
+        self.buttonOk.clicked.connect(self.accept)
 
         main_layout = QGridLayout()
         main_layout.addWidget(self.formGroupBox, 0, 0)
         main_layout.addWidget(self.buttonCancel, 4, 0, Qt.AlignLeft)
         main_layout.addWidget(self.buttonSave, 4, 0, Qt.AlignCenter)
+        main_layout.addWidget(self.buttonOk, 4, 0, Qt.AlignRight)
         main_layout.addWidget(self.buttonLoad, 4, 0, Qt.AlignRight)
 
         self.setLayout(main_layout)
         self.name = "default"
         self.setWindowTitle("SLGR-Suite - Load a Project")
+
+    def disable_class_list(self):
+        self.projectClasses.setDisabled(True)
+        self.projectClasses.setText("Load a Project to edit it's class list")
 
     def _change_name(self):
         self.name = self.projectCmb.currentText()
@@ -63,12 +72,13 @@ class ProjectDialog(QDialog):
 
     @staticmethod
     def read_class_list():
-        with open(Flags().labels) as classes:
-            try:
-                data = classes.read()
-            except TypeError:
-                pass
-        return data
+        l = list()
+        with open(Flags().labels) as file:
+            for line in file:
+                if line.startswith("#"):
+                    continue
+                l.append(line)
+        return ''.join(l)
 
     def write_class_list(self):
         data = self.projectClasses.toPlainText()
@@ -98,10 +108,19 @@ class ProjectDialog(QDialog):
                             archive.extract(i)
                     cond = False
             except FileNotFoundError:
-                os.mkdir(os.path.dirname(archive))
-                shutil.copy(archive, file)
+                self.archive()
         self.show_classes()
+        self.projectClasses.setEnabled(True)
+        self.swapButtons()
         self.dirty = True
+
+    def swapButtons(self):
+        if self.buttonLoad.isVisible() and self.buttonOk.isHidden():
+            self.buttonLoad.hide()
+            self.buttonOk.show()
+        elif self.buttonLoad.isHidden() and self.buttonOk.isVisible():
+            self.buttonLoad.show()
+            self.buttonOk.hide()
 
     def clear_sandbox(self):
         for i in self.archive_list:
@@ -127,4 +146,5 @@ class ProjectDialog(QDialog):
     def save(self):
         self.write_class_list()
         self.archive()
+        self.swapButtons()
         self.dirty = False
