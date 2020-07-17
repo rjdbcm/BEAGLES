@@ -273,37 +273,6 @@ class FlowDialog(QDialog):
 
         self.trainGroupBox.setLayout(layout3)
 
-        self.demoGroupBox = QGroupBox("Select Capture Parameters")
-        layout4 = QFormLayout()
-
-        self.timeoutTme = QTimeEdit()
-        self.timeoutTme.setDisplayFormat('hh:mm:ss')
-        layout4.addRow(QLabel('Record Time (hh:mm:ss)'), self.timeoutTme)
-
-        self.grayscaleChb = QCheckBox()
-        self.grayscaleChb.setChecked(self.flags.grayscale)
-        layout4.addRow(QLabel('Convert to Grayscale'), self.grayscaleChb)
-
-        self.lineFrm = QFrame()
-        self.lineFrm.setFrameShape(QFrame.HLine)
-        self.lineFrm.setFrameShadow(QFrame.Sunken)
-        layout4.addRow(self.lineFrm)
-
-        self.deviceLbl = QLabel("Available Video Devices:")
-        layout4.addRow(self.deviceLbl)
-
-        self.deviceLsV = QListView()
-        self.deviceItemModel = QStandardItemModel()
-        self.deviceLsV.setModel(self.deviceItemModel)
-        layout4.addRow(self.deviceLsV)
-
-        self.refreshDevBtn = QPushButton()
-        layout4.addRow(self.refreshDevBtn)
-
-        self.demoGroupBox.setLayout(layout4)
-        self.demoGroupBox.setDisabled(True)
-        self.demoGroupBox.hide()
-
         self.flowPrg = QProgressBar()
         self.flowPrg.setRange(0, 100)
         self.buttonRun = QPushButton("Run")
@@ -383,21 +352,10 @@ class FlowDialog(QDialog):
                 self.momentumSpd.setDisabled(False)
 
     def flowSelect(self):
-        if self.flowCmb.currentText() == "Capture":
-            self.demoGroupBox.show()
-            self.demoGroupBox.setDisabled(True)
-        else:
-            self.demoGroupBox.hide()
-
         if self.flowCmb.currentText() == "Predict":
             self.flowGroupBox.show()
         else:
             self.flowGroupBox.hide()
-
-        if self.flowCmb.currentText() == "Freeze":
-            self.thresholdSpd.setDisabled(True)
-        else:
-            self.thresholdSpd.setDisabled(False)
 
         if self.flowCmb.currentText() == "Train":
             self.trainGroupBox.show()
@@ -413,10 +371,7 @@ class FlowDialog(QDialog):
     def set_project_name(self):
         self.projectLbl.setText(self.project.name)
 
-    def accept(self):
-        """set flags for darkflow and prevent startup if errors anticipated"""
-        self.updateCkptFile()  # Make sure TFNet gets the correct checkpoint
-        self.flags.get_defaults()  # Reset self.flags
+    def assign_flags(self):
         self.flags.project_name = self.projectLbl.text()
         self.flags.model = os.path.join(
             self.flags.config, self.modelCmb.currentText())
@@ -445,17 +400,11 @@ class FlowDialog(QDialog):
         if self.vocChb.isChecked():
             self.flags.output_type.append("voc")
 
-        self.flags.timeout = QTime(0, 0, 0).secsTo(self.timeoutTme.time())
-        fps_list = list()
-        for i in range(self.deviceItemModel.rowCount()):
-            item = self.deviceItemModel.item(i)
-            if item.checkState():
-                self.flags.capdevs.append(item.data()[0])
-                fps_list.append(item.data()[1])
-        try:
-            self.flags.fps = min(fps_list)
-        except ValueError:
-            pass
+    def accept(self):
+        """set flags for darkflow and prevent startup if errors anticipated"""
+        self.updateCkptFile()  # Make sure TFNet gets the correct checkpoint
+        self.flags.get_defaults()  # Reset self.flags
+        self.assign_flags()
 
         if not self.flowCmb.currentText() == "Train" and self.flags.load == 0:
             QMessageBox.warning(self, 'Error', "Invalid checkpoint",
@@ -488,8 +437,6 @@ class FlowDialog(QDialog):
                 return
             else:
                 self.flags.train = True
-        if self.flowCmb.currentText() == "Freeze":
-            self.flags.freeze = True
         if self.flowCmb.currentText() == "Annotate":
             formats = ['*.avi', '*.mp4', '*.wmv', '*.mkv', '*.mpeg']
             filters = "Video Files (%s)" % ' '.join(
@@ -502,20 +449,7 @@ class FlowDialog(QDialog):
                                                    os.getcwd(),
                                                    filters, options=options)
             self.flags.fbf = filename[0]
-        if self.flowCmb.currentText() == "Capture":
-            if not self.flags.capdevs:
-                QMessageBox.warning(self, 'Error',
-                                    'No capture device is selected',
-                                    QMessageBox.Ok)
-                return
-            if not self.flags.timeout:
-                QMessageBox.warning(self, 'Error',
-                                    "Please specify a record time",
-                                    QMessageBox.Ok)
-                return
-            self.demoGroupBox.setDisabled(True)
-            self.flags.demo = "camera"
-        if [self.flowCmb.currentText() == "Train" or "Freeze"]:
+        if [self.flowCmb.currentText() == "Train"]:
             # create backend subprocess
             proc = subprocess.Popen([sys.executable, os.path.join(
                 os.getcwd(), "libs/scripts/wrapper.py")],

@@ -5,8 +5,7 @@ from ..utils.postprocess import BehaviorIndex
 def analyze(self, file_list):
     def _writer(analysis_file, items):
         with open(analysis_file, mode='a') as file:
-            file.write(items[0])
-            file.write(items[1])
+            file.write(str({**items[1], **items[0]}).replace("'", '"'))
         return
 
     bi = BehaviorIndex(file_list)
