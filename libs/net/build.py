@@ -38,10 +38,13 @@ class TFNet(FlagIO):
     # Interface Methods:
     train, _save_ckpt = train.train, \
                         train._save_ckpt
-    annotate, draw_box, write_annotations, return_predict = annotate.annotate,\
-                                                            annotate.draw_box,\
-                                                            annotate.write_annotations, \
-                                                            annotate.return_predict
+    annotate,\
+    draw_box,\
+    write_annotations,\
+    return_predict = annotate.annotate,\
+                     annotate.draw_box,\
+                     annotate.write_annotations,\
+                     annotate.return_predict
     predict = predict.predict
     analyze = analyze.analyze
 
