@@ -24,7 +24,7 @@ class YOLOWriter(BoundingBox):
         self.localImgPath = localImgPath
         self.verified = False
 
-    def BndBox2YoloLine(self, box, classList=[]):
+    def BndBox2YoloLine(self, box, classList: list):
         xmin = box['xmin']
         xmax = box['xmax']
         ymin = box['ymin']
@@ -48,7 +48,7 @@ class YOLOWriter(BoundingBox):
 
         return classIndex, xcen, ycen, w, h
 
-    def save(self, classList=[], targetFile=None):
+    def save(self, classList: list, targetFile=None):
 
         out_file = None #Update yolo .txt
         out_class_file = None   #Update class list .txt
@@ -63,7 +63,6 @@ class YOLOWriter(BoundingBox):
             out_file = codecs.open(targetFile, 'w', encoding=ENCODE_METHOD)
             classesFile = os.path.join(os.path.dirname(os.path.abspath(targetFile)), "classes.txt")
             out_class_file = open(classesFile, 'w')
-
 
         for box in self.boxlist:
             classIndex, xcen, ycen, w, h = self.BndBox2YoloLine(box, classList)
