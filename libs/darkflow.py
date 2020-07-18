@@ -509,15 +509,18 @@ class FlowDialog(QDialog):
             self.flowPrg.reset()
             acceptEvent()
 
+    def rolloverLogs(self):
+        logs = [self.flowthread.logfile, self.flowthread.tf_logfile]
+        for log in logs:
+            if os.stat(log.baseFilename).st_size > 0:
+                log.doRollover()
+
     def onFinished(self):
         self.flags = self.flowthread.flags
         if self.flags.error:
             QMessageBox.critical(self, "Error Message", self.flags.error,
                                  QMessageBox.Ok)
-            if os.stat(self.flowthread.logfile.baseFilename).st_size > 0:
-                self.flowthread.logfile.doRollover()
-            if os.stat(self.flowthread.tf_logfile.baseFilename).st_size > 0:
-                self.flowthread.tf_logfile.doRollover()
+            self.rolloverLogs()
         if self.flags.verbalise:
             QMessageBox.information(self, "Debug Message", "Process Stopped:\n"
                                     + "\n".join('{}: {}'.format(k, v)
