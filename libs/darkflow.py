@@ -287,7 +287,6 @@ class FlowDialog(QDialog):
         main_layout = QGridLayout()
         main_layout.addWidget(self.formGroupBox, 0, 0)
         main_layout.addWidget(self.flowGroupBox, 1, 0)
-        main_layout.addWidget(self.demoGroupBox, 2, 0)
         main_layout.addWidget(self.trainGroupBox, 3, 0)
         main_layout.setSizeConstraint(QLayout.SetFixedSize)
         main_layout.addWidget(self.buttonRun, 4, 0, Qt.AlignRight)
