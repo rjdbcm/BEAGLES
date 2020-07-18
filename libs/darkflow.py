@@ -473,7 +473,6 @@ class FlowDialog(QDialog):
             self.buttonStop.hide()
             self.buttonRun.show()
             self.flowGroupBox.setEnabled(True)
-            self.demoGroupBox.setEnabled(True)
             self.trainGroupBox.setEnabled(True)
             self.formGroupBox.setEnabled(True)
             # self.findProject()
@@ -528,7 +527,6 @@ class FlowDialog(QDialog):
                                                 self.flags.items()),
                                     QMessageBox.Ok)
         self.flowGroupBox.setEnabled(True)
-        self.demoGroupBox.setEnabled(True)
         self.trainGroupBox.setEnabled(True)
         self.formGroupBox.setEnabled(True)
         self.flowPrg.setMaximum(100)
