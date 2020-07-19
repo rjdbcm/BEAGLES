@@ -466,47 +466,52 @@ class FlowDialog(QDialog):
         self.formGroupBox.setEnabled(False)
         self.trainGroupBox.setEnabled(False)
 
-    def closeEvent(self, event):
+    def stopMessage(self, event):
 
-        def acceptEvent():
-            self.buttonRun.setDisabled(False)
-            self.buttonStop.hide()
-            self.buttonRun.show()
-            self.flowGroupBox.setEnabled(True)
-            self.trainGroupBox.setEnabled(True)
-            self.formGroupBox.setEnabled(True)
-            # self.findProject()
+        option = "close" if type(event) == QCloseEvent else "stop"
+        msg = "Are you sure you want to {} this dialog? " \
+              "This will terminate any running processes.".format(option)
+        reply = QMessageBox.question(self, 'Message', msg, QMessageBox.Yes,
+                                     QMessageBox.No)
+        if reply == QMessageBox.No:
             try:
-                event.accept()
+                event.ignore()
             except AttributeError:
                 pass
+        else:
+            try:
+                self.flowthread.stop()
+            except AttributeError:
+                pass
+            return True
+
+    def closeEvent(self, event):
+
+        def acceptEvent(accepted):
+            if accepted:
+                self.buttonRun.setDisabled(False)
+                self.buttonStop.hide()
+                self.buttonRun.show()
+                self.flowGroupBox.setEnabled(True)
+                self.trainGroupBox.setEnabled(True)
+                self.formGroupBox.setEnabled(True)
+                # self.findProject()
+                try:
+                    event.accept()
+                except AttributeError:
+                    pass
 
         try:
             thread_running = self.flowthread.isRunning()
         except AttributeError:
             thread_running = False
         if thread_running:
-            option = "close" if type(event) == QCloseEvent else "stop"
-            msg = "Are you sure you want to {} this dialog? " \
-                  "This will terminate any running processes.".format(option)
-            reply = QMessageBox.question(self, 'Message', msg, QMessageBox.Yes,
-                                         QMessageBox.No)
-            if reply == QMessageBox.No:
-                try:
-                    event.ignore()
-                except AttributeError:
-                    pass
-            else:
-                try:
-                    self.flowthread.stop()
-                except AttributeError:
-                    pass
-                acceptEvent()
-
+            accepted = self.stopMessage(event)
+            acceptEvent(accepted)
         else:
             self.flowPrg.setMaximum(100)
             self.flowPrg.reset()
-            acceptEvent()
+            acceptEvent(True)
 
     def rolloverLogs(self):
         logs = [self.flowthread.logfile, self.flowthread.tf_logfile]
