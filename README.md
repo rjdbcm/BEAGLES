@@ -7,15 +7,10 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 ##### Created Using:
 
 [![python](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7%20|%203.8-blue.svg)](https://www.python.org/downloads/release/python-360/)
-
 [![tensorflow](https://raw.githubusercontent.com/aleen42/badges/master/src/tensorflow.svg?)](https://www.tensorflow.org/)
-
 [![cython](https://img.shields.io/badge/Cython-0.29.6-%23646464)](https://cython.org)
-
 [![numpy](https://img.shields.io/badge/NumPy-1.18-013243)](https://numpy.org/)
-
 [![opencv](https://img.shields.io/badge/OpenCV-4.0-%233a6aeb)](https://opencv.org/)
-
 [![pyqt5](https://img.shields.io/badge/PyQt-5.12-41cd52.svg)](https://pypi.org/project/PyQt5/)
 
 
@@ -37,16 +32,19 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 - Command-line backend interface 
 - Human-in-the-loop prediction and dataset expansion
 
+##### Feature Wishlist:
+
+- YOLOv3 detection
+- Automatic [hyperparameter tuning](https://github.com/autonomio/talos#Talos) using talos
+- All darknet layer types implemented as sublclassed Keras Layers
+
 ##### Development Goals:
 
-- Code coverage of \>60%
-- Improved maintainability
+- Code coverage of \>60% (*in progress*)
+- Improve maintainability to A rating (*in progress*)
 - [OBS Studio](https://github.com/obsproject/obs-studio) utility for USB camera arrays (*in progress*)
 - Statistical report generation using [traces](https://github.com/datascopeanalytics/traces) (*in progress*)
 - TensorFlow 2 native code (*separate development branch created*)
-- All darknet layer types implemented as Keras Layers
-- YOLOv3 detection
-- Take advantage of python 3.8's multiprocessing.shared_memory
 
 <details>
   <summary>Table of Contents:</summary>
