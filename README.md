@@ -1,6 +1,5 @@
-# SLGR-Suite
-SLGR stands for Single-Look Gesture Recognition and is an implementation of the YOLO(You Only Look Once) object 
-classification system extended for behavioral analysis and quantification. SLGR-Suite is a graphical image annotation 
+# BEAGLES
+BEAGLES stands for **BE**havioral **A**nnotation and **G**esture **LE**arning **S**uite, and is intended for behavioral analysis and quantification. BEAGLES is a graphical image annotation 
 tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and frontend for a fork of 
 [darkflow](https://github.com/thtrieu/darkflow). 
 
