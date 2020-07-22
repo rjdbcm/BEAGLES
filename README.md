@@ -1,4 +1,4 @@
-# BEAGLES
+# Introduction
 BEAGLES stands for **BE**havioral **A**nnotation and **G**esture **LE**arning **S**uite, and is intended for behavioral analysis and quantification. BEAGLES is a graphical image annotation 
 tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and frontend for a fork of 
 [darkflow](https://github.com/thtrieu/darkflow). 
