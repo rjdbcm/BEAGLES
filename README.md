@@ -1,6 +1,5 @@
-# SLGR-Suite [![GitHub version](https://badge.fury.io/gh/rjdbcm%2FSLGR-Suite.svg)](https://badge.fury.io/gh/rjdbcm%2FSLGR-Suite)[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/rjdbcm/SLGR-Suite/graphs/commit-activity)[![Maintainability](https://api.codeclimate.com/v1/badges/4a252ae7978e72fe850a/maintainability)](https://codeclimate.com/github/rjdbcm/SLGR-Suite/maintainability)
-SLGR stands for Single-Look Gesture Recognition and is an implementation of the YOLO(You Only Look Once) object 
-classification system extended for behavioral analysis and quantification. SLGR-Suite is a graphical image annotation 
+# Introduction [![GitHub version](https://badge.fury.io/gh/rjdbcm%2FSLGR-Suite.svg)](https://badge.fury.io/gh/rjdbcm%2FSLGR-Suite)[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/rjdbcm/SLGR-Suite/graphs/commit-activity)[![Maintainability](https://api.codeclimate.com/v1/badges/4a252ae7978e72fe850a/maintainability)](https://codeclimate.com/github/rjdbcm/SLGR-Suite/maintainability)
+BEAGLES stands for **BE**havioral **A**nnotation and **G**esture **LE**arning **S**uite, and is intended for behavioral analysis and quantification. BEAGLES is a graphical image annotation 
 tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and frontend for a fork of 
 [darkflow](https://github.com/thtrieu/darkflow). 
 
