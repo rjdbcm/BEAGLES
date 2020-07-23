@@ -130,7 +130,7 @@ class Flags(dict):
 
     def __init__(self, defaults=True):
         if defaults:
-            # All paths are relative to slgrSuite.py
+            # All paths are relative to BEAGLES.py
             self.annotation = './data/committedframes/'
             self.backup = './data/ckpt/'
             self.batch = 16

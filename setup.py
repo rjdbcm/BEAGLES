@@ -89,7 +89,7 @@ setup(
     license='GPLv3',
     url='https://github.com/rjdbcm/SLGR-Suite',
     packages=find_packages(),
-    scripts=['slgrSuite.py'],
+    scripts=['BEAGLES.py'],
     ext_modules=cythonize(ext_modules),
     extras_require={'darkmode': ["qdarkstyle", "pyobjc"]
                     if sys.platform == "Darwin" else ["qdarkstyle"]},

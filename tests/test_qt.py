@@ -1,7 +1,7 @@
 from unittest import TestCase, mock
 import os
 import glob
-from slgrSuite import get_main_app
+from BEAGLES import get_main_app
 import argparse
 from libs.utils.flags import Flags
 from libs.scripts.voc_to_yolo import convertAnnotation
@@ -57,8 +57,8 @@ class TestMainWindow(TestCase):
         self.win.openPrevImg()
 
     def testImpVideo(self):
-        import slgrSuite
-        slgrSuite.frame_capture('test.mp4')
+        import BEAGLES
+        BEAGLES.frame_capture('test.mp4')
         files = glob.glob('*.jpg')
         for file in files:
             os.remove(file)
