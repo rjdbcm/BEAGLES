@@ -368,7 +368,11 @@ class FlowDialog(QDialog):
     #     genConfigYOLOv2()
 
     def set_project_name(self):
-        self.projectLbl.setText(self.project.name)
+        try:
+            self.projectLbl.setText(self.project.name)
+        except TypeError:
+            print(self.project.name)
+            pass
 
     def assign_flags(self):
         self.flags.project_name = self.projectLbl.text()
