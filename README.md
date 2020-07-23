@@ -1,4 +1,4 @@
-# Introduction [![GitHub version](https://badge.fury.io/gh/rjdbcm%2FSLGR-Suite.svg)](https://badge.fury.io/gh/rjdbcm%2FSLGR-Suite)[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/rjdbcm/SLGR-Suite/graphs/commit-activity)[![Maintainability](https://api.codeclimate.com/v1/badges/4a252ae7978e72fe850a/maintainability)](https://codeclimate.com/github/rjdbcm/SLGR-Suite/maintainability)
+# Introduction [![GitHub version](https://badge.fury.io/gh/rjdbcm%2FBEAGLES.svg)](https://badge.fury.io/gh/rjdbcm%2FBEAGLES)[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/rjdbcm/BEAGLES/graphs/commit-activity)[![Maintainability](https://api.codeclimate.com/v1/badges/4a252ae7978e72fe850a/maintainability)](https://codeclimate.com/github/rjdbcm/BEAGLES/maintainability)
 BEAGLES stands for **BE**havioral **A**nnotation and **G**esture **LE**arning **S**uite, and is intended for behavioral analysis and quantification. BEAGLES is a graphical image annotation 
 tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and frontend for a fork of 
 [darkflow](https://github.com/thtrieu/darkflow). 
@@ -17,8 +17,8 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 
 |  Branch  |                     Status                     |
 |:---------:|:------------------------------------------------:|
-| master   |[![codecov](https://codecov.io/gh/rjdbcm/SLGR-Suite/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/SLGR-Suite)[![Build Status](https://travis-ci.org/rjdbcm/SLGR-Suite.svg?branch=master)](https://travis-ci.org/rjdbcm/SLGR-Suite)
-| dev      |[![codecov](https://codecov.io/gh/rjdbcm/SLGR-Suite/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/SLGR-Suite)[![Build Status](https://travis-ci.org/rjdbcm/SLGR-Suite.svg?branch=dev)](https://travis-ci.org/rjdbcm/SLGR-Suite)
+| master   |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Build Status](https://travis-ci.org/rjdbcm/BEAGLES.svg?branch=master)](https://travis-ci.org/rjdbcm/BEAGLES)
+| dev      |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Build Status](https://travis-ci.org/rjdbcm/BEAGLES.svg?branch=dev)](https://travis-ci.org/rjdbcm/BEAGLES)
 
 ##### Features:
 
@@ -81,10 +81,10 @@ make
 
 Scripts are included in `build/` for those interested but are **NOT** **RECOMMENDED**.
 
-### Open SLGR-Suite
+### Open BEAGLES
 From the source directory run:
 ```
-./slgrSuite.py
+./BEAGLES.py
 ```
 
 ## Controls
