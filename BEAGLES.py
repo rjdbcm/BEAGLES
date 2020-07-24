@@ -506,7 +506,14 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.fit_window = False
         self.difficult = False
 
-        self.recentFiles = settings.get(SETTING_RECENT_FILES)
+        # Fix the compatible issue for qt4 and qt5.
+        # Convert the QStringList to python list
+        if settings.get(SETTING_RECENT_FILES):
+            if have_qstring():
+                recentFileQStringList = settings.get(SETTING_RECENT_FILES)
+                self.recentFiles = [str(i) for i in recentFileQStringList]
+            else:
+                self.recentFiles = settings.get(SETTING_RECENT_FILES)
 
         size = settings.get(SETTING_WIN_SIZE, QSize(600, 500))
         position = QPoint(0, 0)

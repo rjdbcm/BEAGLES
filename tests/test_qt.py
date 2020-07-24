@@ -1,6 +1,7 @@
 from unittest import TestCase, mock
 import os
 import glob
+import BEAGLES
 from BEAGLES import get_main_app
 import argparse
 from libs.utils.flags import Flags
@@ -14,13 +15,14 @@ class TestMainWindow(TestCase):
     app = None
     win = None
 
+    @classmethod
     @mock.patch('argparse.ArgumentParser.parse_args',
                 return_value=argparse.Namespace(
                     defaultFilename='data/sample_img/sample_dog.jpg',
                     defaultPredefClassFile=Flags().labels,
                     defaultSaveDir=None))
-    def setUp(self, args):
-        self.app, self.win = get_main_app()
+    def setUpClass(cls, args):
+        cls.app, cls.win = get_main_app()
 
     def testCanvas(self):
         self.canvas = self.win.canvas
@@ -56,9 +58,9 @@ class TestMainWindow(TestCase):
         self.win.openNextImg()
         self.win.openPrevImg()
 
+    # Definitely works but doesn't test well.
     def testImpVideo(self):
-        import BEAGLES
-        BEAGLES.frame_capture('test.mp4')
+        BEAGLES.frame_capture(os.path.abspath('test.mp4'))
         files = glob.glob('*.jpg')
         for file in files:
             os.remove(file)
@@ -66,9 +68,10 @@ class TestMainWindow(TestCase):
     def testClearSandbox(self):
         self.win.project.clear_sandbox()
 
-    def tearDown(self):
-        self.win.close()
-        self.app.quit()
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.win.close()
+        cls.app.quit()
 
     def test_noop(self):
         pass
