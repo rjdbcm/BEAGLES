@@ -295,7 +295,7 @@ class FlowDialog(QDialog):
         main_layout.addWidget(self.flowPrg, 4, 0, Qt.AlignCenter)
         self.setLayout(main_layout)
 
-        self.setWindowTitle("SLGR-Suite - Machine Learning Tool")
+        self.setWindowTitle("BEAGLES - Machine Learning Tool")
         if self.project.check_open_project():
             self.project.name = self.project.check_open_project()
             self.project.show_classes()
@@ -418,7 +418,7 @@ class FlowDialog(QDialog):
             options = QFileDialog.Options()
             options = QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks
             dirname = QFileDialog.getExistingDirectory(self,
-                                                       'SLGR-Suite Predict - '
+                                                       'BEAGLES Predict - '
                                                        'Choose Image Folder',
                                                        os.getcwd(),
                                                        options)
@@ -447,7 +447,7 @@ class FlowDialog(QDialog):
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
             filename = QFileDialog.getOpenFileName(self,
-                                                   'SLGR-Suite Annotate - '
+                                                   'BEAGLES Annotate - '
                                                    'Choose Video file',
                                                    os.getcwd(),
                                                    filters, options=options)

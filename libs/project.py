@@ -56,7 +56,7 @@ class ProjectDialog(QDialog):
         main_layout.addWidget(self.buttonLoad, 4, 0, Qt.AlignRight)
 
         self.setLayout(main_layout)
-        self.setWindowTitle("SLGR-Suite - Load a Project")
+        self.setWindowTitle("BEAGLES - Load a Project")
 
     @property
     def name(self):

@@ -22,10 +22,10 @@ coverage:
 	coverage run -m unittest discover tests
 
 clean:
-	rm -f ~/.SLGR-SuiteSettings.pkl ./libs/resources.py
+	rm -f ~/.BEAGLESSettings.pkl ./libs/resources.py
 	rm -f ./libs/cython_utils/*.c
 	rm -rf *.egg-info
-	rm -rf SLGR-Suite-*
+	rm -rf BEAGLES-*
 	rm -f ./libs/cython_utils/*.so
 	rm -rf ./build
 	rm -rf ./dist

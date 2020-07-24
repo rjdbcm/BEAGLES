@@ -43,7 +43,7 @@ from libs.yolo_io import TXT_EXT
 from libs.version import __version__
 from libs.hashableQListWidgetItem import HashableQListWidgetItem
 
-__appname__ = 'SLGR-Suite'
+__appname__ = 'BEAGLES'
 
 
 # noinspection PyUnresolvedReferences

@@ -52,7 +52,7 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 * [Installation](#installation)
     * [Source Install](#source-install-virtualenv)
     * [Binary Build](#binary-build)
-    * [Open SLGR-Suite](#open-slgr-suite)
+    * [Open BEAGLES](#open-BEAGLES)
 * [Controls](#controls)
 * [Image Annotation](#image-annotation)
     * [Verify Image](#verify-image)
@@ -154,7 +154,7 @@ Send a pull request
 
 ## Related
 
-1. [labelImg](https://github.com/tzutalin/labelImg) the original image annotation software SLGR-Suite is forked from
+1. [labelImg](https://github.com/tzutalin/labelImg) the original image annotation software BEAGLES is forked from
 2. [darkflow](https://github.com/thtrieu/darkflow) the original basis of the machine learning backend
 3. [cyclic-learning-rate](https://github.com/mhmoodlan/cyclic-learning-rate) the implementation of cyclic learning rates used
 4. [traces](https://github.com/datascopeanalytics/traces) library for non-transformative unevenly-spaced timeseries analysis

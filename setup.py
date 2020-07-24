@@ -82,12 +82,12 @@ else:
 
 setup(
     version=VERSION,
-    name='SLGR-Suite',
+    name='BEAGLES',
     description='',
     long_description=long_description,
     long_description_content_type="text/markdown",
     license='GPLv3',
-    url='https://github.com/rjdbcm/SLGR-Suite',
+    url='https://github.com/rjdbcm/BEAGLES',
     packages=find_packages(),
     scripts=['BEAGLES.py'],
     ext_modules=cythonize(ext_modules),

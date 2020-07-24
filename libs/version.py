@@ -1,2 +1,2 @@
 __version__ = '2.0.0a'
-"""Current version of SLGR-Suite"""
+"""Current version of BEAGLES"""

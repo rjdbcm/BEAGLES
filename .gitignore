@@ -3,7 +3,7 @@ resources/icons/.DS_Store
 resources.py
 
 .idea*
-SLGR-Suite.egg-info*
+BEAGLES.egg-info*
 
 *.pyc
 .*.swp
