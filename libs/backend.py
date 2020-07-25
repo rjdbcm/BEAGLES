@@ -2,7 +2,6 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from .labelFile import LabelFile
-from .stringBundle import StringBundle
 from .utils.flags import Flags, FlagIO
 from .project import ProjectDialog
 from libs.backend_ui import BackendDialog, BackendThread
@@ -25,7 +24,6 @@ class FlowDialog(BackendDialog):
         self.flags = Flags()
         self.project = ProjectDialog(self)
         self.project.accepted.connect(self.set_project_name)
-        self.stringBundle = StringBundle.getBundle()
         self.setupDialog()
         if self.project.check_open_project():
             self.project.name = self.project.check_open_project()

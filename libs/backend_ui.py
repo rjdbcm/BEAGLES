@@ -3,6 +3,7 @@ import os
 import sys
 import time
 from libs.utils.flags import FlagIO
+from .stringBundle import StringBundle
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -107,9 +108,9 @@ class BackendThread(QThread, FlagIO):
 class BackendDialog(QDialog):
     def __init__(self, parent):
         super(BackendDialog, self).__init__(parent)
+        self.stringBundle = StringBundle.getBundle()
 
     def setupDialog(self):
-
         def getStr(strId):
             return self.stringBundle.getString(strId)
 
