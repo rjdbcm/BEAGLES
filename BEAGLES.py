@@ -31,7 +31,7 @@ from libs.canvas import Canvas
 from libs.zoomWidget import ZoomWidget
 from libs.labelDialog import LabelDialog
 from libs.utils.flags import Flags, FlagIO
-from libs.darkflow import FlowDialog
+from libs.backend import FlowDialog
 from libs.colorDialog import ColorDialog
 from libs.project import ProjectDialog
 from libs.labelFile import LabelFile, LabelFileError
