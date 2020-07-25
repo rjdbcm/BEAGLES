@@ -117,19 +117,17 @@ class FlowDialog(QDialog):
 
     def __init__(self, parent=None, labelfile=None):
         super(FlowDialog, self).__init__(parent)
+        self.labelfile = labelfile
         self.flags = Flags()
         self.project = ProjectDialog(self)
         self.project.accepted.connect(self.set_project_name)
-        self.oldBatchValue = int(self.flags.batch)
-        self.oldSaveValue = int(self.flags.save)
-        # allow use of labels file passed by slgrSuite
-
         self.stringBundle = StringBundle.getBundle()
+
+    def setupDialog(self):
 
         def getStr(strId):
             return self.stringBundle.getString(strId)
 
-        self.labelfile = labelfile
         self.formGroupBox = QGroupBox("Select Model and Checkpoint")
         layout = QFormLayout()
 
@@ -227,7 +225,8 @@ class FlowDialog(QDialog):
 
         self.maxLearningRateSpd = ScientificDoubleSpinBox()
         self.maxLearningRateSpd.setValue(self.flags.max_lr)
-        layout3.addRow(QLabel("Maximum Learning Rate"), self.maxLearningRateSpd)
+        layout3.addRow(QLabel("Maximum Learning Rate"),
+                       self.maxLearningRateSpd)
 
         self.stepSizeCoefficient = QSpinBox()
         self.stepSizeCoefficient.setRange(2, 10)
@@ -278,7 +277,8 @@ class FlowDialog(QDialog):
         self.buttonRun = QPushButton("Run")
         self.buttonCancel = QDialogButtonBox(QDialogButtonBox.Cancel)
         self.buttonStop = QPushButton("Stop")
-        self.buttonStop.setIcon(self.style().standardIcon(QStyle.SP_BrowserStop))
+        self.buttonStop.setIcon(
+            self.style().standardIcon(QStyle.SP_BrowserStop))
         self.buttonStop.hide()
         self.buttonRun.clicked.connect(self.accept)
         self.buttonStop.clicked.connect(self.closeEvent)
