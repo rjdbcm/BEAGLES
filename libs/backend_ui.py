@@ -2,8 +2,9 @@ import re
 import os
 import sys
 import time
+import inspect
 from libs.utils.flags import FlagIO
-from .stringBundle import StringBundle
+from .base_ui import getStr, BeaglesDialog
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -104,28 +105,42 @@ class BackendThread(QThread, FlagIO):
             time.sleep(self.rate)
             self.read_flags()
 
-
-class BackendDialog(QDialog):
+class BackendDialog(BeaglesDialog):
     def __init__(self, parent):
         super(BackendDialog, self).__init__(parent)
-        self.stringBundle = StringBundle.getBundle()
+        # training_widgets
+        self.flowCmb = QComboBox()
+        self.modelCmb = QComboBox()
+        self.loadCmb = QComboBox()
+        self.thresholdSpd = QDoubleSpinBox()
+        self.verbaliseChb = QCheckBox()
+        # predict_widgets
+        self.jsonChb = QCheckBox()
+        self.vocChb = QCheckBox()
+        # hyperparameter_widgets
+        self.trainerCmb = QComboBox()
+        self.momentumSpd = QDoubleSpinBox()
+        self.learningModeCmb = QComboBox()
+        self.learningRateSpd = ScientificDoubleSpinBox()
+        self.maxLearningRateSpd = ScientificDoubleSpinBox()
+        self.stepSizeCoefficient = QSpinBox()
+        self.keepSpb = QSpinBox()
+        self.batchSpb = QSpinBox()
+        self.epochSpb = QSpinBox()
+        self.saveSpb = QSpinBox()
+        self.clipLayout = QHBoxLayout()
+        self.updateAnchorChb = QCheckBox()
 
-    def setupDialog(self):
-        def getStr(strId):
-            return self.stringBundle.getString(strId)
-
-        self.formGroupBox = QGroupBox("Select Model and Checkpoint")
-        layout = QFormLayout()
-
+    def setupProjectWidgets(self, layout):
         self.projectLayout = QHBoxLayout()
-        self.projectLbl = QLabel(self.project.default)
         self.projectBtn = QPushButton(getStr('selectProject'))
+        self.projectLbl = QLabel(self.project.default)
         self.projectBtn.clicked.connect(self.project.open)
         self.projectLayout.addWidget(self.projectLbl)
         self.projectLayout.addWidget(self.projectBtn)
-        layout.addRow(QLabel(getStr('projectName')), self.projectLayout)
+        layout.addRow(QLabel("Project"), self.projectLayout)
 
-        self.flowCmb = QComboBox()
+    def setupTrainingWidgets(self):
         self.flowCmb.addItems(
             [getStr('train'),
              getStr('predict'),
@@ -133,136 +148,62 @@ class BackendDialog(QDialog):
              getStr('analyze')])
         self.flowCmb.setMinimumWidth(100)
         self.flowCmb.currentIndexChanged.connect(self.flowSelect)
-        layout.addRow(QLabel("Mode"), self.flowCmb)
-
-        self.modelCmb = QComboBox()
         self.modelCmb.addItems(self.listFiles(self.flags.config))
         self.modelCmb.setToolTip("Choose a model configuration")
         self.modelCmb.currentIndexChanged.connect(self.findCkpt)
-        layout.addRow(QLabel("Model"), self.modelCmb)
-
-        self.loadCmb = QComboBox()
         self.loadCmb.setToolTip("Choose a checkpoint")
         self.loadCmb.setMinimumWidth(100)
-        layout.addRow(QLabel("Checkpoint"), self.loadCmb)
-
-        self.thresholdSpd = QDoubleSpinBox()
         self.thresholdSpd.setRange(0.0, .99)
         self.thresholdSpd.setSingleStep(0.01)
         self.thresholdSpd.setValue(self.flags.threshold)
         self.thresholdSpd.setDisabled(True)
-        layout.addRow(QLabel("Threshold"), self.thresholdSpd)
 
-        self.verbaliseChb = QCheckBox()
-        layout.addRow(QLabel("Verbose"), self.verbaliseChb)
-
-        self.formGroupBox.setLayout(layout)
-
-        self.flowGroupBox = QGroupBox("Select Predict Parameters")
-
-        layout2 = QFormLayout()
-
-        self.jsonChb = QCheckBox()
+    def setupPredictWidgets(self):
         self.jsonChb.setChecked(False)
-
-        self.vocChb = QCheckBox()
         self.vocChb.setChecked(True)
 
-        layout2.addRow(QLabel("Output JSON Annotations"), self.jsonChb)
-        layout2.addRow(QLabel("Output VOC Annotations "), self.vocChb)
-
-        self.flowGroupBox.setLayout(layout2)
-        self.flowGroupBox.hide()
-
-        self.trainGroupBox = QGroupBox("Select Training Parameters")
-
-        layout3 = QFormLayout()
-
-        self.trainerCmb = QComboBox()
+    def setupHyperparameterWidgets(self):
         self.trainerCmb.addItems(["rmsprop", "adadelta", "adagrad",
                                   "adagradDA", "momentum", "nesterov", "adam",
                                   "AMSGrad", "ftrl", "sgd"])
         self.trainerCmb.currentIndexChanged.connect(self.trainerSelect)
-        layout3.addRow(QLabel("Training Algorithm"), self.trainerCmb)
-
-        self.momentumSpd = QDoubleSpinBox()
         self.momentumSpd.setRange(0.0, .99)
         self.momentumSpd.setSingleStep(0.01)
         self.momentumSpd.setToolTip(getStr('momentumTip'))
-        layout3.addRow(QLabel("Momentum"), self.momentumSpd)
-
-        self.learningModeCmb = QComboBox()
-        self.learningModeCmb.addItems(["triangular", "triangular2",
-                                       "exp_range"])
-        self.learningModeCmb.setItemData(0,
-                                         getStr('triangularTip'),
-                                         Qt.ToolTipRole)
-        self.learningModeCmb.setItemData(1,
-                                         getStr('triangular2Tip'),
-                                         Qt.ToolTipRole)
-        self.learningModeCmb.setItemData(2,
-                                         getStr('expRangeTip'),
-                                         Qt.ToolTipRole)
-        layout3.addRow(QLabel("Learning Mode"), self.learningModeCmb)
-
-        self.learningRateSpd = ScientificDoubleSpinBox()
+        learning_modes = ["triangular", "triangular2", "exp_range"]
+        self.learningModeCmb.addItems(learning_modes)
+        for i, mode in enumerate(learning_modes):
+            self.learningModeCmb.setItemData(i, getStr(mode + 'Tip'),
+                                             Qt.ToolTipRole)
         self.learningRateSpd.setValue(self.flags.lr)
-        layout3.addRow(QLabel("Initial Learning Rate"), self.learningRateSpd)
-
-        self.maxLearningRateSpd = ScientificDoubleSpinBox()
         self.maxLearningRateSpd.setValue(self.flags.max_lr)
-        layout3.addRow(QLabel("Maximum Learning Rate"),
-                       self.maxLearningRateSpd)
-
-        self.stepSizeCoefficient = QSpinBox()
         self.stepSizeCoefficient.setRange(2, 10)
         self.stepSizeCoefficient.setValue(self.flags.step_size_coefficient)
-        layout3.addRow(QLabel("Step Size Coefficient"),
-                       self.stepSizeCoefficient)
-
-        self.keepSpb = QSpinBox()
         self.keepSpb.setValue(self.flags.keep)
         self.keepSpb.setRange(1, 256)
-        layout3.addRow(QLabel("Checkpoints to Keep"), self.keepSpb)
-
-        self.batchSpb = QSpinBox()
         self.batchSpb.setRange(1, 256)
         self.batchSpb.setValue(int(self.flags.batch))
         self.batchSpb.setWrapping(True)
-        layout3.addRow(QLabel("Batch Size"), self.batchSpb)
-
-        self.epochSpb = QSpinBox()
         self.epochSpb.setRange(1, 65536)
         self.epochSpb.setValue(int(self.flags.epoch))
-        layout3.addRow(QLabel("Epochs to Run"), self.epochSpb)
-
-        self.saveSpb = QSpinBox()
         self.saveSpb.setRange(1, 65536)
         self.saveSpb.setValue(self.flags.save)
         self.saveSpb.setWrapping(True)
-        layout3.addRow(QLabel("Save Every"), self.saveSpb)
-
-        self.clipLayout = QHBoxLayout()
         self.clipNorm = QSpinBox()
+        self.clipChb = QCheckBox()
         self.clipNorm.setValue(5)
         self.clipNorm.setDisabled(True)
-        self.clipChb = QCheckBox()
         self.clipChb.clicked.connect(self.clipNorm.setEnabled)
         self.clipLayout.addWidget(self.clipChb)
         self.clipLayout.addWidget(QLabel("Norm:"))
         self.clipLayout.addWidget(self.clipNorm)
-        layout3.addRow(QLabel("Clip Gradients"), self.clipLayout)
 
-        self.updateAnchorChb = QCheckBox()
-        layout3.addRow(QLabel("Update Anchors"), self.updateAnchorChb)
-
-        self.trainGroupBox.setLayout(layout3)
-
+    def setupMainLayout(self):
         self.flowPrg = QProgressBar()
-        self.flowPrg.setRange(0, 100)
         self.buttonRun = QPushButton("Run")
-        self.buttonCancel = QDialogButtonBox(QDialogButtonBox.Cancel)
         self.buttonStop = QPushButton("Stop")
+        self.flowPrg.setRange(0, 100)
+        self.buttonCancel = QDialogButtonBox(QDialogButtonBox.Cancel)
         self.buttonStop.setIcon(
             self.style().standardIcon(QStyle.SP_BrowserStop))
         self.buttonStop.hide()
@@ -271,14 +212,39 @@ class BackendDialog(QDialog):
         self.buttonCancel.rejected.connect(self.close)
 
         main_layout = QGridLayout()
+        main_layout.setSizeConstraint(QLayout.SetFixedSize)
         main_layout.addWidget(self.formGroupBox, 0, 0)
         main_layout.addWidget(self.flowGroupBox, 1, 0)
         main_layout.addWidget(self.trainGroupBox, 3, 0)
-        main_layout.setSizeConstraint(QLayout.SetFixedSize)
         main_layout.addWidget(self.buttonRun, 4, 0, Qt.AlignRight)
         main_layout.addWidget(self.buttonStop, 4, 0, Qt.AlignRight)
         main_layout.addWidget(self.buttonCancel, 4, 0, Qt.AlignLeft)
         main_layout.addWidget(self.flowPrg, 4, 0, Qt.AlignCenter)
         self.setLayout(main_layout)
 
+    def setupDialog(self):
+        layout = QFormLayout()
+        self.formGroupBox = QGroupBox("Select Model and Checkpoint")
+        self.formGroupBox.setLayout(layout)
+        self.setupProjectWidgets(layout)
+        self.setupTrainingWidgets()
+        training_widgets = self.getWidgetsByIndex(0, 4)
+        self.addRowsToLayout(layout, training_widgets)
+
+        self.flowGroupBox = QGroupBox("Select Predict Parameters")
+        layout2 = QFormLayout()
+        self.setupPredictWidgets()
+        predict_widgets = self.getWidgetsByIndex(5, 7)
+        self.addRowsToLayout(layout2, predict_widgets)
+        self.flowGroupBox.setLayout(layout2)
+        self.flowGroupBox.hide()
+
+        self.trainGroupBox = QGroupBox("Select Training Parameters")
+        layout3 = QFormLayout()
+        self.setupHyperparameterWidgets()
+        hyperparameter_widgets = self.getWidgetsByIndex(7, 19)
+        self.addRowsToLayout(layout3, hyperparameter_widgets)
+        self.trainGroupBox.setLayout(layout3)
+
+        self.setupMainLayout()
         self.setWindowTitle("BEAGLES - Machine Learning Tool")
