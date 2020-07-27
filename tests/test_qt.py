@@ -55,8 +55,8 @@ class TestMainWindow(TestCase):
 
     def testImportDirImages(self):
         self.win.importDirImages('data/sample_img')
-        self.win.openNextImg()
-        self.win.openPrevImg()
+        self.win.nextImg()
+        self.win.prevImg()
 
     # Definitely works but doesn't test well.
     def testImpVideo(self):

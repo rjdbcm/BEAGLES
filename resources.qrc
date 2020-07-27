@@ -18,7 +18,7 @@
 <file alias="copy">resources/icons/copy.png</file>
 <file alias="edit">resources/icons/edit.png</file>
 <file alias="open">resources/icons/open.png</file>
-<file alias="impvideo">resources/icons/impvideo.png</file>
+<file alias="impVideo">resources/icons/impvideo.png</file>
 <file alias="switchmeon">resources/icons/switchmeon.png</file>
 <file alias="switchmeoff">resources/icons/switchmeoff.png</file>
 <file alias="trainModel">resources/icons/trainModel.png</file>
@@ -36,8 +36,8 @@
 <file alias="zoom-in">resources/icons/zoom-in.png</file>
 <file alias="zoom-out">resources/icons/zoom-out.png</file>
 <file alias="delete">resources/icons/cancel.png</file>
-<file alias="next">resources/icons/next.png</file>
-<file alias="prev">resources/icons/prev.png</file>
+<file alias="nextImg">resources/icons/next.png</file>
+<file alias="prevImg">resources/icons/prev.png</file>
 <file alias="resetall">resources/icons/resetall.png</file>
 <file alias="verify">resources/icons/verify.png</file>
 <file alias="strings">resources/strings/strings.properties</file>

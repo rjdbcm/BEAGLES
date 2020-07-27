@@ -1,7 +1,12 @@
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+from functools import partial
 from .stringBundle import StringBundle
+from .toolBar import ToolBar
+from .qtUtils import *
+from .utils.flags import FlagIO
+
 
 stringBundle = StringBundle.getBundle()
 
@@ -37,3 +42,44 @@ class BeaglesDialog(QDialog):
     # def addWidgetsToLayout(self, layout, widgets: dict):
     #     for _, obj in widgets.items():
     #         layout.addWidget(obj)
+
+
+class BeaglesMainWindow(QMainWindow, FlagIO):
+    def __init__(self):
+        super(BeaglesMainWindow, self).__init__()
+        FlagIO.__init__(self, subprogram=True)
+        self.shortcuts = dict({
+            'impVideo': 'Ctrl+i',
+            'nextImg': 'd',
+            'prevImg': 'a'
+        })
+
+    def menu(self, title, actions=None):
+        menu = self.menuBar().addMenu(title)
+        if actions:
+            addActions(menu, actions)
+        return menu
+
+    def toolbar(self, title, actions=None):
+        toolbar = ToolBar(title)
+        toolbar.setObjectName(u'%sToolBar' % title)
+        toolbar.setMovable(False)
+        toolbar.setFixedHeight(32)
+        toolbar.setIconSize(QSize(30, 30))
+        toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        if actions:
+            addActions(toolbar, actions)
+        self.addToolBar(Qt.TopToolBarArea, toolbar)
+        return toolbar
+
+    # def _generateActions(self, actions: list, checkable=False, enabled=True):
+    #     new_action = partial(newAction, self)
+    #     for action in actions:
+    #
+    #         print(action_str, action, action_shortcut,
+    #                                      action_icon, action_detail, checkable,
+    #                                      enabled)
+    #         complete_action = new_action(action_str, action, action_shortcut,
+    #                                      action_icon, action_detail, checkable,
+    #                                      enabled)
+    #         yield complete_action

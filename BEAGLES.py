@@ -22,6 +22,7 @@ from PyQt5.QtWidgets import *
 # noinspection PyUnresolvedReferences
 from tensorflow import version as tf_version
 from libs.resources import *
+from libs.base_ui import BeaglesMainWindow, getStr
 from libs.constants import *
 from libs.qtUtils import *
 from libs.settings import Settings
@@ -30,12 +31,11 @@ from libs.stringBundle import StringBundle
 from libs.canvas import Canvas
 from libs.zoomWidget import ZoomWidget
 from libs.labelDialog import LabelDialog
-from libs.utils.flags import Flags, FlagIO
+from libs.utils.flags import Flags
 from libs.backend import FlowDialog
 from libs.colorDialog import ColorDialog
 from libs.project import ProjectDialog
 from libs.labelFile import LabelFile, LabelFileError
-from libs.toolBar import ToolBar
 from libs.pascal_voc_io import PascalVocReader
 from libs.pascal_voc_io import XML_EXT
 from libs.yolo_io import YoloReader
@@ -46,37 +46,13 @@ from libs.hashableQListWidgetItem import HashableQListWidgetItem
 __appname__ = 'BEAGLES'
 
 
-# noinspection PyUnresolvedReferences
-class WindowMixin(object):
-
-    def menu(self, title, actions=None):
-        menu = self.menuBar().addMenu(title)
-        if actions:
-            addActions(menu, actions)
-        return menu
-
-    def toolbar(self, title, actions=None):
-        toolbar = ToolBar(title)
-        toolbar.setObjectName(u'%sToolBar' % title)
-        toolbar.setMovable(False)
-        toolbar.setFixedHeight(32)
-        toolbar.setIconSize(QSize(30, 30))
-        toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        if actions:
-            addActions(toolbar, actions)
-        self.addToolBar(Qt.TopToolBarArea, toolbar)
-        return toolbar
-
-
-# noinspection PyUnresolvedReferences
-class MainWindow(QMainWindow, WindowMixin, FlagIO):
+class MainWindow(BeaglesMainWindow):
     FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = list(range(3))
 
     # noinspection PyShadowingBuiltins
     def __init__(self, defaultFilename=None, defaultPredefClassFile=None,
                  defaultSaveDir=None):
         super(MainWindow, self).__init__()
-        FlagIO.__init__(self, subprogram=True)
         self.logger.info("Initializing GUI")
         self.setWindowTitle(__appname__)
 
@@ -89,12 +65,6 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.settings = Settings()
         self.settings.load()
         settings = self.settings
-
-        # Load string bundle for i18n
-        self.stringBundle = StringBundle.getBundle()
-
-        def getStr(strId):
-            return self.stringBundle.getString(strId)
 
         # Start tensorboard process
         # noinspection PyTypeChecker
@@ -221,7 +191,26 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.dock.setFeatures(self.dock.features() ^ self.dockFeatures)
 
         # Actions
+
+        def createActions(parent, actions: list):
+            action = partial(newAction, self)
+            cmd = 'global {0}; {0} = action("{1}", {2}, "{3}", "{4}", "{5}")'
+            for act in actions:
+                _str = act
+                action_str = getStr(_str)
+                action_shortcut = self.shortcuts[_str] if _str in self.shortcuts \
+                    else None
+                action_detail = getStr(_str + "Detail")
+                action_icon = _str
+                callback = 'parent.' + act
+                print(cmd.format(_str, action_str, callback, action_shortcut,
+                                 action_icon, action_detail))
+                exec(cmd.format(_str, action_str, callback, action_shortcut,
+                                action_icon, action_detail))
+
         action = partial(newAction, self)
+        createActions(self, ['impVideo', 'prevImg', 'nextImg'])
+
         quit = action(getStr('quit'), self.close,
                       'Ctrl+Q', 'quit', getStr('quitApp'))
 
@@ -231,8 +220,8 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         opendir = action(getStr('openDir'), self.openDirDialog,
                          'Ctrl+u', 'open', getStr('openDir'))
 
-        impVideo = action(getStr('impVideo'), self.impVideo, 'Ctrl+i',
-                          'impvideo', getStr('impVideoDetail'))
+        # impVideo = action(getStr('impVideo'), self.impVideo, 'Ctrl+i',
+        #                   'impVideo', getStr('impVideoDetail'))
 
         changeSavedir = action(getStr('changeSaveDir'),
                                self.changeSavedirDialog,
@@ -244,11 +233,11 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                                 'Ctrl+Shift+O', 'open',
                                 getStr('openAnnotationDetail'))
 
-        openNextImg = action(getStr('nextImg'), self.openNextImg,
-                             'd', 'next', getStr('nextImgDetail'))
-
-        openPrevImg = action(getStr('prevImg'), self.openPrevImg,
-                             'a', 'prev', getStr('prevImgDetail'))
+        # nextImg = action(getStr('nextImg'), self.nextImg,
+        #                      'd', 'next', getStr('nextImgDetail'))
+        #
+        # prevImg = action(getStr('prevImg'), self.prevImg,
+        #                      'a', 'prev', getStr('prevImgDetail'))
 
         verify = action(getStr('verifyImg'), self.verifyImg,
                         'space', 'verify', getStr('verifyImgDetail'))
@@ -308,14 +297,14 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                               'Ctrl+Shift+A', 'expert',
                               getStr('advancedModeDetail'), checkable=True)
 
-        hideAll = action('&Hide\nRectBox', partial(self.togglePolygons, False),
+        hideAll = action('&Hide Bounding Box', partial(self.togglePolygons, False),
                          'Ctrl+H', 'hide', getStr('hideAllBoxDetail'),
                          enabled=False)
-        showAll = action('&Show\nRectBox', partial(self.togglePolygons, True),
+        showAll = action('&Show Bounding Box', partial(self.togglePolygons, True),
                          'Ctrl+A', 'hide', getStr('showAllBoxDetail'),
                          enabled=False)
 
-        help = action(getStr('tutorial'), self.showTutorialDialog, None,
+        showTutorialDialog = action(getStr('tutorial'), self.showTutorialDialog, None,
                       'help', getStr('tutorialDetail'))
         showInfo = action(getStr('info'), self.showInfoDialog, None, 'help',
                           getStr('info'))
@@ -355,10 +344,10 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             self.MANUAL_ZOOM: lambda: 1,
         }
 
-        edit = action(getStr('editLabel'), self.editLabel,
+        editLabel = action(getStr('editLabel'), self.editLabel,
                       'Ctrl+E', 'edit', getStr('editLabelDetail'),
-                      enabled=False)
-        self.editButton.setDefaultAction(edit)
+                           enabled=False)
+        self.editButton.setDefaultAction(editLabel)
 
         shapeLineColor = action(getStr('shapeLineColor'),
                                 self.chshapeLineColor,
@@ -377,7 +366,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
 
         # Label list context menu.
         labelMenu = QMenu()
-        addActions(labelMenu, (edit, delete))
+        addActions(labelMenu, (editLabel, delete))
         self.labelList.setContextMenuPolicy(Qt.CustomContextMenu)
         self.labelList.customContextMenuRequested.connect(
             self.popLabelListMenu)
@@ -395,7 +384,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                               saveAs=saveAs, open=open, close=close,
                               resetAll=resetAll, verify=verify,
                               lineColor=color1, create=create, delete=delete,
-                              edit=edit, copy=copy, trainModel=trainModel,
+                              edit=editLabel, copy=copy, trainModel=trainModel,
                               visualize=visualize,
                               createMode=createMode,
                               editMode=editMode,
@@ -411,10 +400,10 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                                   commitAnnotatedFrames, trainModel, visualize,
                                   close, resetAll, quit),
                               beginner=(), advanced=(),
-                              editMenu=(edit, copy, delete,
+                              editMenu=(editLabel, copy, delete,
                                         None, color1, self.drawSquaresOption),
-                              beginnerContext=(create, edit, copy, delete),
-                              advancedContext=(createMode, editMode, edit,
+                              beginnerContext=(create, editLabel, copy, delete),
+                              advancedContext=(createMode, editMode, editLabel,
                                                copy, delete, shapeLineColor,
                                                shapeFillColor),
                               onLoadActive=(
@@ -451,13 +440,13 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
                    (open, opendir, changeSavedir, impVideo, openAnnotation,
                     self.menus.recentFiles, save, save_format,
                     saveAs, trainModel, close, resetAll, quit))
-        addActions(self.menus.help, (help, showInfo))
+        addActions(self.menus.help, (showTutorialDialog, showInfo))
         addActions(self.menus.view, (
             self.autoSaving,
             self.singleClassMode,
             self.displayLabelOption,
             labels, advancedMode, None,
-            openPrevImg, openNextImg, None,
+            prevImg, nextImg, None,
             hideAll, showAll, None,
             zoomIn, zoomOut, zoomOrg, None,
             fitWindow, fitWidth))
@@ -474,7 +463,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
 
         self.actions.beginner = (
             open, opendir, changeSavedir, save, None,
-            create, copy, delete, None, openPrevImg, openNextImg, None, zoomIn,
+            create, copy, delete, None, prevImg, nextImg, None, zoomIn,
             zoom, zoomOut, fitWindow, fitWidth)
 
         self.actions.advanced = (open, save, None, createMode, editMode,
@@ -1430,7 +1419,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
         self.filePath = None
         self.fileListWidget.clear()
         self.mImgList = self.scanAllImages(dirpath)
-        self.openNextImg()
+        self.nextImg()
         for imgPath in self.mImgList:
             item = QListWidgetItem(os.path.basename(imgPath))
             self.fileListWidget.addItem(item)
@@ -1453,7 +1442,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             self.paintCanvas()
             self.saveFile()
 
-    def openPrevImg(self, _value=False):
+    def prevImg(self, _value=False):
         # Proceeding prev image without dialog if having any label
         if self.autoSaving.isChecked():
             if self.defaultSaveDir is not None:
@@ -1478,7 +1467,7 @@ class MainWindow(QMainWindow, WindowMixin, FlagIO):
             if filename:
                 self.loadFile(filename)
 
-    def openNextImg(self, _value=False):
+    def nextImg(self, _value=False):
         # Proceeding prev image without dialog if having any label
         if self.autoSaving.isChecked():
             if self.defaultSaveDir is not None:
