@@ -25,11 +25,8 @@ from libs.resources import *
 from libs.base_ui import BeaglesMainWindow, getStr
 from libs.constants import *
 from libs.qtUtils import *
-from libs.settings import Settings
 from libs.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
 from libs.stringBundle import StringBundle
-from libs.canvas import Canvas
-from libs.zoomWidget import ZoomWidget
 from libs.labelDialog import LabelDialog
 from libs.utils.flags import Flags
 from libs.backend import FlowDialog
@@ -48,23 +45,19 @@ __appname__ = 'BEAGLES'
 
 class MainWindow(BeaglesMainWindow):
     FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = list(range(3))
-
     # noinspection PyShadowingBuiltins
     def __init__(self, defaultFilename=None, defaultPredefClassFile=None,
                  defaultSaveDir=None):
         super(MainWindow, self).__init__()
         self.logger.info("Initializing GUI")
         self.setWindowTitle(__appname__)
-
         self.predefinedClasses = defaultPredefClassFile
         self.project = ProjectDialog(self)
 
         # Load setting in the main thread
         self.imageData = None
         self.labelFile = None
-        self.settings = Settings()
-        self.settings.load()
-        settings = self.settings
+
 
         # Start tensorboard process
         # noinspection PyTypeChecker
@@ -103,46 +96,6 @@ class MainWindow(BeaglesMainWindow):
         self.shapesToItems = {}
         self.prevLabelText = ''
 
-        listLayout = QVBoxLayout()
-        listLayout.setContentsMargins(0, 0, 0, 0)
-
-        # Create a widget for using default label
-        self.useDefaultLabelCheckbox = QCheckBox(getStr('useDefaultLabel'))
-        self.useDefaultLabelCheckbox.setChecked(False)
-        self.defaultLabelTextLine = QLineEdit()
-        useDefaultLabelQHBoxLayout = QHBoxLayout()
-        useDefaultLabelQHBoxLayout.addWidget(self.useDefaultLabelCheckbox)
-        useDefaultLabelQHBoxLayout.addWidget(self.defaultLabelTextLine)
-        useDefaultLabelContainer = QWidget()
-        useDefaultLabelContainer.setLayout(useDefaultLabelQHBoxLayout)
-
-        # Create a widget for edit and diffc button
-        self.diffcButton = QCheckBox(getStr('useDifficult'))
-        self.diffcButton.setChecked(False)
-        self.diffcButton.stateChanged.connect(self.btnstate)
-        self.editButton = QToolButton()
-        self.editButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-
-        # Add some of widgets to listLayout
-        listLayout.addWidget(self.editButton)
-        listLayout.addWidget(self.diffcButton)
-        listLayout.addWidget(useDefaultLabelContainer)
-
-        # Create and add a widget for showing current label items
-        self.labelList = QListWidget()
-        labelListContainer = QWidget()
-        labelListContainer.setLayout(listLayout)
-        self.labelList.itemActivated.connect(self.labelSelectionChanged)
-        self.labelList.itemSelectionChanged.connect(self.labelSelectionChanged)
-        self.labelList.itemDoubleClicked.connect(self.editLabel)
-        # Connect to itemChanged to detect checkbox changes.
-        self.labelList.itemChanged.connect(self.labelItemChanged)
-        listLayout.addWidget(self.labelList)
-
-        self.dock = QDockWidget(getStr('boxLabelText'), self)
-        self.dock.setObjectName(getStr('labels'))
-        self.dock.setWidget(labelListContainer)
-
         self.fileListWidget = QListWidget()
         self.fileListWidget.itemDoubleClicked.connect(
             self.fileitemDoubleClicked)
@@ -155,13 +108,7 @@ class MainWindow(BeaglesMainWindow):
         self.filedock.setObjectName(getStr('files'))
         self.filedock.setWidget(fileListContainer)
 
-        self.zoomWidget = ZoomWidget()
         self.colorDialog = ColorDialog(parent=self)
-
-        self.canvas = Canvas(parent=self)
-        self.canvas.zoomRequest.connect(self.zoomRequest)
-        self.canvas.setDrawingShapeToSquare(settings.get(SETTING_DRAW_SQUARE,
-                                                         False))
 
         scroll = QScrollArea()
         scroll.setAutoFillBackground(True)
@@ -190,152 +137,9 @@ class MainWindow(BeaglesMainWindow):
         # noinspection PyTypeChecker
         self.dock.setFeatures(self.dock.features() ^ self.dockFeatures)
 
-        # Actions
-
-        def createActions(parent, actions: list):
-            action = partial(newAction, self)
-            cmd = 'global {0}; {0} = action("{1}", {2}, "{3}", "{4}", "{5}")'
-            for act in actions:
-                _str = act
-                action_str = getStr(_str)
-                action_shortcut = self.shortcuts[_str] if _str in self.shortcuts \
-                    else None
-                action_detail = getStr(_str + "Detail")
-                action_icon = _str
-                callback = 'parent.' + act
-                print(cmd.format(_str, action_str, callback, action_shortcut,
-                                 action_icon, action_detail))
-                exec(cmd.format(_str, action_str, callback, action_shortcut,
-                                action_icon, action_detail))
-
-        action = partial(newAction, self)
-        createActions(self, ['impVideo', 'prevImg', 'nextImg'])
-
-        quit = action(getStr('quit'), self.close,
-                      'Ctrl+Q', 'quit', getStr('quitApp'))
-
-        open = action(getStr('openFile'), self.openFile,
-                      'Ctrl+O', 'open', getStr('openFileDetail'))
-
-        opendir = action(getStr('openDir'), self.openDirDialog,
-                         'Ctrl+u', 'open', getStr('openDir'))
-
-        # impVideo = action(getStr('impVideo'), self.impVideo, 'Ctrl+i',
-        #                   'impVideo', getStr('impVideoDetail'))
-
-        changeSavedir = action(getStr('changeSaveDir'),
-                               self.changeSavedirDialog,
-                               'Ctrl+r', 'open',
-                               getStr('changeSavedAnnotationDir'))
-
-        openAnnotation = action(getStr('openAnnotation'),
-                                self.openAnnotationDialog,
-                                'Ctrl+Shift+O', 'open',
-                                getStr('openAnnotationDetail'))
-
-        # nextImg = action(getStr('nextImg'), self.nextImg,
-        #                      'd', 'next', getStr('nextImgDetail'))
-        #
-        # prevImg = action(getStr('prevImg'), self.prevImg,
-        #                      'a', 'prev', getStr('prevImgDetail'))
-
-        verify = action(getStr('verifyImg'), self.verifyImg,
-                        'space', 'verify', getStr('verifyImgDetail'))
-
-        save = action(getStr('save'), self.saveFile,
-                      'Ctrl+S', 'save', getStr('saveDetail'), enabled=False)
-
-        save_format = action('&PascalVOC', self.change_format,
-                             'Ctrl+', 'format_voc', getStr('changeSaveFormat'),
-                             enabled=True)
-
-        saveAs = action(getStr('saveAs'), self.saveFileAs,
-                        'Ctrl+Shift+S', 'save-as', getStr('saveAsDetail'),
-                        enabled=False)
-
-        close = action(getStr('closeCur'), self.closeFile, 'Ctrl+W', 'close',
-                       getStr('closeCurDetail'))
-
-        resetAll = action(getStr('resetAll'), self.resetAll, None, 'resetall',
-                          getStr('resetAllDetail'))
-
-        color1 = action(getStr('boxLineColor'), self.chooseColor1,
-                        'Ctrl+L', 'color_line', getStr('boxLineColorDetail'))
-
-        createMode = action(getStr('crtBox'), self.setCreateMode,
-                            'w', 'new', getStr('crtBoxDetail'), enabled=False)
-        editMode = action('&Edit\nRectBox', self.setEditMode,
-                          'e', 'edit', u'Move and edit boxes',
-                          enabled=False)
-
-        create = action(getStr('crtBox'), self.createShape,
-                        'w', 'new', getStr('crtBoxDetail'), enabled=False)
-
-        delete = action(getStr('delBox'), self.deleteSelectedShape,
-                        'Delete', 'delete', getStr('delBoxDetail'),
-                        enabled=False)
-
-        copy = action(getStr('dupBox'), self.copySelectedShape,
-                      'Ctrl+D', 'copy', getStr('dupBoxDetail'),
-                      enabled=False)
-
-        commitAnnotatedFrames = action(getStr('commitAnnotatedFrames'),
-                                       self.commitAnnotatedFrames, None,
-                                       'commitAnnotatedFrames',
-                                       getStr('commitAnnotatedFrames'),
-                                       enabled=True)
-
-        trainModel = action(getStr('trainModel'), self.trainModel, 'Ctrl+T',
-                            'trainModel', getStr('trainModelDetail'),
-                            enabled=True)
-
-        visualize = action(getStr('visualize'), self.visualize, None,
-                           'visualize', getStr('visualizeDetail'),
-                           enabled=True)
-
-        advancedMode = action(getStr('advancedMode'), self.toggleAdvancedMode,
-                              'Ctrl+Shift+A', 'expert',
-                              getStr('advancedModeDetail'), checkable=True)
-
-        hideAll = action('&Hide Bounding Box', partial(self.togglePolygons, False),
-                         'Ctrl+H', 'hide', getStr('hideAllBoxDetail'),
-                         enabled=False)
-        showAll = action('&Show Bounding Box', partial(self.togglePolygons, True),
-                         'Ctrl+A', 'hide', getStr('showAllBoxDetail'),
-                         enabled=False)
-
-        showTutorialDialog = action(getStr('tutorial'), self.showTutorialDialog, None,
-                      'help', getStr('tutorialDetail'))
-        showInfo = action(getStr('info'), self.showInfoDialog, None, 'help',
-                          getStr('info'))
-
-        zoom = QWidgetAction(self)
-        zoom.setDefaultWidget(self.zoomWidget)
-        self.zoomWidget.setWhatsThis(
-            u"Zoom in or out of the image. Also accessible with"
-            " %s and %s from the canvas." % (fmtShortcut("Ctrl+[-+]"),
-                                             fmtShortcut("Ctrl+Wheel")))
-        self.zoomWidget.setEnabled(False)
-
-        zoomIn = action(getStr('zoomin'), partial(self.addZoom, 10),
-                        'Ctrl++', 'zoom-in', getStr('zoominDetail'),
-                        enabled=False)
-        zoomOut = action(getStr('zoomout'), partial(self.addZoom, -10),
-                         'Ctrl+-', 'zoom-out', getStr('zoomoutDetail'),
-                         enabled=False)
-        zoomOrg = action(getStr('originalsize'), partial(self.setZoom, 100),
-                         'Ctrl+Shift++', 'zoom', getStr('originalsizeDetail'),
-                         enabled=False)
-        fitWindow = action(getStr('fitWin'), self.setFitWindow,
-                           'Ctrl+F', 'fit-window', getStr('fitWinDetail'),
-                           checkable=True, enabled=False)
-        fitWidth = action(getStr('fitWidth'), self.setFitWidth,
-                          'Ctrl+Shift+F', 'fit-width',
-                          getStr('fitWidthDetail'),
-                          checkable=True, enabled=False)
         # Group zoom controls into a list for easier toggling.
-        zoomActions = (self.zoomWidget, zoomIn, zoomOut,
-                       zoomOrg, fitWindow, fitWidth)
+        # noinspection PyUnresolvedReferences
+
         self.zoomMode = self.MANUAL_ZOOM
         self.scalers = {
             self.FIT_WINDOW: self.scaleFitWindow,
@@ -344,132 +148,9 @@ class MainWindow(BeaglesMainWindow):
             self.MANUAL_ZOOM: lambda: 1,
         }
 
-        editLabel = action(getStr('editLabel'), self.editLabel,
-                      'Ctrl+E', 'edit', getStr('editLabelDetail'),
-                           enabled=False)
-        self.editButton.setDefaultAction(editLabel)
-
-        shapeLineColor = action(getStr('shapeLineColor'),
-                                self.chshapeLineColor,
-                                icon='color_line',
-                                tip=getStr('shapeLineColorDetail'),
-                                enabled=False)
-        shapeFillColor = action(getStr('shapeFillColor'),
-                                self.chshapeFillColor,
-                                icon='color',
-                                tip=getStr('shapeFillColorDetail'),
-                                enabled=False)
-
-        labels = self.dock.toggleViewAction()
-        labels.setText(getStr('showHide'))
-        labels.setShortcut('Ctrl+Shift+L')
-
-        # Label list context menu.
-        labelMenu = QMenu()
-        addActions(labelMenu, (editLabel, delete))
         self.labelList.setContextMenuPolicy(Qt.CustomContextMenu)
         self.labelList.customContextMenuRequested.connect(
             self.popLabelListMenu)
-
-        # Draw squares/rectangles
-        self.drawSquaresOption = QAction('Draw Squares', self)
-        self.drawSquaresOption.setShortcut('Ctrl+Shift+R')
-        self.drawSquaresOption.setCheckable(True)
-        self.drawSquaresOption.setChecked(settings.get(SETTING_DRAW_SQUARE,
-                                                       False))
-        self.drawSquaresOption.triggered.connect(self.toggleDrawSquare)
-
-        # Store actions for further handling.
-        self.actions = struct(save=save, save_format=save_format,
-                              saveAs=saveAs, open=open, close=close,
-                              resetAll=resetAll, verify=verify,
-                              lineColor=color1, create=create, delete=delete,
-                              edit=editLabel, copy=copy, trainModel=trainModel,
-                              visualize=visualize,
-                              createMode=createMode,
-                              editMode=editMode,
-                              advancedMode=advancedMode,
-                              shapeLineColor=shapeLineColor,
-                              shapeFillColor=shapeFillColor,
-                              zoom=zoom, zoomIn=zoomIn, zoomOut=zoomOut,
-                              zoomOrg=zoomOrg,
-                              fitWindow=fitWindow, fitWidth=fitWidth,
-                              zoomActions=zoomActions,
-                              fileMenuActions=(
-                                  open, opendir, impVideo, save, saveAs,
-                                  commitAnnotatedFrames, trainModel, visualize,
-                                  close, resetAll, quit),
-                              beginner=(), advanced=(),
-                              editMenu=(editLabel, copy, delete,
-                                        None, color1, self.drawSquaresOption),
-                              beginnerContext=(create, editLabel, copy, delete),
-                              advancedContext=(createMode, editMode, editLabel,
-                                               copy, delete, shapeLineColor,
-                                               shapeFillColor),
-                              onLoadActive=(
-                                  close, create, createMode, editMode),
-                              onShapesPresent=(saveAs, hideAll, showAll))
-
-        self.menus = struct(
-            file=self.menu('&File'),
-            edit=self.menu('&Edit'),
-            view=self.menu('&View'),
-            help=self.menu('&Help'),
-            recentFiles=QMenu('Open &Recent'),
-            labelList=labelMenu)
-
-        # Auto saving : Enable auto saving if pressing next
-        self.autoSaving = QAction(getStr('autoSaveMode'), self)
-        self.autoSaving.setCheckable(True)
-        self.autoSaving.setChecked(settings.get(SETTING_AUTO_SAVE, False))
-        # Sync single class mode from PR#106
-        self.singleClassMode = QAction(getStr('singleClsMode'), self)
-        self.singleClassMode.setCheckable(True)
-        self.singleClassMode.setChecked(settings.get(SETTING_SINGLE_CLASS,
-                                                     False))
-        self.lastLabel = None
-        # Add option to enable/disable labels being displayed at the top of bounding boxes
-        self.displayLabelOption = QAction(getStr('displayLabel'), self)
-        self.displayLabelOption.setShortcut("Ctrl+Shift+P")
-        self.displayLabelOption.setCheckable(True)
-        self.displayLabelOption.setChecked(settings.get(SETTING_PAINT_LABEL,
-                                                        False))
-        self.displayLabelOption.triggered.connect(self.togglePaintLabelsOption)
-
-        addActions(self.menus.file,
-                   (open, opendir, changeSavedir, impVideo, openAnnotation,
-                    self.menus.recentFiles, save, save_format,
-                    saveAs, trainModel, close, resetAll, quit))
-        addActions(self.menus.help, (showTutorialDialog, showInfo))
-        addActions(self.menus.view, (
-            self.autoSaving,
-            self.singleClassMode,
-            self.displayLabelOption,
-            labels, advancedMode, None,
-            prevImg, nextImg, None,
-            hideAll, showAll, None,
-            zoomIn, zoomOut, zoomOrg, None,
-            fitWindow, fitWidth))
-
-        self.menus.file.aboutToShow.connect(self.updateFileMenu)
-
-        # Custom context menu for the canvas widget:
-        addActions(self.canvas.menus[0], self.actions.beginnerContext)
-        addActions(self.canvas.menus[1], (
-            action('&Copy here', self.copyShape),
-            action('&Move here', self.moveShape)))
-
-        self.tools = self.toolbar('Tools')
-
-        self.actions.beginner = (
-            open, opendir, changeSavedir, save, None,
-            create, copy, delete, None, prevImg, nextImg, None, zoomIn,
-            zoom, zoomOut, fitWindow, fitWidth)
-
-        self.actions.advanced = (open, save, None, createMode, editMode,
-                                 verify, None, hideAll, showAll, None,
-                                 commitAnnotatedFrames, trainModel, visualize,
-                                 impVideo)
 
         self.statusBar().showMessage('%s started.' % __appname__)
         self.statusBar().show()
@@ -497,16 +178,16 @@ class MainWindow(BeaglesMainWindow):
 
         # Fix the compatible issue for qt4 and qt5.
         # Convert the QStringList to python list
-        if settings.get(SETTING_RECENT_FILES):
+        if self.settings.get(SETTING_RECENT_FILES):
             if have_qstring():
-                recentFileQStringList = settings.get(SETTING_RECENT_FILES)
+                recentFileQStringList = self.settings.get(SETTING_RECENT_FILES)
                 self.recentFiles = [str(i) for i in recentFileQStringList]
             else:
-                self.recentFiles = settings.get(SETTING_RECENT_FILES)
+                self.recentFiles = self.settings.get(SETTING_RECENT_FILES)
 
-        size = settings.get(SETTING_WIN_SIZE, QSize(600, 500))
+        size = self.settings.get(SETTING_WIN_SIZE, QSize(600, 500))
         position = QPoint(0, 0)
-        saved_position = settings.get(SETTING_WIN_POSE, position)
+        saved_position = self.settings.get(SETTING_WIN_POSE, position)
         # Fix the multiple monitors issue
         for i in range(QApplication.desktop().screenCount()):
             if QApplication.desktop().availableGeometry(i).contains(saved_position):
@@ -514,8 +195,8 @@ class MainWindow(BeaglesMainWindow):
                 break
         self.resize(size)
         self.move(position)
-        saveDir = str(settings.get(SETTING_SAVE_DIR, None))
-        self.lastOpenDir = str(settings.get(SETTING_LAST_OPEN_DIR, None))
+        saveDir = str(self.settings.get(SETTING_SAVE_DIR, None))
+        self.lastOpenDir = str(self.settings.get(SETTING_LAST_OPEN_DIR, None))
         if self.defaultSaveDir is None and saveDir is not None and os.path.exists(saveDir):
             self.defaultSaveDir = saveDir
             self.statusBar().showMessage(
@@ -523,11 +204,11 @@ class MainWindow(BeaglesMainWindow):
                 (__appname__, self.defaultSaveDir))
             self.statusBar().show()
 
-        self.restoreState(settings.get(SETTING_WIN_STATE, QByteArray()))
+        self.restoreState(self.settings.get(SETTING_WIN_STATE, QByteArray()))
         Shape.line_color = self.lineColor = QColor(
-            settings.get(SETTING_LINE_COLOR, DEFAULT_LINE_COLOR))
+            self.settings.get(SETTING_LINE_COLOR, DEFAULT_LINE_COLOR))
         Shape.fill_color = self.fillColor = QColor(
-            settings.get(SETTING_FILL_COLOR, DEFAULT_FILL_COLOR))
+            self.settings.get(SETTING_FILL_COLOR, DEFAULT_FILL_COLOR))
         self.canvas.setDrawingColor(self.lineColor)
         # Add chris
         Shape.difficult = self.difficult
@@ -537,9 +218,9 @@ class MainWindow(BeaglesMainWindow):
                 return x.toBool()
             return bool(x)
 
-        if xbool(settings.get(SETTING_ADVANCE_MODE, False)):
+        if xbool(self.settings.get(SETTING_ADVANCE_MODE, False)):
             self.actions.advancedMode.setChecked(True)
-            self.toggleAdvancedMode()
+            self.advancedMode()
 
         # Populate the File menu dynamically.
         self.updateFileMenu()
@@ -561,7 +242,7 @@ class MainWindow(BeaglesMainWindow):
 
         # Open Dir if default file
         if self.filePath and os.path.isdir(self.filePath):
-            self.openDirDialog()
+            self.openDir()
 
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Control:
@@ -573,22 +254,22 @@ class MainWindow(BeaglesMainWindow):
             self.canvas.setDrawingShapeToSquare(True)
 
     # Support Functions #
-    def set_format(self, save_format):
-        if save_format == FORMAT_PASCALVOC:
-            self.actions.save_format.setText(FORMAT_PASCALVOC)
-            self.actions.save_format.setIcon(newIcon("format_voc"))
+    def set_format(self, changeFormat):
+        if changeFormat == FORMAT_PASCALVOC:
+            self.actions.changeFormat.setText(FORMAT_PASCALVOC)
+            self.actions.changeFormat.setIcon(newIcon("format_voc"))
             self.usingPascalVocFormat = True
             self.usingYoloFormat = False
             LabelFile.suffix = XML_EXT
 
-        elif save_format == FORMAT_YOLO:
-            self.actions.save_format.setText(FORMAT_YOLO)
-            self.actions.save_format.setIcon(newIcon("format_yolo"))
+        elif changeFormat == FORMAT_YOLO:
+            self.actions.changeFormat.setText(FORMAT_YOLO)
+            self.actions.changeFormat.setIcon(newIcon("format_yolo"))
             self.usingPascalVocFormat = False
             self.usingYoloFormat = True
             LabelFile.suffix = TXT_EXT
 
-    def change_format(self):
+    def changeFormat(self):
         if self.usingPascalVocFormat:
             self.set_format(FORMAT_YOLO)
         elif self.usingYoloFormat:
@@ -597,15 +278,21 @@ class MainWindow(BeaglesMainWindow):
     def noShapes(self):
         return not self.itemsToShapes
 
+    def hideAll(self):
+        self.togglePolygons(False)
+
+    def showAll(self):
+        self.togglePolygons(True)
+
     # noinspection PyTypeChecker
-    def toggleAdvancedMode(self, value=True):
+    def advancedMode(self, value=True):
         self._beginner = not value
         self.canvas.setEditing(True)
         self.populateModeActions()
         self.editButton.setVisible(not value)
         if value:
-            self.actions.createMode.setEnabled(True)
-            self.actions.editMode.setEnabled(False)
+            self.actions.setCreateMode.setEnabled(True)
+            self.actions.setEditMode.setEnabled(False)
             self.dock.setFeatures(self.dock.features() | self.dockFeatures)
         else:
             self.dock.setFeatures(self.dock.features() ^ self.dockFeatures)
@@ -621,8 +308,8 @@ class MainWindow(BeaglesMainWindow):
         addActions(self.canvas.menus[0], menu)
         self.menus.edit.clear()
         actions = (self.actions.create,) if self.beginner() \
-            else (self.actions.createMode, self.actions.editMode,
-                  self.actions.verify)
+            else (self.actions.setCreateMode, self.actions.setEditMode,
+                  self.actions.verifyImg)
         addActions(self.menus.edit, actions + self.actions.editMenu)
 
     def setBeginner(self):
@@ -635,11 +322,11 @@ class MainWindow(BeaglesMainWindow):
 
     def setDirty(self):
         self.dirty = True
-        self.actions.save.setEnabled(True)
+        self.actions.saveFile.setEnabled(True)
 
     def setClean(self):
         self.dirty = False
-        self.actions.save.setEnabled(False)
+        self.actions.saveFile.setEnabled(False)
         self.actions.create.setEnabled(True)
 
     def toggleActions(self, value=True):
@@ -700,7 +387,7 @@ class MainWindow(BeaglesMainWindow):
     def showTutorialDialog(self):
         subprocess.Popen(self.screencastViewer + [self.screencast])
 
-    def showInfoDialog(self):
+    def showInfo(self):
         msg = u'{0}\n' \
               u'App Version: {1}\n' \
               u'Python Version: {2}.{3}.{4}\n' \
@@ -722,7 +409,7 @@ class MainWindow(BeaglesMainWindow):
 
     def toggleDrawingSensitive(self, drawing=True):
         """In the middle of drawing, toggling between modes disabled."""
-        self.actions.editMode.setEnabled(not drawing)
+        self.actions.setEditMode.setEnabled(not drawing)
         if not drawing and self.beginner():
             # Cancel creation.
             self.logger.info('Cancel creation.')
@@ -732,8 +419,8 @@ class MainWindow(BeaglesMainWindow):
 
     def toggleDrawMode(self, edit=True):
         self.canvas.setEditing(edit)
-        self.actions.createMode.setEnabled(edit)
-        self.actions.editMode.setEnabled(not edit)
+        self.actions.setCreateMode.setEnabled(edit)
+        self.actions.setEditMode.setEnabled(not edit)
 
     def setCreateMode(self):
         assert self.advanced()
@@ -824,9 +511,9 @@ class MainWindow(BeaglesMainWindow):
                 self.shapesToItems[shape].setSelected(True)
             else:
                 self.labelList.clearSelection()
-        self.actions.delete.setEnabled(selected)
-        self.actions.copy.setEnabled(selected)
-        self.actions.edit.setEnabled(selected)
+        self.actions.delBox.setEnabled(selected)
+        self.actions.copySelectedShape.setEnabled(selected)
+        self.actions.editLabel.setEnabled(selected)
         self.actions.shapeLineColor.setEnabled(selected)
         self.actions.shapeFillColor.setEnabled(selected)
 
@@ -986,7 +673,7 @@ class MainWindow(BeaglesMainWindow):
                 self.canvas.setEditing(True)
                 self.actions.create.setEnabled(True)
             else:
-                self.actions.editMode.setEnabled(True)
+                self.actions.setEditMode.setEnabled(True)
             self.setDirty()
 
             if text not in self.labelHist:
@@ -1001,10 +688,19 @@ class MainWindow(BeaglesMainWindow):
         bar.setValue(bar.value() + bar.singleStep() * units)
 
     def setZoom(self, value):
-        self.actions.fitWidth.setChecked(False)
-        self.actions.fitWindow.setChecked(False)
+        self.actions.setFitWidth.setChecked(False)
+        self.actions.setFitWin.setChecked(False)
         self.zoomMode = self.MANUAL_ZOOM
         self.zoomWidget.setValue(value)
+
+    def zoomIn(self):
+        self.addZoom(10)
+
+    def zoomOut(self):
+        self.addZoom(-10)
+
+    def zoomOrg(self):
+        self.setZoom(100)
 
     def addZoom(self, increment=10):
         self.setZoom(self.zoomWidget.value() + increment)
@@ -1015,7 +711,7 @@ class MainWindow(BeaglesMainWindow):
         h_bar = self.scrollBars[Qt.Horizontal]
         v_bar = self.scrollBars[Qt.Vertical]
 
-        # get the current maximum, to know the difference after zooming
+        # get the current maximum, to know the difference after zoomIng
         h_bar_max = h_bar.maximum()
         v_bar_max = v_bar.maximum()
 
@@ -1061,15 +757,15 @@ class MainWindow(BeaglesMainWindow):
         h_bar.setValue(new_h_bar_value)
         v_bar.setValue(new_v_bar_value)
 
-    def setFitWindow(self, value=True):
+    def setFitWin(self, value=True):
         if value:
-            self.actions.fitWidth.setChecked(False)
+            self.actions.setFitWidth.setChecked(False)
         self.zoomMode = self.FIT_WINDOW if value else self.MANUAL_ZOOM
         self.adjustScale()
 
     def setFitWidth(self, value=True):
         if value:
-            self.actions.fitWindow.setChecked(False)
+            self.actions.setFitWin.setChecked(False)
         self.zoomMode = self.FIT_WIDTH if value else self.MANUAL_ZOOM
         self.adjustScale()
 
@@ -1266,7 +962,7 @@ class MainWindow(BeaglesMainWindow):
         natural_sort(images, key=lambda x: x.lower())
         return images
 
-    def changeSavedirDialog(self, _value=False):
+    def changeSaveDir(self, _value=False):
         if self.defaultSaveDir is not None:
             path = str(self.defaultSaveDir)
         else:
@@ -1284,7 +980,7 @@ class MainWindow(BeaglesMainWindow):
             ('Change saved folder', self.defaultSaveDir))
         self.statusBar().show()
 
-    def openAnnotationDialog(self, _value=False):
+    def openAnnotation(self, _value=False):
         if self.filePath is None:
             self.statusBar().showMessage('Please select image first')
             self.statusBar().show()
@@ -1304,7 +1000,7 @@ class MainWindow(BeaglesMainWindow):
                     filename = filename[0]
             self.loadPascalXMLByFilename(filename)
 
-    def openDirDialog(self, _value=False):
+    def openDir(self, _value=False):
         if not self.mayContinue():
             return
 
@@ -1449,7 +1145,7 @@ class MainWindow(BeaglesMainWindow):
                 if self.dirty is True:
                     self.saveFile()
             else:
-                self.changeSavedirDialog()
+                self.changeSaveDir()
                 return
 
         if not self.mayContinue():
@@ -1474,7 +1170,7 @@ class MainWindow(BeaglesMainWindow):
                 if self.dirty is True:
                     self.saveFile()
             else:
-                self.changeSavedirDialog()
+                self.changeSaveDir()
                 return
 
         if not self.mayContinue():
@@ -1527,7 +1223,7 @@ class MainWindow(BeaglesMainWindow):
             self._saveFile(savedPath if self.labelFile
                            else self.saveFileDialog(removeExt=False))
 
-    def saveFileAs(self, _value=False):
+    def saveAs(self, _value=False):
         assert not self.image.isNull(), "cannot save empty image"
         self._saveFile(self.saveFileDialog())
 
@@ -1586,7 +1282,7 @@ class MainWindow(BeaglesMainWindow):
     def currentPath(self):
         return os.path.dirname(self.filePath) if self.filePath else '.'
 
-    def chooseColor1(self):
+    def boxLineColor(self):
         color = self.colorDialog.getColor(self.lineColor, u'Choose line color',
                                           default=DEFAULT_LINE_COLOR)
         if color:
@@ -1596,14 +1292,14 @@ class MainWindow(BeaglesMainWindow):
             self.canvas.update()
             self.setDirty()
 
-    def deleteSelectedShape(self):
+    def delBox(self):
         self.remLabel(self.canvas.deleteSelected())
         self.setDirty()
         if self.noShapes():
             for action in self.actions.onShapesPresent:
                 action.setEnabled(False)
 
-    def chshapeLineColor(self):
+    def shapeLineColor(self):
         color = self.colorDialog.getColor(self.lineColor, u'Choose line color',
                                           default=DEFAULT_LINE_COLOR)
         if color:
@@ -1611,7 +1307,7 @@ class MainWindow(BeaglesMainWindow):
             self.canvas.update()
             self.setDirty()
 
-    def chshapeFillColor(self):
+    def shapeFillColor(self):
         color = self.colorDialog.getColor(self.fillColor, u'Choose fill color',
                                           default=DEFAULT_FILL_COLOR)
         if color:

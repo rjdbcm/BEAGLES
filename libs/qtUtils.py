@@ -57,10 +57,16 @@ def labelValidator():
     return QRegExpValidator(QRegExp(r'^[^ \t].+'), None)
 
 
-class struct(object):
+class Struct(object):
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+    def __add__(self, other):
+        self.__dict__.update(other.__dict__)
 
 
 def distance(p):

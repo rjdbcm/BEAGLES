@@ -29,12 +29,12 @@ class TestMainWindow(TestCase):
         self.assertRaises(AssertionError, self.canvas.resetAllLines)
 
     def testToggleAdvancedMode(self):
-        self.win.toggleAdvancedMode()
-        self.win.toggleAdvancedMode()
+        self.win.advancedMode()
+        self.win.advancedMode()
 
     def testChangeFormat(self):
-        self.win.change_format()
-        self.win.change_format()
+        self.win.changeFormat()
+        self.win.changeFormat()
 
     def testToggleDrawMode(self):
         self.win.toggleDrawMode()
@@ -48,7 +48,7 @@ class TestMainWindow(TestCase):
 
     def testFileLoadZoom(self):
         self.win.loadFile('data/sample_img/sample_dog.jpg')
-        self.win.setFitWindow()
+        self.win.setFitWin()
         self.win.setFitWidth()
         self.win.setZoom(50)
         self.win.closeFile()
