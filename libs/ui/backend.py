@@ -2,9 +2,8 @@ import re
 import os
 import sys
 import time
-import inspect
 from libs.utils.flags import FlagIO
-from .base_ui import getStr, BeaglesDialog
+from libs.ui.BEAGLES import getStr, BeaglesDialog
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *

@@ -2,18 +2,14 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from .labelFile import LabelFile
-from .utils.flags import Flags, FlagIO
+from .utils.flags import Flags
 from .project import ProjectDialog
-from libs.backend_ui import BackendDialog, BackendThread
+from libs.ui.backend import BackendDialog, BackendThread
 #from .scripts.genConfig import genConfigYOLOv2
-from absl import logging
-import numpy as np
 import subprocess
-import cv2
 import sys
 import os
 import re
-import time
 
 
 class FlowDialog(BackendDialog):

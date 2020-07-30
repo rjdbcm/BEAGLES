@@ -1,32 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import cv2
-import glob
-import errno
 import codecs
 import random
-import shutil
 import os.path
-import tarfile
 import argparse
 import platform
-import subprocess
 from functools import partial
-# noinspection PyUnresolvedReferences
-from PyQt5.QtGui import *
-# noinspection PyUnresolvedReferences
-from PyQt5.QtCore import *
-# noinspection PyUnresolvedReferences
-from PyQt5.QtWidgets import *
+
 # Add internal libs
 # noinspection PyUnresolvedReferences
-from tensorflow import version as tf_version
 from libs.resources import *
-from libs.base_ui import BeaglesMainWindow, getStr
+from libs.ui.BEAGLES import BeaglesMainWindow, getStr
 from libs.constants import *
 from libs.qtUtils import *
 from libs.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
-from libs.stringBundle import StringBundle
 from libs.labelDialog import LabelDialog
 from libs.utils.flags import Flags
 from libs.backend import FlowDialog
@@ -37,10 +24,7 @@ from libs.pascal_voc_io import PascalVocReader
 from libs.pascal_voc_io import XML_EXT
 from libs.yolo_io import YoloReader
 from libs.yolo_io import TXT_EXT
-from libs.version import __version__
 from libs.hashableQListWidgetItem import HashableQListWidgetItem
-
-__appname__ = 'BEAGLES'
 
 
 class MainWindow(BeaglesMainWindow):
@@ -50,7 +34,7 @@ class MainWindow(BeaglesMainWindow):
                  defaultSaveDir=None):
         super(MainWindow, self).__init__()
         self.logger.info("Initializing GUI")
-        self.setWindowTitle(__appname__)
+        self.setWindowTitle(APP_NAME)
         self.predefinedClasses = defaultPredefClassFile
         self.project = ProjectDialog(self)
 
@@ -152,7 +136,7 @@ class MainWindow(BeaglesMainWindow):
         self.labelList.customContextMenuRequested.connect(
             self.popLabelListMenu)
 
-        self.statusBar().showMessage('%s started.' % __appname__)
+        self.statusBar().showMessage('%s started.' % APP_NAME)
         self.statusBar().show()
 
         # Data folders
@@ -201,7 +185,7 @@ class MainWindow(BeaglesMainWindow):
             self.defaultSaveDir = saveDir
             self.statusBar().showMessage(
                 '%s started. Annotation will be saved to %s' %
-                (__appname__, self.defaultSaveDir))
+                (APP_NAME, self.defaultSaveDir))
             self.statusBar().show()
 
         self.restoreState(self.settings.get(SETTING_WIN_STATE, QByteArray()))
@@ -269,33 +253,8 @@ class MainWindow(BeaglesMainWindow):
             self.usingYoloFormat = True
             LabelFile.suffix = TXT_EXT
 
-    def changeFormat(self):
-        if self.usingPascalVocFormat:
-            self.set_format(FORMAT_YOLO)
-        elif self.usingYoloFormat:
-            self.set_format(FORMAT_PASCALVOC)
-
     def noShapes(self):
         return not self.itemsToShapes
-
-    def hideAll(self):
-        self.togglePolygons(False)
-
-    def showAll(self):
-        self.togglePolygons(True)
-
-    # noinspection PyTypeChecker
-    def advancedMode(self, value=True):
-        self._beginner = not value
-        self.canvas.setEditing(True)
-        self.populateModeActions()
-        self.editButton.setVisible(not value)
-        if value:
-            self.actions.setCreateMode.setEnabled(True)
-            self.actions.setEditMode.setEnabled(False)
-            self.dock.setFeatures(self.dock.features() | self.dockFeatures)
-        else:
-            self.dock.setFeatures(self.dock.features() ^ self.dockFeatures)
 
     def populateModeActions(self):
         if self.beginner():
@@ -383,30 +342,6 @@ class MainWindow(BeaglesMainWindow):
         elif osName == 'Darwin':
             return ['open', '-a', 'Safari']
 
-    # Callbacks #
-    def showTutorialDialog(self):
-        subprocess.Popen(self.screencastViewer + [self.screencast])
-
-    def showInfo(self):
-        msg = u'{0}\n' \
-              u'App Version: {1}\n' \
-              u'Python Version: {2}.{3}.{4}\n' \
-              u'Qt Version: {5}\n' \
-              u'PyQt Version: {6}\n' \
-              u'Tensorflow Version: {7}'.format(
-                                            __appname__,
-                                            __version__,
-                                            *sys.version_info[:3],
-                                            QT_VERSION_STR,
-                                            PYQT_VERSION_STR,
-                                            tf_version.VERSION)
-        QMessageBox.information(self, u'Information', msg)
-
-    def createShape(self):
-        assert self.beginner()
-        self.canvas.setEditing(False)
-        self.actions.create.setEnabled(False)
-
     def toggleDrawingSensitive(self, drawing=True):
         """In the middle of drawing, toggling between modes disabled."""
         self.actions.setEditMode.setEnabled(not drawing)
@@ -421,15 +356,6 @@ class MainWindow(BeaglesMainWindow):
         self.canvas.setEditing(edit)
         self.actions.setCreateMode.setEnabled(edit)
         self.actions.setEditMode.setEnabled(not edit)
-
-    def setCreateMode(self):
-        assert self.advanced()
-        self.toggleDrawMode(False)
-
-    def setEditMode(self):
-        assert self.advanced()
-        self.toggleDrawMode(True)
-        self.labelSelectionChanged()
 
     def updateFileMenu(self):
         currFilePath = self.filePath
@@ -450,18 +376,6 @@ class MainWindow(BeaglesMainWindow):
 
     def popLabelListMenu(self, point):
         self.menus.labelList.exec_(self.labelList.mapToGlobal(point))
-
-    def editLabel(self):
-        if not self.canvas.editing():
-            return
-        item = self.currentItem()
-        if not item:
-            return
-        text = self.labelDialog.popUp(item.text())
-        if text is not None:
-            item.setText(text)
-            item.setBackground(generateColorByText(text))
-            self.setDirty()
 
     # Tzutalin 20160906 : Add file list and dock to move faster
     def fileitemDoubleClicked(self, item=None):
@@ -616,10 +530,6 @@ class MainWindow(BeaglesMainWindow):
             self.errorMessage(u'Error saving label data', u'<b>%s</b>' % e)
             return False
 
-    def copySelectedShape(self):
-        self.addLabel(self.canvas.copySelectedShape())
-        # fix copy and delete
-        self.shapeSelectionChanged(True)
 
     def labelSelectionChanged(self):
         item = self.currentItem()
@@ -693,15 +603,6 @@ class MainWindow(BeaglesMainWindow):
         self.zoomMode = self.MANUAL_ZOOM
         self.zoomWidget.setValue(value)
 
-    def zoomIn(self):
-        self.addZoom(10)
-
-    def zoomOut(self):
-        self.addZoom(-10)
-
-    def zoomOrg(self):
-        self.setZoom(100)
-
     def addZoom(self, increment=10):
         self.setZoom(self.zoomWidget.value() + increment)
 
@@ -757,17 +658,7 @@ class MainWindow(BeaglesMainWindow):
         h_bar.setValue(new_h_bar_value)
         v_bar.setValue(new_v_bar_value)
 
-    def setFitWin(self, value=True):
-        if value:
-            self.actions.setFitWidth.setChecked(False)
-        self.zoomMode = self.FIT_WINDOW if value else self.MANUAL_ZOOM
-        self.adjustScale()
 
-    def setFitWidth(self, value=True):
-        if value:
-            self.actions.setFitWin.setChecked(False)
-        self.zoomMode = self.FIT_WIDTH if value else self.MANUAL_ZOOM
-        self.adjustScale()
 
     def togglePolygons(self, value):
         for item, shape in self.itemsToShapes.items():
@@ -862,7 +753,7 @@ class MainWindow(BeaglesMainWindow):
                 elif os.path.isfile(txtPath):
                     self.loadYOLOTXTByFilename(txtPath)
 
-            self.setWindowTitle(__appname__ + ' ' + filePath)
+            self.setWindowTitle(APP_NAME + ' ' + filePath)
 
             # Default : select last item if there is at least one item
             if self.labelList.count():
@@ -962,150 +853,6 @@ class MainWindow(BeaglesMainWindow):
         natural_sort(images, key=lambda x: x.lower())
         return images
 
-    def changeSaveDir(self, _value=False):
-        if self.defaultSaveDir is not None:
-            path = str(self.defaultSaveDir)
-        else:
-            path = '.'
-
-        dirpath = str(QFileDialog.getExistingDirectory(
-            self, '%s - Save annotations to the directory' % __appname__, path,
-            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
-
-        if dirpath is not None and len(dirpath) > 1:
-            self.defaultSaveDir = dirpath
-
-        self.statusBar().showMessage(
-            '%s . Annotation will be saved to %s' %
-            ('Change saved folder', self.defaultSaveDir))
-        self.statusBar().show()
-
-    def openAnnotation(self, _value=False):
-        if self.filePath is None:
-            self.statusBar().showMessage('Please select image first')
-            self.statusBar().show()
-            return
-
-        path = os.path.dirname(str(self.filePath)) \
-            if self.filePath else '.'
-        if self.usingPascalVocFormat:
-            filters = "Open Annotation XML file (%s)" % ' '.join(['*.xml'])
-            options = QFileDialog.Options()
-            options |= QFileDialog.DontUseNativeDialog
-            filename = str(QFileDialog.getOpenFileName(
-                self, '%s - Choose a xml file' % __appname__, path, filters,
-                options=options))
-            if filename:
-                if isinstance(filename, (tuple, list)):
-                    filename = filename[0]
-            self.loadPascalXMLByFilename(filename)
-
-    def openDir(self, _value=False):
-        if not self.mayContinue():
-            return
-
-        if self.lastOpenDir and os.path.exists(self.lastOpenDir):
-            defaultOpenDirPath = self.lastOpenDir
-        else:
-            defaultOpenDirPath = os.path.dirname(self.filePath) if\
-                self.filePath else '.'
-        targetDirPath = str(QFileDialog.getExistingDirectory(
-            self, '%s - Open Directory' % __appname__, defaultOpenDirPath,
-            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
-        # set the annotation save directory to the target directory
-        self.defaultSaveDir = targetDirPath if targetDirPath != "" else \
-            self.defaultSaveDir
-        print(self.defaultSaveDir)
-        self.importDirImages(targetDirPath)
-
-    def impVideo(self, _value=False):
-        if not self.mayContinue():
-            return
-        if self.lastOpenDir and os.path.exists(self.lastOpenDir):
-            defaultOpenDirPath = self.lastOpenDir
-        else:
-            defaultOpenDirPath = os.path.dirname(self.filePath) \
-                if self.filePath else '.'
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        formats = ['*.avi', '*.mp4', '*.wmv', '*.mkv', '*.mpeg']
-        filters = "Video Files (%s)" % ' '.join(
-            formats + ['*%s' % LabelFile.suffix])
-        filename = QFileDialog.getOpenFileName(
-            self, '%s - Choose Image or Label file' % __appname__,
-            defaultOpenDirPath, filters, options=options)
-        target = os.path.join(
-            self.rawframesDataPath,
-            os.path.basename(os.path.splitext(filename[0])[0]))
-        if not os.path.exists(target):
-            os.makedirs(target)
-        if filename[0] != '':
-            if isinstance(filename, (tuple, list)):
-                video = shutil.copy2(filename[0], target)
-                self.logger.info('Extracting frames from {} to {}'.format(
-                    filename, target))
-                frame_capture(video)
-                self.importDirImages(target)
-        if target is not None and len(target) > 1:
-            self.defaultSaveDir = target
-        else:
-            pass
-
-    def commitAnnotatedFrames(self):
-        reply = QMessageBox.question(self, 'Message',
-                                     "Are you sure you want to commit all "
-                                     "open files?", QMessageBox.Yes,
-                                     QMessageBox.No)
-        if reply == QMessageBox.No or not self.mayContinue():
-            return
-        else:
-            pass
-
-        if self.lastOpenDir and os.path.exists(self.lastOpenDir):
-            defaultOpenDirPath = self.lastOpenDir
-        else:
-            defaultOpenDirPath = os.path.dirname(self.filePath) if \
-                self.filePath else '.'
-        if defaultOpenDirPath == self.committedframesDataPath:
-            self.errorMessage("", "These files are already committed.")
-            return
-
-        filelist = []
-        for file in os.listdir(defaultOpenDirPath):
-            filename = os.fsdecode(file)
-            if filename.endswith(".xml"):
-                self.logger.info(
-                    "Moving {0} to data/committedframes/{0}".format(filename))
-                filename = os.path.join(defaultOpenDirPath, filename)
-                basename = os.path.splitext(filename)[0]
-                filelist.append(filename)
-                filelist.append(basename + '.jpg')
-            else:
-                continue
-
-        for i in filelist:
-            dest = os.path.join(self.committedframesDataPath,
-                                os.path.split(i)[1])
-            try:
-                os.rename(i, dest)
-            except OSError as e:
-                if e.errno == errno.EXDEV:
-                    shutil.copy2(i, dest)
-                    os.remove(i)
-                else:
-                    raise
-
-        self.importDirImages(defaultOpenDirPath)
-
-    def trainModel(self):
-        if not self.mayContinue():
-            return
-        self.trainDialog.show()
-
-    def visualize(self):
-        subprocess.Popen(self.screencastViewer +
-                         ['http://localhost:6006/#scalars&_smoothingWeight=0'])
-
     def importDirImages(self, dirpath):
         if not self.mayContinue() or not dirpath:
             return
@@ -1120,115 +867,8 @@ class MainWindow(BeaglesMainWindow):
             item = QListWidgetItem(os.path.basename(imgPath))
             self.fileListWidget.addItem(item)
 
-    def verifyImg(self, _value=False):
-        # Proceeding next image without dialog if having any label
-        if self.filePath is not None:
-            try:
-                self.labelFile.toggleVerify()
-            except AttributeError:
-                # If the labelling file does not exist yet, create if and
-                # re-save it with the verified attribute.
-                self.labelFile = LabelFile()
-                self.logger.info(self.labelFile)
-                if self.labelFile is not None:
-                    self.labelFile.toggleVerify()
-                else:
-                    return
-            self.canvas.verified = self.labelFile.verified
-            self.paintCanvas()
-            self.saveFile()
-
-    def prevImg(self, _value=False):
-        # Proceeding prev image without dialog if having any label
-        if self.autoSaving.isChecked():
-            if self.defaultSaveDir is not None:
-                if self.dirty is True:
-                    self.saveFile()
-            else:
-                self.changeSaveDir()
-                return
-
-        if not self.mayContinue():
-            return
-
-        if len(self.mImgList) <= 0:
-            return
-
-        if self.filePath is None:
-            return
-
-        currIndex = self.mImgList.index(self.filePath)
-        if currIndex - 1 >= 0:
-            filename = self.mImgList[currIndex - 1]
-            if filename:
-                self.loadFile(filename)
-
-    def nextImg(self, _value=False):
-        # Proceeding prev image without dialog if having any label
-        if self.autoSaving.isChecked():
-            if self.defaultSaveDir is not None:
-                if self.dirty is True:
-                    self.saveFile()
-            else:
-                self.changeSaveDir()
-                return
-
-        if not self.mayContinue():
-            return
-
-        if len(self.mImgList) <= 0:
-            return
-
-        filename = None
-        if self.filePath is None:
-            filename = self.mImgList[0]
-        else:
-            currIndex = self.mImgList.index(self.filePath)
-            if currIndex + 1 < len(self.mImgList):
-                filename = self.mImgList[currIndex + 1]
-
-        if filename:
-            self.loadFile(filename)
-
-    def openFile(self, _value=False):
-        if not self.mayContinue():
-            return
-        path = os.path.dirname(str(self.filePath)) if self.filePath else '.'
-        formats = ['*.%s' % fmt.data().decode("ascii").lower()
-                   for fmt in QImageReader.supportedImageFormats()]
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        filters = "Image files (%s)" % ' '.join(formats)
-        filename = QFileDialog.getOpenFileName(
-            self, '%s - Choose Image file' % __appname__, path, filters,
-            options=options)
-        if filename:
-            if isinstance(filename, (tuple, list)):
-                filename = filename[0]
-            self.loadFile(filename)
-
-    def saveFile(self, _value=False):
-        if self.defaultSaveDir is not None and len(str(self.defaultSaveDir)):
-            if self.filePath:
-                imgFileName = os.path.basename(self.filePath)
-                savedFileName = os.path.splitext(imgFileName)[0]
-                savedPath = os.path.join(str(self.defaultSaveDir),
-                                         savedFileName)
-                self._saveFile(savedPath)
-        else:
-            imgFileDir = os.path.dirname(self.filePath)
-            imgFileName = os.path.basename(self.filePath)
-            savedFileName = os.path.splitext(imgFileName)[0]
-            savedPath = os.path.join(imgFileDir, savedFileName)
-            self._saveFile(savedPath if self.labelFile
-                           else self.saveFileDialog(removeExt=False))
-
-    def saveAs(self, _value=False):
-        assert not self.image.isNull(), "cannot save empty image"
-        self._saveFile(self.saveFileDialog())
-
     def saveFileDialog(self, removeExt=True):
-        caption = '%s - Choose File' % __appname__
+        caption = '%s - Choose File' % APP_NAME
         filters = 'File (*%s)' % LabelFile.suffix
         openDialogPath = self.currentPath()
         dlg = QFileDialog(self, caption, openDialogPath, filters)
@@ -1252,21 +892,6 @@ class MainWindow(BeaglesMainWindow):
             self.statusBar().showMessage('Saved to  %s' % annotationFilePath)
             self.statusBar().show()
 
-    def closeFile(self, _value=False):
-        if not self.mayContinue():
-            return
-        self.resetState()
-        self.setClean()
-        self.toggleActions(False)
-        self.canvas.setEnabled(False)
-        self.actions.saveAs.setEnabled(False)
-
-    def resetAll(self):
-        self.settings.reset()
-        self.close()
-        proc = QProcess()
-        proc.startDetached(os.path.abspath(__file__))
-
     def mayContinue(self):
         return not (self.dirty and not self.discardChangesDialog())
 
@@ -1282,38 +907,10 @@ class MainWindow(BeaglesMainWindow):
     def currentPath(self):
         return os.path.dirname(self.filePath) if self.filePath else '.'
 
-    def boxLineColor(self):
-        color = self.colorDialog.getColor(self.lineColor, u'Choose line color',
-                                          default=DEFAULT_LINE_COLOR)
-        if color:
-            self.lineColor = color
-            Shape.line_color = color
-            self.canvas.setDrawingColor(color)
-            self.canvas.update()
-            self.setDirty()
 
-    def delBox(self):
-        self.remLabel(self.canvas.deleteSelected())
-        self.setDirty()
-        if self.noShapes():
-            for action in self.actions.onShapesPresent:
-                action.setEnabled(False)
 
-    def shapeLineColor(self):
-        color = self.colorDialog.getColor(self.lineColor, u'Choose line color',
-                                          default=DEFAULT_LINE_COLOR)
-        if color:
-            self.canvas.selectedShape.line_color = color
-            self.canvas.update()
-            self.setDirty()
 
-    def shapeFillColor(self):
-        color = self.colorDialog.getColor(self.fillColor, u'Choose fill color',
-                                          default=DEFAULT_FILL_COLOR)
-        if color:
-            self.canvas.selectedShape.fill_color = color
-            self.canvas.update()
-            self.setDirty()
+
 
     def copyShape(self):
         self.canvas.endMove(copy=True)
@@ -1380,21 +977,6 @@ def read(filename, default=None):
     except FileNotFoundError:
         return default
 
-
-def frame_capture(path):
-    vidObj = cv2.VideoCapture(path)
-    count = 1  # Start the frame index at 1 >.>
-    success = 1
-    name = os.path.splitext(path)[0]
-    total_zeros = len(str(int(vidObj.get(cv2.CAP_PROP_FRAME_COUNT))))
-    while success:
-        success, image = vidObj.read()
-        fileno = str(count)
-        cv2.imwrite("{}_frame_{}.jpg".format(name, fileno.zfill(total_zeros)),
-                    image)
-        count += 1
-
-
 def parse_args(args):
     parser = argparse.ArgumentParser()
     img_dir = Flags().imgdir
@@ -1438,7 +1020,7 @@ def get_main_app(argv=None):
             app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
     except ImportError as e:
         print(" ".join([str(e), "falling back to system theme"]))
-    app.setApplicationName(__appname__)
+    app.setApplicationName(APP_NAME)
     app.setWindowIcon(newIcon("app"))
     win = MainWindow(**vars(args))
     win.show()

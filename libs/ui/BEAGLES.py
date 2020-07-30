@@ -1,16 +1,14 @@
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
 from libs.zoomWidget import ZoomWidget
 from libs.settings import Settings
 from libs.canvas import Canvas
 from libs.constants import *
+from libs.ui.callbacks.mainWindowCallbacks import MainWindowCallbacks
 from functools import partial
-from .stringBundle import StringBundle
+from libs.stringBundle import StringBundle
 import json
-from .toolBar import ToolBar
-from .qtUtils import *
-from .utils.flags import FlagIO
+from libs.toolBar import ToolBar
+from libs.qtUtils import *
+from libs.utils.flags import FlagIO
 
 
 stringBundle = StringBundle.getBundle()
@@ -49,7 +47,7 @@ class BeaglesDialog(QDialog):
     #         layout.addWidget(obj)
 
 
-class BeaglesMainWindow(QMainWindow, FlagIO):
+class BeaglesMainWindow(QMainWindow, MainWindowCallbacks, FlagIO):
     def __init__(self):
         super(BeaglesMainWindow, self).__init__()
         FlagIO.__init__(self, subprogram=True)
@@ -224,13 +222,11 @@ class BeaglesMainWindow(QMainWindow, FlagIO):
             setFitWin, setFitWidth))
 
         self.menus.file.aboutToShow.connect(self.updateFileMenu)
-
         # Custom context menu for the canvas widget:
         addActions(self.canvas.menus[0], self.actions.beginnerContext)
         addActions(self.canvas.menus[1], (
             action('&Copy here', self.copyShape),
             action('&Move here', self.moveShape)))
-
         self.tools = self.toolbar('Tools')
 
         # noinspection PyUnresolvedReferences
