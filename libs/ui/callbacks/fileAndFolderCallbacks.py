@@ -133,6 +133,10 @@ class FileAndFolderCallbacks:
             self._saveFile(savedPath if self.labelFile
                            else self.saveFileDialog(removeExt=False))
 
+    def saveAs(self, _value=False):
+        assert not self.image.isNull(), "cannot save empty image"
+        self._saveFile(self.saveFileDialog())
+
     def commitAnnotatedFrames(self):
         reply = QMessageBox.question(self, 'Message',
                                      "Are you sure you want to commit all "

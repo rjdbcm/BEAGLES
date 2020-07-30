@@ -10,12 +10,12 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from libs.constants import *
 from libs.ui.callbacks.fileAndFolderCallbacks import FileAndFolderCallbacks
-from libs.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
+from libs.ui.callbacks.boundingBoxCallbacks import BoundingBoxCallbacks
 from libs.labelFile import LabelFile
 from libs.version import __version__
 
 
-class MainWindowCallbacks(FileAndFolderCallbacks):
+class MainWindowCallbacks(FileAndFolderCallbacks, BoundingBoxCallbacks):
 
     def nextImg(self, _value=False):
         # Proceeding prev image without dialog if having any label
@@ -93,10 +93,6 @@ class MainWindowCallbacks(FileAndFolderCallbacks):
         elif self.usingYoloFormat:
             self.set_format(FORMAT_PASCALVOC)
 
-    def saveAs(self, _value=False):
-        assert not self.image.isNull(), "cannot save empty image"
-        self._saveFile(self.saveFileDialog())
-
     def closeFile(self, _value=False):
         if not self.mayContinue():
             return
@@ -111,16 +107,6 @@ class MainWindowCallbacks(FileAndFolderCallbacks):
         self.close()
         proc = QProcess()
         proc.startDetached(os.path.abspath(__file__))
-
-    def boxLineColor(self):
-        color = self.colorDialog.getColor(self.lineColor, u'Choose line color',
-                                          default=DEFAULT_LINE_COLOR)
-        if color:
-            self.lineColor = color
-            Shape.line_color = color
-            self.canvas.setDrawingColor(color)
-            self.canvas.update()
-            self.setDirty()
 
     def setCreateMode(self):
         assert self.advanced()
@@ -140,24 +126,10 @@ class MainWindowCallbacks(FileAndFolderCallbacks):
         subprocess.Popen(self.screencastViewer +
                          ['http://localhost:6006/#scalars&_smoothingWeight=0'])
 
-    def hideAll(self):
-        self.togglePolygons(False)
-
-    def showAll(self):
-        self.togglePolygons(True)
-
     def trainModel(self):
         if not self.mayContinue():
             return
         self.trainDialog.show()
-
-    def delBox(self):
-        self.remLabel(self.canvas.deleteSelected())
-        self.setDirty()
-        if self.noShapes():
-            for action in self.actions.onShapesPresent:
-                action.setEnabled(False)
-        # noinspection PyTypeChecker
 
     def advancedMode(self, value=True):
         self._beginner = not value
@@ -222,23 +194,4 @@ class MainWindowCallbacks(FileAndFolderCallbacks):
             item.setBackground(generateColorByText(text))
             self.setDirty()
 
-    def shapeFillColor(self):
-        color = self.colorDialog.getColor(self.fillColor, u'Choose fill color',
-                                          default=DEFAULT_FILL_COLOR)
-        if color:
-            self.canvas.selectedShape.fill_color = color
-            self.canvas.update()
-            self.setDirty()
 
-    def shapeLineColor(self):
-        color = self.colorDialog.getColor(self.lineColor, u'Choose line color',
-                                          default=DEFAULT_LINE_COLOR)
-        if color:
-            self.canvas.selectedShape.line_color = color
-            self.canvas.update()
-            self.setDirty()
-
-    def copySelectedShape(self):
-        self.addLabel(self.canvas.copySelectedShape())
-        # fix copy and delete
-        self.shapeSelectionChanged(True)
