@@ -1,7 +1,7 @@
 from unittest import TestCase, mock
 import os
 import glob
-import BEAGLES
+from libs.ui.functions.fileFunctions import FileFunctions
 from BEAGLES import get_main_app
 import argparse
 from libs.utils.flags import Flags
@@ -60,7 +60,7 @@ class TestMainWindow(TestCase):
 
     # Definitely works but doesn't test well.
     def testImpVideo(self):
-        BEAGLES.frame_capture(os.path.abspath('test.mp4'))
+        FileFunctions.frameCapture(os.path.abspath('test.mp4'))
         files = glob.glob('*.jpg')
         for file in files:
             os.remove(file)

@@ -1,6 +1,6 @@
 import os
 import unittest
-from stringBundle import StringBundle
+from libs.stringBundle import StringBundle
 
 
 class TestStringBundle(unittest.TestCase):

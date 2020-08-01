@@ -17,4 +17,5 @@ FORMAT_PASCALVOC='PascalVOC'
 FORMAT_YOLO='YOLO'
 SETTING_DRAW_SQUARE = 'draw/square'
 DEFAULT_ENCODING = 'utf-8'
-
+XML_EXT = '.xml'
+TXT_EXT = '.txt'

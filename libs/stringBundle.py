@@ -68,3 +68,7 @@ class StringBundle:
                 self.idToMessage[key] = value
 
             f.close()
+
+
+def getStr(strId):
+    return StringBundle.getBundle().getString(strId)

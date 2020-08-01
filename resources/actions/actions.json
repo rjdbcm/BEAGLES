@@ -45,7 +45,7 @@
       false
    ],
    "changeFormat":[
-      "None",
+      null,
       false,
       true
    ],
@@ -60,7 +60,7 @@
       true
    ],
    "resetAll":[
-      "None",
+      null,
       false,
       true
    ],
@@ -85,12 +85,12 @@
       false
    ],
    "commitAnnotatedFrames":[
-      "None",
+      null,
       false,
       true
    ],
    "visualize":[
-      "None",
+      null,
       false,
       true
    ],
@@ -120,12 +120,12 @@
       true
    ],
    "showInfo":[
-      "None",
+      null,
       false,
       true
    ],
    "showTutorialDialog":[
-      "None",
+      null,
       false,
       true
    ],
@@ -165,12 +165,12 @@
       false
    ],
    "shapeFillColor": [
-      "None",
+      null,
       false,
       false
    ],
    "shapeLineColor":[
-      "None",
+      null,
       false,
       false
    ],

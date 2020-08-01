@@ -3,7 +3,7 @@ import os
 import sys
 import time
 from libs.utils.flags import FlagIO
-from libs.ui.BEAGLES import getStr, BeaglesDialog
+from libs.stringBundle import getStr
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -104,7 +104,8 @@ class BackendThread(QThread, FlagIO):
             time.sleep(self.rate)
             self.read_flags()
 
-class BackendDialog(BeaglesDialog):
+
+class BackendDialog(QDialog):
     def __init__(self, parent):
         super(BackendDialog, self).__init__(parent)
         # training_widgets
@@ -129,6 +130,26 @@ class BackendDialog(BeaglesDialog):
         self.saveSpb = QSpinBox()
         self.clipLayout = QHBoxLayout()
         self.updateAnchorChb = QCheckBox()
+
+    @property
+    def widgets(self) -> dict:
+        return self.__dict__
+
+    def _getWidget(self, index: int) -> dict:
+        widget_name = list(self.widgets)[index]
+        widget_obj = list(self.widgets.values())[index]
+        return {widget_name: widget_obj}
+
+    def getWidgetsByIndex(self, start, end) -> dict:
+        d = dict()
+        for i in range(start, end):
+            d.update(self._getWidget(i))
+        return d
+
+    def addRowsToLayout(self, layout, widgets: dict):
+        for key, obj in widgets.items():
+            label = QLabel(getStr(str(key)))
+            layout.addRow(label, obj)
 
     def setupProjectWidgets(self, layout):
         self.projectLayout = QHBoxLayout()

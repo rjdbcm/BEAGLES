@@ -5,9 +5,9 @@
 from PyQt5.QtGui import QImage
 
 from base64 import b64encode, b64decode
-from libs.pascal_voc_io import PascalVocWriter
-from libs.yolo_io import YOLOWriter
-from libs.pascal_voc_io import XML_EXT
+from libs.pascalVoc import PascalVocWriter
+from libs.yolo import YOLOWriter
+from libs.pascalVoc import XML_EXT
 import os.path
 import sys
 
@@ -26,6 +26,8 @@ class LabelFile(object):
         self.imagePath = None
         self.imageData = None
         self.verified = False
+        self.lineColor = []
+        self.fillColor = []
 
     def savePascalVocFormat(self, filename, shapes, imagePath, imageData,
                             lineColor=None, fillColor=None, databaseSrc=None):

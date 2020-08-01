@@ -1,24 +1,32 @@
 import os
-import errno
 import shutil
-import cv2
 from libs.labelFile import LabelFile
 from libs.constants import *
+from libs.ui.functions.fileFunctions import FileFunctions
 # noinspection PyUnresolvedReferences
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtCore import QProcess
 from PyQt5.QtGui import QImageReader
+from PyQt5.QtWidgets import QFileDialog
 
 
+class FileCallbacks(FileFunctions):
 
-class FileAndFolderCallbacks:
+    def resetAll(self):
+        self.settings.reset()
+        self.close()
+        proc = QProcess()
+        proc.startDetached(os.path.abspath(__file__))
+
+    def changeFormat(self):
+        if self.usingPascalVocFormat:
+            self.setFormat(FORMAT_YOLO)
+        elif self.usingYoloFormat:
+            self.setFormat(FORMAT_PASCALVOC)
+
     def impVideo(self, _value=False):
         if not self.mayContinue():
             return
-        if self.lastOpenDir and os.path.exists(self.lastOpenDir):
-            defaultOpenDirPath = self.lastOpenDir
-        else:
-            defaultOpenDirPath = os.path.dirname(self.filePath) \
-                if self.filePath else '.'
+        path = self.setDefaultOpenDirPath()
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         formats = ['*.avi', '*.mp4', '*.wmv', '*.mkv', '*.mpeg']
@@ -26,7 +34,7 @@ class FileAndFolderCallbacks:
             formats + ['*%s' % LabelFile.suffix])
         filename = QFileDialog.getOpenFileName(
             self, '%s - Choose Image or Label file' % APP_NAME,
-            defaultOpenDirPath, filters, options=options)
+            path, filters, options=options)
         target = os.path.join(
             self.rawframesDataPath,
             os.path.basename(os.path.splitext(filename[0])[0]))
@@ -37,7 +45,7 @@ class FileAndFolderCallbacks:
                 video = shutil.copy2(filename[0], target)
                 self.logger.info('Extracting frames from {} to {}'.format(
                     filename, target))
-                frame_capture(video)
+                self.frameCapture(video)
                 self.importDirImages(target)
         if target is not None and len(target) > 1:
             self.defaultSaveDir = target
@@ -53,6 +61,7 @@ class FileAndFolderCallbacks:
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         filters = "Image files (%s)" % ' '.join(formats)
+        # noinspection PyTypeChecker
         filename = QFileDialog.getOpenFileName(
             self, '%s - Choose Image file' % APP_NAME, path, filters,
             options=options)
@@ -61,22 +70,25 @@ class FileAndFolderCallbacks:
                 filename = filename[0]
             self.loadFile(filename)
 
+    def closeFile(self, _value=False):
+        if not self.mayContinue():
+            return
+        self.resetState()
+        self.setClean()
+        self.toggleActions(False)
+        self.canvas.setEnabled(False)
+        self.actions.saveAs.setEnabled(False)
+
     def openDir(self, _value=False):
         if not self.mayContinue():
             return
-
-        if self.lastOpenDir and os.path.exists(self.lastOpenDir):
-            defaultOpenDirPath = self.lastOpenDir
-        else:
-            defaultOpenDirPath = os.path.dirname(self.filePath) if \
-                self.filePath else '.'
+        path = self.setDefaultOpenDirPath()
         targetDirPath = str(QFileDialog.getExistingDirectory(
-            self, '%s - Open Directory' % APP_NAME, defaultOpenDirPath,
+            self, '%s - Open Directory' % APP_NAME, path,
                   QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
         # set the annotation save directory to the target directory
         self.defaultSaveDir = targetDirPath if targetDirPath != "" else \
             self.defaultSaveDir
-        print(self.defaultSaveDir)
         self.importDirImages(targetDirPath)
 
     def changeSaveDir(self, _value=False):
@@ -136,63 +148,3 @@ class FileAndFolderCallbacks:
     def saveAs(self, _value=False):
         assert not self.image.isNull(), "cannot save empty image"
         self._saveFile(self.saveFileDialog())
-
-    def commitAnnotatedFrames(self):
-        reply = QMessageBox.question(self, 'Message',
-                                     "Are you sure you want to commit all "
-                                     "open files?", QMessageBox.Yes,
-                                     QMessageBox.No)
-        if reply == QMessageBox.No or not self.mayContinue():
-            return
-        else:
-            pass
-
-        if self.lastOpenDir and os.path.exists(self.lastOpenDir):
-            defaultOpenDirPath = self.lastOpenDir
-        else:
-            defaultOpenDirPath = os.path.dirname(self.filePath) if \
-                self.filePath else '.'
-        if defaultOpenDirPath == self.committedframesDataPath:
-            self.errorMessage("", "These files are already committed.")
-            return
-
-        filelist = []
-        for file in os.listdir(defaultOpenDirPath):
-            filename = os.fsdecode(file)
-            if filename.endswith(".xml"):
-                self.logger.info(
-                    "Moving {0} to data/committedframes/{0}".format(filename))
-                filename = os.path.join(defaultOpenDirPath, filename)
-                basename = os.path.splitext(filename)[0]
-                filelist.append(filename)
-                filelist.append(basename + '.jpg')
-            else:
-                continue
-
-        for i in filelist:
-            dest = os.path.join(self.committedframesDataPath,
-                                os.path.split(i)[1])
-            try:
-                os.rename(i, dest)
-            except OSError as e:
-                if e.errno == errno.EXDEV:
-                    shutil.copy2(i, dest)
-                    os.remove(i)
-                else:
-                    raise
-
-        self.importDirImages(defaultOpenDirPath)
-
-
-def frame_capture(path):
-    vidObj = cv2.VideoCapture(path)
-    count = 1  # Start the frame index at 1 >.>
-    success = 1
-    name = os.path.splitext(path)[0]
-    total_zeros = len(str(int(vidObj.get(cv2.CAP_PROP_FRAME_COUNT))))
-    while success:
-        success, image = vidObj.read()
-        fileno = str(count)
-        cv2.imwrite("{}_frame_{}.jpg".format(name, fileno.zfill(total_zeros)),
-                    image)
-        count += 1

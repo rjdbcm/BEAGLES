@@ -5,11 +5,9 @@ from defusedxml import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 from lxml import etree  # nosec
 import codecs
-from libs.constants import DEFAULT_ENCODING
-
+from libs.constants import DEFAULT_ENCODING, XML_EXT
 from libs.boundingBox import BoundingBox
 
-XML_EXT = '.xml'
 ENCODE_METHOD = DEFAULT_ENCODING
 
 

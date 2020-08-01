@@ -23,10 +23,10 @@ coverage:
 
 clean:
 	rm -f ~/.BEAGLESSettings.pkl ./libs/resources.py
-	rm -f ./libs/cython_utils/*.c
+	rm -f ./libs/cythonUtils/*.c
 	rm -rf *.egg-info
 	rm -rf BEAGLES-*
-	rm -f ./libs/cython_utils/*.so
+	rm -f ./libs/cythonUtils/*.so
 	rm -rf ./build
 	rm -rf ./dist
 	rm -rf ./bin

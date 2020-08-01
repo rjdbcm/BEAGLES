@@ -6,4 +6,4 @@ opencv-contrib-python==4.0.0.21
 tensorflow>=2.0
 numpy==1.16.2
 traces==0.4.2
-requests[darkmode]
+requests[darkmode, dev]

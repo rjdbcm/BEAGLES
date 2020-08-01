@@ -8,9 +8,9 @@ import json
 #from utils.box import BoundBox, box_iou, prob_compare
 #from utils.box import prob_compare2, box_intersection
 from ...utils.box import BoundBox
-from ...cython_utils.cy_yolo2_findboxes import box_constructor
-from ...yolo_io import YOLOWriter
-from ...pascal_voc_io import PascalVocWriter, XML_EXT
+from ...cythonUtils.cy_yolo2_findboxes import box_constructor
+from ...yolo import YOLOWriter
+from ...pascalVoc import PascalVocWriter, XML_EXT
 
 
 def expit(x):

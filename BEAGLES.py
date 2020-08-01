@@ -15,67 +15,44 @@ from libs.constants import *
 from libs.qtUtils import *
 from libs.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
 from libs.labelDialog import LabelDialog
-from libs.utils.flags import Flags
+from libs.utils.flags import Flags, FlagIO
 from libs.backend import FlowDialog
 from libs.colorDialog import ColorDialog
 from libs.project import ProjectDialog
 from libs.labelFile import LabelFile, LabelFileError
-from libs.pascal_voc_io import PascalVocReader
-from libs.pascal_voc_io import XML_EXT
-from libs.yolo_io import YoloReader
-from libs.yolo_io import TXT_EXT
+from libs.pascalVoc import XML_EXT
+from libs.yolo import TXT_EXT
 from libs.hashableQListWidgetItem import HashableQListWidgetItem
 
 
 class MainWindow(BeaglesMainWindow):
-    FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = list(range(3))
+
     # noinspection PyShadowingBuiltins
-    def __init__(self, defaultFilename=None, defaultPredefClassFile=None,
-                 defaultSaveDir=None):
+    def __init__(self, filename=None, predefined_class_file=None,
+                 save_directory=None):
         super(MainWindow, self).__init__()
         self.logger.info("Initializing GUI")
         self.setWindowTitle(APP_NAME)
-        self.predefinedClasses = defaultPredefClassFile
+        self.predefinedClasses = predefined_class_file
+        self.defaultSaveDir = save_directory
         self.project = ProjectDialog(self)
-
         # Load setting in the main thread
         self.imageData = None
         self.labelFile = None
-
-
-        # Start tensorboard process
-        # noinspection PyTypeChecker
-        self.tb_process = QProcess(self)
-        self.tb_process.start("tensorboard", ["--logdir=data/summaries",
-                                              "--debugger_port=6064"])
-
         # Save as Pascal voc xml
-        self.defaultSaveDir = defaultSaveDir
         self.usingPascalVocFormat = True
         self.usingYoloFormat = False
-
         # For loading all image under a directory
         self.mImgList = []
         self.dirname = None
-        self.labelHist = []
-        self.lastOpenDir = None
-
         # Whether we need to save or not.
         self.dirty = False
-
         self._noSelectionSlot = False
         self._beginner = True
-        self.screencastViewer = self.getAvailableScreencastViewer()
-        self.screencast = "https://youtu.be/p0nR2YsCY_U"
-
         # Load predefined classes to the list
         self.loadPredefinedClasses()
 
         # Main widgets and related state.
-        self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist)
-        self.trainDialog = FlowDialog(parent=self,
-                                      labelfile=defaultPredefClassFile)
-
         self.itemsToShapes = {}
         self.shapesToItems = {}
         self.prevLabelText = ''
@@ -139,26 +116,10 @@ class MainWindow(BeaglesMainWindow):
         self.statusBar().showMessage('%s started.' % APP_NAME)
         self.statusBar().show()
 
-        # Data folders
-        if hasattr(sys, 'frozen'):
-            self.rawframesDataPath = os.path.join(
-                os.path.dirname(sys.executable), 'data/rawframes/')
-            self.committedframesDataPath = os.path.join(
-                os.path.dirname(sys.executable), Flags().dataset)
-        else:
-            self.rawframesDataPath = os.path.abspath('./data/rawframes/')
-            self.committedframesDataPath = os.path.abspath(Flags().dataset)
 
-        # Application state.
-        self.image = QImage()
-        self.filePath = str(defaultFilename)
-        self.recentFiles = []
-        self.maxRecent = 7
-        self.lineColor = None
-        self.fillColor = None
-        self.zoom_level = 100
-        self.fit_window = False
-        self.difficult = False
+        self.filePath = str(filename)
+
+
 
         # Fix the compatible issue for qt4 and qt5.
         # Convert the QStringList to python list
@@ -228,31 +189,7 @@ class MainWindow(BeaglesMainWindow):
         if self.filePath and os.path.isdir(self.filePath):
             self.openDir()
 
-    def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key_Control:
-            self.canvas.setDrawingShapeToSquare(False)
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Control:
-            # Draw rectangle if Ctrl is pressed
-            self.canvas.setDrawingShapeToSquare(True)
-
     # Support Functions #
-    def set_format(self, changeFormat):
-        if changeFormat == FORMAT_PASCALVOC:
-            self.actions.changeFormat.setText(FORMAT_PASCALVOC)
-            self.actions.changeFormat.setIcon(newIcon("format_voc"))
-            self.usingPascalVocFormat = True
-            self.usingYoloFormat = False
-            LabelFile.suffix = XML_EXT
-
-        elif changeFormat == FORMAT_YOLO:
-            self.actions.changeFormat.setText(FORMAT_YOLO)
-            self.actions.changeFormat.setIcon(newIcon("format_yolo"))
-            self.usingPascalVocFormat = False
-            self.usingYoloFormat = True
-            LabelFile.suffix = TXT_EXT
-
     def noShapes(self):
         return not self.itemsToShapes
 
@@ -278,15 +215,6 @@ class MainWindow(BeaglesMainWindow):
     def setAdvanced(self):
         self.tools.clear()
         addActions(self.tools, self.actions.advanced)
-
-    def setDirty(self):
-        self.dirty = True
-        self.actions.saveFile.setEnabled(True)
-
-    def setClean(self):
-        self.dirty = False
-        self.actions.saveFile.setEnabled(False)
-        self.actions.create.setEnabled(True)
 
     def toggleActions(self, value=True):
         """Enable/Disable widgets which depend on an opened image."""
@@ -331,16 +259,6 @@ class MainWindow(BeaglesMainWindow):
     def advanced(self):
         return not self.beginner()
 
-    @staticmethod
-    def getAvailableScreencastViewer():
-        osName = platform.system()
-
-        if osName == 'Windows':
-            return ['C:\\Program Files\\Internet Explorer\\iexplore.exe']
-        elif osName == 'Linux':
-            return ['xdg-open']
-        elif osName == 'Darwin':
-            return ['open', '-a', 'Safari']
 
     def toggleDrawingSensitive(self, drawing=True):
         """In the middle of drawing, toggling between modes disabled."""
@@ -351,11 +269,6 @@ class MainWindow(BeaglesMainWindow):
             self.canvas.setEditing(True)
             self.canvas.restoreCursor()
             self.actions.create.setEnabled(True)
-
-    def toggleDrawMode(self, edit=True):
-        self.canvas.setEditing(edit)
-        self.actions.setCreateMode.setEnabled(edit)
-        self.actions.setEditMode.setEnabled(not edit)
 
     def updateFileMenu(self):
         currFilePath = self.filePath
@@ -387,7 +300,7 @@ class MainWindow(BeaglesMainWindow):
                 self.loadFile(filename)
 
     # Add chris
-    def btnstate(self):
+    def buttonState(self):
         """ Function to handle difficult examples
         Update on each object """
         if not self.canvas.editing():
@@ -397,7 +310,7 @@ class MainWindow(BeaglesMainWindow):
         if not item:  # If not selected Item, take the first one
             item = self.labelList.item(self.labelList.count() - 1)
 
-        difficult = self.diffcButton.isChecked()
+        difficult = self.difficultButton.isChecked()
 
         try:
             shape = self.itemsToShapes[item]
@@ -530,7 +443,6 @@ class MainWindow(BeaglesMainWindow):
             self.errorMessage(u'Error saving label data', u'<b>%s</b>' % e)
             return False
 
-
     def labelSelectionChanged(self):
         item = self.currentItem()
         if item and self.canvas.editing():
@@ -538,7 +450,7 @@ class MainWindow(BeaglesMainWindow):
             self.canvas.selectShape(self.itemsToShapes[item])
             shape = self.itemsToShapes[item]
             # Add Chris
-            self.diffcButton.setChecked(shape.difficult)
+            self.difficultButton.setChecked(shape.difficult)
 
     def labelItemChanged(self, item):
         shape = self.itemsToShapes[item]
@@ -572,7 +484,7 @@ class MainWindow(BeaglesMainWindow):
             text = self.defaultLabelTextLine.text()
 
         # Add Chris
-        self.diffcButton.setChecked(False)
+        self.difficultButton.setChecked(False)
         if text is not None:
             self.prevLabelText = text
             generate_color = generateColorByText(text)
@@ -597,180 +509,9 @@ class MainWindow(BeaglesMainWindow):
         bar = self.scrollBars[orientation]
         bar.setValue(bar.value() + bar.singleStep() * units)
 
-    def setZoom(self, value):
-        self.actions.setFitWidth.setChecked(False)
-        self.actions.setFitWin.setChecked(False)
-        self.zoomMode = self.MANUAL_ZOOM
-        self.zoomWidget.setValue(value)
-
-    def addZoom(self, increment=10):
-        self.setZoom(self.zoomWidget.value() + increment)
-
-    def zoomRequest(self, delta):
-        # get the current scrollbar positions
-        # calculate the percentages ~ coordinates
-        h_bar = self.scrollBars[Qt.Horizontal]
-        v_bar = self.scrollBars[Qt.Vertical]
-
-        # get the current maximum, to know the difference after zoomIng
-        h_bar_max = h_bar.maximum()
-        v_bar_max = v_bar.maximum()
-
-        # get the cursor position and canvas size
-        # calculate the desired movement from 0 to 1
-        # where 0 = move left
-        #       1 = move right
-        # up and down analogous
-        cursor = QCursor()
-        pos = cursor.pos()
-        relative_pos = QWidget.mapFromGlobal(self, pos)
-
-        cursor_x = relative_pos.x()
-        cursor_y = relative_pos.y()
-
-        w = self.scrollArea.width()
-        h = self.scrollArea.height()
-
-        # the scaling from 0 to 1 has some padding
-        # you don't have to hit the very leftmost pixel for a maximum-left movement
-        margin = 0.1
-        move_x = (cursor_x - margin * w) / (w - 2 * margin * w)
-        move_y = (cursor_y - margin * h) / (h - 2 * margin * h)
-
-        # clamp the values from 0 to 1
-        move_x = min(max(move_x, 0), 1)
-        move_y = min(max(move_y, 0), 1)
-
-        # zoom in
-        units = delta / (8 * 15)
-        scale = 10
-        self.addZoom(scale * units)
-
-        # get the difference in scrollbar values
-        # this is how far we can move
-        d_h_bar_max = h_bar.maximum() - h_bar_max
-        d_v_bar_max = v_bar.maximum() - v_bar_max
-
-        # get the new scrollbar values
-        new_h_bar_value = h_bar.value() + move_x * d_h_bar_max
-        new_v_bar_value = v_bar.value() + move_y * d_v_bar_max
-
-        h_bar.setValue(new_h_bar_value)
-        v_bar.setValue(new_v_bar_value)
-
-
-
     def togglePolygons(self, value):
         for item, shape in self.itemsToShapes.items():
             item.setCheckState(Qt.Checked if value else Qt.Unchecked)
-
-
-    def loadFile(self, filePath=None):
-        """Load the specified file, or the last opened file if None."""
-        self.resetState()
-        self.canvas.setEnabled(False)
-        if filePath is None:
-            filePath = self.settings.get(SETTING_FILENAME)
-
-        # Make sure that filePath is a regular python string, rather than QString
-        filePath = str(filePath)
-        unicodeFilePath = str(filePath)
-        # Tzutalin 20160906 : Add file list and dock to move faster
-        # Highlight the file item
-        if unicodeFilePath and self.fileListWidget.count() > 0:
-            try:
-                index = self.mImgList.index(unicodeFilePath)
-                fileWidgetItem = self.fileListWidget.item(index)
-                fileWidgetItem.setSelected(True)
-                self.fileListWidget.scrollToItem(fileWidgetItem)
-            except ValueError:
-                pass
-
-        if unicodeFilePath and os.path.exists(unicodeFilePath):
-            if LabelFile.isLabelFile(unicodeFilePath):
-                try:
-                    self.labelFile = LabelFile(unicodeFilePath)
-                except LabelFileError as e:
-                    self.errorMessage(
-                        u'Error opening file',
-                        (u"<p><b>%s</b></p>"
-                         u"<p>Make sure <i>%s</i> is a valid label file.")
-                        % (e, unicodeFilePath))
-                    self.status("Error reading %s" % unicodeFilePath)
-                    return False
-                self.imageData = self.labelFile.imageData
-                self.lineColor = QColor(*self.labelFile.lineColor)
-                self.fillColor = QColor(*self.labelFile.fillColor)
-                self.canvas.verified = self.labelFile.verified
-            else:
-                # Load image:
-                # read data first and store for saving into label file.
-                self.imageData = read(unicodeFilePath, None)
-                self.labelFile = None
-                self.canvas.verified = False
-
-            image = QImage.fromData(self.imageData)
-            if image.isNull():
-                self.errorMessage(
-                    u'Error opening file',
-                    u"<p>Make sure <i>%s</i> is a valid image file."
-                    % unicodeFilePath)
-                self.status("Error reading %s" % unicodeFilePath)
-                return False
-            self.status("Loaded %s" % os.path.basename(unicodeFilePath))
-            self.image = image
-            self.filePath = unicodeFilePath
-            self.canvas.loadPixmap(QPixmap.fromImage(image))
-            if self.labelFile:
-                self.loadLabels(self.labelFile.shapes)
-            self.setClean()
-            self.canvas.setEnabled(True)
-            self.adjustScale(initial=True)
-            self.paintCanvas()
-            self.addRecentFile(self.filePath)
-            self.toggleActions(True)
-
-            # Label xml file and show bound box according to its filename
-            # if self.usingPascalVocFormat is True:
-            if self.defaultSaveDir is not None:
-                basename = os.path.basename(
-                    os.path.splitext(self.filePath)[0])
-                xmlPath = os.path.join(self.defaultSaveDir, basename + XML_EXT)
-                txtPath = os.path.join(self.defaultSaveDir, basename + TXT_EXT)
-
-                """Annotation file priority:
-                PascalXML > YOLO
-                """
-                if os.path.isfile(xmlPath):
-                    self.loadPascalXMLByFilename(xmlPath)
-                elif os.path.isfile(txtPath):
-                    self.loadYOLOTXTByFilename(txtPath)
-            else:
-                xmlPath = os.path.splitext(filePath)[0] + XML_EXT
-                txtPath = os.path.splitext(filePath)[0] + TXT_EXT
-                if os.path.isfile(xmlPath):
-                    self.loadPascalXMLByFilename(xmlPath)
-                elif os.path.isfile(txtPath):
-                    self.loadYOLOTXTByFilename(txtPath)
-
-            self.setWindowTitle(APP_NAME + ' ' + filePath)
-
-            # Default : select last item if there is at least one item
-            if self.labelList.count():
-                self.labelList.setCurrentItem(
-                    self.labelList.item(self.labelList.count() - 1))
-                self.labelList.item(
-                    self.labelList.count() - 1).setSelected(True)
-
-            self.canvas.setFocus(True)
-            return True
-        return False
-
-    def resizeEvent(self, event):
-        if self.canvas and not self.image.isNull() \
-                and self.zoomMode != self.MANUAL_ZOOM:
-            self.adjustScale()
-        super(MainWindow, self).resizeEvent(event)
 
     def paintCanvas(self):
         assert not self.image.isNull(), "cannot paint null image"
@@ -799,45 +540,6 @@ class MainWindow(BeaglesMainWindow):
         w = self.centralWidget().width() - 2.0
         return w / self.canvas.pixmap.width()
 
-    def closeEvent(self, event):
-        if not self.mayContinue():
-            event.ignore()
-        if self.tb_process.pid() > 0:
-            self.tb_process.kill()
-#        self.saveProject(self.project)
-        settings = self.settings
-        # If it loads images from dir, don't load it at the beginning
-        if self.dirname is None:
-            settings[SETTING_FILENAME] = self.filePath if self.filePath else ''
-        else:
-            settings[SETTING_FILENAME] = ''
-        settings[SETTING_WIN_SIZE] = self.size()
-        settings[SETTING_WIN_POSE] = self.pos()
-        settings[SETTING_WIN_STATE] = self.saveState()
-        settings[SETTING_LINE_COLOR] = self.lineColor
-        settings[SETTING_FILL_COLOR] = self.fillColor
-        settings[SETTING_RECENT_FILES] = self.recentFiles
-        settings[SETTING_ADVANCE_MODE] = not self._beginner
-        if self.defaultSaveDir and os.path.exists(self.defaultSaveDir):
-            settings[SETTING_SAVE_DIR] = str(self.defaultSaveDir)
-        else:
-            settings[SETTING_SAVE_DIR] = ''
-
-        if self.lastOpenDir and os.path.exists(self.lastOpenDir):
-            settings[SETTING_LAST_OPEN_DIR] = self.lastOpenDir
-        else:
-            settings[SETTING_LAST_OPEN_DIR] = ''
-
-        settings[SETTING_AUTO_SAVE] = self.autoSaving.isChecked()
-        settings[SETTING_SINGLE_CLASS] = self.singleClassMode.isChecked()
-        settings[SETTING_PAINT_LABEL] = self.displayLabelOption.isChecked()
-        settings[SETTING_DRAW_SQUARE] = self.drawSquaresOption.isChecked()
-        settings.save()
-
-    def loadRecent(self, filename):
-        if self.mayContinue():
-            self.loadFile(filename)
-
     @staticmethod
     def scanAllImages(folderPath):
         extensions = ['.%s' % fmt.data().decode("ascii").lower() for
@@ -852,20 +554,6 @@ class MainWindow(BeaglesMainWindow):
                     images.append(path)
         natural_sort(images, key=lambda x: x.lower())
         return images
-
-    def importDirImages(self, dirpath):
-        if not self.mayContinue() or not dirpath:
-            return
-
-        self.lastOpenDir = dirpath
-        self.dirname = dirpath
-        self.filePath = None
-        self.fileListWidget.clear()
-        self.mImgList = self.scanAllImages(dirpath)
-        self.nextImg()
-        for imgPath in self.mImgList:
-            item = QListWidgetItem(os.path.basename(imgPath))
-            self.fileListWidget.addItem(item)
 
     def saveFileDialog(self, removeExt=True):
         caption = '%s - Choose File' % APP_NAME
@@ -892,25 +580,8 @@ class MainWindow(BeaglesMainWindow):
             self.statusBar().showMessage('Saved to  %s' % annotationFilePath)
             self.statusBar().show()
 
-    def mayContinue(self):
-        return not (self.dirty and not self.discardChangesDialog())
-
-    def discardChangesDialog(self):
-        yes, no = QMessageBox.Yes, QMessageBox.No
-        msg = u'You have unsaved changes, proceed anyway?'
-        return yes == QMessageBox.warning(self, u'Attention', msg, yes | no)
-
-    def errorMessage(self, title, message):
-        return QMessageBox.critical(self, title,
-                                    '<p><b>%s</b></p>%s' % (title, message))
-
     def currentPath(self):
         return os.path.dirname(self.filePath) if self.filePath else '.'
-
-
-
-
-
 
     def copyShape(self):
         self.canvas.endMove(copy=True)
@@ -932,31 +603,7 @@ class MainWindow(BeaglesMainWindow):
                     else:
                         self.labelHist.append(line)
 
-    def loadPascalXMLByFilename(self, xmlPath):
-        if self.filePath is None:
-            return
-        if os.path.isfile(xmlPath) is False:
-            return
 
-        self.set_format(FORMAT_PASCALVOC)
-
-        tVocParseReader = PascalVocReader(xmlPath)
-        shapes = tVocParseReader.getShapes()
-        self.loadLabels(shapes)
-        self.canvas.verified = tVocParseReader.verified
-
-    def loadYOLOTXTByFilename(self, txtPath):
-        if self.filePath is None:
-            return
-        if os.path.isfile(txtPath) is False:
-            return
-
-        self.set_format(FORMAT_YOLO)
-        tYoloParseReader = YoloReader(txtPath, self.image)
-        shapes = tYoloParseReader.getShapes()
-        print(shapes)
-        self.loadLabels(shapes)
-        self.canvas.verified = tYoloParseReader.verified
 
     def togglePaintLabelsOption(self):
         for shape in self.canvas.shapes:
@@ -969,24 +616,16 @@ class MainWindow(BeaglesMainWindow):
 def inverted(color):
     return QColor(*[255 - v for v in color.getRgb()])
 
-
-def read(filename, default=None):
-    try:
-        with open(filename, 'rb') as f:
-            return f.read()
-    except FileNotFoundError:
-        return default
-
 def parse_args(args):
     parser = argparse.ArgumentParser()
     img_dir = Flags().imgdir
     random_img = random.choice([os.path.join(img_dir, f) for f in
                                 os.listdir(img_dir) if
                                 os.path.isfile(os.path.join(img_dir, f))])
-    parser.add_argument('-i', '--defaultFilename', default=random_img, help="image file to open")
-    parser.add_argument('-c', '--defaultPredefClassFile', default=Flags().labels,
+    parser.add_argument('-i', '--filename', default=random_img, help="image file to open")
+    parser.add_argument('-c', '--predefined_class_file', default=Flags().labels,
                         help="text file containing class names")
-    parser.add_argument('-s', '--defaultSaveDir', default=None, help="save directory")
+    parser.add_argument('-s', '--save_directory', default=None, help="save directory")
     return parser.parse_args(args)
 
 

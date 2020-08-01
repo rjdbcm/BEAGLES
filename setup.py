@@ -18,20 +18,20 @@ with open('requirements/requirements.txt', 'r') as f:
 
 if os.name == 'nt':
     ext_modules = [
-        Extension("libs.cython_utils.nms",
-                  sources=["libs/cython_utils/nms.pyx"],
+        Extension("libs.cythonUtils.nms",
+                  sources=["libs/cythonUtils/nms.pyx"],
                   # libraries=["m"] # Unix-like specific
                   include_dirs=[numpy.get_include()]
                   ),
-        Extension("libs.cython_utils.cy_yolo2_findboxes",
-                  sources=["libs/cython_utils/cy_yolo2_findboxes.pyx"],
+        Extension("libs.cythonUtils.cy_yolo2_findboxes",
+                  sources=["libs/cythonUtils/cy_yolo2_findboxes.pyx"],
                   # libraries=["m"] # Unix-like specific
                   include_dirs=[numpy.get_include()],
                   extra_compile_args=['/fopenmp'],
                   extra_link_args=['/fopenmp']
                   ),
-        Extension("libs.cython_utils.cy_yolo_findboxes",
-                  sources=["libs/cython_utils/cy_yolo_findboxes.pyx"],
+        Extension("libs.cythonUtils.cy_yolo_findboxes",
+                  sources=["libs/cythonUtils/cy_yolo_findboxes.pyx"],
                   # libraries=["m"] # Unix-like specific
                   include_dirs=[numpy.get_include()]
                   )
@@ -46,36 +46,36 @@ elif os.name == 'posix':
         linker_args = ['-fopenmp']
 
     ext_modules = [
-        Extension("libs.cython_utils.nms",
-                  sources=["libs/cython_utils/nms.pyx"],
+        Extension("libs.cythonUtils.nms",
+                  sources=["libs/cythonUtils/nms.pyx"],
                   libraries=["m"],  # Unix-like specific
                   include_dirs=[numpy.get_include()]
                   ),
-        Extension("libs.cython_utils.cy_yolo2_findboxes",
-                  sources=["libs/cython_utils/cy_yolo2_findboxes.pyx"],
+        Extension("libs.cythonUtils.cy_yolo2_findboxes",
+                  sources=["libs/cythonUtils/cy_yolo2_findboxes.pyx"],
                   libraries=["m"],  # Unix-like specific
                   include_dirs=[numpy.get_include()],
                   extra_compile_args=compile_args,
                   extra_link_args=linker_args
                   ),
-        Extension("libs.cython_utils.cy_yolo_findboxes",
-                  sources=["libs/cython_utils/cy_yolo_findboxes.pyx"],
+        Extension("libs.cythonUtils.cy_yolo_findboxes",
+                  sources=["libs/cythonUtils/cy_yolo_findboxes.pyx"],
                   libraries=["m"],  # Unix-like specific
                   include_dirs=[numpy.get_include()]
                   )
     ]
 else:
     ext_modules = [
-        Extension("libs.cython_utils.nms",
-                  sources=["libs/cython_utils/nms.pyx"],
+        Extension("libs.cythonUtils.nms",
+                  sources=["libs/cythonUtils/nms.pyx"],
                   libraries=["m"]  # Unix-like specific
                   ),
-        Extension("libs.cython_utils.cy_yolo2_findboxes",
-                  sources=["libs/cython_utils/cy_yolo2_findboxes.pyx"],
+        Extension("libs.cythonUtils.cy_yolo2_findboxes",
+                  sources=["libs/cythonUtils/cy_yolo2_findboxes.pyx"],
                   libraries=["m"]  # Unix-like specific
                   ),
-        Extension("libs.cython_utils.cy_yolo_findboxes",
-                  sources=["libs/cython_utils/cy_yolo_findboxes.pyx"],
+        Extension("libs.cythonUtils.cy_yolo_findboxes",
+                  sources=["libs/cythonUtils/cy_yolo_findboxes.pyx"],
                   libraries=["m"]  # Unix-like specific
                   )
     ]
@@ -92,7 +92,8 @@ setup(
     scripts=['BEAGLES.py'],
     ext_modules=cythonize(ext_modules),
     extras_require={'darkmode': ["qdarkstyle", "pyobjc"]
-                    if sys.platform == "Darwin" else ["qdarkstyle"]},
+                    if sys.platform == "Darwin" else ["qdarkstyle"],
+                    'dev': ["googletrans"]},
     classifiers=["Programming Language :: Cython",
                  "Programming Language :: Python :: 3",
                  "License :: OSI Approved ::"

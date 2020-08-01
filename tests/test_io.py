@@ -1,8 +1,8 @@
 import os
 import sys
 from unittest import TestCase
-from libs.pascal_voc_io import PascalVocWriter, PascalVocReader
-from libs.yolo_io import YOLOWriter, YoloReader
+from libs.pascalVoc import PascalVocWriter, PascalVocReader
+from libs.yolo import YOLOWriter, YoloReader
 from libs.scripts.voc_to_yolo import convertAnnotation
 
 

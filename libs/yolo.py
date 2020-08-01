@@ -6,10 +6,10 @@ from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 from lxml import etree
 import codecs
-from libs.constants import DEFAULT_ENCODING
+from libs.constants import DEFAULT_ENCODING, TXT_EXT
 from libs.boundingBox import BoundingBox
 
-TXT_EXT = '.txt'
+
 ENCODE_METHOD = DEFAULT_ENCODING
 
 
