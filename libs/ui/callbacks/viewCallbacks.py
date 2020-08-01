@@ -26,15 +26,8 @@ class ViewCallbacks(ViewFunctions):
         self.adjustScale()
 
     def nextImg(self, _value=False):
-        # Proceeding prev image without dialog if having any label
         if self.autoSaving.isChecked():
-            if self.defaultSaveDir is not None:
-                if self.dirty is True:
-                    self.saveFile()
-            else:
-                self.changeSaveDir()
-                return
-
+            self.autoSave()
         if not self.mayContinue():
             return
 
@@ -53,15 +46,8 @@ class ViewCallbacks(ViewFunctions):
             self.loadFile(filename)
 
     def prevImg(self, _value=False):
-        # Proceeding prev image without dialog if having any label
         if self.autoSaving.isChecked():
-            if self.defaultSaveDir is not None:
-                if self.dirty is True:
-                    self.saveFile()
-            else:
-                self.changeSaveDir()
-                return
-
+            self.autoSave()
         if not self.mayContinue():
             return
 

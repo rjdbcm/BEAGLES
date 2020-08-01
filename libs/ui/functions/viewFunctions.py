@@ -1,5 +1,6 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidgetAction
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QWidget
 from libs.qtUtils import fmtShortcut
 from libs.ui.functions.mainWindowFunctions import MainWindowFunctions
 from libs.zoomWidget import ZoomWidget
@@ -8,8 +9,19 @@ from libs.zoomWidget import ZoomWidget
 class ViewFunctions(MainWindowFunctions):
     FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = list(range(3))
 
+    def autoSave(self):
+        # Proceeding without dialog if having any label
+        if self.defaultSaveDir is not None:
+            if self.dirty is True:
+                self.saveFile()
+        else:
+            self.changeSaveDir()
+            return
+
     def setZoom(self, value):
+        # noinspection PyUnresolvedReferences
         self.actions.setFitWidth.setChecked(False)
+        # noinspection PyUnresolvedReferences
         self.actions.setFitWin.setChecked(False)
         self.zoomMode = self.MANUAL_ZOOM
         self.zoomWidget.setValue(value)

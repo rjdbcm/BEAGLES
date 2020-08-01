@@ -106,20 +106,12 @@ class FileFunctions(MainWindowFunctions):
                 xmlPath = os.path.join(self.defaultSaveDir, basename + XML_EXT)
                 txtPath = os.path.join(self.defaultSaveDir, basename + TXT_EXT)
 
-                """Annotation file priority:
-                PascalXML > YOLO
-                """
-                if os.path.isfile(xmlPath):
-                    self.loadPascalXMLByFilename(xmlPath)
-                elif os.path.isfile(txtPath):
-                    self.loadYOLOTXTByFilename(txtPath)
+                # Annotation file priority: PascalXML > YOLO
+                self.loadBasedOnPriority(xmlPath, txtPath)
             else:
                 xmlPath = os.path.splitext(filePath)[0] + XML_EXT
                 txtPath = os.path.splitext(filePath)[0] + TXT_EXT
-                if os.path.isfile(xmlPath):
-                    self.loadPascalXMLByFilename(xmlPath)
-                elif os.path.isfile(txtPath):
-                    self.loadYOLOTXTByFilename(txtPath)
+                self.loadBasedOnPriority(xmlPath, txtPath)
 
             self.setWindowTitle(APP_NAME + ' ' + filePath)
 
@@ -133,6 +125,12 @@ class FileFunctions(MainWindowFunctions):
             self.canvas.setFocus(True)
             return True
         return False
+
+    def loadBasedOnPriority(self, first, second):
+        if os.path.isfile(first):
+            self.loadPascalXMLByFilename(first)
+        elif os.path.isfile(second):
+            self.loadYOLOTXTByFilename(second)
 
     def loadPascalXMLByFilename(self, xmlPath):
         if self.filePath is None:
