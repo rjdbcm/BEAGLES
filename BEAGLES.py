@@ -1,27 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import codecs
 import random
 import os.path
 import argparse
-import platform
 from functools import partial
 
 # Add internal libs
 # noinspection PyUnresolvedReferences
 from libs.resources import *
-from libs.ui.BEAGLES import BeaglesMainWindow, getStr
+from libs.ui.BEAGLES import BeaglesMainWindow
 from libs.constants import *
 from libs.qtUtils import *
 from libs.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
 from libs.labelDialog import LabelDialog
-from libs.utils.flags import Flags, FlagIO
-from libs.backend import FlowDialog
+from libs.utils.flags import Flags
 from libs.colorDialog import ColorDialog
 from libs.project import ProjectDialog
-from libs.labelFile import LabelFile, LabelFileError
-from libs.pascalVoc import XML_EXT
-from libs.yolo import TXT_EXT
 from libs.hashableQListWidgetItem import HashableQListWidgetItem
 
 
@@ -48,7 +42,7 @@ class MainWindow(BeaglesMainWindow):
         # Whether we need to save or not.
         self.dirty = False
         self._noSelectionSlot = False
-        self._beginner = True
+
         # Load predefined classes to the list
         self.loadPredefinedClasses()
 
@@ -56,18 +50,6 @@ class MainWindow(BeaglesMainWindow):
         self.itemsToShapes = {}
         self.shapesToItems = {}
         self.prevLabelText = ''
-
-        self.fileListWidget = QListWidget()
-        self.fileListWidget.itemDoubleClicked.connect(
-            self.fileitemDoubleClicked)
-        filelistLayout = QVBoxLayout()
-        filelistLayout.setContentsMargins(0, 0, 0, 0)
-        filelistLayout.addWidget(self.fileListWidget)
-        fileListContainer = QWidget()
-        fileListContainer.setLayout(filelistLayout)
-        self.filedock = QDockWidget(getStr('fileList'), self)
-        self.filedock.setObjectName(getStr('files'))
-        self.filedock.setWidget(fileListContainer)
 
         self.colorDialog = ColorDialog(parent=self)
 
@@ -81,26 +63,7 @@ class MainWindow(BeaglesMainWindow):
             Qt.Horizontal: scroll.horizontalScrollBar()
         }
         self.scrollArea = scroll
-        self.canvas.scrollRequest.connect(self.scrollRequest)
-
-        self.canvas.newShape.connect(self.newShape)
-        self.canvas.shapeMoved.connect(self.setDirty)
-        self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
-        self.canvas.drawingPolygon.connect(self.toggleDrawingSensitive)
-
         self.setCentralWidget(scroll)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.dock)
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.filedock)
-        self.filedock.setFeatures(QDockWidget.DockWidgetFloatable)
-
-        self.dockFeatures = \
-            QDockWidget.DockWidgetClosable | QDockWidget.DockWidgetFloatable
-        # noinspection PyTypeChecker
-        self.dock.setFeatures(self.dock.features() ^ self.dockFeatures)
-
-        # Group zoom controls into a list for easier toggling.
-        # noinspection PyUnresolvedReferences
-
         self.zoomMode = self.MANUAL_ZOOM
         self.scalers = {
             self.FIT_WINDOW: self.scaleFitWindow,
@@ -115,12 +78,7 @@ class MainWindow(BeaglesMainWindow):
 
         self.statusBar().showMessage('%s started.' % APP_NAME)
         self.statusBar().show()
-
-
         self.filePath = str(filename)
-
-
-
         # Fix the compatible issue for qt4 and qt5.
         # Convert the QStringList to python list
         if self.settings.get(SETTING_RECENT_FILES):
@@ -179,7 +137,6 @@ class MainWindow(BeaglesMainWindow):
         # Callbacks:
         self.zoomWidget.valueChanged.connect(self.paintCanvas)
 
-        self.populateModeActions()
 
         # Display cursor coordinates at the right of status bar
         self.labelCoordinates = QLabel('')
@@ -193,72 +150,16 @@ class MainWindow(BeaglesMainWindow):
     def noShapes(self):
         return not self.itemsToShapes
 
-    def populateModeActions(self):
-        if self.beginner():
-            tool, menu = self.actions.beginner, self.actions.beginnerContext
-        else:
-            tool, menu = self.actions.advanced, self.actions.advancedContext
-        self.tools.clear()
-        addActions(self.tools, tool)
-        self.canvas.menus[0].clear()
-        addActions(self.canvas.menus[0], menu)
-        self.menus.edit.clear()
-        actions = (self.actions.create,) if self.beginner() \
-            else (self.actions.setCreateMode, self.actions.setEditMode,
-                  self.actions.verifyImg)
-        addActions(self.menus.edit, actions + self.actions.editMenu)
-
-    def setBeginner(self):
-        self.tools.clear()
-        addActions(self.tools, self.actions.beginner)
-
-    def setAdvanced(self):
-        self.tools.clear()
-        addActions(self.tools, self.actions.advanced)
-
-    def toggleActions(self, value=True):
-        """Enable/Disable widgets which depend on an opened image."""
-        for z in self.actions.zoomActions:
-            z.setEnabled(value)
-        for action in self.actions.onLoadActive:
-            action.setEnabled(value)
-
-    # noinspection PyMethodMayBeStatic
-    def queueEvent(self, function):
-        QTimer.singleShot(0, function)
-
     def status(self, message, delay=5000):
         self.statusBar().showMessage(message, delay)
 
-    def resetState(self):
-        self.itemsToShapes.clear()
-        self.shapesToItems.clear()
-        self.labelList.clear()
-        self.filePath = None
-        self.imageData = None
-        self.labelFile = None
-        self.canvas.resetState()
-        self.labelCoordinates.clear()
+
 
     def currentItem(self):
         items = self.labelList.selectedItems()
         if items:
             return items[0]
         return None
-
-    def addRecentFile(self, filePath):
-        if filePath in self.recentFiles:
-            self.recentFiles.remove(filePath)
-        elif len(self.recentFiles) >= self.maxRecent:
-            self.recentFiles.pop()
-        self.recentFiles.insert(0, filePath)
-
-    def beginner(self):
-        return self._beginner
-
-    def advanced(self):
-        return not self.beginner()
-
 
     def toggleDrawingSensitive(self, drawing=True):
         """In the middle of drawing, toggling between modes disabled."""
@@ -269,35 +170,6 @@ class MainWindow(BeaglesMainWindow):
             self.canvas.setEditing(True)
             self.canvas.restoreCursor()
             self.actions.create.setEnabled(True)
-
-    def updateFileMenu(self):
-        currFilePath = self.filePath
-
-        def exists(filename):
-            return os.path.exists(filename)
-
-        menu = self.menus.recentFiles
-        menu.clear()
-        files = [f for f in self.recentFiles if f !=
-                 currFilePath and exists(f)]
-        for i, f in enumerate(files):
-            icon = newIcon('labels')
-            action = QAction(
-                icon, '&%d %s' % (i + 1, QFileInfo(f).fileName()), self)
-            action.triggered.connect(partial(self.loadRecent, f))
-            menu.addAction(action)
-
-    def popLabelListMenu(self, point):
-        self.menus.labelList.exec_(self.labelList.mapToGlobal(point))
-
-    # Tzutalin 20160906 : Add file list and dock to move faster
-    def fileitemDoubleClicked(self, item=None):
-        item = os.path.join(self.dirname, item.text())
-        currIndex = self.mImgList.index(item)
-        if currIndex < len(self.mImgList):
-            filename = self.mImgList[currIndex]
-            if filename:
-                self.loadFile(filename)
 
     # Add chris
     def buttonState(self):
@@ -368,81 +240,6 @@ class MainWindow(BeaglesMainWindow):
         del self.shapesToItems[shape]
         del self.itemsToShapes[item]
 
-    def loadLabels(self, shapes):
-        s = []
-        for label, points, line_color, fill_color, difficult in shapes:
-            shape = Shape(label=label)
-            for x, y in points:
-
-                # Ensure the labels are within the bounds of the image.
-                # If not, fix them.
-                x, y, snapped = self.canvas.snapPointToCanvas(x, y)
-                if snapped:
-                    self.setDirty()
-
-                shape.addPoint(QPointF(x, y))
-            shape.difficult = difficult
-            shape.close()
-            s.append(shape)
-
-            if line_color:
-                shape.line_color = QColor(*line_color)
-            else:
-                shape.line_color = generateColorByText(label)
-
-            if fill_color:
-                shape.fill_color = QColor(*fill_color)
-            else:
-                shape.fill_color = generateColorByText(label)
-
-            self.addLabel(shape)
-
-        self.canvas.loadShapes(s)
-
-    def saveLabels(self, annotationFilePath):
-        annotationFilePath = str(annotationFilePath)
-        if self.labelFile is None:
-            self.labelFile = LabelFile()
-            self.labelFile.verified = self.canvas.verified
-
-        def format_shape(s):
-            return dict(label=s.label,
-                        line_color=s.line_color.getRgb(),
-                        fill_color=s.fill_color.getRgb(),
-                        points=[(p.x(), p.y()) for p in s.points],
-                        # add chris
-                        difficult=s.difficult)
-
-        shapes = [format_shape(shape) for shape in self.canvas.shapes]
-        # Can add different annotation formats here
-        try:
-            if self.usingPascalVocFormat is True:
-                if annotationFilePath[-4:].lower() != ".xml":
-                    annotationFilePath += XML_EXT
-                self.labelFile.savePascalVocFormat(annotationFilePath, shapes,
-                                                   self.filePath,
-                                                   self.imageData,
-                                                   self.lineColor.getRgb(),
-                                                   self.fillColor.getRgb())
-            elif self.usingYoloFormat is True:
-                if annotationFilePath[-4:].lower() != ".txt":
-                    annotationFilePath += TXT_EXT
-                self.labelFile.saveYoloFormat(annotationFilePath, shapes,
-                                              self.filePath, self.imageData,
-                                              self.labelHist,
-                                              self.lineColor.getRgb(),
-                                              self.fillColor.getRgb())
-            else:
-                self.labelFile.save(annotationFilePath, shapes, self.filePath,
-                                    self.imageData, self.lineColor.getRgb(),
-                                    self.fillColor.getRgb())
-            self.logger.info('Image:{0} -> Annotation:{1}'.format(
-                self.filePath, annotationFilePath))
-            return True
-        except LabelFileError as e:
-            self.errorMessage(u'Error saving label data', u'<b>%s</b>' % e)
-            return False
-
     def labelSelectionChanged(self):
         item = self.currentItem()
         if item and self.canvas.editing():
@@ -462,7 +259,6 @@ class MainWindow(BeaglesMainWindow):
         else:  # User probably changed item visibility
             self.canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
 
-    # Callback functions:
     def newShape(self):
         """Pop-up and give focus to the label editor.
 
@@ -540,49 +336,6 @@ class MainWindow(BeaglesMainWindow):
         w = self.centralWidget().width() - 2.0
         return w / self.canvas.pixmap.width()
 
-    @staticmethod
-    def scanAllImages(folderPath):
-        extensions = ['.%s' % fmt.data().decode("ascii").lower() for
-                      fmt in QImageReader.supportedImageFormats()]
-        images = []
-
-        for root, dirs, files in os.walk(folderPath):
-            for file in files:
-                if file.lower().endswith(tuple(extensions)):
-                    relativePath = os.path.join(root, file)
-                    path = str(os.path.abspath(relativePath))
-                    images.append(path)
-        natural_sort(images, key=lambda x: x.lower())
-        return images
-
-    def saveFileDialog(self, removeExt=True):
-        caption = '%s - Choose File' % APP_NAME
-        filters = 'File (*%s)' % LabelFile.suffix
-        openDialogPath = self.currentPath()
-        dlg = QFileDialog(self, caption, openDialogPath, filters)
-        dlg.setDefaultSuffix(LabelFile.suffix[1:])
-        dlg.setAcceptMode(QFileDialog.AcceptSave)
-        filenameWithoutExtension = os.path.splitext(self.filePath)[0]
-        dlg.selectFile(filenameWithoutExtension)
-        dlg.setOption(QFileDialog.DontUseNativeDialog, False)
-        if dlg.exec_():
-            fullFilePath = str(dlg.selectedFiles()[0])
-            if removeExt:
-                # Return file path without the extension.
-                return os.path.splitext(fullFilePath)[0]
-            else:
-                return fullFilePath
-        return ''
-
-    def _saveFile(self, annotationFilePath):
-        if annotationFilePath and self.saveLabels(annotationFilePath):
-            self.setClean()
-            self.statusBar().showMessage('Saved to  %s' % annotationFilePath)
-            self.statusBar().show()
-
-    def currentPath(self):
-        return os.path.dirname(self.filePath) if self.filePath else '.'
-
     def copyShape(self):
         self.canvas.endMove(copy=True)
         self.addLabel(self.canvas.selectedShape)
@@ -592,29 +345,11 @@ class MainWindow(BeaglesMainWindow):
         self.canvas.endMove(copy=False)
         self.setDirty()
 
-    def loadPredefinedClasses(self):
-        predefClassesFile = self.predefinedClasses
-        if os.path.exists(predefClassesFile) is True:
-            with codecs.open(predefClassesFile, 'r', 'utf8') as f:
-                for line in f:
-                    line = line.strip()
-                    if self.labelHist is None:
-                        self.labelHist = [line]
-                    else:
-                        self.labelHist.append(line)
-
-
-
     def togglePaintLabelsOption(self):
         for shape in self.canvas.shapes:
             shape.paintLabel = self.displayLabelOption.isChecked()
 
-    def toggleDrawSquare(self):
-        self.canvas.setDrawingShapeToSquare(self.drawSquaresOption.isChecked())
 
-
-def inverted(color):
-    return QColor(*[255 - v for v in color.getRgb()])
 
 def parse_args(args):
     parser = argparse.ArgumentParser()

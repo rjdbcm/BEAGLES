@@ -81,10 +81,7 @@ def _local_pad(dimension, padding, size, stride):
     return (dimension - 1 - (1 - padding) * (size - 1)) // stride + 1
 
 
-def _extract_new_input_layer(input_layer,
-                             colors: list,
-                             heights: list,
-                             widths: list):
+def _extract_new_input_layer(input_layer, colors: list, heights: list, widths: list):
     new_inp = list()
     for p in range(colors[1]):
         for q in range(heights[1]):

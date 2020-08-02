@@ -18,9 +18,10 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
         FlagIO.__init__(self, subprogram=True)
         with open('resources/actions/actions.json', 'r') as json_file:
             self.actionSettings = json.load(json_file)
-        """dict(key: list(shortcut: str, checkable: bool, enabled: bool))"""
         self.actionList = list(self.actionSettings.keys())
+        self._beginner = True
         action = partial(newAction, self)
+
         def createActions(actions: list):
             nonlocal self
             nonlocal action
@@ -28,55 +29,16 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
             for act in actions:
                 _str = act
                 action_str = getStr(_str)
-                action_shortcut, checkable, enabled = [str(i) for i in
-                                                       self.actionSettings[
-                                                           _str]]
+                action_shortcut, checkable, enabled = [str(i) for i in self.actionSettings[_str]]
                 action_detail = getStr(_str + "Detail")
                 action_icon = _str
                 callback = 'self.' + act
-                self.logger.info(
-                    cmd.format(_str, action_str, callback, action_shortcut,
-                               action_icon, action_detail, checkable,
-                               enabled))
-                exec(cmd.format(_str, action_str, callback, action_shortcut,
-                                action_icon, action_detail, checkable,
-                                enabled))
+                cmd_string = cmd.format(_str, action_str, callback, action_shortcut,
+                                        action_icon, action_detail, checkable, enabled)
+                self.logger.info(cmd_string)
+                exec(cmd_string)
         createActions(self.actionList)
-        self.settings = Settings()
-        self.settings.load()
-        settings = self.settings
-        # noinspection PyUnresolvedReferences
-        self.drawSquaresOption = QAction('Draw Squares', self)
-        self.drawSquaresOption.setShortcut('Ctrl+Shift+R')
-        self.drawSquaresOption.setCheckable(True)
-        self.drawSquaresOption.setChecked(settings.get(SETTING_DRAW_SQUARE, False))
-        self.drawSquaresOption.triggered.connect(self.toggleDrawSquare)
-        self.setupZoomWidget()
-        self.setupActions()
-        self.setupMenus()
-        self.setupToolbar()
-        self.setupLabelDock()
-        # Auto saving : Enable auto saving if pressing next
-        self.autoSaving = QAction(getStr('autoSaveMode'), self)
-        self.autoSaving.setCheckable(True)
-        self.autoSaving.setChecked(self.settings.get(SETTING_AUTO_SAVE, False))
-        # Sync single class mode from PR#106
-        self.singleClassMode = QAction(getStr('singleClsMode'), self)
-        self.singleClassMode.setCheckable(True)
-        self.singleClassMode.setChecked(self.settings.get(SETTING_SINGLE_CLASS, False))
-        # Add option to enable/disable labels being displayed at the top of bounding boxes
-
-        self.displayLabelOption = QAction(getStr('displayLabel'), self)
-        self.displayLabelOption.setShortcut("Ctrl+Shift+P")
-        self.displayLabelOption.setCheckable(True)
-        self.displayLabelOption.setChecked(self.settings.get(SETTING_PAINT_LABEL, False))
-        self.displayLabelOption.triggered.connect(self.togglePaintLabelsOption)
-        self.populateMenus()
-        self.setupCanvasWidget()
-
-
-
-        # Create a widget for using default label
+        self.setup()
 
     def menu(self, title, actions=None):
         menu = self.menuBar().addMenu(title)
@@ -96,7 +58,41 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
         self.addToolBar(Qt.TopToolBarArea, toolbar)
         return toolbar
 
+    def setup(self):
+        self.settings = Settings()
+        self.settings.load()
+        self.setupZoomWidget()
+        self.setupActions()
+        self.setupMenus()
+        self.setupToolbar()
+        self.setupFileDock()
+        self.setupLabelDock()
+        self.populateMenus()
+        self.setupCanvasWidget()
+        self.populateModeActions()
+
     def setupActions(self):
+        # Auto saving : Enable auto saving if pressing next
+        self.autoSaving = QAction(getStr('autoSaveMode'), self)
+        self.autoSaving.setCheckable(True)
+        self.autoSaving.setChecked(self.settings.get(SETTING_AUTO_SAVE, False))
+        # Sync single class mode from PR#106
+        self.singleClassMode = QAction(getStr('singleClsMode'), self)
+        self.singleClassMode.setCheckable(True)
+        self.singleClassMode.setChecked(self.settings.get(SETTING_SINGLE_CLASS, False))
+        # Add option to enable/disable labels being displayed at the top of bounding boxes
+
+        self.displayLabelOption = QAction(getStr('displayLabel'), self)
+        self.displayLabelOption.setShortcut("Ctrl+Shift+P")
+        self.displayLabelOption.setCheckable(True)
+        self.displayLabelOption.setChecked(self.settings.get(SETTING_PAINT_LABEL, False))
+        self.displayLabelOption.triggered.connect(self.togglePaintLabelsOption)
+
+        self.drawSquaresOption = QAction('Draw Squares', self)
+        self.drawSquaresOption.setShortcut('Ctrl+Shift+R')
+        self.drawSquaresOption.setCheckable(True)
+        self.drawSquaresOption.setChecked(self.settings.get(SETTING_DRAW_SQUARE, False))
+        self.drawSquaresOption.triggered.connect(self.toggleDrawSquare)
         # noinspection PyUnresolvedReferences
         zoomActions = (self.zoomWidget, zoomIn, zoomOut, zoomOrg, setFitWin, setFitWidth)
         # noinspection PyUnresolvedReferences
@@ -110,11 +106,9 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
                               shapeLineColor=shapeLineColor, shapeFillColor=shapeFillColor,
                               zoom=self.zoom, zoomIn=zoomIn, zoomOut=zoomOut,
                               zoomOrg=zoomOrg, setFitWin=setFitWin, setFitWidth=setFitWidth,
-                              zoomActions=zoomActions,
-                              fileMenuActions=(openFile, openDir, impVideo, saveFile,
-                                               saveAs, commitAnnotatedFrames, trainModel,
-                                               visualize, closeFile, resetAll, close),
-                              beginner=(), advanced=(),
+                              zoomActions=zoomActions, fileMenuActions=(openFile, openDir,
+                              impVideo, saveFile, saveAs, commitAnnotatedFrames, trainModel,
+                              visualize, closeFile, resetAll, close), beginner=(), advanced=(),
                               editMenu=(editLabel, copySelectedShape, delBox, None,
                                         boxLineColor, self.drawSquaresOption),
                               beginnerContext=(createShape, editLabel, copySelectedShape,
@@ -125,6 +119,22 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
                               onLoadActive=(closeFile, createShape, setCreateMode,
                                             setEditMode),
                               onShapesPresent=(saveAs, hideAll, showAll))
+
+    # noinspection PyUnresolvedReferences
+    def populateModeActions(self):
+        if self.beginner():
+            tool, menu = self.actions.beginner, self.actions.beginnerContext
+        else:
+            tool, menu = self.actions.advanced, self.actions.advancedContext
+        self.tools.clear()
+        addActions(self.tools, tool)
+        self.canvas.menus[0].clear()
+        addActions(self.canvas.menus[0], menu)
+        self.menus.edit.clear()
+        actions = (self.actions.create,) if self.beginner() \
+            else (self.actions.setCreateMode, self.actions.setEditMode,
+                  self.actions.verifyImg)
+        addActions(self.menus.edit, actions + self.actions.editMenu)
 
     def setupMenus(self):
         labelMenu = QMenu()
@@ -171,6 +181,20 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
                                  verifyImg, None, hideAll, showAll, None,
                                  commitAnnotatedFrames, trainModel, visualize, impVideo)
 
+    def setupFileDock(self):
+        self.fileListWidget = QListWidget()
+        self.fileListWidget.itemDoubleClicked.connect(self.fileitemDoubleClicked)
+        filelistLayout = QVBoxLayout()
+        filelistLayout.setContentsMargins(0, 0, 0, 0)
+        filelistLayout.addWidget(self.fileListWidget)
+        fileListContainer = QWidget()
+        fileListContainer.setLayout(filelistLayout)
+        self.filedock = QDockWidget(getStr('fileList'), self)
+        self.filedock.setObjectName(getStr('files'))
+        self.filedock.setWidget(fileListContainer)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.filedock)
+        self.filedock.setFeatures(QDockWidget.DockWidgetFloatable)
+
     def setupLabelDock(self):
         listLayout = QVBoxLayout()
         listLayout.setContentsMargins(0, 0, 0, 0)
@@ -194,6 +218,11 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
         self.dock = QDockWidget(getStr('boxLabelText'), self)
         self.dock.setObjectName(getStr('labels'))
         self.dock.setWidget(labelListContainer)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.dock)
+        self.dockFeatures = \
+            QDockWidget.DockWidgetClosable | QDockWidget.DockWidgetFloatable
+        # noinspection PyTypeChecker
+        self.dock.setFeatures(self.dock.features() ^ self.dockFeatures)
         self.useDefaultLabelCheckbox = QCheckBox(getStr('useDefaultLabel'))
         self.useDefaultLabelCheckbox.setChecked(False)
         self.defaultLabelTextLine = QLineEdit()
@@ -224,10 +253,27 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
         self.canvas = Canvas(parent=self)
         self.canvas.zoomRequest.connect(self.zoomRequest)
         self.canvas.setDrawingShapeToSquare(self.settings.get(SETTING_DRAW_SQUARE, False))
+        self.canvas.scrollRequest.connect(self.scrollRequest)
+
+        self.canvas.newShape.connect(self.newShape)
+        self.canvas.shapeMoved.connect(self.setDirty)
+        self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
+        self.canvas.drawingPolygon.connect(self.toggleDrawingSensitive)
         # Custom context menu for the canvas widget:
+        # noinspection PyUnresolvedReferences
         addActions(self.canvas.menus[0], self.actions.beginnerContext)
         addActions(self.canvas.menus[1], (action('&Copy here', self.copyShape),
                                           action('&Move here', self.moveShape)))
+
+    def resetState(self):
+        self.itemsToShapes.clear()
+        self.shapesToItems.clear()
+        self.labelList.clear()
+        self.filePath = None
+        self.imageData = None
+        self.labelFile = None
+        self.canvas.resetState()
+        self.labelCoordinates.clear()
 
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Control:

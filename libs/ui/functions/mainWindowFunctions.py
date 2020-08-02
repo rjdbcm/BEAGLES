@@ -1,11 +1,11 @@
 import os
 import sys
 import platform
-from PyQt5.QtCore import QObject
+from PyQt5.QtCore import QObject, QTimer
 from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import QWidget, QMessageBox, QListWidgetItem
 from libs.constants import *
-from libs.qtUtils import newIcon
+from libs.qtUtils import newIcon, addActions
 from libs.labelFile import LabelFile
 from libs.labelDialog import LabelDialog
 from libs.utils.flags import Flags
@@ -46,6 +46,17 @@ class MainWindowFunctions(QWidget, QObject):
         elif os_name == 'Darwin':
             return ['open', '-a', 'Safari']
 
+    # noinspection PyMethodMayBeStatic
+    def queueEvent(self, function):
+        QTimer.singleShot(0, function)
+
+    def toggleActions(self, value=True):
+        """Enable/Disable widgets which depend on an opened image."""
+        for z in self.actions.zoomActions:
+            z.setEnabled(value)
+        for action in self.actions.onLoadActive:
+            action.setEnabled(value)
+
     def setDirty(self):
         self.dirty = True
         # noinspection PyUnresolvedReferences
@@ -70,6 +81,20 @@ class MainWindowFunctions(QWidget, QObject):
     def errorMessage(self, title, message):
         # noinspection PyTypeChecker
         return QMessageBox.critical(self, title, '<p><b>%s</b></p>%s' % (title, message))
+
+    def setBeginner(self):
+        self.tools.clear()
+        addActions(self.tools, self.actions.beginner)
+
+    def setAdvanced(self):
+        self.tools.clear()
+        addActions(self.tools, self.actions.advanced)
+
+    def beginner(self):
+        return self._beginner
+
+    def advanced(self):
+        return not self.beginner()
 
     def setFormat(self, annotation_format):
         if annotation_format == FORMAT_PASCALVOC:
@@ -111,3 +136,15 @@ class MainWindowFunctions(QWidget, QObject):
         for imgPath in self.mImgList:
             item = QListWidgetItem(os.path.basename(imgPath))
             self.fileListWidget.addItem(item)
+
+    def popLabelListMenu(self, point):
+        self.menus.labelList.exec_(self.labelList.mapToGlobal(point))
+
+    # Tzutalin 20160906 : Add file list and dock to move faster
+    def fileitemDoubleClicked(self, item=None):
+        item = os.path.join(self.dirname, item.text())
+        currIndex = self.mImgList.index(item)
+        if currIndex < len(self.mImgList):
+            filename = self.mImgList[currIndex]
+            if filename:
+                self.loadFile(filename)

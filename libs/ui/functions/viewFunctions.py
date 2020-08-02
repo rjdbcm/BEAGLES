@@ -18,6 +18,9 @@ class ViewFunctions(MainWindowFunctions):
             self.changeSaveDir()
             return
 
+    def toggleDrawSquare(self):
+        self.canvas.setDrawingShapeToSquare(self.drawSquaresOption.isChecked())
+
     def setZoom(self, value):
         # noinspection PyUnresolvedReferences
         self.actions.setFitWidth.setChecked(False)

@@ -1,13 +1,16 @@
 import os
+import codecs
 import cv2
-import sys
-from PyQt5.QtGui import QImage, QColor, QPixmap
-from PyQt5.QtWidgets import QListWidgetItem
+from functools import partial
+from PyQt5.QtCore import QFileInfo, QPointF
+from PyQt5.QtGui import QImage, QColor, QPixmap, QImageReader
+from PyQt5.QtWidgets import QAction, QFileDialog
 from libs.constants import *
 from libs.labelFile import LabelFile, LabelFileError
 from libs.pascalVoc import XML_EXT, PascalVocReader
 from libs.ui.functions.mainWindowFunctions import MainWindowFunctions
-from libs.utils.flags import Flags
+from libs.qtUtils import newIcon, natural_sort, generateColorByText
+from libs.shape import Shape
 from libs.yolo import TXT_EXT, YoloReader
 
 
@@ -28,6 +31,45 @@ class FileFunctions(MainWindowFunctions):
                 "{}_frame_{}.jpg".format(name, fileno.zfill(total_zeros)),
                 image)
             count += 1
+
+    @staticmethod
+    def scanAllImages(folderPath):
+        extensions = ['.%s' % fmt.data().decode("ascii").lower() for
+                      fmt in QImageReader.supportedImageFormats()]
+        images = []
+
+        for root, dirs, files in os.walk(folderPath):
+            for file in files:
+                if file.lower().endswith(tuple(extensions)):
+                    relativePath = os.path.join(root, file)
+                    path = str(os.path.abspath(relativePath))
+                    images.append(path)
+        natural_sort(images, key=lambda x: x.lower())
+        return images
+
+    def addRecentFile(self, filePath):
+        if filePath in self.recentFiles:
+            self.recentFiles.remove(filePath)
+        elif len(self.recentFiles) >= self.maxRecent:
+            self.recentFiles.pop()
+        self.recentFiles.insert(0, filePath)
+
+    def updateFileMenu(self):
+        currFilePath = self.filePath
+
+        def exists(filename):
+            return os.path.exists(filename)
+
+        menu = self.menus.recentFiles
+        menu.clear()
+        files = [f for f in self.recentFiles if f !=
+                 currFilePath and exists(f)]
+        for i, f in enumerate(files):
+            icon = newIcon('labels')
+            action = QAction(
+                icon, '&%d %s' % (i + 1, QFileInfo(f).fileName()), self)
+            action.triggered.connect(partial(self.loadRecent, f))
+            menu.addAction(action)
 
     def loadRecent(self, filename):
         if self.mayContinue():
@@ -157,6 +199,119 @@ class FileFunctions(MainWindowFunctions):
         self.loadLabels(shapes)
         self.canvas.verified = yolo_reader.verified
 
+    def currentPath(self):
+        return os.path.dirname(self.filePath) if self.filePath else '.'
+
+    def saveFileDialog(self, removeExt=True):
+        caption = '%s - Choose File' % APP_NAME
+        filters = 'File (*%s)' % LabelFile.suffix
+        openDialogPath = self.currentPath()
+        dlg = QFileDialog(self, caption, openDialogPath, filters)
+        dlg.setDefaultSuffix(LabelFile.suffix[1:])
+        dlg.setAcceptMode(QFileDialog.AcceptSave)
+        filenameWithoutExtension = os.path.splitext(self.filePath)[0]
+        dlg.selectFile(filenameWithoutExtension)
+        dlg.setOption(QFileDialog.DontUseNativeDialog, False)
+        if dlg.exec_():
+            fullFilePath = str(dlg.selectedFiles()[0])
+            if removeExt:
+                # Return file path without the extension.
+                return os.path.splitext(fullFilePath)[0]
+            else:
+                return fullFilePath
+        return ''
+
+    def _saveFile(self, annotationFilePath):
+        if annotationFilePath and self.saveLabels(annotationFilePath):
+            self.setClean()
+            self.statusBar().showMessage('Saved to  %s' % annotationFilePath)
+            self.statusBar().show()
+
+    def loadLabels(self, shapes):
+        s = []
+        for label, points, line_color, fill_color, difficult in shapes:
+            shape = Shape(label=label)
+            for x, y in points:
+
+                # Ensure the labels are within the bounds of the image.
+                # If not, fix them.
+                x, y, snapped = self.canvas.snapPointToCanvas(x, y)
+                if snapped:
+                    self.setDirty()
+
+                shape.addPoint(QPointF(x, y))
+            shape.difficult = difficult
+            shape.close()
+            s.append(shape)
+
+            if line_color:
+                shape.line_color = QColor(*line_color)
+            else:
+                shape.line_color = generateColorByText(label)
+
+            if fill_color:
+                shape.fill_color = QColor(*fill_color)
+            else:
+                shape.fill_color = generateColorByText(label)
+
+            self.addLabel(shape)
+
+        self.canvas.loadShapes(s)
+
+    def saveLabels(self, annotationFilePath):
+        annotationFilePath = str(annotationFilePath)
+        if self.labelFile is None:
+            self.labelFile = LabelFile()
+            self.labelFile.verified = self.canvas.verified
+
+        def format_shape(s):
+            return dict(label=s.label,
+                        line_color=s.line_color.getRgb(),
+                        fill_color=s.fill_color.getRgb(),
+                        points=[(p.x(), p.y()) for p in s.points],
+                        # add chris
+                        difficult=s.difficult)
+
+        shapes = [format_shape(shape) for shape in self.canvas.shapes]
+        # Can add different annotation formats here
+        try:
+            if self.usingPascalVocFormat is True:
+                if annotationFilePath[-4:].lower() != ".xml":
+                    annotationFilePath += XML_EXT
+                self.labelFile.savePascalVocFormat(annotationFilePath, shapes,
+                                                   self.filePath,
+                                                   self.imageData,
+                                                   self.lineColor.getRgb(),
+                                                   self.fillColor.getRgb())
+            elif self.usingYoloFormat is True:
+                if annotationFilePath[-4:].lower() != ".txt":
+                    annotationFilePath += TXT_EXT
+                self.labelFile.saveYoloFormat(annotationFilePath, shapes,
+                                              self.filePath, self.imageData,
+                                              self.labelHist,
+                                              self.lineColor.getRgb(),
+                                              self.fillColor.getRgb())
+            else:
+                self.labelFile.save(annotationFilePath, shapes, self.filePath,
+                                    self.imageData, self.lineColor.getRgb(),
+                                    self.fillColor.getRgb())
+            self.logger.info('Image:{0} -> Annotation:{1}'.format(
+                self.filePath, annotationFilePath))
+            return True
+        except LabelFileError as e:
+            self.errorMessage(u'Error saving label data', u'<b>%s</b>' % e)
+            return False
+
+    def loadPredefinedClasses(self):
+        predefClassesFile = self.predefinedClasses
+        if os.path.exists(predefClassesFile) is True:
+            with codecs.open(predefClassesFile, 'r', 'utf8') as f:
+                for line in f:
+                    line = line.strip()
+                    if self.labelHist is None:
+                        self.labelHist = [line]
+                    else:
+                        self.labelHist.append(line)
 
 def read(filename, default=None):
     try:
