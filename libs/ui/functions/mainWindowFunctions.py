@@ -6,8 +6,8 @@ from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import QWidget, QMessageBox, QListWidgetItem
 from libs.constants import *
 from libs.qtUtils import newIcon, addActions
-from libs.labelFile import LabelFile
-from libs.labelDialog import LabelDialog
+from libs.io.labelFile import LabelFile
+from libs.widgets.labelDialog import LabelDialog
 from libs.utils.flags import Flags
 
 

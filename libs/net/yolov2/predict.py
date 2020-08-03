@@ -1,7 +1,5 @@
 import numpy as np
-import math
 import sys
-import cv2
 import os
 import json
 #from scipy.special import expit
@@ -9,8 +7,6 @@ import json
 #from utils.box import prob_compare2, box_intersection
 from ...utils.box import BoundBox
 from ...cythonUtils.cy_yolo2_findboxes import box_constructor
-from ...yolo import YOLOWriter
-from ...pascalVoc import PascalVocWriter, XML_EXT
 
 
 def expit(x):

@@ -1,6 +1,6 @@
 import os
 import shutil
-from libs.labelFile import LabelFile
+from libs.io.labelFile import LabelFile
 from libs.constants import *
 from libs.ui.functions.fileFunctions import FileFunctions
 # noinspection PyUnresolvedReferences

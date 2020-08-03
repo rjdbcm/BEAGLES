@@ -1,15 +1,13 @@
 # Copyright (c) 2016 Tzutalin
 # Create by TzuTaLin <tzu.ta.lin@gmail.com>
 
-
+import os.path
+from collections import namedtuple
 from PyQt5.QtGui import QImage
 
-from base64 import b64encode, b64decode
-from libs.pascalVoc import PascalVocWriter
-from libs.yolo import YOLOWriter
-from libs.pascalVoc import XML_EXT
-import os.path
-import sys
+from libs.io.pascalVoc import PascalVocWriter
+from libs.io.yolo import YoloWriter
+from libs.io.pascalVoc import XML_EXT
 
 
 class LabelFileError(Exception):
@@ -28,6 +26,8 @@ class LabelFile(object):
         self.verified = False
         self.lineColor = []
         self.fillColor = []
+        self.metadata = namedtuple('metadata', 'label difficult')
+        self.boundingBox = namedtuple('boundingBox', 'xmin ymin xmax ymax')
 
     def savePascalVocFormat(self, filename, shapes, imagePath, imageData,
                             lineColor=None, fillColor=None, databaseSrc=None):
@@ -41,8 +41,7 @@ class LabelFile(object):
         image.load(imagePath)
         imageShape = [image.height(), image.width(),
                       1 if image.isGrayscale() else 3]
-        writer = PascalVocWriter(imgFolderName, imgFileName,
-                                 imageShape)
+        writer = PascalVocWriter(imgFolderName, imgFileName, imageShape)
         writer.verified = self.verified
 
         for shape in shapes:
@@ -50,8 +49,9 @@ class LabelFile(object):
             label = shape['label']
             # Add Chris
             difficult = int(shape['difficult'])
-            bndbox = LabelFile.convertPoints2BndBox(points)
-            writer.addBndBox(bndbox, label, difficult)
+            bndbox = self.convertPoints2BndBox(points)
+            metadata = self.metadata(label, difficult)
+            writer.addBndBox(bndbox, metadata)
 
         writer.save(targetFile=filename)
         return
@@ -68,17 +68,16 @@ class LabelFile(object):
         image.load(imagePath)
         imageShape = [image.height(), image.width(),
                       1 if image.isGrayscale() else 3]
-        writer = YOLOWriter(imgFolderName, imgFileName,
-                                 imageShape, localImgPath=imagePath)
+        writer = YoloWriter(imgFolderName, imgFileName, imageShape, localImgPath=imagePath)
         writer.verified = self.verified
 
         for shape in shapes:
             points = shape['points']
             label = shape['label']
-            # Add Chris
             difficult = int(shape['difficult'])
-            bndbox = LabelFile.convertPoints2BndBox(points)
-            writer.addBndBox(bndbox, label, difficult)
+            metadata = self.metadata(label, difficult)
+            bndbox = self.convertPoints2BndBox(points)
+            writer.addBndBox(bndbox, metadata)
 
         writer.save(targetFile=filename, classList=classList)
         return
@@ -120,8 +119,7 @@ class LabelFile(object):
         fileSuffix = os.path.splitext(filename)[1].lower()
         return fileSuffix == LabelFile.suffix
 
-    @staticmethod
-    def convertPoints2BndBox(points):
+    def convertPoints2BndBox(self, points):
         xmin = float('inf')
         ymin = float('inf')
         xmax = float('-inf')
@@ -143,4 +141,6 @@ class LabelFile(object):
         if ymin < 1:
             ymin = 1
 
-        return (int(xmin), int(ymin), int(xmax), int(ymax))
+        box = self.boundingBox(int(xmin), int(ymin), int(xmax), int(ymax))
+
+        return box

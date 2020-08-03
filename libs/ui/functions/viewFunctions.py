@@ -1,9 +1,7 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget
-from libs.qtUtils import fmtShortcut
 from libs.ui.functions.mainWindowFunctions import MainWindowFunctions
-from libs.zoomWidget import ZoomWidget
 
 
 class ViewFunctions(MainWindowFunctions):

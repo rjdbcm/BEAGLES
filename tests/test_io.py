@@ -2,7 +2,7 @@ import os
 import sys
 from unittest import TestCase
 from libs.pascalVoc import PascalVocWriter, PascalVocReader
-from libs.yolo import YOLOWriter, YoloReader
+from libs.io.yolo import YoloWriter, YoloReader
 from libs.scripts.voc_to_yolo import convertAnnotation
 
 
@@ -47,7 +47,7 @@ class TestIO(TestCase):
 
     def testYoloRW(self):
 
-        writer = YOLOWriter('tests', 'test', (512, 512, 1))
+        writer = YoloWriter('tests', 'test', (512, 512, 1))
         person_box = [60, 40, 430, 504]
         face_box = [113, 40, 450, 403]
         writer.addBndBox(person_box, 'person', 0)

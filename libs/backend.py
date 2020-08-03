@@ -1,10 +1,10 @@
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from .labelFile import LabelFile
+from libs.io.labelFile import LabelFile
 from .utils.flags import Flags
-from .project import ProjectDialog
-from libs.ui.backend import BackendDialog, BackendThread
+from libs.widgets.projectDialog import ProjectDialog
+from libs.widgets.backend import BackendDialog, BackendThread
 #from .scripts.genConfig import genConfigYOLOv2
 import subprocess
 import sys

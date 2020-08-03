@@ -6,12 +6,12 @@ from PyQt5.QtCore import QFileInfo, QPointF
 from PyQt5.QtGui import QImage, QColor, QPixmap, QImageReader
 from PyQt5.QtWidgets import QAction, QFileDialog
 from libs.constants import *
-from libs.labelFile import LabelFile, LabelFileError
-from libs.pascalVoc import XML_EXT, PascalVocReader
+from libs.io.labelFile import LabelFile, LabelFileError
+from libs.io.pascalVoc import XML_EXT, PascalVocReader
 from libs.ui.functions.mainWindowFunctions import MainWindowFunctions
-from libs.qtUtils import newIcon, natural_sort, generateColorByText
+from libs.qtUtils import newIcon, naturalSort, generateColorByText
 from libs.shape import Shape
-from libs.yolo import TXT_EXT, YoloReader
+from libs.io.yolo import TXT_EXT, YoloReader
 
 
 class FileFunctions(MainWindowFunctions):
@@ -44,7 +44,7 @@ class FileFunctions(MainWindowFunctions):
                     relativePath = os.path.join(root, file)
                     path = str(os.path.abspath(relativePath))
                     images.append(path)
-        natural_sort(images, key=lambda x: x.lower())
+        naturalSort(images, key=lambda x: x.lower())
         return images
 
     def addRecentFile(self, filePath):

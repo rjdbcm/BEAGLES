@@ -5,9 +5,6 @@ from libs.ui.functions.fileFunctions import FileFunctions
 from BEAGLES import get_main_app
 import argparse
 from libs.utils.flags import Flags
-from libs.scripts.voc_to_yolo import convertAnnotation
-from libs.project import ProjectDialog
-from PyQt5.QtWidgets import QMainWindow
 
 
 class TestMainWindow(TestCase):

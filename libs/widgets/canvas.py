@@ -14,10 +14,30 @@ CURSOR_GRAB = Qt.OpenHandCursor
 
 
 class CanvasWidget(QWidget):
+    CREATE, EDIT = list(range(2))
+
     def __init__(self, *args, **kwargs):
         super(CanvasWidget, self).__init__(*args, **kwargs)
+        self.mode = self.EDIT
         self.pixmap = QPixmap()
         self._painter = QPainter()
+
+    @property
+    def drawing(self):
+        return self.mode == self.CREATE
+
+    @property
+    def editing(self):
+        return self.mode == self.EDIT
+
+    @editing.setter
+    def editing(self, value=True):
+        self.mode = self.EDIT if value else self.CREATE
+        if not value:  # Create
+            self.unHighlight()
+            self.deSelectShape()
+        self.prevPoint = QPointF()
+        self.repaint()
 
     # These two, along with a call to adjustSize are required for the
     # scroll area.
@@ -52,7 +72,7 @@ class CanvasWidget(QWidget):
                 'X: %d; Y: %d' % (pos.x(), pos.y()))
 
         # Polygon drawing.
-        if self.drawing():
+        if self.drawing:
             self.overrideCursor(CURSOR_DRAW)
             if self.current:
                 # Display annotation width and height while drawing
@@ -160,13 +180,13 @@ class CanvasWidget(QWidget):
         pos = self.transformPos(ev.pos())
 
         if ev.button() == Qt.LeftButton:
-            if self.drawing():
+            if self.drawing:
                 self.handleDrawing(pos)
             else:
                 self.selectShapePoint(pos)
                 self.prevPoint = pos
                 self.repaint()
-        elif ev.button() == Qt.RightButton and self.editing():
+        elif ev.button() == Qt.RightButton and self.editing:
             self.selectShapePoint(pos)
             self.prevPoint = pos
             self.repaint()
@@ -187,7 +207,7 @@ class CanvasWidget(QWidget):
                 self.overrideCursor(CURSOR_GRAB)
         elif ev.button() == Qt.LeftButton:
             pos = self.transformPos(ev.pos())
-            if self.drawing():
+            if self.drawing:
                 self.handleDrawing(pos)
 
     def mouseDoubleClickEvent(self, ev):
@@ -244,7 +264,7 @@ class CanvasWidget(QWidget):
         p.drawPixmap(0, 0, self.pixmap)
         Shape.scale = self.scale
         for shape in self.shapes:
-            if (shape.selected or not self._hideBackround) and self.isVisible(shape):
+            if (shape.selected or not self._hideBackground) and self.isVisible(shape):
                 shape.fill = shape.selected or shape == self.hShape
                 shape.paint(p)
         if self.current:
@@ -264,7 +284,7 @@ class CanvasWidget(QWidget):
             p.setBrush(brush)
             p.drawRect(leftTop.x(), leftTop.y(), rectWidth, rectHeight)
 
-        if self.drawing() and not self.prevPoint.isNull() and not self.outOfPixmap(self.prevPoint):
+        if self.drawing and not self.prevPoint.isNull() and not self.outOfPixmap(self.prevPoint):
             p.setPen(QColor(0, 0, 0))
             p.drawLine(self.prevPoint.x(), 0, self.prevPoint.x(), self.pixmap.height())
             p.drawLine(0, self.prevPoint.y(), self.pixmap.width(), self.prevPoint.y())
@@ -290,14 +310,12 @@ class Canvas(CanvasWidget):
     shapeMoved = pyqtSignal()
     drawingPolygon = pyqtSignal(bool)
 
-    CREATE, EDIT = list(range(2))
 
     epsilon = 11.0
 
     def __init__(self, *args, **kwargs):
         super(Canvas, self).__init__(*args, **kwargs)
         # Initialise local state.
-        self.mode = self.EDIT
         self.shapes = []
         self.current = None
         self.selectedShape = None  # save the selected shape here
@@ -309,8 +327,8 @@ class Canvas(CanvasWidget):
         self.offsets = QPointF(), QPointF()
         self.scale = 1.0
         self.visible = {}
-        self._hideBackround = False
-        self.hideBackround = False
+        self._hideBackground = False
+        self.hideBackground = False
         self.hShape = None
         self.hVertex = None
         self._cursor = CURSOR_DEFAULT
@@ -325,20 +343,6 @@ class Canvas(CanvasWidget):
     def setDrawingColor(self, qColor):
         self.drawingLineColor = qColor
         self.drawingRectColor = qColor
-
-    def drawing(self):
-        return self.mode == self.CREATE
-
-    def editing(self):
-        return self.mode == self.EDIT
-
-    def setEditing(self, value=True):
-        self.mode = self.EDIT if value else self.CREATE
-        if not value:  # Create
-            self.unHighlight()
-            self.deSelectShape()
-        self.prevPoint = QPointF()
-        self.repaint()
 
     def unHighlight(self):
         if self.hShape:
@@ -362,8 +366,8 @@ class Canvas(CanvasWidget):
             self.selectedShape.points = [p for p in shape.points]
         self.selectedShapeCopy = None
 
-    def hideBackroundShapes(self, value):
-        self.hideBackround = value
+    def hideBackgroundShapes(self, value):
+        self.hideBackground = value
         if self.selectedShape:
             # Only hide other shapes if there is a current selection.
             # Otherwise the user will not be able to select a shape.
@@ -391,10 +395,10 @@ class Canvas(CanvasWidget):
             self.update()
 
     def setHiding(self, enable=True):
-        self._hideBackround = self.hideBackround if enable else False
+        self._hideBackground = self.hideBackground if enable else False
 
     def canCloseShape(self):
-        return self.drawing() and self.current and len(self.current) > 2
+        return self.drawing and self.current and len(self.current) > 2
 
     def selectShape(self, shape):
         self.deSelectShape()

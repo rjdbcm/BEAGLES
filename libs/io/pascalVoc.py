@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
-import sys
 from defusedxml import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 from lxml import etree  # nosec
 import codecs
 from libs.constants import DEFAULT_ENCODING, XML_EXT
-from libs.boundingBox import BoundingBox
-
-ENCODE_METHOD = DEFAULT_ENCODING
+from libs.io.boundingBox import BoundingBox
 
 
 class PascalVocWriter(BoundingBox):
@@ -27,10 +24,8 @@ class PascalVocWriter(BoundingBox):
         """
         rough_string = ElementTree.tostring(elem, 'utf8')
         root = etree.fromstring(rough_string)
-        return etree.tostring(root, pretty_print=True, encoding=ENCODE_METHOD).replace("  ".encode(), "\t".encode())
-        # minidom does not support UTF-8
-        # reparsed = minidom.parseString(rough_string)
-        # return reparsed.toprettyxml(indent="\t", encoding=ENCODE_METHOD)
+        pretty_root = etree.tostring(root, pretty_print=True, encoding=DEFAULT_ENCODING)
+        return pretty_root.replace("  ".encode(), "\t".encode())
 
     def genXML(self):
         """
@@ -77,27 +72,27 @@ class PascalVocWriter(BoundingBox):
             truncated = SubElement(object_item, 'truncated')
             height = int(float(self.imgSize[0]))
             width = int(float(self.imgSize[1]))
-            minx = int(float(each_object['xmin']))
-            miny = int(float(each_object['ymin']))
-            maxy = int(float(each_object['ymax']))
-            maxx = int(float(each_object['xmax']))
+            minx = int(float(each_object.xmin))
+            miny = int(float(each_object.ymin))
+            maxy = int(float(each_object.ymax))
+            maxx = int(float(each_object.xmax))
             truncated.text = "1" if maxy == height or miny == 1 else "0"
             truncated.text = "1" if maxx == width or minx == 1 else "0"
             name = SubElement(object_item, 'name')
-            name.text = str(each_object['name'])
+            name.text = str(each_object.label)
             pose = SubElement(object_item, 'pose')
             pose.text = "Unspecified"
             difficult = SubElement(object_item, 'difficult')
-            difficult.text = str( bool(each_object['difficult']) & 1 )
+            difficult.text = str(bool(each_object.difficult) & 1)
             bndbox = SubElement(object_item, 'bndbox')
             xmin = SubElement(bndbox, 'xmin')
-            xmin.text = str(each_object['xmin'])
+            xmin.text = str(each_object.xmin)
             ymin = SubElement(bndbox, 'ymin')
-            ymin.text = str(each_object['ymin'])
+            ymin.text = str(each_object.ymin)
             xmax = SubElement(bndbox, 'xmax')
-            xmax.text = str(each_object['xmax'])
+            xmax.text = str(each_object.xmax)
             ymax = SubElement(bndbox, 'ymax')
-            ymax.text = str(each_object['ymax'])
+            ymax.text = str(each_object.ymax)
 
     def save(self, targetFile=None):
         root = self.genXML()
@@ -105,9 +100,9 @@ class PascalVocWriter(BoundingBox):
         out_file = None
         if targetFile is None:
             out_file = codecs.open(
-                self.filename + XML_EXT, 'w', encoding=ENCODE_METHOD)
+                self.filename + XML_EXT, 'w', encoding=DEFAULT_ENCODING)
         else:
-            out_file = codecs.open(targetFile, 'w', encoding=ENCODE_METHOD)
+            out_file = codecs.open(targetFile, 'w', encoding=DEFAULT_ENCODING)
 
         prettifyResult = self.prettify(root)
         out_file.write(prettifyResult.decode('utf8'))
@@ -141,7 +136,7 @@ class PascalVocReader:
 
     def parseXML(self):
         assert self.filepath.endswith(XML_EXT), "Unsupport file format"
-        parser = etree.XMLParser(encoding=ENCODE_METHOD)
+        parser = etree.XMLParser(encoding=DEFAULT_ENCODING)
         xmltree = ElementTree.parse(self.filepath, parser=parser).getroot()
         filename = xmltree.find('filename').text
         try:

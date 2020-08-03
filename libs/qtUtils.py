@@ -6,6 +6,7 @@ import sys
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+from libs.constants import LABEL_RE
 
 
 def newIcon(icon):
@@ -54,7 +55,7 @@ def addActions(widget, actions):
 
 
 def labelValidator():
-    return QRegExpValidator(QRegExp(r'^[^ \t].+'), None)
+    return QRegExpValidator(QRegExp(LABEL_RE), None)
 
 
 class Struct(object):
@@ -87,16 +88,12 @@ def generateColorByText(text):
     return QColor(r, g, b, 100)
 
 
-def have_qstring():
+def haveQString():
     '''p3/qt5 get rid of QString scripts as py3 has native unicode str type'''
     return not (sys.version_info.major >= 3 or QT_VERSION_STR.startswith('5.'))
 
 
-def util_qt_strlistclass():
-    return QStringList if have_qstring() else list
-
-
-def natural_sort(list, key=lambda s:s):
+def naturalSort(list, key=lambda s:s):
     """
     Sort the list into natural alphanumeric order.
     """

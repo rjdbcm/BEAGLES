@@ -8,15 +8,15 @@ from functools import partial
 # Add internal libs
 # noinspection PyUnresolvedReferences
 from libs.resources import *
-from libs.ui.BEAGLES import BeaglesMainWindow
+from libs.widgets.beaglesMainWindow import BeaglesMainWindow
 from libs.constants import *
 from libs.qtUtils import *
 from libs.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
-from libs.labelDialog import LabelDialog
+from libs.widgets.labelDialog import LabelDialog
 from libs.utils.flags import Flags
-from libs.colorDialog import ColorDialog
-from libs.project import ProjectDialog
-from libs.hashableQListWidgetItem import HashableQListWidgetItem
+from libs.widgets.colorDialog import ColorDialog
+from libs.widgets.projectDialog import ProjectDialog
+from libs.widgets.hashableQListWidgetItem import HashableQListWidgetItem
 
 
 class MainWindow(BeaglesMainWindow):
@@ -82,7 +82,7 @@ class MainWindow(BeaglesMainWindow):
         # Fix the compatible issue for qt4 and qt5.
         # Convert the QStringList to python list
         if self.settings.get(SETTING_RECENT_FILES):
-            if have_qstring():
+            if haveQString():
                 recentFileQStringList = self.settings.get(SETTING_RECENT_FILES)
                 self.recentFiles = [str(i) for i in recentFileQStringList]
             else:
@@ -153,8 +153,6 @@ class MainWindow(BeaglesMainWindow):
     def status(self, message, delay=5000):
         self.statusBar().showMessage(message, delay)
 
-
-
     def currentItem(self):
         items = self.labelList.selectedItems()
         if items:
@@ -167,7 +165,7 @@ class MainWindow(BeaglesMainWindow):
         if not drawing and self.beginner():
             # Cancel creation.
             self.logger.info('Cancel creation.')
-            self.canvas.setEditing(True)
+            self.canvas.editing = True
             self.canvas.restoreCursor()
             self.actions.create.setEnabled(True)
 
@@ -175,7 +173,7 @@ class MainWindow(BeaglesMainWindow):
     def buttonState(self):
         """ Function to handle difficult examples
         Update on each object """
-        if not self.canvas.editing():
+        if not self.canvas.editing:
             return
 
         item = self.currentItem()
@@ -242,7 +240,7 @@ class MainWindow(BeaglesMainWindow):
 
     def labelSelectionChanged(self):
         item = self.currentItem()
-        if item and self.canvas.editing():
+        if item and self.canvas.editing:
             self._noSelectionSlot = True
             self.canvas.selectShape(self.itemsToShapes[item])
             shape = self.itemsToShapes[item]
@@ -288,7 +286,7 @@ class MainWindow(BeaglesMainWindow):
                                              generate_color)
             self.addLabel(shape)
             if self.beginner():  # Switch to edit mode.
-                self.canvas.setEditing(True)
+                self.canvas.editing = True
                 self.actions.create.setEnabled(True)
             else:
                 self.actions.setEditMode.setEnabled(True)

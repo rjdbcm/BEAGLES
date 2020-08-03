@@ -1,13 +1,13 @@
 import os
 import json
-from libs.zoomWidget import ZoomWidget
-from libs.settings import Settings
-from libs.canvas import Canvas
+from libs.widgets.zoomWidget import ZoomWidget
+from libs.io.settings import Settings
+from libs.widgets.canvas import Canvas
 from libs.constants import *
 from libs.ui.callbacks.actionCallbacks import ActionCallbacks
 from functools import partial
 from libs.stringBundle import getStr
-from libs.toolBar import ToolBar
+from libs.widgets.toolBar import ToolBar
 from libs.qtUtils import *
 from libs.utils.flags import FlagIO
 
@@ -25,16 +25,17 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
         def createActions(actions: list):
             nonlocal self
             nonlocal action
-            cmd = 'global {0}; {0} = action("{1}", {2}, "{3}", "{4}", "{5}", {6}, {7})'
+            cmd = 'global {0}; {0} = action("{1}", {2}, {3}, "{4}", "{5}", {6}, {7})'
             for act in actions:
                 _str = act
                 action_str = getStr(_str)
-                action_shortcut, checkable, enabled = [str(i) for i in self.actionSettings[_str]]
-                action_detail = getStr(_str + "Detail")
-                action_icon = _str
+                shortcut, checkable, enabled = [str(i) for i in self.actionSettings[_str]]
+                shortcut = '"{}"'.format(shortcut) if shortcut is not None else None
+                detail = getStr(_str + "Detail")
+                icon = _str
                 callback = 'self.' + act
-                cmd_string = cmd.format(_str, action_str, callback, action_shortcut,
-                                        action_icon, action_detail, checkable, enabled)
+                cmd_string = cmd.format(_str, action_str, callback, shortcut, icon,
+                                        detail, checkable, enabled)
                 self.logger.info(cmd_string)
                 exec(cmd_string)
         createActions(self.actionList)
@@ -153,8 +154,8 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
         labels.setText(getStr('showHide'))
         labels.setShortcut('Ctrl+Shift+L')
         # noinspection PyUnresolvedReferences
-        addActions(self.menus.file, (openFile, openDir, changeSaveDir, impVideo,
-                                     openAnnotation, self.menus.recentFiles, saveFile,
+        addActions(self.menus.file, (openFile, self.menus.recentFiles, openDir,
+                                     changeSaveDir, impVideo, openAnnotation, saveFile,
                                      changeFormat, saveAs, closeFile, resetAll, close))
         # noinspection PyUnresolvedReferences
         addActions(self.menus.help, (showTutorialDialog, showInfo))

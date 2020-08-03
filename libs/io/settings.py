@@ -1,6 +1,5 @@
 import pickle
 import os
-import sys
 
 
 class Settings(object):
@@ -34,8 +33,8 @@ class Settings(object):
                 with open(self.path, 'rb') as f:
                     self.data = pickle.load(f)
                     return True
-        except:
-            print('Loading setting failed')
+        except Exception as e:
+            print('Loading setting failed: ', e)
         return False
 
     def reset(self):

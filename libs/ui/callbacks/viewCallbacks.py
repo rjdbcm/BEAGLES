@@ -65,7 +65,7 @@ class ViewCallbacks(ViewFunctions):
 
     def advancedMode(self, value=True):
         self._beginner = not value
-        self.canvas.setEditing(True)
+        self.canvas.editing = True
         self.populateModeActions()
         self.editButton.setVisible(not value)
         if value:

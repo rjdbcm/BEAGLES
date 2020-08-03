@@ -1,76 +1,17 @@
-import re
 import os
-import sys
 import time
-from libs.utils.flags import FlagIO
+from libs.widgets.scientificQDoubleSpinBox import ScientificQDoubleSpinBox
 from libs.stringBundle import getStr
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
+from libs.utils.flags import FlagIO
+from PyQt5.QtCore import QThread, QObject, pyqtSignal, Qt
+from PyQt5.QtWidgets import QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QHBoxLayout, \
+                            QDialog, QLabel, QPushButton, QGridLayout, QProgressBar, \
+                            QDialogButtonBox, QStyle, QLayout, QFormLayout, QGroupBox
 
-_FLOAT_RE = re.compile(r'(([+-]?\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)')
 
 
 class BackendConnection(QObject):
     progressUpdate = pyqtSignal(int)
-
-
-class FloatValidator(QValidator):
-
-    @staticmethod
-    def valid_float_string(string):
-        match = _FLOAT_RE.search(string)
-        return match.groups()[0] == string if match else False
-
-    def validate(self, string, position):
-        if self.valid_float_string(string):
-            state = self.Acceptable
-        elif string == "" or string[position-1] in 'e.-+':
-            state = self.Intermediate
-        else:
-            state = self.Invalid
-        return state, string, position
-
-    def fixup(self, text):
-        match = _FLOAT_RE.search(text)
-        return match.groups()[0] if match else ""
-
-
-class ScientificDoubleSpinBox(QDoubleSpinBox):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setMinimum(float(sys.float_info.min))
-        self.setMaximum(float(sys.float_info.max))
-        self.validator = FloatValidator()
-        self.setDecimals(1000)
-
-    def validate(self, text, position):
-        return self.validator.validate(text, position)
-
-    def fixup(self, text):
-        return self.validator.fixup(text)
-
-    def valueFromText(self, text):
-        return float(text)
-
-    def textFromValue(self, value):
-        return self.format_float(value)
-
-    def stepBy(self, steps):
-        text = self.cleanText()
-        groups = _FLOAT_RE.search(text).groups()
-        decimal = float(groups[1])
-        decimal += steps
-        new_string = "{:g}".format(decimal) + (groups[3] if groups[3] else "")
-        self.lineEdit().setText(new_string)
-
-    @staticmethod
-    def format_float(value):
-        """Modified form of the 'g' format specifier."""
-        string = "{:g}".format(value).replace("e+", "e")
-        string = re.sub("e(-?)0*(\d+)", r"e\1\2", string)
-        return string
 
 
 class BackendThread(QThread, FlagIO):
@@ -121,8 +62,8 @@ class BackendDialog(QDialog):
         self.trainerCmb = QComboBox()
         self.momentumSpd = QDoubleSpinBox()
         self.learningModeCmb = QComboBox()
-        self.learningRateSpd = ScientificDoubleSpinBox()
-        self.maxLearningRateSpd = ScientificDoubleSpinBox()
+        self.learningRateSpd = ScientificQDoubleSpinBox()
+        self.maxLearningRateSpd = ScientificQDoubleSpinBox()
         self.stepSizeCoefficient = QSpinBox()
         self.keepSpb = QSpinBox()
         self.batchSpb = QSpinBox()
@@ -131,11 +72,17 @@ class BackendDialog(QDialog):
         self.clipLayout = QHBoxLayout()
         self.updateAnchorChb = QCheckBox()
 
+    @staticmethod
+    def addRowsToLayout(layout, widgets: dict):
+        for key, obj in widgets.items():
+            label = QLabel(getStr(str(key)))
+            layout.addRow(label, obj)
+
     @property
     def widgets(self) -> dict:
         return self.__dict__
 
-    def _getWidget(self, index: int) -> dict:
+    def widgetFromIndex(self, index: int) -> dict:
         widget_name = list(self.widgets)[index]
         widget_obj = list(self.widgets.values())[index]
         return {widget_name: widget_obj}
@@ -143,15 +90,10 @@ class BackendDialog(QDialog):
     def getWidgetsByIndex(self, start, end) -> dict:
         d = dict()
         for i in range(start, end):
-            d.update(self._getWidget(i))
+            d.update(self.widgetFromIndex(i))
         return d
 
-    def addRowsToLayout(self, layout, widgets: dict):
-        for key, obj in widgets.items():
-            label = QLabel(getStr(str(key)))
-            layout.addRow(label, obj)
-
-    def setupProjectWidgets(self, layout):
+    def setupProjectWidgets(self, layout) -> None:
         self.projectLayout = QHBoxLayout()
         self.projectBtn = QPushButton(getStr('selectProject'))
         self.projectLbl = QLabel(self.project.default)

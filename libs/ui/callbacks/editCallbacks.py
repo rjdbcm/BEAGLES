@@ -1,4 +1,4 @@
-from libs.labelFile import LabelFile
+from libs.io.labelFile import LabelFile
 from libs.qtUtils import generateColorByText
 from libs.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
 from libs.ui.functions.editFunctions import EditFunctions
@@ -6,7 +6,7 @@ from libs.ui.functions.editFunctions import EditFunctions
 
 class EditCallbacks(EditFunctions):
     def editLabel(self):
-        if not self.canvas.editing():
+        if not self.canvas.editing:
             return
         item = self.currentItem()
         if not item:
@@ -23,7 +23,7 @@ class EditCallbacks(EditFunctions):
 
     def createShape(self):
         assert self.beginner()
-        self.canvas.setEditing(False)
+        self.canvas.editing = False
         # noinspection PyUnresolvedReferences
         self.actions.create.setEnabled(False)
 

@@ -1,22 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
-import sys
 import os
-from xml.etree import ElementTree
-from xml.etree.ElementTree import Element, SubElement
-from lxml import etree
 import codecs
 from libs.constants import DEFAULT_ENCODING, TXT_EXT
-from libs.boundingBox import BoundingBox
+from libs.io.boundingBox import BoundingBox
 
 
 ENCODE_METHOD = DEFAULT_ENCODING
 
 
-class YOLOWriter(BoundingBox):
+class YoloWriter(BoundingBox):
 
     def __init__(self, foldername, filename, imgSize, databaseSrc='Unknown', localImgPath=None):
-        super(YOLOWriter, self).__init__()
+        super(YoloWriter, self).__init__()
         self.foldername = foldername
         self.filename = filename
         self.databaseSrc = databaseSrc
@@ -25,10 +21,10 @@ class YOLOWriter(BoundingBox):
         self.verified = False
 
     def BndBox2YoloLine(self, box, classList: list):
-        xmin = box['xmin']
-        xmax = box['xmax']
-        ymin = box['ymin']
-        ymax = box['ymax']
+        xmin = box.xmin
+        xmax = box.xmax
+        ymin = box.ymin
+        ymax = box.ymax
 
         def center(min, max, size):
             return float((min + max)) / 2 / size
@@ -40,11 +36,10 @@ class YOLOWriter(BoundingBox):
         h = float((ymax - ymin)) / self.imgSize[0]
 
         # PR387
-        boxName = box['name']
-        if boxName not in classList:
-            classList.append(boxName)
+        if box.label not in classList:
+            classList.append(box.label)
 
-        classIndex = classList.index(boxName)
+        classIndex = classList.index(box.label)
 
         return classIndex, xcen, ycen, w, h
 
@@ -76,7 +71,6 @@ class YOLOWriter(BoundingBox):
 
         out_class_file.close()
         out_file.close()
-
 
 
 class YoloReader:
