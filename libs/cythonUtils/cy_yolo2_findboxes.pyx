@@ -4,7 +4,7 @@ cimport cython
 from cython.parallel import prange
 ctypedef np.float_t DTYPE_t
 from libc.math cimport exp
-from ..utils.box import BoundBox
+from libs.utils.box import BoundingBox
 from nms cimport NMS
 
 #expit

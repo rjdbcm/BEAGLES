@@ -5,7 +5,7 @@ from xml.etree.ElementTree import Element, SubElement
 from lxml import etree  # nosec
 import codecs
 from libs.constants import DEFAULT_ENCODING, XML_EXT
-from libs.io.boundingBox import BoundingBox
+from libs.utils.box import BoundingBox
 
 
 class PascalVocWriter(BoundingBox):

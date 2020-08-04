@@ -4,7 +4,7 @@
 import os.path
 from collections import namedtuple
 from PyQt5.QtGui import QImage
-
+from libs.utils.box import BoundingBox
 from libs.io.pascalVoc import PascalVocWriter
 from libs.io.yolo import YoloWriter
 from libs.io.pascalVoc import XML_EXT
@@ -51,7 +51,7 @@ class LabelFile(object):
             difficult = int(shape['difficult'])
             bndbox = self.convertPoints2BndBox(points)
             metadata = self.metadata(label, difficult)
-            writer.addBndBox(bndbox, metadata)
+            writer.appendBox(bndbox, metadata)
 
         writer.save(targetFile=filename)
         return
@@ -77,7 +77,7 @@ class LabelFile(object):
             difficult = int(shape['difficult'])
             metadata = self.metadata(label, difficult)
             bndbox = self.convertPoints2BndBox(points)
-            writer.addBndBox(bndbox, metadata)
+            writer.appendBox(bndbox, metadata)
 
         writer.save(targetFile=filename, classList=classList)
         return

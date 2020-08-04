@@ -2,7 +2,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from libs.io.labelFile import LabelFile
-from .utils.flags import Flags
+from libs.utils.flags import Flags
 from libs.widgets.projectDialog import ProjectDialog
 from libs.widgets.backend import BackendDialog, BackendThread
 #from .scripts.genConfig import genConfigYOLOv2
@@ -109,7 +109,6 @@ class FlowDialog(BackendDialog):
             self.flags.load = 0
             pass
         self.flags.trainer = self.trainerCmb.currentText()
-        self.flags.grayscale = self.grayscaleChb.checkState()
         self.flags.threshold = self.thresholdSpd.value()
         self.flags.clip = bool(self.clipChb.checkState())
         self.flags.clip_norm = self.clipNorm.value()

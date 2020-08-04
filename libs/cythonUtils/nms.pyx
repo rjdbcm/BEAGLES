@@ -2,7 +2,7 @@ import numpy as np
 cimport numpy as np
 cimport cython
 from libc.math cimport exp
-from ..utils.box import BoundBox
+from libs.utils.box import BoundingBox
 
 
 
@@ -10,7 +10,7 @@ from ..utils.box import BoundBox
 @cython.boundscheck(False) # turn off bounds-checking for entire function
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
 @cython.cdivision(True)
-cdef float overlap_c(float x1, float w1 , float x2 , float w2):
+cdef float box_overlap_c(float x1, float w1 , float x2 , float w2):
     cdef:
         float l1,l2,left,right
     l1 = x1 - w1 /2.
@@ -21,6 +21,10 @@ cdef float overlap_c(float x1, float w1 , float x2 , float w2):
     right = min(r1, r2)
     return right - left;
 
+def overlap_c(x1, w1, x2, w2):
+    return box_overlap_c(x1, w1, x2, w2)
+
+
 #BOX INTERSECTION
 @cython.boundscheck(False) # turn off bounds-checking for entire function
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
@@ -28,11 +32,14 @@ cdef float overlap_c(float x1, float w1 , float x2 , float w2):
 cdef float box_intersection_c(float ax, float ay, float aw, float ah, float bx, float by, float bw, float bh):
     cdef:
         float w,h,area
-    w = overlap_c(ax, aw, bx, bw)
-    h = overlap_c(ay, ah, by, bh)
+    w = box_overlap_c(ax, aw, bx, bw)
+    h = box_overlap_c(ay, ah, by, bh)
     if w < 0 or h < 0: return 0
     area = w * h
     return area
+
+def intersection_c(ax, ay, aw, ah, bx, by, bw, bh):
+    return box_intersection_c(ax, ay, aw, ah, bx, by, bw, bh)
 
 #BOX UNION
 @cython.boundscheck(False) # turn off bounds-checking for entire function
@@ -45,6 +52,8 @@ cdef float box_union_c(float ax, float ay, float aw, float ah, float bx, float b
     u = aw * ah + bw * bh -i
     return u
 
+def union_c(ax, ay, aw, ah, bx, by, bw, bh):
+    return box_union_c(ax, ay, aw, ah, bx, by, bw, bh)
 
 #BOX IOU
 @cython.boundscheck(False) # turn off bounds-checking for entire function
@@ -53,8 +62,7 @@ cdef float box_union_c(float ax, float ay, float aw, float ah, float bx, float b
 cdef float box_iou_c(float ax, float ay, float aw, float ah, float bx, float by, float bw, float bh):
     return box_intersection_c(ax, ay, aw, ah, bx, by, bw, bh) / box_union_c(ax, ay, aw, ah, bx, by, bw, bh);
 
-#Wrapper for IOU Testing
-def box_iou(ax, ay, aw, ah, bx, by, bw, bh):
+def iou_c(ax, ay, aw, ah, bx, by, bw, bh):
     return box_iou_c(ax, ay, aw, ah, bx, by, bw, bh)
 
 
@@ -84,7 +92,7 @@ cdef NMS(float[:, ::1] final_probs , float[:, ::1] final_bbox):
                     final_probs[index2,class_loop]=0
             
             if index not in indices:
-                bb=BoundBox(class_length)
+                bb=BoundingBox(class_length)
                 bb.x = final_bbox[index, 0]
                 bb.y = final_bbox[index, 1]
                 bb.w = final_bbox[index, 2]

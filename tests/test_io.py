@@ -1,7 +1,8 @@
 import os
 import sys
+from collections import namedtuple
 from unittest import TestCase
-from libs.pascalVoc import PascalVocWriter, PascalVocReader
+from libs.io.pascalVoc import PascalVocWriter, PascalVocReader
 from libs.io.yolo import YoloWriter, YoloReader
 from libs.scripts.voc_to_yolo import convertAnnotation
 
@@ -22,17 +23,20 @@ class Image(object):
         return self._width
 
 
+metadata = namedtuple('metadata', 'label difficult')
+boundingBox = namedtuple('boundingBox', 'xmin ymin xmax ymax')
+
+
 class TestIO(TestCase):
 
     def testPascalVocRW(self):
-
         # Test Write/Read
         writer = PascalVocWriter('tests', 'test', (512, 512, 1))
         difficult = 1
-        person_box = [60, 40, 430, 504]
-        face_box = [113, 40, 450, 403]
-        writer.addBndBox(person_box, 'person', difficult)
-        writer.addBndBox(face_box, 'face', difficult)
+        person_box = boundingBox(60, 40, 430, 504)
+        face_box = boundingBox(113, 40, 450, 403)
+        writer.appendBox(person_box, metadata('person', difficult))
+        writer.appendBox(face_box, metadata('face', difficult))
         writer.save('tests/test.xml')
 
         reader = PascalVocReader('tests/test.xml')
@@ -48,10 +52,10 @@ class TestIO(TestCase):
     def testYoloRW(self):
 
         writer = YoloWriter('tests', 'test', (512, 512, 1))
-        person_box = [60, 40, 430, 504]
-        face_box = [113, 40, 450, 403]
-        writer.addBndBox(person_box, 'person', 0)
-        writer.addBndBox(face_box, 'face', 0)
+        person_box = boundingBox(60, 40, 430, 504)
+        face_box = boundingBox(113, 40, 450, 403)
+        writer.appendBox(person_box, metadata('person', 0))
+        writer.appendBox(face_box, metadata('face', 0))
         writer.save(['person', 'face'], 'tests/test.yolo')
 
         image = Image(512, 512, 1)

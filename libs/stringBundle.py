@@ -1,14 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import re
-import resources
 import os
-import sys
 import locale
 
 from PyQt5.QtCore import *
-
-# TODO See if we can get newlines to show up on GUI
 
 
 class StringBundle:

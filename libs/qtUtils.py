@@ -1,8 +1,7 @@
-from math import sqrt
-
-import hashlib
 import re
 import sys
+import hashlib
+from math import sqrt
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -98,7 +97,8 @@ def naturalSort(list, key=lambda s:s):
     Sort the list into natural alphanumeric order.
     """
     def get_alphanum_key_func(key):
-        convert = lambda text: int(text) if text.isdigit() else text
+        def convert(text):
+            return int(text) if text.isdigit() else text
         return lambda s: [convert(c) for c in re.split('([0-9]+)', key(s))]
     sort_key = get_alphanum_key_func(key)
     list.sort(key=sort_key)

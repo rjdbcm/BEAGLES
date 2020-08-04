@@ -1,12 +1,5 @@
 import numpy as np
-import sys
-import os
-import json
-#from scipy.special import expit
-#from utils.box import BoundBox, box_iou, prob_compare
-#from utils.box import prob_compare2, box_intersection
-from ...utils.box import BoundBox
-from ...cythonUtils.cy_yolo2_findboxes import box_constructor
+from libs.cythonUtils.cy_yolo2_findboxes import box_constructor
 
 
 def expit(x):

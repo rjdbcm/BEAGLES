@@ -4,7 +4,7 @@ from libs.net.build import TFNet
 from libs.utils.errors import GradientNaN, VariableIsNone
 from libs.dark.darknet import Darknet
 from libs.net.framework import create_framework
-from libs.cythonUtils.nms import box_iou
+from libs.cythonUtils.nms import iou_c
 import tensorflow as tf
 
 
@@ -28,7 +28,7 @@ class TestBackend(TestCase, FlagIO):
         self.io_flags()
 
     def testCythonExtensions(self):
-        iou = box_iou(3, 4, 4, 3, 4, 3, 3, 4)
+        iou = iou_c(3, 4, 4, 3, 4, 3, 3, 4)
         self.assertAlmostEqual(0.35211268067359924, iou), "cythonUtils math failure"
 
     def tearDown(self):

@@ -1,5 +1,5 @@
 import os
-from ..utils.postprocess import BehaviorIndex
+from libs.utils.postprocess import BehaviorIndex
 
 
 def analyze(self, file_list):

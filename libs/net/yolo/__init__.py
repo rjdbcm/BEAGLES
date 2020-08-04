@@ -1,8 +1,8 @@
-from . import train
-from . import predict
-from . import data
-from . import misc
-from ...utils.flags import FlagIO
+from libs.net.yolo import train
+from libs.net.yolo import predict
+from libs.net.yolo import data
+from libs.net.yolo import misc
+from libs.utils.flags import FlagIO
 import numpy as np
 import time
 

@@ -3,7 +3,7 @@
 import os
 import codecs
 from libs.constants import DEFAULT_ENCODING, TXT_EXT
-from libs.io.boundingBox import BoundingBox
+from libs.utils.box import BoundingBox
 
 
 ENCODE_METHOD = DEFAULT_ENCODING
