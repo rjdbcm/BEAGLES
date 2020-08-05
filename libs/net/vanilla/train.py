@@ -37,19 +37,19 @@ def loss(self, net_out):
 
     diff = _truth - out
     if loss_type in ['sse', '12']:
-        self.loss = tf.nn.l2_loss(diff)
+        loss = tf.nn.l2_loss(diff)
 
     elif loss_type == ['smooth']:
         small = tf.cast(diff < 1, tf.float32)
         large = 1. - small
-        self.loss = L1L2(tf.multiply(diff, large), tf.multiply(diff, small))
+        loss = L1L2(tf.multiply(diff, large), tf.multiply(diff, small))
 
     elif loss_type in ['sparse', 'l1']:
-        self.loss = l1(diff)
+        loss = l1(diff)
 
     elif loss_type == 'softmax':
         loss = tf.nn.softmax_cross_entropy_with_logits(logits=net_out)
-        self.loss = tf.reduce_mean(loss)
+        loss = tf.reduce_mean(loss)
 
     # elif loss_type == 'svm':
     #     assert 'train_size' in m, \

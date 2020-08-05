@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.python.platform import tf_logging
 from libs.net.ops import op_create, identity
 from libs.net.ops import HEADER, LINE
-from libs.net.framework import create_framework
+from libs.net.framework import Framework
 from libs.dark.darknet import Darknet
 from libs.utils.loader import create_loader
 from libs.io.flags import FlagIO
@@ -80,7 +80,7 @@ class TFNet(FlagIO):
         self.darknet = darknet
         args = [darknet.meta, flags]
         self.num_layer = len(darknet.layers)
-        self.framework = create_framework(*args)
+        self.framework = Framework.create(*args)
 
         self.meta = darknet.meta
         if speak:

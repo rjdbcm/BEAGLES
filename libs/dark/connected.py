@@ -61,15 +61,15 @@ class select_layer(Layer):
             'weights': [inp_dim, out]
         }
 
-    @property
-    def signature(self):
-        sig = ['connected']
-        sig += self._signature[1:-4]
-        return sig
-
-    def present(self):
-        args = self.signature
-        self.presenter = connected_layer(*args)
+    # @property
+    # def signature(self):
+    #     sig = ['connected']
+    #     sig += self._signature[1:-4]
+    #     return sig
+    #
+    # def present(self):
+    #     args = self.signature
+    #     self.presenter = connected_layer(*args)
 
     def recollect(self, val):
         w = val['weights']

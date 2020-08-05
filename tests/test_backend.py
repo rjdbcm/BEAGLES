@@ -1,10 +1,7 @@
 from unittest import TestCase
 from libs.io.flags import FlagIO
 from libs.utils.flags import Flags
-from libs.net.build import TFNet
 from libs.utils.errors import GradientNaN, VariableIsNone
-from libs.dark.darknet import Darknet
-from libs.net.framework import create_framework
 from libs.cythonUtils.nms import iou_c
 import tensorflow as tf
 
@@ -15,11 +12,6 @@ class TestBackend(TestCase, FlagIO):
         self.flags = Flags()
         self.send_flags()
         self.flags.model = 'data/cfg/tiny-yolov2.cfg'
-        self.flags.labels = 'tests/test_classes.txt'
-
-    def testDarknet(self):
-        self.darknet = Darknet(self.flags)
-        create_framework(self.darknet.meta, self.flags)
 
     def testGradientNan(self):
         with self.assertRaises(GradientNaN):

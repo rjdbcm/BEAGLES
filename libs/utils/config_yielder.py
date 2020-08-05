@@ -230,8 +230,7 @@ class ConfigYielder(DarknetConfigFile):
         yield [self._fixup_name(section['type']), i, section['groups']]
 
     def extract(self, section, i):
-        def new_input_layer(input_layer, colors: list, heights: list,
-                                     widths: list):
+        def new_input_layer(input_layer, colors: list, heights: list, widths: list):
             new_inp = list()
             for p in range(colors[1]):
                 for q in range(heights[1]):
@@ -258,7 +257,7 @@ class ConfigYielder(DarknetConfigFile):
                 h_, w_, c_, n_ = old
                 inp_layer = new_input_layer(inp_layer, [c_, self.c], [h_, self.h], [w_, self.w])
                 old = [h_ * w_ * c_, n_]
-            assert len(inp_layer) == self.l, 'Extract does not match input dimension'
+            assert len(inp_layer) == self.l, 'Extract does not match input dimension {} =/= {}'.format(len(inp_layer), self.l)
         section['old'] = old
         yield [self._fixup_name(section['type']), i] + old + [activation] + [inp_layer, out_layer]
         if activation != 'linear':
@@ -291,7 +290,7 @@ class ConfigYielder(DarknetConfigFile):
         activation = section.get('activation', 'logistic')
         assert activation == 'linear', \
             'Layer {} can only use linear activation'.format(section['type'])
-        from_layer = self.l[index]
+        from_layer = self.layers[index]
         yield ['shortcut', i, from_layer]
         self.l = self.w * self.h * self.c
 

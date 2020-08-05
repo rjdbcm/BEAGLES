@@ -3,6 +3,8 @@ import math
 import pickle
 import tensorflow as tf
 from libs.utils.errors import GradientNaN
+# noinspection PyUnresolvedReferences
+from libs.net.vanilla.train import loss
 from libs.utils.cyclic_learning_rate import cyclic_learning_rate
 
 train_stats = (
@@ -16,14 +18,14 @@ train_stats = (
 
 def train(self):
     self.io_flags()
-    loss_ph = self.framework.placeholders
+    loss_ph = self.Framework.placeholders
     loss_mva = None
     profile = list()
     goal = None
     total_steps = None
     step_pad = None
-    batches = self.framework.shuffle()
-    loss_op = self.framework.loss
+    batches = self.Framework.shuffle()
+    loss_op = self.Framework.loss
 
     for i, (x_batch, datum) in enumerate(batches):
         self.flags = self.read_flags()

@@ -7,7 +7,6 @@ from libs.io.flags import FlagIO
 from libs.utils import loader
 
 
-
 class Darknet(FlagIO, object):
     _EXT = '.weights'
 

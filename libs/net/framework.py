@@ -5,10 +5,10 @@ from libs.io.flags import FlagIO
 from os.path import basename
 
 
-class framework(FlagIO, object):
+class Framework(FlagIO, object):
     constructor = vanilla.constructor
     loss = vanilla.train.loss
-    
+
     def __init__(self, meta, flags):
         FlagIO.__init__(self, delay=0.5, subprogram=True)
         model = basename(meta['model'])
@@ -20,8 +20,14 @@ class framework(FlagIO, object):
     def is_inp(self, file_name):
         return True
 
+    @classmethod
+    def create(cls, meta, flags):
+        net_type = meta['type']
+        this = types.get(net_type, cls)
+        return this(meta, flags)
 
-class YOLO(framework):
+
+class YOLO(Framework):
     constructor = yolo.constructor
     parse = yolo.data.parse
     shuffle = yolo.data.shuffle
@@ -39,7 +45,7 @@ class YOLO(framework):
     process_box = yolo.predict.process_box
 
 
-class YOLOv2(framework):
+class YOLOv2(Framework):
     constructor = yolo.constructor
     parse = yolo.data.parse
     shuffle = yolo.data.shuffle
@@ -56,7 +62,7 @@ class YOLOv2(framework):
     process_box = yolo.predict.process_box
 
 
-class YOLOv3(framework):
+class YOLOv3(Framework):
     constructor = yolo.constructor
     parse = yolo.data.parse
     shuffle = yolov2.data.shuffle
@@ -80,7 +86,4 @@ types = {
 }
 
 
-def create_framework(meta, flags):
-    net_type = meta['type']
-    this = types.get(net_type, framework)
-    return this(meta, flags)
+
