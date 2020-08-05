@@ -1,0 +1,6 @@
+[run]
+omit =
+    *tests*
+    libs/scripts/*
+    build-tools/*
+    *__init__.py*

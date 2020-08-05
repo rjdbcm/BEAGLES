@@ -1,5 +1,6 @@
-from .layer import Layer
+from libs.dark.layer import Layer
 import numpy as np
+
 
 class extract_layer(Layer):
     def setup(self, old_inp, old_out,
@@ -41,7 +42,6 @@ class extract_layer(Layer):
         self.w['biases'] = b
     
 
-
 class select_layer(Layer):
     def setup(self, inp, old, 
               activation, inp_idx,
@@ -61,15 +61,15 @@ class select_layer(Layer):
             'weights': [inp_dim, out]
         }
 
-    @property
-    def signature(self):
-        sig = ['connected']
-        sig += self._signature[1:-4]
-        return sig
-
-    def present(self):
-        args = self.signature
-        self.presenter = connected_layer(*args)
+    # @property
+    # def signature(self):
+    #     sig = ['connected']
+    #     sig += self._signature[1:-4]
+    #     return sig
+    #
+    # def present(self):
+    #     args = self.signature
+    #     self.presenter = connected_layer(*args)
 
     def recollect(self, val):
         w = val['weights']

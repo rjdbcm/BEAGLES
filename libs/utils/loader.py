@@ -1,6 +1,6 @@
 import tensorflow as tf
 import os
-from .. import dark
+from libs import dark
 import numpy as np
 from os.path import basename
 

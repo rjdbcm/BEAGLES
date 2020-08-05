@@ -1,54 +1,30 @@
 # vim: set ts=2 et:
-# TODO: Setup TravisCI for SLGR-Suite
+# TODO: Setup TravisCI for BEAGLES
 # run xvfb with 32-bit color
 # xvfb-run -s '-screen 0 1600x1200x24+32' command_goes_here
 
-matrix:
+language: python
+
+jobs:
   include:
-
-    # Python 3 + QT5
-    - os: linux
-      dist: trusty
-      sudo: required
-      language: generic
-      python: "3.5"
-      env:
-        - QT=5
-        - CONDA=4.2.0
-      addons:
-        apt:
-          packages:
-            - cmake
-            - xvfb
-      before_install:
-        # ref: https://www.continuum.io/downloads
-        - curl -O https://repo.continuum.io/archive/Anaconda3-4.2.0-Linux-x86_64.sh
-        # ref: http://conda.pydata.org/docs/help/silent.html
-        - /bin/bash Anaconda3-4.2.0-Linux-x86_64.sh -b -p $HOME/anaconda3
-        - export PATH="$HOME/anaconda3/bin:$PATH"
-        # ref: http://stackoverflow.com/questions/21637922/how-to-install-pyqt4-in-anaconda
-        - conda create -y -n SLGR-Suite-py3qt5 python=3.5
-        - source activate SLGR-Suite-py3qt5
-        - conda install -y pyqt=5
-        - conda install -y lxml
-        - make qt5py3
-        - xvfb-run make testpy3
-
-    # Pipenv Python 3 + QT5 - Build .app
+    # Python 3 + QT5 - Build .app
     - os: osx
+      services: xvfb
       language: generic
-      python: "3.6"
-      env:
-        - PIPENV_VENV_IN_PROJECT=1
-        - PIPENV_IGNORE_VIRTUALENVS=1
-      install:
-        - pip3 install pipenv
-        - pipenv --three
-        - pipenv run pip install pyqt5 lxml
-        - pipenv run make qt5py3
-        - rm -rf build dist
-        - pipenv run python setup.py py2app
-        - open dist/SLGR-Suite.app
+    - os: linux
+      dist: bionic
+      services: xvfb
+      python: 3.6
 
+before_install:
+  - pip3 install -r requirements/requirements.txt
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev build-essential; fi
+install:
+  - pyrcc5 -o libs/resources.py resources.qrc
+  - python3 setup.py build_ext --inplace
+  - pip3 install codecov
 script:
+  - xvfb-run --auto-servernum make test
+  - make coverage
+  - codecov
   - exit 0

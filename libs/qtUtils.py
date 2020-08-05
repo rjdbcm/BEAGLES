@@ -1,11 +1,11 @@
-from math import sqrt
-from libs.ustr import ustr
-import hashlib
 import re
 import sys
+import hashlib
+from math import sqrt
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+from libs.constants import LABEL_RE
 
 
 def newIcon(icon):
@@ -54,13 +54,19 @@ def addActions(widget, actions):
 
 
 def labelValidator():
-    return QRegExpValidator(QRegExp(r'^[^ \t].+'), None)
+    return QRegExpValidator(QRegExp(LABEL_RE), None)
 
 
-class struct(object):
+class Struct(object):
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+    def __add__(self, other):
+        self.__dict__.update(other.__dict__)
 
 
 def distance(p):
@@ -73,7 +79,7 @@ def fmtShortcut(text):
 
 
 def generateColorByText(text):
-    s = ustr(text)
+    s = str(text)
     hashCode = int(hashlib.sha256(s.encode('utf-8')).hexdigest(), 16)
     r = int((hashCode / 255) % 255)
     g = int((hashCode / 65025)  % 255)
@@ -81,21 +87,18 @@ def generateColorByText(text):
     return QColor(r, g, b, 100)
 
 
-def have_qstring():
+def haveQString():
     '''p3/qt5 get rid of QString scripts as py3 has native unicode str type'''
     return not (sys.version_info.major >= 3 or QT_VERSION_STR.startswith('5.'))
 
 
-def util_qt_strlistclass():
-    return QStringList if have_qstring() else list
-
-
-def natural_sort(list, key=lambda s:s):
+def naturalSort(list, key=lambda s:s):
     """
     Sort the list into natural alphanumeric order.
     """
     def get_alphanum_key_func(key):
-        convert = lambda text: int(text) if text.isdigit() else text
+        def convert(text):
+            return int(text) if text.isdigit() else text
         return lambda s: [convert(c) for c in re.split('([0-9]+)', key(s))]
     sort_key = get_alphanum_key_func(key)
     list.sort(key=sort_key)

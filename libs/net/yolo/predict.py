@@ -1,11 +1,12 @@
-from ...utils.im_transform import imcv2_recolor, imcv2_affine_trans
-from ...utils.box import BoundBox, box_iou, prob_compare
+from libs.utils.im_transform import imcv2_recolor, imcv2_affine_trans
+from collections import namedtuple
 import numpy as np
 import cv2
 import os
 import json
-from ...cython_utils.cy_yolo_findboxes import yolo_box_constructor
-from ...pascal_voc_io import PascalVocWriter, XML_EXT
+# noinspection PyUnresolvedReferences
+from libs.cythonUtils.cy_yolo_findboxes import yolo_box_constructor
+from libs.io.pascalVoc import PascalVocWriter, XML_EXT
 
 
 def _fix(obj, dims, scale, offs):
@@ -28,6 +29,7 @@ def process_box(self, b, h, w, threshold):
     max_indx = np.argmax(b.probs)
     max_prob = b.probs[max_indx]
     label = self.meta['labels'][max_indx]
+    box = namedtuple('Box', 'left right top bot label max_index max_prob')
     if max_prob > threshold:
         left = int((b.x - b.w / 2.) * w)
         right = int((b.x + b.w / 2.) * w)
@@ -38,7 +40,7 @@ def process_box(self, b, h, w, threshold):
         if top < 0:   top = 0
         if bot > h - 1:   bot = h - 1
         mess = '{}'.format(label)
-        return (left, right, top, bot, mess, max_indx, max_prob)
+        return box(left, right, top, bot, mess, max_indx, max_prob)
     return None
 
 
@@ -96,12 +98,13 @@ def postprocess(self, net_out, im, save=True):
         or
         None if salve
     """
-    meta, flags = self.meta, self.flags
-    threshold = flags.threshold
-    colors, labels = meta['colors'], meta['labels']
-
     boxes = self.findboxes(net_out)
 
+    # meta
+    meta = self.meta
+    threshold = meta['thresh']
+    colors = meta['colors']
+    labels = meta['labels']
     if type(im) is not np.ndarray:
         imgcv = cv2.imread(im)
     else:
@@ -111,25 +114,24 @@ def postprocess(self, net_out, im, save=True):
     writer = PascalVocWriter(self.flags.img_out, im, [h, w, c])
     resultsForJSON = []
     for b in boxes:
-        boxResults = self.process_box(b, h, w, threshold)
-        if boxResults is None:
+        pb = self.process_box(b, h, w, threshold)
+        if pb is None:
             continue
-        left, right, top, bot, mess, max_indx, confidence = boxResults
+        box = (pb.left, pb.bot, pb.right, pb.top)
+        meta = namedtuple('meta', 'label difficult')
+        meta = meta(pb.label, False)
         thick = int((h + w) // 300)
         if self.flags.output_type:
-            resultsForJSON.append({"label": mess,
-                                   "confidence": float('%.2f' % confidence),
-                                   "topleft": {"x": left, "y": top},
-                                   "bottomright": {"x": right, "y": bot}})
-            writer.addBndBox(left, bot, right, top, mess, False)
-            continue
-        cv2.rectangle(imgcv,
-                      (left, top), (right, bot),
-                      self.meta['colors'][max_indx], thick)
-        cv2.putText(
-            imgcv, mess, (left, top - 12),
-            0, 1e-3 * h, self.meta['colors'][max_indx],
-               thick // 3)
+            resultsForJSON.append({"label": pb.label,
+                                   "confidence": float('%.2f' % pb.max_prob),
+                                   "topleft": {"x": pb.left, "y": pb.top},
+                                   "bottomright": {"x": pb.right, "y": pb.bot}})
+            writer.appendBox(box, meta)
+            #continue
+
+        mess = ' '.join([pb.label, str(round(pb.max_prob, 3))])
+        cv2.rectangle(imgcv, (pb.left, pb.top), (pb.right, pb.bot), colors[pb.max_index], 3)
+        cv2.putText(imgcv, mess, (pb.left, pb.top - 12), 0, 1e-3 * h, self.meta['colors'][pb.max_index], thick // 3)
 
     if not save:
         return imgcv

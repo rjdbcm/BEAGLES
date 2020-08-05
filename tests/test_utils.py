@@ -1,7 +1,7 @@
 import os
 import sys
 import unittest
-from libs.qtUtils import struct, newAction, newIcon, addActions, fmtShortcut, generateColorByText, natural_sort
+from libs.qtUtils import Struct, newAction, newIcon, addActions, fmtShortcut, generateColorByText, naturalSort
 
 class TestUtils(unittest.TestCase):
 
@@ -14,7 +14,7 @@ class TestUtils(unittest.TestCase):
     def test_nautalSort_noError(self):
         l1 = ['f1', 'f11', 'f3' ]
         exptected_l1 = ['f1', 'f3', 'f11']
-        natural_sort(l1)
+        naturalSort(l1)
         for idx, val in enumerate(l1):
             self.assertTrue(val == exptected_l1[idx])
 

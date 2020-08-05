@@ -1,4 +1,4 @@
-from ..utils import loader
+from libs.utils import loader
 import numpy as np
 
 
@@ -61,6 +61,9 @@ class Layer(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __repr__(self):
+        return self._signature if isinstance(self._signature, dict) else str(self._signature)
 
     def varsig(self, var):
         if var not in self.wshape:

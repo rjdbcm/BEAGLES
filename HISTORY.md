@@ -1,7 +1,7 @@
 # History
 
 
-slgr-suite 1.0.0 "bruchpilot" (2019-05-28)
+BEAGLES 1.0.0 "bruchpilot" (2019-05-28)
 ------------------
 
 * Fork rename to Single Look Gesture Recognition Suite

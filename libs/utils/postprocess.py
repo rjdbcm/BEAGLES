@@ -42,28 +42,38 @@ class BehaviorIndex:
         if len(self.ts_list) > 1:
             ts = TimeSeries()
             ts = ts.merge(self.ts_list)
-            return self.beh_index(ts)
+            return self.beh_interval(ts)
         else:
             return self.individual_total_beh()
 
     def individual_total_beh(self):
         """
-        Returns: dict of form {file_name: total_beh_index)
+        Returns: dict of form {file_name: total_beh_interval)
         """
         l = list()
         for ts in self.ts_list:
-            bi = self.beh_index(ts)
+            bi = self.beh_interval(ts)
             l.append(bi)
-        return dict(zip(self.file_list, l))
+        return {'interval': l}
+
+    def individual_behs(self):
+        return [self.individual_total_beh(), self.individual_single_beh()]
+
+    def group_behs(self):
+        return [self.group_total_beh(), self.group_single_beh()]
 
     def beh_slice(self, ts):
         d = dict()
         for k, v in ts.distribution().items():
-            d.update({k: v * self.beh_index(ts)})
+            print(v)
+            d.update({k: v})
         return d
 
     # make ts slices for individual behaviors
-    def beh_index(self, ts):
+    def beh_interval(self, ts):
         delta = ts.last_key() - ts.first_key()
         delta = delta.total_seconds()
         return delta
+
+    def percent(self):
+        pass

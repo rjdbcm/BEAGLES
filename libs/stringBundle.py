@@ -1,14 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import re
-import resources
 import os
-import sys
 import locale
-from libs.ustr import ustr
-from PyQt5.QtCore import *
 
-# TODO See if we can get newlines to show up on GUI
+from PyQt5.QtCore import *
 
 
 class StringBundle:
@@ -61,10 +57,14 @@ class StringBundle:
                 text.setCodec("UTF-8")
 
             while not text.atEnd():
-                line = ustr(text.readLine())
+                line = str(text.readLine())
                 key_value = line.split(PROP_SEPERATOR)
                 key = key_value[0].strip()
                 value = PROP_SEPERATOR.join(key_value[1:]).strip().strip('"')
                 self.idToMessage[key] = value
 
             f.close()
+
+
+def getStr(strId):
+    return StringBundle.getBundle().getString(strId)

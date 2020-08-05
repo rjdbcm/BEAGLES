@@ -1,4 +1,4 @@
-from . import train
+from libs.net import train
 
 
 def constructor(self, meta, flags):

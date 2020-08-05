@@ -1,5 +1,5 @@
 import tensorflow.compat.v1.layers as slim
-from .baseop import BaseOp
+from libs.net.ops.baseop import BaseOp
 import tensorflow as tf
 import numpy as np
 
@@ -91,29 +91,24 @@ class convolutional(BaseOp):
             return tf.keras.layers.BatchNormalization(**args)(inp)
 
     def speak(self):
+        msg = 'conv {}x{}p{}_{}  {}  {}'.format(*self.get_args())
+        return msg
+
+    def get_args(self):
         l = self.lay
         args = [l.ksize] * 2 + [l.pad] + [l.stride]
         args += [l.batch_norm * '+bnorm']
         args += [l.activation]
-        msg = 'conv {}x{}p{}_{}  {}  {}'.format(*args)
-        return msg
+        return args
 
 
 class conv_select(convolutional):
     def speak(self):
-        l = self.lay
-        args = [l.ksize] * 2 + [l.pad] + [l.stride]
-        args += [l.batch_norm * '+bnorm']
-        args += [l.activation]
-        msg = 'sele {}x{}p{}_{}  {}  {}'.format(*args)
+        msg = 'sele {}x{}p{}_{}  {}  {}'.format(*self.get_args())
         return msg
 
 
 class conv_extract(convolutional):
     def speak(self):
-        l = self.lay
-        args = [l.ksize] * 2 + [l.pad] + [l.stride]
-        args += [l.batch_norm * '+bnorm']
-        args += [l.activation]
-        msg = 'extr {}x{}p{}_{}  {}  {}'.format(*args)
+        msg = 'extr {}x{}p{}_{}  {}  {}'.format(*self.get_args())
         return msg

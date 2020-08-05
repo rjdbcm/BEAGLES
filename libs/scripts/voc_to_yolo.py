@@ -6,7 +6,7 @@ import glob
 import argparse
 import sys
 import os
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 
 
 def getImagesInDir(dir_path):

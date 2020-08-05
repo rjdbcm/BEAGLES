@@ -30,9 +30,9 @@ cd ../
 rm -rf build
 rm -rf dist
 
-# build SLGR-Suite
+# build BEAGLES
 pip3 install pyinstaller
-pip3 install -r requirements/requirements-osx-mojave.txt
+pip3 install -r requirements/requirements.txt
 make qt5py3
 pyinstaller -w --hidden-import=xml \
             --hidden-import=xml.etree \
@@ -43,19 +43,19 @@ pyinstaller -w --hidden-import=xml \
             -r libs/cython_utils/nms.so \
             --add-data ./data:data \
             --icon=resources/icons/app.icns \
-            -n SLGR-Suite slgrSuite.py
-mv "dist/SLGR-Suite.app" /Applications
+            -n BEAGLES slgrSuite.py
+mv "dist/BEAGLES.app" /Applications
 
 # symlink the data folders
-mkdir ~/SLGR-Suite
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/bin/ ~/SLGR-Suite/bin
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/logs/ ~/SLGR-Suite/logs
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/summaries/ ~/SLGR-Suite/summaries
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/ckpt/ ~/SLGR-Suite/ckpt
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/built_graph/ ~/SLGR-Suite/built_graph
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/sample_img/ ~/SLGR-Suite/sample_img
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/sample_img/out/ ~/SLGR-Suite/sample_img/out
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/cfg/ ~/SLGR-Suite/cfg
-ln -s /Applications/SLGR-Suite.app/Contents/Resources/data/predefined_classes.txt ~/SLGR-Suite/data/predefined_classes.txt
+mkdir ~/BEAGLES
+ln -s /Applications/BEAGLES.app/Contents/Resources/data/bin/ ~/BEAGLES/bin
+ln -s /Applications/BEAGLES.app/Contents/Resources/data/logs/ ~/BEAGLES/logs
+ln -s /Applications/BEAGLES.app/Contents/Resources/data/summaries/ ~/BEAGLES/summaries
+ln -s /Applications/BEAGLES.app/Contents/Resources/data/ckpt/ ~/BEAGLES/ckpt
+ln -s /Applications/BEAGLES.app/Contents/Resources/data/built_graph/ ~/BEAGLES/built_graph
+ln -s /Applications/BEAGLES.app/Contents/Resources/data/sample_img/ ~/BEAGLES/sample_img
+ln -s /Applications/BEAGLES.app/Contents/Resources/data/sample_img/out/ ~/BEAGLES/sample_img/out
+ln -s /Applications/BEAGLES.app/Contents/Resources/data/cfg/ ~/BEAGLES/cfg
+ln -s /Applications/BEAGLES.app/Contents/Resources/data/predefined_classes.txt ~/BEAGLES/data/predefined_classes.txt
 
 echo 'DONE'

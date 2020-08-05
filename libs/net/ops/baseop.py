@@ -17,6 +17,7 @@ def _shape(tensor):  # work for both tf.Tensor & np.ndarray
 def _name(tensor):
     return tensor.name.split(':')[0]
 
+
 class BaseOp(object):
     """
     BaseOp objects initialise with a darknet's `layer` object
