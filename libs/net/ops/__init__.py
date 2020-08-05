@@ -1,6 +1,6 @@
-from .simple import *
-from .convolution import *
-from .baseop import HEADER, LINE
+from libs.net.ops.simple import *
+from libs.net.ops.convolution import *
+from libs.net.ops.baseop import HEADER, LINE
 
 op_types = {
     'convolutional': convolutional,

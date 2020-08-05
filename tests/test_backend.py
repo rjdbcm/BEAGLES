@@ -1,5 +1,6 @@
 from unittest import TestCase
-from libs.utils.flags import FlagIO, Flags
+from libs.io.flags import FlagIO
+from libs.utils.flags import Flags
 from libs.net.build import TFNet
 from libs.utils.errors import GradientNaN, VariableIsNone
 from libs.dark.darknet import Darknet

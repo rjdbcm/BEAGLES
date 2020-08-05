@@ -1,7 +1,7 @@
-from . import yolo
-from . import yolov2
-from . import vanilla
-from ..utils.flags import FlagIO
+from libs.net import yolo
+from libs.net import yolov2
+from libs.net import vanilla
+from libs.io.flags import FlagIO
 from os.path import basename
 
 

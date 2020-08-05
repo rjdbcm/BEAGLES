@@ -1,7 +1,7 @@
 # noinspection PyUnresolvedReferences
-from .layer import Layer
-from .convolution import *
-from .connected import *
+from libs.dark.layer import Layer
+from libs.dark.convolution import *
+from libs.dark.connected import *
 
 
 class avgpool_layer(Layer):

@@ -1,10 +1,11 @@
-from ..utils.process import cfg_yielder
-from .darkop import create_darkop
-from ..utils import loader
-from ..utils.flags import FlagIO
-import warnings
-import time
 import os
+import time
+import warnings
+from libs.dark.darkop import create_darkop
+from libs.utils.config_yielder import ConfigYielder
+from libs.io.flags import FlagIO
+from libs.utils import loader
+
 
 
 class Darknet(FlagIO, object):
@@ -14,6 +15,7 @@ class Darknet(FlagIO, object):
         FlagIO.__init__(self, subprogram=True)
         self.get_weight_src(flags)
         self.modify = False
+        self.config = ConfigYielder(self.src_cfg)
 
         self.logger.info('Parsing {}'.format(self.src_cfg))
         src_parsed = self.parse_cfg(self.src_cfg, flags)
@@ -65,8 +67,7 @@ class Darknet(FlagIO, object):
         return a list of `layers` objects (darkop.py)
         given path to binaries/ and configs/
         """
-        args = [model, flags.binary]
-        cfg_layers = cfg_yielder(*args)
+        cfg_layers = self.config.yield_layers()
 
         meta = dict()
         layers = list()

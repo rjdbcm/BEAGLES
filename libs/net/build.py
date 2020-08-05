@@ -2,19 +2,19 @@ import os
 import time
 import tensorflow as tf
 from tensorflow.python.platform import tf_logging
-from .ops import op_create, identity
-from .ops import HEADER, LINE
-from .framework import create_framework
-from ..dark.darknet import Darknet
-from ..utils.loader import create_loader
-from ..utils.flags import FlagIO
-from ..utils.errors import *
-from ..utils.postprocess import BehaviorIndex
-from . import train
-from . import annotate
-from . import predict
-from . import analyze
-from ..utils.cyclic_learning_rate import cyclic_learning_rate
+from libs.net.ops import op_create, identity
+from libs.net.ops import HEADER, LINE
+from libs.net.framework import create_framework
+from libs.dark.darknet import Darknet
+from libs.utils.loader import create_loader
+from libs.io.flags import FlagIO
+from libs.utils.errors import *
+from libs.utils.postprocess import BehaviorIndex
+from libs.net import train
+from libs.net import annotate
+from libs.net import predict
+from libs.net import analyze
+from libs.utils.cyclic_learning_rate import cyclic_learning_rate
 
 
 

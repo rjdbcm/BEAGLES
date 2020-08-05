@@ -1,4 +1,4 @@
-from ...utils.pascal_voc_clean_xml import pascal_voc_clean_xml
+from libs.utils.pascal_voc_clean_xml import pascal_voc_clean_xml
 from .predict import preprocess
 # from .misc import show
 from copy import deepcopy

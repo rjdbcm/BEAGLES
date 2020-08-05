@@ -9,7 +9,7 @@ from functools import partial
 from libs.stringBundle import getStr
 from libs.widgets.toolBar import ToolBar
 from libs.qtUtils import *
-from libs.utils.flags import FlagIO
+from libs.io.flags import FlagIO
 
 
 class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):

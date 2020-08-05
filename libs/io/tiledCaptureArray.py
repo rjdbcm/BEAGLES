@@ -2,7 +2,7 @@ import cv2
 import math
 import os
 import subprocess
-from .flags import FlagIO
+from libs.io.flags import FlagIO
 
 
 class TiledCaptureArray(FlagIO):

@@ -2,8 +2,8 @@ import os
 import math
 import pickle
 import tensorflow as tf
-from ..utils.errors import GradientNaN
-from ..utils.cyclic_learning_rate import cyclic_learning_rate
+from libs.utils.errors import GradientNaN
+from libs.utils.cyclic_learning_rate import cyclic_learning_rate
 
 train_stats = (
     'Training statistics - '

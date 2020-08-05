@@ -2,7 +2,7 @@ from libs.net.yolo import train
 from libs.net.yolo import predict
 from libs.net.yolo import data
 from libs.net.yolo import misc
-from libs.utils.flags import FlagIO
+from libs.io.flags import FlagIO
 import numpy as np
 import time
 

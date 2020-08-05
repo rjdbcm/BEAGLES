@@ -2,7 +2,7 @@ import os
 import time
 from libs.widgets.scientificQDoubleSpinBox import ScientificQDoubleSpinBox
 from libs.stringBundle import getStr
-from libs.utils.flags import FlagIO
+from libs.io.flags import FlagIO
 from PyQt5.QtCore import QThread, QObject, pyqtSignal, Qt
 from PyQt5.QtWidgets import QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QHBoxLayout, \
                             QDialog, QLabel, QPushButton, QGridLayout, QProgressBar, \

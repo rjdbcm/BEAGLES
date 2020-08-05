@@ -5,7 +5,7 @@ from libs.io.labelFile import LabelFile
 from libs.utils.flags import Flags
 from libs.widgets.projectDialog import ProjectDialog
 from libs.widgets.backend import BackendDialog, BackendThread
-#from .scripts.genConfig import genConfigYOLOv2
+#from libs.scripts.genConfig import genConfigYOLOv2
 import subprocess
 import sys
 import os
