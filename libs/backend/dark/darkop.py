@@ -1,5 +1,5 @@
 # noinspection PyUnresolvedReferences
-from libs.backend.dark import Layer
+from libs.backend.dark.layer import Layer
 from libs.backend.dark.convolution import *
 from libs.backend.dark.connected import *
 

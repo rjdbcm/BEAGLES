@@ -1,5 +1,5 @@
 import numpy as np
-from libs.backend.cythonUtils import box_constructor
+from libs.cythonUtils.cy_yolo2_findboxes import box_constructor
 
 
 def expit(x):

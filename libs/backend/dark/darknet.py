@@ -1,7 +1,7 @@
 import os
 import time
 import warnings
-from libs.backend.dark import create_darkop
+from libs.backend.dark.darkop import create_darkop
 from libs.utils.config_yielder import ConfigYielder
 from libs.io.flags import FlagIO
 from libs.utils import loader
