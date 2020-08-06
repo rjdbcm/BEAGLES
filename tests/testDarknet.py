@@ -1,6 +1,8 @@
 from unittest import TestCase
 from libs.net.framework import Framework
 from libs.dark.darknet import Darknet
+from libs.utils.darknet_config_file import DarknetConfigFile
+from libs.utils.errors import DarknetConfigEmpty
 from libs.utils.flags import Flags
 from libs.dark.layer import Layer
 
@@ -22,7 +24,7 @@ meta = {
     'class_scale': 1, 'coord_scale': 1, 'absolute': 1, 'thresh': 0.4, 'random': 1,
     'labels': ['foo', 'bar', 'baz', 'bah'],
     'name': 'test',
-    'model': 'tests/test.cfg', 'inp_size': [608, 608, 3], 'out_size': 16245}
+    'model': 'tests/resources/test.cfg', 'inp_size': [608, 608, 3], 'out_size': 16245}
 
 layers = \
     [Layer('convolutional', 0, 3, 3, 32, 1, 1, 1, 'leaky'),
@@ -72,12 +74,29 @@ class TestDarknet(TestCase):
     def setUpClass(cls) -> None:
         cls.flags = Flags()
         cls.maxDiff = None
+        cls.flags.model = 'tests/resources/test.cfg'
 
     def testParseAndYieldYoloV2Config(self):
-        self.flags.model = 'tests/test.cfg'
-        self.flags.labels = 'tests/test_classes.txt'
+        self.flags.labels = 'tests/resources/test_classes.txt'
         darknet = Darknet(self.flags)
         Framework.create(darknet.meta, self.flags)
         self.assertDictEqual(darknet.meta, meta,
                              'Failed to correctly parse darknet metadata')
         self.assertEqual(darknet.layers, layers)
+
+    def testDarknetConfigToAndFromJson(self):
+        cfg = DarknetConfigFile(self.flags.model)
+        json_cfg_file = cfg.to_json()
+        json_cfg = DarknetConfigFile(json_cfg_file)
+        self.assertEqual(cfg, json_cfg, 'layers mismatch')
+        self.assertRaises(FileNotFoundError, DarknetConfigFile, 'tests/resources/phonybologna.cfg')
+        self.flags.model = json_cfg_file
+        self.flags.labels = 'tests/resources/test_classes.txt'
+        darknet = Darknet(self.flags)
+        Framework.create(darknet.meta, self.flags)
+        self.assertDictEqual(darknet.meta, meta,
+                             'Failed to correctly parse darknet metadata')
+        self.assertEqual(darknet.layers, layers)
+
+    def testEmptyDarknetConfigFile(self):
+        self.assertRaises(DarknetConfigEmpty, DarknetConfigFile, 'tests/resources/empty.cfg')

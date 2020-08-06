@@ -26,7 +26,7 @@ ys=(0 0 0 0 $FIRSTY $FIRSTY $FIRSTY $SECONDY $SECONDY $SECONDY)
 
 for i in $(seq 1 9); do
 
-    BASENAME="$BASENAME"_camera"$i$EXTENSION"
+    BASENAME="$BASENAME""_camera""$i$EXTENSION"
     echo $BASENAME ${xs[i]} ${ys[i]}
     ffmpeg -i "$1" -filter:v "crop=$FIRSTX:$FIRSTY:${xs[i]}:${ys[i]}" -c:a copy $BASENAME
     BASENAME=$COPY

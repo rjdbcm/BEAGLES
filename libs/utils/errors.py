@@ -1,3 +1,7 @@
+class DarknetConfigEmpty(Exception):
+    """raised when a darknet configuration is empty"""
+    def __init__(self, cfg):
+        Exception.__init__(self, "Configuration is empty: {}".format(cfg))
 
 
 class GradientNaN(Exception):

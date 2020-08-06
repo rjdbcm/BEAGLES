@@ -57,7 +57,7 @@ class TestMainWindow(TestCase):
 
     # Definitely works but doesn't test well.
     def testImpVideo(self):
-        FileFunctions.frameCapture(os.path.abspath('test.mp4'))
+        FileFunctions.frameCapture(os.path.abspath('resources/test.mp4'))
         files = glob.glob('*.jpg')
         for file in files:
             os.remove(file)
