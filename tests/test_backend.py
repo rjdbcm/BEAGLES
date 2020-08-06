@@ -1,9 +1,8 @@
 from unittest import TestCase
 from libs.io.flags import FlagIO
 from libs.utils.flags import Flags
-from libs.utils.errors import GradientNaN, VariableIsNone
-from libs.cythonUtils.nms import iou_c
-import tensorflow as tf
+from libs.utils.errors import GradientNaN
+from libs.backend.cythonUtils import iou_c
 
 
 class TestBackend(TestCase, FlagIO):

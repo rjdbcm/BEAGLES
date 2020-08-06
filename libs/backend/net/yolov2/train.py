@@ -1,7 +1,7 @@
 import tensorflow.compat.v1.layers as slim
 import pickle
 import tensorflow as tf
-from libs.net.yolo.misc import show
+from libs.backend.net.yolo.misc import show
 import numpy as np
 import os
 import math

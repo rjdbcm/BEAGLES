@@ -1,7 +1,7 @@
-from libs.net.yolo import train
-from libs.net.yolo import predict
-from libs.net.yolo import data
-from libs.net.yolo import misc
+from libs.backend.net.yolo import train
+from libs.backend.net.yolo import predict
+from libs.backend.net.yolo import data
+from libs.backend.net.yolo import misc
 from libs.io.flags import FlagIO
 import numpy as np
 import time

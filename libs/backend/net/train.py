@@ -4,7 +4,7 @@ import pickle
 import tensorflow as tf
 from libs.utils.errors import GradientNaN
 # noinspection PyUnresolvedReferences
-from libs.net.vanilla.train import loss
+from libs.backend.net.vanilla.train import loss
 from libs.utils.cyclic_learning_rate import cyclic_learning_rate
 
 train_stats = (

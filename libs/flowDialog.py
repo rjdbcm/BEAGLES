@@ -182,7 +182,7 @@ class FlowDialog(BackendDialog):
         if [self.flowCmb.currentText() == "Train"]:
             # create backend subprocess
             proc = subprocess.Popen([sys.executable, os.path.join(
-                os.getcwd(), "libs/scripts/wrapper.py")],
+                os.getcwd(), "libs/wrapper.py")],
                                     stdout=subprocess.PIPE, shell=False)
             self.thread = BackendThread(self, proc=proc, flags=self.flags)
             self.thread.setTerminationEnabled(True)

@@ -6,17 +6,17 @@ try:
 except IndexError:
     argv = []
 if argv:
-    EXEC_PATH = os.path.abspath("../../")
+    EXEC_PATH = os.path.abspath("../")
 else:
     EXEC_PATH = os.getcwd()
 try:
-    from libs.net.build import TFNet
+    from libs.backend.net.build import TFNet
     from libs.utils.flags import Flags
     from libs.io.flags import FlagIO  # Move to the toplevel folder since flag paths are relative to BEAGLES.py
 except ModuleNotFoundError:
     sys.path.append(EXEC_PATH)
 finally:
-    from libs.net.build import TFNet
+    from libs.backend.net.build import TFNet
     from libs.utils.flags import Flags
     from libs.io.flags import  FlagIO
     os.chdir(EXEC_PATH)

@@ -1,10 +1,10 @@
 from unittest import TestCase
-from libs.net.framework import Framework
-from libs.dark.darknet import Darknet
+from libs.backend.net.framework import Framework
+from libs.backend.dark import Darknet
 from libs.utils.darknet_config_file import DarknetConfigFile
 from libs.utils.errors import DarknetConfigEmpty
 from libs.utils.flags import Flags
-from libs.dark.layer import Layer
+from libs.backend.dark import Layer
 
 meta = {
     'net': {'type': '[net]', 'batch': 1, 'subdivisions': 1, 'width': 608, 'height': 608,

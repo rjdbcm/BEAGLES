@@ -2,18 +2,17 @@ import os
 import time
 import tensorflow as tf
 from tensorflow.python.platform import tf_logging
-from libs.net.ops import op_create, identity
-from libs.net.ops import HEADER, LINE
-from libs.net.framework import Framework
-from libs.dark.darknet import Darknet
+from libs.backend.net.ops import op_create, identity
+from libs.backend.net.ops.baseop import HEADER, LINE
+from libs.backend.net.framework import Framework
+from libs.backend.dark.darknet import Darknet
 from libs.utils.loader import create_loader
 from libs.io.flags import FlagIO
 from libs.utils.errors import *
-from libs.utils.postprocess import BehaviorIndex
-from libs.net import train
-from libs.net import annotate
-from libs.net import predict
-from libs.net import analyze
+from libs.backend.net import train
+from libs.backend.net import annotate
+from libs.backend.net import predict
+from libs.backend.net import analyze
 from libs.utils.cyclic_learning_rate import cyclic_learning_rate
 
 

@@ -5,7 +5,7 @@ import cv2
 import os
 import json
 # noinspection PyUnresolvedReferences
-from libs.cythonUtils.cy_yolo_findboxes import yolo_box_constructor
+from libs.backend.cythonUtils import yolo_box_constructor
 from libs.io.pascalVoc import PascalVocWriter, XML_EXT
 
 

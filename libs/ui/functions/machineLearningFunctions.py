@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QProcess
 from libs.ui.functions.mainWindowFunctions import MainWindowFunctions
-from libs.backend import FlowDialog
+from libs.flowDialog import FlowDialog
 from libs.utils.flags import Flags
 
 

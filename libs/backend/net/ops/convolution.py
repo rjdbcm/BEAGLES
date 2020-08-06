@@ -1,5 +1,5 @@
 import tensorflow.compat.v1.layers as slim
-from libs.net.ops.baseop import BaseOp
+from libs.backend.net.ops.baseop import BaseOp
 import tensorflow as tf
 import numpy as np
 
