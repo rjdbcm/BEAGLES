@@ -106,16 +106,16 @@ def return_predict(self, im):
     assert isinstance(im, np.ndarray), \
         'Image is not a np.ndarray'
     h, w, _ = im.shape
-    im = self.Framework.resize_input(im)
+    im = self.framework.resize_input(im)
     this_inp = np.expand_dims(im, 0)
     feed_dict = {self.inp: this_inp}
 
     out = self.sess.run(self.out, feed_dict)[0]
-    boxes = self.Framework.findboxes(out)
+    boxes = self.framework.findboxes(out)
     threshold = self.flags.threshold
     boxesInfo = list()
     for box in boxes:
-        processed_box = self.Framework.process_box(box, h, w, threshold)
+        processed_box = self.framework.process_box(box, h, w, threshold)
         if processed_box is None:
             continue
         boxesInfo.append(processed_box)

@@ -18,14 +18,14 @@ train_stats = (
 
 def train(self):
     self.io_flags()
-    loss_ph = self.Framework.placeholders
+    loss_ph = self.framework.placeholders
     loss_mva = None
     profile = list()
     goal = None
     total_steps = None
     step_pad = None
-    batches = self.Framework.shuffle()
-    loss_op = self.Framework.loss
+    batches = self.framework.shuffle()
+    loss_op = self.framework.loss
 
     for i, (x_batch, datum) in enumerate(batches):
         self.flags = self.read_flags()
