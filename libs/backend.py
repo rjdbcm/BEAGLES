@@ -87,6 +87,9 @@ class FlowDialog(BackendDialog):
         else:
             self.trainGroupBox.hide()
             self.loadCmb.setCurrentIndex(0)
+
+        if self.flowCmb.currentText() == "Annotate":
+            self.thresholdSpd.setDisabled(False)
     #
     # def updateAnchors(self):
     #     pass
