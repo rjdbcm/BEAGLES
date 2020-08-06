@@ -39,13 +39,16 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 - Automatic [hyperparameter tuning](https://github.com/autonomio/talos#Talos) using talos
 - All darknet layer types implemented as sublclassed Keras Layers
 
-##### Development Goals:
+<details>
+  <summary>Development Goals:</summary>
 
 - Code coverage of \>60% (*in progress*)
 - Improve maintainability to A rating (*in progress*)
 - [OBS Studio](https://github.com/obsproject/obs-studio) utility for USB camera arrays (*in progress*)
 - Statistical report generation using [traces](https://github.com/datascopeanalytics/traces) (*in progress*)
 - TensorFlow 2 native code (*separate development branch created*)
+
+</details>
 
 <details>
   <summary>Table of Contents:</summary>
