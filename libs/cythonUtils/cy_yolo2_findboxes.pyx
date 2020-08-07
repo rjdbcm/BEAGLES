@@ -1,7 +1,7 @@
 import numpy as np
 cimport numpy as np
 cimport cython
-from cython.parallel import prange
+#from cython.parallel import prange
 ctypedef np.float_t DTYPE_t
 from libc.math cimport exp
 from libs.utils.box import BoundingBox
@@ -20,7 +20,7 @@ cdef float expit_c(float x):
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
 @cython.cdivision(True)
 cdef float max_c(float a, float b):
-    if(a>b):
+    if a > b:
         return a
     return b
 

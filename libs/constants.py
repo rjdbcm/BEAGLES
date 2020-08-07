@@ -1,4 +1,7 @@
+from os.path import expanduser, join
+
 APP_NAME = 'BEAGLES'
+SAVE_SETTINGS_PATH = join(expanduser("~"), '.BEAGLESSettings.pkl')
 SETTING_FILENAME = 'filename'
 SETTING_RECENT_FILES = 'recentFiles'
 SETTING_WIN_SIZE = 'window/size'
