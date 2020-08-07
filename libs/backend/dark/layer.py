@@ -63,7 +63,7 @@ class Layer(object):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return self._signature if isinstance(self._signature, dict) else str(self._signature)
+        return self._signature
 
     def varsig(self, var):
         if var not in self.wshape:

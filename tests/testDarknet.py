@@ -1,10 +1,11 @@
 from unittest import TestCase
 from libs.backend.net.framework import Framework
-from libs.backend.dark import Darknet
+from libs.backend.dark.darknet import Darknet
 from libs.utils.darknet_config_file import DarknetConfigFile
 from libs.utils.errors import DarknetConfigEmpty
 from libs.utils.flags import Flags
-from libs.backend.dark import Layer
+from libs.backend.dark.layer import Layer
+from libs.backend.dark.connected import connected_layer
 
 meta = {
     'net': {'type': '[net]', 'batch': 1, 'subdivisions': 1, 'width': 608, 'height': 608,
@@ -62,11 +63,30 @@ layers = \
      Layer('dropout', 32, 0.5),
      Layer('connected', 33, 4096, 1000, 'ramp'),
      Layer('convolutional', 34, 3, 1024, 1024, 1, 1, 1, 'leaky'),
-     Layer('select', 35, 369664, 1470, 'linear', None, 686, [8, 14, 15, 19, 28, 34, 35, 39, 48, 54, 55, 59, 68, 74, 75, 79, 88, 94, 95, 99, 108, 114, 115, 119, 128, 134, 135, 139, 148, 154, 155, 159, 168, 174, 175, 179, 188, 194, 195, 199, 208, 214, 215, 219, 228, 234, 235, 239, 248, 254, 255, 259, 268, 274, 275, 279, 288, 294, 295, 299, 308, 314, 315, 319, 328, 334, 335, 339, 348, 354, 355, 359, 368, 374, 375, 379, 388, 394, 395, 399, 408, 414, 415, 419, 428, 434, 435, 439, 448, 454, 455, 459, 468, 474, 475, 479, 488, 494, 495, 499, 508, 514, 515, 519, 528, 534, 535, 539, 548, 554, 555, 559, 568, 574, 575, 579, 588, 594, 595, 599, 608, 614, 615, 619, 628, 634, 635, 639, 648, 654, 655, 659, 668, 674, 675, 679, 688, 694, 695, 699, 708, 714, 715, 719, 728, 734, 735, 739, 748, 754, 755, 759, 768, 774, 775, 779, 788, 794, 795, 799, 808, 814, 815, 819, 828, 834, 835, 839, 848, 854, 855, 859, 868, 874, 875, 879, 888, 894, 895, 899, 908, 914, 915, 919, 928, 934, 935, 939, 948, 954, 955, 959, 968, 974, 975, 979], 980),
-     Layer('shortcut', 36, {'type': '[convolutional]', 'batch_normalize': 1, 'size': 3,
-                            'stride': 1, 'pad': 1, 'filters': 1024, 'activation': 'leaky',
-                            '_size': [19, 19, 1024, 369664, True]}),
-     Layer('convolutional', 37, 1, 1024, 45, 1, 0, False, 'linear')]
+     Layer('shortcut', 35, {'type': '[connected]', 'output': 1000, 'activation': 'ramp',
+                            '_size': [19, 19, 1024, 1000, True]}),
+     Layer('convolutional', 36, 1, 1024, 45, 1, 0, False, 'linear')]
+
+yolov1_layer = [Layer('crop', 0),
+                Layer('convolutional', 1, 3, 3, 16, 1, 1, False, 'leaky'),
+                Layer('maxpool', 2, 2, 2, 0),
+                Layer('convolutional', 3, 3, 16, 32, 1, 1, False, 'leaky'),
+                Layer('maxpool', 4, 2, 2, 0),
+                Layer('convolutional', 5, 3, 32, 64, 1, 1, False, 'leaky'),
+                Layer('maxpool', 6, 2, 2, 0),
+                Layer('convolutional', 7, 3, 64, 128, 1, 1, False, 'leaky'),
+                Layer('maxpool', 8, 2, 2, 0),
+                Layer('convolutional', 9, 3, 128, 256, 1, 1, False, 'leaky'),
+                Layer('maxpool', 10, 2, 2, 0),
+                Layer('convolutional', 11, 3, 256, 512, 1, 1, False, 'leaky'),
+                Layer('maxpool', 12, 2, 2, 0),
+                Layer('convolutional', 13, 3, 512, 1024, 1, 1, False, 'leaky'),
+                Layer('convolutional', 14, 3, 1024, 1024, 1, 1, False, 'leaky'),
+                Layer('convolutional', 15, 3, 1024, 1024, 1, 1, False, 'leaky'),
+                Layer('flatten', 16),
+                Layer('connected', 17, 256, 4096, 'leaky'),
+                Layer('dropout', 18, 0.5),
+                Layer('connected', 19, 4096, 1470, 'linear')]
 
 
 class TestDarknet(TestCase):
@@ -74,9 +94,9 @@ class TestDarknet(TestCase):
     def setUpClass(cls) -> None:
         cls.flags = Flags()
         cls.maxDiff = None
-        cls.flags.model = 'tests/resources/test.cfg'
 
     def testParseAndYieldYoloV2Config(self):
+        self.flags.model = 'tests/resources/test.cfg'
         self.flags.labels = 'tests/resources/test_classes.txt'
         darknet = Darknet(self.flags)
         Framework.create(darknet.meta, self.flags)
@@ -84,12 +104,23 @@ class TestDarknet(TestCase):
                              'Failed to correctly parse darknet metadata')
         self.assertEqual(darknet.layers, layers)
 
+    def testParseAndYieldYoloV1Config(self):
+        self.flags.labels = 'tests/resources/test_classes.txt'
+        self.flags.model = 'tests/resources/test_yolov1.cfg'
+        darknet = Darknet(self.flags)
+        Framework.create(darknet.meta, self.flags)
+        # self.assertDictEqual(darknet.meta, meta,
+        #                      'Failed to correctly parse darknet metadata')
+        self.assertEqual(darknet.layers, yolov1_layer)
+
     def testDarknetConfigToAndFromJson(self):
+        self.flags.model = 'tests/resources/test.cfg'
         cfg = DarknetConfigFile(self.flags.model)
         json_cfg_file = cfg.to_json()
         json_cfg = DarknetConfigFile(json_cfg_file)
         self.assertEqual(cfg, json_cfg, 'layers mismatch')
-        self.assertRaises(FileNotFoundError, DarknetConfigFile, 'tests/resources/phonybologna.cfg')
+        self.assertRaises(FileNotFoundError, DarknetConfigFile,
+                          'tests/resources/phonybologna.cfg')
         self.flags.model = json_cfg_file
         self.flags.labels = 'tests/resources/test_classes.txt'
         darknet = Darknet(self.flags)
@@ -99,4 +130,5 @@ class TestDarknet(TestCase):
         self.assertEqual(darknet.layers, layers)
 
     def testEmptyDarknetConfigFile(self):
-        self.assertRaises(DarknetConfigEmpty, DarknetConfigFile, 'tests/resources/empty.cfg')
+        self.assertRaises(DarknetConfigEmpty, DarknetConfigFile,
+                          'tests/resources/empty.cfg')
