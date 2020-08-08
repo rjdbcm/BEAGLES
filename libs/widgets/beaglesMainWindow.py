@@ -36,7 +36,7 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
                 callback = 'self.' + act
                 cmd_string = cmd.format(_str, action_str, callback, shortcut, icon,
                                         detail, checkable, enabled)
-                self.logger.info(cmd_string)
+                self.logger.debug(cmd_string)
                 exec(cmd_string)
         createActions(self.actionList)
         self.setup()

@@ -1,4 +1,5 @@
 import tensorflow.compat.v1.layers as slim
+from tensorflow.compat.v1.nn import xw_plus_b
 from libs.backend.net.ops.baseop import BaseOp
 import tensorflow as tf
 
@@ -23,7 +24,7 @@ class route(BaseOp):
 
 class connected(BaseOp):
     def forward(self):
-        self.out = tf.nn.xw_plus_b(
+        self.out = xw_plus_b(
             self.inp.out,
             self.lay.w['weights'],
             self.lay.w['biases'],
@@ -122,6 +123,32 @@ class maxpool(BaseOp):
             l.ksize, l.ksize, l.pad, l.stride)
 
 
+class shortcut(BaseOp):
+    def forward(self):
+        from_layer = self.lay.from_layer
+        this = self.inp
+        while this.lay.number != from_layer:
+            this = this.inp
+            assert this is not None, \
+                'Shortcut to non-existence {}'.format(self.lay.from_layer)
+        from_layer = this.inp.out
+        self.out = tf.add(self.inp.out,
+                          from_layer,
+                          name=self.scope)
+
+    def speak(self):
+        l = self.lay
+        return 'shortcut from {}'.format(l.from_layer)
+
+
+class upsample(BaseOp):
+    def forward(self):
+        size = (self.lay.height, self.lay.width)
+        self.out = tf.image.resize(self.inp.out, size, method='nearest', name=self.scope)
+
+    def speak(self):
+        return 'upsample {}'.format(self.lay.stride)
+
 # ---Activations---
 
 
@@ -176,35 +203,6 @@ class leaky(BaseOp):
 
     def verbalise(self):
         pass
-
-
-class shortcut(BaseOp):
-    def forward(self):
-        from_layer = self.lay.from_layer
-        this = self.inp
-        while this.lay.number != from_layer:
-            this = this.inp
-            assert this is not None, \
-                'Shortcut to non-existence {}'.format(self.lay.from_layer)
-        from_layer = this.inp.out
-        self.out = tf.add(self.inp.out,
-                          from_layer,
-                          name=self.scope)
-
-    def speak(self):
-        l = self.lay
-        return 'shortcut from {}'.format(l.from_layer)
-
-
-class upsample(BaseOp):
-    def forward(self):
-        size = (self.lay.height, self.lay.width)
-        self.out = tf.image.resize_nearest_neighbor(self.inp.out,
-                                                    size,
-                                                    name=self.scope)
-
-    def speak(self):
-        return 'upsample {}'.format(self.lay.stride)
 
 
 class identity(BaseOp):

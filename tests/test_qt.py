@@ -11,12 +11,14 @@ class TestMainWindow(TestCase):
 
     app = None
     win = None
+    flags = Flags()
+    labels = flags.labels
 
     @classmethod
     @mock.patch('argparse.ArgumentParser.parse_args',
                 return_value=argparse.Namespace(
                     filename='data/sample_img/sample_dog.jpg',
-                    predefined_class_file=Flags().labels,
+                    predefined_class_file=labels,
                     save_directory='tests'))
     def setUpClass(cls, args):
         cls.app, cls.win = get_main_app()

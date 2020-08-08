@@ -24,7 +24,6 @@ class Settings(object):
 
     def save(self):
         if SAVE_SETTINGS_PATH:
-            print(self.__dict__)
             with open(SAVE_SETTINGS_PATH, 'wb') as f:
                 pickle.dump(self.__dict__, f, pickle.HIGHEST_PROTOCOL)
                 return True

@@ -14,13 +14,14 @@ class FlagIO(object):
     def __init__(self, subprogram=False, delay=0.1):
         self.subprogram = subprogram
         self.delay = delay
+        self.flags = Flags()
 
         logging.captureWarnings(True)
         self.logger = logging.getLogger(type(self).__name__)
         formatter = logging.Formatter(
             '{asctime} | {levelname:7} | {name:<11} | {funcName:<20} |'
             ' {message}', style='{')
-        self.logfile = logging.handlers.RotatingFileHandler(Flags().log,
+        self.logfile = logging.handlers.RotatingFileHandler(self.flags.log,
                                                             backupCount=20)
         self.tf_logfile = logging.handlers.RotatingFileHandler(
             os.path.splitext(Flags().log)[0] + ".tf" +

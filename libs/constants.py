@@ -1,7 +1,9 @@
 from os.path import expanduser, join
+from os import getcwd
 
 APP_NAME = 'BEAGLES'
 SAVE_SETTINGS_PATH = join(expanduser("~"), '.BEAGLESSettings.pkl')
+BACKEND_ENTRYPOINT = join(getcwd(), 'libs/backend/wrapper.py')
 SETTING_FILENAME = 'filename'
 SETTING_RECENT_FILES = 'recentFiles'
 SETTING_WIN_SIZE = 'window/size'

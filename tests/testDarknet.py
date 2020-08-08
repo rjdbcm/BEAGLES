@@ -1,11 +1,9 @@
 from unittest import TestCase
-from libs.backend.net.framework import Framework
 from libs.backend.dark.darknet import Darknet
-from libs.utils.darknet_config_file import DarknetConfigFile
+from libs.backend.io.darknet_config_file import DarknetConfigFile
 from libs.utils.errors import DarknetConfigEmpty
 from libs.utils.flags import Flags
 from libs.backend.dark.layer import Layer
-from libs.backend.dark.connected import connected_layer
 
 meta = {
     'net': {'type': '[net]', 'batch': 1, 'subdivisions': 1, 'width': 608, 'height': 608,
@@ -16,15 +14,9 @@ meta = {
             'scales': '.1,.1'}, 'type': '[region]',
     'anchors': [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778,
                 9.77052, 9.16828], 'bias_match': 1, 'classes': 4,
-    'colors': [(254.0, 254.0, 254),
-               (222.25, 190.5, 127),
-               (190.5, 127.0, 254),
-               (158.75, 63.5, 127)],
     'coords': 4, 'num': 5,
     'softmax': 1, 'jitter': 0.3, 'rescore': 1, 'object_scale': 5, 'noobject_scale': 1,
-    'class_scale': 1, 'coord_scale': 1, 'absolute': 1, 'thresh': 0.4, 'random': 1,
-    'labels': ['foo', 'bar', 'baz', 'bah'],
-    'name': 'test',
+    'class_scale': 1, 'coord_scale': 1, 'absolute': 1, 'thresh': 0.1, 'random': 1,
     'model': 'tests/resources/test.cfg', 'inp_size': [608, 608, 3], 'out_size': 16245}
 
 layers = \
@@ -99,7 +91,6 @@ class TestDarknet(TestCase):
         self.flags.model = 'tests/resources/test.cfg'
         self.flags.labels = 'tests/resources/test_classes.txt'
         darknet = Darknet(self.flags)
-        Framework.create(darknet.meta, self.flags)
         self.assertDictEqual(darknet.meta, meta,
                              'Failed to correctly parse darknet metadata')
         self.assertEqual(darknet.layers, layers)
@@ -108,7 +99,6 @@ class TestDarknet(TestCase):
         self.flags.labels = 'tests/resources/test_classes.txt'
         self.flags.model = 'tests/resources/test_yolov1.cfg'
         darknet = Darknet(self.flags)
-        Framework.create(darknet.meta, self.flags)
         # self.assertDictEqual(darknet.meta, meta,
         #                      'Failed to correctly parse darknet metadata')
         self.assertEqual(darknet.layers, yolov1_layer)
@@ -123,8 +113,8 @@ class TestDarknet(TestCase):
                           'tests/resources/phonybologna.cfg')
         self.flags.model = json_cfg_file
         self.flags.labels = 'tests/resources/test_classes.txt'
+        print(self.flags)
         darknet = Darknet(self.flags)
-        Framework.create(darknet.meta, self.flags)
         self.assertDictEqual(darknet.meta, meta,
                              'Failed to correctly parse darknet metadata')
         self.assertEqual(darknet.layers, layers)

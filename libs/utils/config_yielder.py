@@ -1,6 +1,6 @@
 import pickle
 from typing import Generator
-from libs.utils.darknet_config_file import DarknetConfigFile
+from libs.backend.io.darknet_config_file import DarknetConfigFile
 
 
 class ConfigYielder(DarknetConfigFile):

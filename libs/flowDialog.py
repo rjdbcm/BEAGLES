@@ -2,11 +2,12 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from libs.io.labelFile import LabelFile
+from libs.constants import *
 from libs.utils.flags import Flags
 from libs.widgets.projectDialog import ProjectDialog
 from libs.widgets.backend import BackendDialog, BackendThread
 #from libs.scripts.genConfig import genConfigYOLOv2
-import subprocess
+from subprocess import Popen, PIPE
 import sys
 import os
 import re
@@ -174,16 +175,11 @@ class FlowDialog(BackendDialog):
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
             filename = QFileDialog.getOpenFileName(self,
-                                                   'BEAGLES Annotate - '
-                                                   'Choose Video file',
-                                                   os.getcwd(),
-                                                   filters, options=options)
+                                                   'BEAGLES Annotate - Choose Video file',
+                                                   os.getcwd(), filters, options=options)
             self.flags.fbf = filename[0]
         if [self.flowCmb.currentText() == "Train"]:
-            # create backend subprocess
-            proc = subprocess.Popen([sys.executable, os.path.join(
-                os.getcwd(), "libs/wrapper.py")],
-                                    stdout=subprocess.PIPE, shell=False)
+            proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
             self.thread = BackendThread(self, proc=proc, flags=self.flags)
             self.thread.setTerminationEnabled(True)
             self.thread.finished.connect(self.onFinished)
