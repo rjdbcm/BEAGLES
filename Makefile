@@ -1,17 +1,24 @@
 # ex: set ts=8 noet:
 
-all: virtualenv qt5 cython
+all: virtualenv qt5 install
+
+dev_package: qt5 local_package
+
+local_package:
+	pip3 install -e .
 
 virtualenv:
 	virtualenv --python=python3 .
 	. bin/activate
-	pip3 install -r requirements/requirements.txt
 
 qt5:
 	pyrcc5 -o libs/resources.py resources.qrc
 
 cython:
 	python3 setup.py build_ext --inplace
+
+install:
+	python3 setup.py install
 
 test:
 	python3 -m unittest discover ./tests
@@ -23,6 +30,7 @@ coverage:
 
 clean:
 	rm -f ~/.BEAGLESSettings.pkl ./libs/resources.py
+	rm -rf ./.pytest_cache
 	rm -f ./libs/cythonUtils/*.c
 	rm -rf *.egg-info
 	rm -rf BEAGLES-*

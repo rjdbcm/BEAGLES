@@ -1,2 +1,2 @@
-__version__ = '2.0.0a'
+__version__ = '0.2.0'
 """Current version of BEAGLES"""

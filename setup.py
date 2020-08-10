@@ -8,13 +8,10 @@ import importlib
 
 VERSION = importlib.import_module('.version', 'libs')
 VERSION = VERSION.__version__
+PLAT = sys.platform
 
 with open("README.md", "r") as f:
     long_description = f.read()
-
-with open('requirements/requirements.txt', 'r') as f:
-    lines = f.readlines()
-    requirements = [x.strip() for x in lines]
 
 if os.name == 'nt':
     ext_modules = [
@@ -91,8 +88,7 @@ setup(
     packages=find_packages(),
     scripts=['BEAGLES.py'],
     ext_modules=cythonize(ext_modules),
-    extras_require={'darkmode': ["qdarkstyle", "pyobjc"]
-                    if sys.platform == "Darwin" else ["qdarkstyle"],
+    extras_require={'darkmode': ["qdarkstyle", "pyobjc"] if PLAT == "Darwin" else ["qdarkstyle"],
                     'dev': ["googletrans"]},
     classifiers=["Programming Language :: Cython",
                  "Programming Language :: Python :: 3",
@@ -101,5 +97,13 @@ setup(
                  "Topic :: Scientific/Engineering :: Bio-Informatics",
                  "Intended Audience :: Science/Research",
                  "Development Status :: 2 - Pre-Alpha"],
-    install_requires=requirements
+    install_requires=["PyQt5",
+                      "defusedxml>=0.6.0",
+                      "lxml>=4.2.4",
+                      "Cython==0.29.6",
+                      "opencv-contrib-python==4.0.0.21",
+                      "tensorflow>2.0.0b",
+                      "numpy==1.16.2",
+                      "traces==0.4.2"]
+
 )

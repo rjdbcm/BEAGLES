@@ -10,6 +10,7 @@ recursive-include data *
 recursive-include resources *
 recursive-include libs *
 
+recursive-exclude data/summaries *
 recursive-exclude build-tools *
 recursive-exclude build *
 recursive-exclude dist *
