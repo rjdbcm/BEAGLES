@@ -65,6 +65,9 @@ class Layer(object):
     def __repr__(self):
         return self._signature
 
+    def __str__(self):
+        return str(self._signature)
+
     def varsig(self, var):
         if var not in self.wshape:
             return None
@@ -82,5 +85,5 @@ class Layer(object):
     def setup(self, *args):
         pass
 
-    def finalize(self):
+    def finalize(self, *args):
         pass

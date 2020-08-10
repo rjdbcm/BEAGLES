@@ -62,10 +62,8 @@ class extract(connected):
 
 class flatten(BaseOp):
     def forward(self):
-        temp = tf.transpose(
-            self.inp.out, [0, 3, 1, 2])
-        self.out = slim.flatten(
-            temp, scope=self.scope)
+        temp = tf.transpose(self.inp.out, [0, 3, 1, 2])
+        self.out = slim.flatten(temp, name=self.scope)
 
     def speak(self): return 'flat'
 

@@ -16,20 +16,15 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
     def __init__(self):
         super(BeaglesMainWindow, self).__init__()
         FlagIO.__init__(self, subprogram=True)
-        with open('resources/actions/actions.json', 'r') as json_file:
-            self.actionSettings = json.load(json_file)
-        self.actionList = list(self.actionSettings.keys())
-        self._beginner = True
-        action = partial(newAction, self)
 
         def createActions(actions: list):
             nonlocal self
-            nonlocal action
+            action = partial(newAction, self)
             cmd = 'global {0}; {0} = action("{1}", {2}, {3}, "{4}", "{5}", {6}, {7})'
             for act in actions:
                 _str = act
                 action_str = getStr(_str)
-                shortcut, checkable, enabled = [str(i) for i in self.actionSettings[_str]]
+                shortcut, checkable, enabled = [str(i) for i in self.actionFile[_str]]
                 shortcut = '"{}"'.format(shortcut) if shortcut is not None else None
                 detail = getStr(_str + "Detail")
                 icon = _str
@@ -38,7 +33,10 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
                                         detail, checkable, enabled)
                 self.logger.debug(cmd_string)
                 exec(cmd_string)
-        createActions(self.actionList)
+        with open('resources/actions/actions.json', 'r') as json_file:
+            self.actionFile = json.load(json_file)
+        actionList = list(self.actionFile.keys())
+        createActions(actionList)
         self.setup()
 
     def menu(self, title, actions=None):
@@ -60,6 +58,7 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
         return toolbar
 
     def setup(self):
+        self._beginner = True
         self.settings = Settings()
         self.settings.load()
         self.setupZoomWidget()

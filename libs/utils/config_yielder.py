@@ -8,8 +8,16 @@ class ConfigYielder(DarknetConfigFile):
         super(ConfigYielder, self).__init__(model)
         self.h, self.w, self.c = self.metadata['inp_size']
         self.l = self.h * self.w * self.c
-        self.flat = False
+        self._flat = False
         self.conv = '.conv.' in model
+
+    @property
+    def flat(self):
+        return self._flat
+
+    @flat.setter
+    def flat(self, val: bool):
+        self._flat = val
 
     def yield_layers(self) -> Generator[dict, list, None]:
         yield self.metadata
@@ -27,7 +35,7 @@ class ConfigYielder(DarknetConfigFile):
 
     def get_layer_handler(self, section: dict, i):
         handler_name = self._fixup_name(section['type'])
-        handler = getattr(self, handler_name, [lambda section: None, lambda i: None])
+        handler = getattr(self, handler_name, [lambda section: str, lambda i: int])
         return handler
 
     @staticmethod

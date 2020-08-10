@@ -25,6 +25,8 @@ class TestBackend(TestCase, FlagIO):
     def setUp(self):
         FlagIO.__init__(self)
         self.flags = Flags()
+
+    def testBackendWrapperTrainYoloV2(self):
         self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'
         self.flags.dataset = 'tests/resources/BCCD/train'
         self.flags.labels = 'tests/resources/BCCD.classes'
@@ -37,17 +39,26 @@ class TestBackend(TestCase, FlagIO):
         self.flags.epoch = 1
         self.flags.train = True
         self.io_flags()
-
-    def testBackendWrapperTrain(self):
         proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
         proc.communicate()
+
+    # def testBackendWrapperTrainYoloV1(self):
+    #     self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'
+    #     self.flags.dataset = 'tests/resources/BCCD/train'
+    #     self.flags.labels = 'tests/resources/BCCD.classes'
+    #     self.flags.annotation = 'tests/resources/BCCD/train'
+    #     self.flags.backup = 'tests/resources'
+    #     self.flags.project_name = '_test'
+    #     self.flags.trainer = 'adam'
+    #     self.flags.load = 0
+    #     self.flags.batch = 4
+    #     self.flags.epoch = 1
+    #     self.flags.train = True
+    #     self.io_flags()
 
     def testGradientNan(self):
         with self.assertRaises(GradientNaN):
             raise GradientNaN(self.flags)
-
-    def testFlagIO(self):
-        self.io_flags()
 
     def testCythonExtensions(self):
         iou = iou_c(3, 4, 4, 3, 4, 3, 3, 4)

@@ -37,7 +37,6 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 
 - YOLOv3 detection
 - Automatic [hyperparameter tuning](https://github.com/autonomio/talos#Talos) using talos
-- All darknet layer types implemented as sublclassed Keras Layers
 
 ##### Development Goals:
 
@@ -141,7 +140,7 @@ According to your deep neural network implementation, you can include or exclude
 
 ## How to contribute
 
-Send a pull request
+See the section on contributing in the developer wiki [here](https://github.com/rjdbcm/BEAGLES/wiki/Developer-Guide#contributing).
 
 ## License
 

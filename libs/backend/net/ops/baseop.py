@@ -11,7 +11,8 @@ HEADER = FORM.format('Source', 'Train?','Layer description', 'Output size')
 def _shape(tensor):  # work for both tf.Tensor & np.ndarray
     if type(tensor) in [tf.Variable, tf.Tensor]: 
         return tensor.get_shape()
-    else: return tensor.shape
+    else:
+        return tensor.shape
 
 
 def _name(tensor):
@@ -33,7 +34,6 @@ class BaseOp(object):
         self.num = num # int
         self.out = None # tf.Tensor
         self.lay = layer
-
         self.scope = '{}-{}'.format(
             str(self.num), self.lay.type)
         self.gap = roof - self.num
@@ -106,6 +106,9 @@ class BaseOp(object):
         return msg + FORM.format(
             self.act, self.train_msg, 
             self.speak(), _shape(self.out))
-    
+
+    def forward(self):
+        pass
+
     def speak(self):
         pass
