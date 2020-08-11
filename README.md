@@ -35,14 +35,17 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 - Command-line backend interface 
 - Human-in-the-loop prediction and dataset expansion
 
-##### Feature Wishlist:
+
+<details>
+  <summary>Feature Wishlist</summary>
 
 - YOLOv3 detection
 - Automatic [hyperparameter tuning](https://github.com/autonomio/talos#Talos) using talos
-- All darknet layer types implemented as sublclassed Keras Layers
+
+</details>
 
 <details>
-  <summary>Development Goals:</summary>
+  <summary>Development Goals</summary>
 
 - Code coverage of \>60% (*in progress*)
 - Improve maintainability to A rating (*in progress*)
@@ -53,7 +56,7 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 </details>
 
 <details>
-  <summary>Table of Contents:</summary>
+  <summary>Table of Contents</summary>
 
 ## Table of Contents
 * [Installation](#installation)
