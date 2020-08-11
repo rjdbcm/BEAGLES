@@ -16,14 +16,6 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 [![opencv](https://img.shields.io/badge/OpenCV-4.0-%233a6aeb)](https://opencv.org/)
 [![pyqt5](https://img.shields.io/badge/PyQt-5.12-41cd52.svg)](https://pypi.org/project/PyQt5/)
 
-
-##### Build Status:
-
-|  Branch  |                     Status                     |
-|:---------:|:------------------------------------------------:|
-| master   |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Build Status](https://travis-ci.org/rjdbcm/BEAGLES.svg?branch=master)](https://travis-ci.org/rjdbcm/BEAGLES)
-| dev      |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Build Status](https://travis-ci.org/rjdbcm/BEAGLES.svg?branch=dev)](https://travis-ci.org/rjdbcm/BEAGLES)
-
 ##### Features:
 
 - Darknet-style configuration files 
@@ -32,9 +24,17 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 - Automatic anchor box generation
 - Preconfigured to output training data to TensorBoard
 - Fixed or cyclic learning rates 
-- Command-line backend interface 
 - Human-in-the-loop prediction and dataset expansion
 
+<details>
+  <summary>Build Status</summary>
+
+|  Branch  |                     Status                     |
+|:---------:|:------------------------------------------------:|
+| master   |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Build Status](https://travis-ci.org/rjdbcm/BEAGLES.svg?branch=master)](https://travis-ci.org/rjdbcm/BEAGLES)
+| dev      |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Build Status](https://travis-ci.org/rjdbcm/BEAGLES.svg?branch=dev)](https://travis-ci.org/rjdbcm/BEAGLES)
+
+</details>
 
 <details>
   <summary>Feature Wishlist</summary>
