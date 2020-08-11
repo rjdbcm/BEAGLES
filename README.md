@@ -32,7 +32,7 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 |  Branch  |                     Status                     |
 |:---------:|:------------------------------------------------:|
 | master   |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Build Status](https://travis-ci.org/rjdbcm/BEAGLES.svg?branch=master)](https://travis-ci.org/rjdbcm/BEAGLES)
-| dev      |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Build Status](https://travis-ci.org/rjdbcm/BEAGLES.svg?branch=dev)](https://travis-ci.org/rjdbcm/BEAGLES)![Code Climate issues](https://img.shields.io/codeclimate/issues/rjdbcm/BEAGLES/branch/dev)
+| dev      |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Build Status](https://travis-ci.org/rjdbcm/BEAGLES.svg?branch=dev)](https://travis-ci.org/rjdbcm/BEAGLES)![Code Climate issues](https://img.shields.io/codeclimate/issues/rjdbcm/BEAGLES)
 
 </details>
 
