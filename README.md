@@ -58,7 +58,6 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 <details>
   <summary>Table of Contents</summary>
 
-## Table of Contents
 * [Installation](#installation)
     * [Source Install](#source-install-virtualenv)
     * [Binary Build](#binary-build)
