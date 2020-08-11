@@ -1,7 +1,7 @@
 
 # Introduction 
 
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/rjdbcm/BEAGLES) ![GitHub repo size](https://img.shields.io/github/repo-size/rjdbcm/BEAGLES) ![Platform](https://img.shields.io/badge/Platform-osx%20%7C%20linux-blue) [![GitHub version](https://badge.fury.io/gh/rjdbcm%2FBEAGLES.svg)](https://badge.fury.io/gh/rjdbcm%2FBEAGLES) [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/rjdbcm/BEAGLES/graphs/commit-activity) [![Maintainability](https://api.codeclimate.com/v1/badges/9899a9bd3cdfadaee972/maintainability)](https://codeclimate.com/github/rjdbcm/BEAGLES/maintainability)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/rjdbcm/BEAGLES) ![GitHub repo size](https://img.shields.io/github/repo-size/rjdbcm/BEAGLES) ![Platform](https://img.shields.io/badge/Platform-osx%20%7C%20linux-blue) [![GitHub version](https://badge.fury.io/gh/rjdbcm%2FBEAGLES.svg)](https://badge.fury.io/gh/rjdbcm%2FBEAGLES) [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/rjdbcm/BEAGLES/graphs/commit-activity) [![Maintainability](https://api.codeclimate.com/v1/badges/9899a9bd3cdfadaee972/maintainability)](https://codeclimate.com/github/rjdbcm/BEAGLES/maintainability) ![Code Climate issues](https://img.shields.io/codeclimate/issues/rjdbcm/BEAGLES)(https://codeclimate.com/github/rjdbcm/BEAGLES/issues)
 
 BEAGLES stands for **BE**havioral **A**nnotation and **G**esture **LE**arning **S**uite, and is intended for behavioral analysis and quantification. BEAGLES is a graphical image annotation 
 tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and frontend for a fork of 
@@ -31,8 +31,8 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 
 |  Branch  |                     Status                     |
 |:---------:|:------------------------------------------------:|
-| master   |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)![Code Climate issues](https://img.shields.io/codeclimate/issues/rjdbcm/BEAGLES)[![Build Status](https://travis-ci.org/rjdbcm/BEAGLES.svg?branch=master)](https://travis-ci.org/rjdbcm/BEAGLES)
-| dev      |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)![Code Climate issues](https://img.shields.io/codeclimate/issues/rjdbcm/BEAGLES)[![Build Status](https://travis-ci.org/rjdbcm/BEAGLES.svg?branch=dev)](https://travis-ci.org/rjdbcm/BEAGLES)
+| master   |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Build Status](https://travis-ci.org/rjdbcm/BEAGLES.svg?branch=master)](https://travis-ci.org/rjdbcm/BEAGLES)
+| dev      |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Build Status](https://travis-ci.org/rjdbcm/BEAGLES.svg?branch=dev)](https://travis-ci.org/rjdbcm/BEAGLES)
 
 </details>
 
