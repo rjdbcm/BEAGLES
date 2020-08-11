@@ -64,8 +64,6 @@ class TestMainWindow(TestCase):
         for file in files:
             os.remove(file)
 
-    def testClearSandbox(self):
-        self.win.project.clear_sandbox()
 
     @classmethod
     def tearDownClass(cls) -> None:

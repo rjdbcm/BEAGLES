@@ -113,17 +113,15 @@ class BackendWrapper(FlagIO):
             self.flags = parser.parse_args()
             self.send_flags()
         self.flags = self.read_flags()
+        print(self.flags, file=sys.stderr)
         self.flags.started = True
         self.io_flags()
         if self.flags.train:
-            trainer = Trainer(self.flags)
-            trainer.train()
+            Trainer(self.flags).train()
         elif self.flags.fbf != '':
-            annotator = Annotator(self.flags)
-            annotator.annotate()
+            Annotator(self.flags).annotate()
         else:
-            predictor = Predictor(self.flags)
-            predictor.predict()
+            Predictor(self.flags).predict()
         self.done()
 
     def done(self):

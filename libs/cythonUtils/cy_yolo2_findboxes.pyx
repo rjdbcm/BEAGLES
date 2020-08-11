@@ -5,7 +5,7 @@ cimport cython
 ctypedef np.float_t DTYPE_t
 from libc.math cimport exp
 from libs.utils.box import BoundingBox
-from nms cimport NMS
+from nms cimport nms
 
 #expit
 @cython.boundscheck(False) # turn off bounds-checking for entire function
@@ -95,4 +95,4 @@ def box_constructor(meta,np.ndarray[float,ndim=3] net_out_in):
     
     
     #NMS                    
-    return NMS(np.ascontiguousarray(probs).reshape(H*W*B,C), np.ascontiguousarray(Bbox_pred).reshape(H*B*W,5))
+    return nms(np.ascontiguousarray(probs).reshape(H*W*B,C), np.ascontiguousarray(Bbox_pred).reshape(H*B*W,5))

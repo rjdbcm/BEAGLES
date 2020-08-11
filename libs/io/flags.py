@@ -3,6 +3,7 @@ import sys
 import time
 import pickle
 import logging
+import msgpack
 import subprocess
 import logging.handlers
 from libs.utils.flags import Flags
@@ -61,8 +62,8 @@ class FlagIO(object):
 
     def send_flags(self):
         self.logger.debug(self.flags)
-        with open(r"{}".format(self.flagpath), "wb") as outfile:
-            pickle.dump(self.flags, outfile)
+        with open(r"{}".format(self.flagpath), "w") as outfile:
+            self.flags.to_json(outfile)
 
     def read_flags(self):
         inpfile = None
@@ -70,10 +71,10 @@ class FlagIO(object):
         while inpfile is None:  # retry-while inpfile is None and count < 10:
             count += 1
             try:
-                with open(r"{}".format(self.flagpath), "rb") as inpfile:
+                with open(r"{}".format(self.flagpath), "r") as inpfile:
                     try:
                         time.sleep(self.delay)
-                        flags = pickle.load(inpfile)
+                        flags = self.flags.from_json(inpfile)
                     except EOFError:
                         self.logger.warning("Flags Busy: Reusing old")
                         flags = self.flags

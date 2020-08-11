@@ -2,13 +2,13 @@
 These lists are not meant to be exhaustive (especially for alpha releases)
 nor will the minor version or patch version bump for any alpha pre-releases.
 
-1.0.0a 'bruchpilot'
+0.1.0a0 'bruchpilot'
 -------------------
 
 * Initial alpha version mainly combines functionality of the original 
 repos labelImg and darkflow.
 
-1.0.0a2 'caucaphony'
+1.0.0a0 'caucaphony'
 ------------------
 
 * Major version bumped due to adding global_step tf.Variable to 

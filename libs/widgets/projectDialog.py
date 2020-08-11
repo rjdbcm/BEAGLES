@@ -147,8 +147,6 @@ class ProjectDialog(QDialog):
                 [os.remove(j.path) for j in os.scandir(i)]
             elif os.path.isfile(i):
                 open(i, "w").close()
-                with open(i, "a") as f:
-                    f.write("#default\n")
 
     def archive(self):
         name = self.projectCmb.currentText()

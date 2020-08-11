@@ -4,7 +4,7 @@ cimport cython
 ctypedef np.float_t DTYPE_t
 from libc.math cimport exp
 from libs.utils.box import BoundingBox
-from nms cimport NMS
+from nms cimport nms
 
 
 
@@ -48,4 +48,4 @@ def yolo_box_constructor(meta,np.ndarray[float] net_out, float threshold):
                     final_probs[grid, b, class_loop] = probs[grid, class_loop]
     
     
-    return NMS(np.ascontiguousarray(final_probs).reshape(SS*B, C) , np.ascontiguousarray(coords).reshape(SS*B, 4))
+    return nms(np.ascontiguousarray(final_probs).reshape(SS*B, C) , np.ascontiguousarray(coords).reshape(SS*B, 4))
