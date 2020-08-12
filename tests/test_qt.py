@@ -57,13 +57,12 @@ class TestMainWindow(TestCase):
         self.win.nextImg()
         self.win.prevImg()
 
-    # Definitely works but doesn't test well.
     def testImpVideo(self):
-        FileFunctions.frameCapture(os.path.abspath('resources/test.mp4'))
-        files = glob.glob('*.jpg')
+        FileFunctions().frameCapture(os.path.abspath('tests/resources/test.mp4'))
+        files = glob.glob('tests/resources/test_frame_*.jpg')
+        self.assertIsNotNone(files)
         for file in files:
             os.remove(file)
-
 
     @classmethod
     def tearDownClass(cls) -> None:

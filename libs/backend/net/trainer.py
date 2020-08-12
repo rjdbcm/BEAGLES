@@ -28,7 +28,7 @@ class Trainer(TFNet):
         goal = None
         total_steps = None
         step_pad = None
-        batches = self.framework.shuffle()
+        batches = self.framework.shuffle(self.data)
         loss_op = self.framework.loss
 
         for i, (x_batch, datum) in enumerate(batches):
@@ -47,7 +47,7 @@ class Trainer(TFNet):
                 fetched = self.sess.run(fetches, feed_dict)
             except tf.errors.OpError as oe:
                 if oe.error_code == 3 and "nan" in oe.message.lower():
-                    self.raise_error(GradientNaN(self.flags), tf_traceback=oe)
+                    self.raise_error(GradientNaN(self.flags), traceback=oe)
                 raise
             loss = fetched[1]
 

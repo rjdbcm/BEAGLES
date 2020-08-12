@@ -63,6 +63,8 @@ class TFNet(FlagIO):
         args = [darknet.meta, flags]
         self.num_layer = len(darknet.layers)
         self.framework = Framework.create(*args)
+        self.data = self.framework.parse()
+
 
         self.meta = darknet.meta
         if speak:
@@ -80,13 +82,13 @@ class TFNet(FlagIO):
         self.logger.info('Finished in {}s'.format(
             time.time() - start))
 
-    def raise_error(self, error: Exception, tf_traceback=None):
+    def raise_error(self, error: Exception, traceback=None):
         form = "{}\nOriginal Tensorflow Error: {}"
         try:
             raise error
         except Exception as e:
-            if tf_traceback:
-                oe = tf_traceback.message
+            if traceback:
+                oe = traceback.message
                 self.flags.error = form.format(str(e), oe)
             else:
                 self.flags.error = str(e)
@@ -217,21 +219,25 @@ class TFNet(FlagIO):
 
         # setup trainer
         step_size = int(self.flags.step_size_coefficient *
-                        (len(self.framework.parse()) // self.flags.batch))
-        self.optimizer = self._TRAINER[self.flags.trainer](
-            cyclic_learning_rate(self,
-                global_step=self.global_step,
-                mode=self.flags.clr_mode,
-                step_size=step_size,
-                learning_rate=self.flags.lr,
-                max_lr=self.flags.max_lr), **kwargs)
+                        (len(self.data) // self.flags.batch))
+        self.optimizer = self._TRAINER[self.flags.trainer]\
+            (
+                cyclic_learning_rate(
+                    self,
+                    global_step=self.global_step,
+                    mode=self.flags.clr_mode,
+                    step_size=step_size,
+                    learning_rate=self.flags.lr,
+                    max_lr=self.flags.max_lr
+                ), **kwargs
+            )
 
         # setup gradients
         self.gradients, self.variables = zip(
             *self.optimizer.compute_gradients(self.framework.loss))
         if self.flags.clip:
             self.gradients, _ = tf.clip_by_global_norm(self.gradients,
-                                                    self.flags.clip_norm)
+                                                       self.flags.clip_norm)
         # create histogram summaries
         for grad, var in zip(self.gradients, self.variables):
             name = var.name.split('/')

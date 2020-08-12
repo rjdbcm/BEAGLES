@@ -113,7 +113,6 @@ class BackendWrapper(FlagIO):
             self.flags = parser.parse_args()
             self.send_flags()
         self.flags = self.read_flags()
-        print(self.flags, file=sys.stderr)
         self.flags.started = True
         self.io_flags()
         if self.flags.train:

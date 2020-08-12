@@ -1,1 +1,1 @@
-TODO: Ignore duplicate detections
+TODO: Split FlagIO Logger methods out of libs/io/flags.py

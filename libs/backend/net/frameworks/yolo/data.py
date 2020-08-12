@@ -110,9 +110,8 @@ def get_feed_values(self, chunk, dim1, dim2):
     return inp_feed_val, loss_feed_val
 
 
-def shuffle(self):
+def shuffle(self, data):
     batch = self.flags.batch
-    data = self.parse()
     self.flags.size = len(data)
     self.io_flags()
     self.logger.info('Dataset of {} instance(s)'.format(self.flags.size))

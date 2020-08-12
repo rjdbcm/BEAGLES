@@ -27,9 +27,7 @@ class FileFunctions(MainWindowFunctions):
         while success:
             success, image = vidObj.read()
             fileno = str(count)
-            cv2.imwrite(
-                "{}_frame_{}.jpg".format(name, fileno.zfill(total_zeros)),
-                image)
+            cv2.imwrite(f"{name}_frame_{fileno.zfill(total_zeros)}.jpg", image)
             count += 1
 
     @staticmethod
