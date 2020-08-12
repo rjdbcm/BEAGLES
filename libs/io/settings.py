@@ -57,7 +57,7 @@ class Settings(object):
     def save(self):
         if SAVE_SETTINGS_PATH:
             with open(SAVE_SETTINGS_PATH, 'w') as f:
-                json.dump(dict(self.__dict__.items()), f, indent=4)
+                json.dump(self.__dict__, f, indent=4)
                 return True
         return False
 
@@ -65,7 +65,7 @@ class Settings(object):
         try:
             if os.path.exists(SAVE_SETTINGS_PATH):
                 with open(SAVE_SETTINGS_PATH, 'r') as f:
-                    self.__dict__ = dict(json.load(f))
+                    self.__dict__.update(dict(json.load(f)))
                     return True
         except Exception as e:
             print(f"Failed to load setting {e}")
