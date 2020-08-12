@@ -9,7 +9,6 @@ jobs:
   include:
     # Python 3 + QT5 - Build .app
     - os: osx
-      services: xvfb
       language: generic
     - os: linux
       dist: bionic
@@ -25,7 +24,6 @@ before_install:
   - pip3 install tensorflow>2.0.0b
   - pip3 install numpy==1.16.2
   - pip3 install traces==0.4.2
-  - pip3 install coverage
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev libqt5x11extras5 build-essential; fi
 install:
   - pyrcc5 -o libs/resources.py resources.qrc
