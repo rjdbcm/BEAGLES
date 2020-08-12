@@ -11,7 +11,7 @@ jobs:
       services: xvfb
       language: generic
     - os: linux
-      dist: bionic
+      dist: xenial
       services: xvfb
       python: 3.6
 
