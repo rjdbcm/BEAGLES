@@ -26,7 +26,7 @@ before_install:
   - pip3 install numpy==1.16.2
   - pip3 install traces==0.4.2
   - pip3 install coverage
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev build-essential; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev libqt5x11extras5 build-essential; fi
 install:
   - pyrcc5 -o libs/resources.py resources.qrc
   - python3 setup.py build_ext --inplace
