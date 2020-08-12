@@ -26,10 +26,10 @@ test:
 distclean: clean clean_site_packages
 
 coverage:
-	coverage run -m unittest discover tests
+	coverage3 run -m unittest discover tests
 
 clean:
-	rm -f ~/.BEAGLESSettings.pkl ./libs/resources.py
+	rm -f ~/.BEAGLESSettings.json ./libs/resources.py
 	rm -rf ./.pytest_cache
 	rm -f ./libs/cythonUtils/*.c
 	rm -rf *.egg-info
