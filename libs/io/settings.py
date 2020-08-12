@@ -4,8 +4,6 @@ import codecs
 from PyQt5.QtCore import QSize, QPoint, QByteArray
 from PyQt5.QtGui import QColor
 from libs.constants import SAVE_SETTINGS_PATH
-from libs.io.flags import FlagIO
-from libs.utils.errors import SettingLoadFailed
 
 
 class Settings(object):
