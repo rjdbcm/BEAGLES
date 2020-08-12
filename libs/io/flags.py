@@ -90,7 +90,7 @@ class FlagIO(object):
         self.flags = self.read_flags()
 
     def init_ramdisk(self):
-        flagfile = ".flags.pkl"
+        flagfile = ".flags.json"
         if sys.platform == "darwin":
             ramdisk = "/Volumes/RAMDisk"
             if not self.subprogram:
