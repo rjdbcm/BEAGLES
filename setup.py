@@ -101,7 +101,7 @@ setup(
                       "defusedxml>=0.6.0",
                       "lxml>=4.2.4",
                       "Cython==0.29.6",
-                      "opencv-contrib-python>=4.0.0.21",
+                      "opencv-contrib-python==4.0.0.21",
                       "tensorflow>2.0.0b",
                       "numpy==1.16.2",
                       "traces==0.4.2"]
