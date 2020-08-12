@@ -14,14 +14,6 @@ jobs:
       dist: bionic
       services: xvfb
       python: 3.6
-    - os: linux
-      dist: bionic
-      services: xvfb
-      python: 3.7
-    - os: linux
-      dist: bionic
-      services: xvfb
-      python: 3.8
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev build-essential; fi
