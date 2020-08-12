@@ -1,9 +1,7 @@
 import os
 import sys
 import time
-import pickle
 import logging
-import msgpack
 import subprocess
 import logging.handlers
 from libs.utils.flags import Flags
