@@ -24,10 +24,10 @@ before_install:
   - pip3 install tensorflow>2.0.0b
   - pip3 install numpy==1.16.2
   - pip3 install traces==0.4.2
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev libqt5x11extras5 build-essential; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev libqt5x11extras5 xvfb build-essential; fi
 install:
   - pyrcc5 -o libs/resources.py resources.qrc
-  - python3 setup.py build_ext --inplace
+  - python3 setup.py install
   - pip3 install codecov
 script:
   - xvfb-run --auto-servernum make test
