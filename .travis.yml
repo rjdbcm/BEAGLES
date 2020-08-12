@@ -7,11 +7,12 @@ language: python
 
 jobs:
   include:
+    # Python 3 + QT5 - Build .app
     - os: osx
       services: xvfb
       language: generic
     - os: linux
-      dist: xenial
+      dist: bionic
       services: xvfb
       python: 3.6
 
