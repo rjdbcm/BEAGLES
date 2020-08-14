@@ -30,10 +30,17 @@ class TestBackend(TestCase, FlagIO):
         self.flags.backup = 'tests/resources'
         self.flags.project_name = '_test'
         self.flags.trainer = 'adam'
+        self.flags.lr = .001
+        self.flags.max_lr = .001
         self.flags.load = 0
         self.flags.batch = 4
         self.flags.epoch = 1
         self.flags.train = True
+        self.io_flags()
+        proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
+        proc.communicate()
+        self.assertEqual(proc.returncode, 0)
+        self.flags.load = 63
         self.io_flags()
         proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
         proc.communicate()

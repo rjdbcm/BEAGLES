@@ -166,6 +166,16 @@ cdef soft_nms(float[:, ::1] final_probs , float[:, ::1] final_bbox):
     cdef:
         np.intp_t pred_length,class_length,class_loop,index,index2
 
+    def assign(Box box):
+        bb=BoundingBox(class_length)
+        bb.x = box.x
+        bb.y = box.y
+        bb.w = box.w
+        bb.h = box.h
+        bb.c = box.c
+        bb.probs = np.asarray(final_probs[index,:])
+        return bb
+
 
     pred_length = final_bbox.shape[0]
     class_length = final_probs.shape[1]
@@ -184,16 +194,11 @@ cdef soft_nms(float[:, ::1] final_probs , float[:, ::1] final_bbox):
                     continue
                 else:
                     final_probs[index, class_loop] = final_probs[index, class_loop] * box_iou_c(box_a, box_b)
+                    final_probs[index2, class_loop] = final_probs[index2, class_loop] * box_iou_c(box_a, box_b)
                     break
 
-            if index not in indices:
-                bb=BoundingBox(class_length)
-                bb.x = box_a.x
-                bb.y = box_a.y
-                bb.w = box_a.w
-                bb.h = box_a.h
-                bb.c = box_a.c
-                bb.probs = np.asarray(final_probs[index,:])
-                boxes.append(bb)
-                indices.add(index)
+            if index or index2 not in indices:
+                boxes.append(assign(box_a))
+                boxes.append(assign(box_b))
+                indices.add([index, index2])
     return boxes

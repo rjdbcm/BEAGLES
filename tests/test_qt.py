@@ -19,7 +19,8 @@ class TestMainWindow(TestCase):
                 return_value=argparse.Namespace(
                     filename='data/sample_img/sample_dog.jpg',
                     predefined_class_file=labels,
-                    save_directory='tests'))
+                    save_directory='tests',
+                    darkmode=True))
     def setUpClass(cls, args):
         cls.app, cls.win = get_main_app()
 
