@@ -11,12 +11,16 @@ else:
     EXEC_PATH = os.getcwd()
 try:
     from libs.backend.net.trainer import Trainer
+    from libs.backend.net.predictor import Predictor
+    from libs.backend.net.annotator import Annotator
     from libs.utils.flags import Flags
     from libs.io.flags import FlagIO  # Move to the toplevel folder since flag paths are relative to BEAGLES.py
 except ModuleNotFoundError:
     sys.path.append(EXEC_PATH)
 finally:
     from libs.backend.net.trainer import Trainer
+    from libs.backend.net.predictor import Predictor
+    from libs.backend.net.annotator import Annotator
     from libs.utils.flags import Flags
     from libs.io.flags import  FlagIO
     os.chdir(EXEC_PATH)

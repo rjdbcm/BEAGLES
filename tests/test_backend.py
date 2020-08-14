@@ -22,7 +22,7 @@ class TestBackend(TestCase, FlagIO):
         FlagIO.__init__(self)
         self.flags = Flags()
 
-    def testBackendWrapperTrainYoloV2(self):
+    def testBackendWrapperYoloV2(self):
         self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'
         self.flags.dataset = 'tests/resources/BCCD/train'
         self.flags.labels = 'tests/resources/BCCD.classes'
@@ -41,6 +41,13 @@ class TestBackend(TestCase, FlagIO):
         proc.communicate()
         self.assertEqual(proc.returncode, 0)
         self.flags.load = 63
+        self.io_flags()
+        proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
+        proc.communicate()
+        self.assertEqual(proc.returncode, 0)
+        self.flags.train = False
+        self.flags.imgdir = 'tests/resources/BCCD/test'
+        self.flags.predict = True
         self.io_flags()
         proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
         proc.communicate()

@@ -6,7 +6,7 @@ from libs.utils.box import BoundingBox
 
 
 cdef class Box:
-    cdef float x,y,w,h,c
+    cdef public float x,y,w,h,c
 
     def __init__(self, x, y, w, h, c):
         self.x = x
@@ -200,5 +200,6 @@ cdef soft_nms(float[:, ::1] final_probs , float[:, ::1] final_bbox):
             if index or index2 not in indices:
                 boxes.append(assign(box_a))
                 boxes.append(assign(box_b))
-                indices.add([index, index2])
+                indices.add(index)
+                indices.add(index2)
     return boxes
