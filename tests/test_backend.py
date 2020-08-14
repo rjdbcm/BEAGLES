@@ -1,18 +1,14 @@
 from unittest import TestCase
 import os
 import sys
-from glob import glob
-import fnmatch
 from shutil import rmtree
 from subprocess import Popen, PIPE
 from zipfile import ZipFile
-from PyQt5.QtCore import QObject
 from libs.io.flags import FlagIO
 from libs.utils.flags import Flags
+from libs.backend.net.trainer import Trainer
 from libs.utils.errors import GradientNaN
-from libs.cythonUtils.nms import iou_c
 from libs.constants import BACKEND_ENTRYPOINT
-from libs.widgets.backend import BackendThread
 
 
 class TestBackend(TestCase, FlagIO):
@@ -42,6 +38,23 @@ class TestBackend(TestCase, FlagIO):
         proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
         proc.communicate()
         self.assertEqual(proc.returncode, 0)
+
+    def testBackendGradientExplosion(self):
+        self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'
+        self.flags.dataset = 'tests/resources/BCCD/train'
+        self.flags.labels = 'tests/resources/BCCD.classes'
+        self.flags.annotation = 'tests/resources/BCCD/train'
+        self.flags.backup = 'tests/resources'
+        self.flags.project_name = '_test'
+        self.flags.trainer = 'adam'
+        self.flags.lr = 1000.0
+        self.flags.max_lr = 10000.0
+        self.flags.load = 0
+        self.flags.batch = 4
+        self.flags.epoch = 1
+        self.flags.train = True
+        t = Trainer(self.flags)
+        self.assertRaises(GradientNaN, t.train)
 
     # def testBackendWrapperTrainYoloV1(self):
     #     self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'

@@ -1,8 +1,6 @@
 import json
 from libs.constants import DEFAULT_FLAGS_PATH
 
-_Flags_Type = 12
-
 
 class Flags(dict):
     """
@@ -33,4 +31,3 @@ class Flags(dict):
 
     def to_json(self, file):
         return json.dump(dict(self.items()), fp=file)
-

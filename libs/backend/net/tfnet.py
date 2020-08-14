@@ -43,7 +43,7 @@ class TFNet(FlagIO):
         tf_logger.addHandler(self.tf_logfile)
         if os.stat(self.tf_logfile.baseFilename).st_size > 0:
             self.tf_logfile.doRollover()
-        self.flags = self.read_flags()
+        self.flags = self.read_flags() if self.read_flags() is not None else flags
         self.io_flags()
 
         self.ntrain = 0

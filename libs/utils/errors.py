@@ -14,7 +14,6 @@ class GradientNaN(Exception):
                   f" from the last checkpoint with a lower learning rate{opt}")
 
 
-
 class VariableIsNone(Exception):
     """Raised when a variable cannot be restored"""
     def __init__(self, var):
