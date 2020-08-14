@@ -81,3 +81,24 @@ class ViewFunctions(MainWindowFunctions):
 
         h_bar.setValue(new_h_bar_value)
         v_bar.setValue(new_v_bar_value)
+
+    def adjustScale(self, initial=False):
+        value = self.scalers[self.FIT_WINDOW if initial else self.zoomMode]()
+        self.zoomWidget.setValue(int(100 * value))
+
+    def scaleFitWindow(self):
+        """Figure out the size of the pixmap to fit the main widget."""
+        e = 2.0  # So that no scrollbars are generated.
+        w1 = self.centralWidget().width() - e
+        h1 = self.centralWidget().height() - e
+        a1 = w1 / h1
+        # Calculate a new scale value based on the pixmap's aspect ratio.
+        w2 = self.canvas.pixmap.width() - 0.0
+        h2 = self.canvas.pixmap.height() - 0.0
+        a2 = w2 / h2
+        return w1 / w2 if a2 >= a1 else h1 / h2
+
+    def scaleFitWidth(self):
+        # The epsilon does not seem to work too well here.
+        w = self.centralWidget().width() - 2.0
+        return w / self.canvas.pixmap.width()
