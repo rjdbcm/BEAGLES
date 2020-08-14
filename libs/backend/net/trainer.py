@@ -28,7 +28,7 @@ class Trainer(TFNet):
         goal = None
         total_steps = None
         step_pad = None
-        batches = self.framework.shuffle(self.data)
+        batches = self.framework.shuffle(self.annotation_data)
         loss_op = self.framework.loss
 
         for i, (x_batch, datum) in enumerate(batches):

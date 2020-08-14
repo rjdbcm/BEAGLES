@@ -32,55 +32,27 @@ class TFNet(FlagIO):
     # Interface Methods:
     def __init__(self, flags, darknet=None):
         FlagIO.__init__(self, subprogram=True)
-        speak = True if darknet is None else False
         # disable eager mode for TF1-dependent code
         tf.compat.v1.disable_eager_execution()
-
-        #  Setup logging verbosity
-        tf_logger = tf_logging.get_logger()
-        #  remove default StreamHandler and use the tf_handler from utils.flags
-        tf_logger.handlers = []
-        tf_logger.addHandler(self.tf_logfile)
-        if os.stat(self.tf_logfile.baseFilename).st_size > 0:
-            self.tf_logfile.doRollover()
         self.flags = self.read_flags() if self.read_flags() is not None else flags
         self.io_flags()
-
         self.ntrain = 0
-
-        if self.flags.verbalise:
-            os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
-            tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.DEBUG)
-        else:
-            os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-            tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.FATAL)
-
-        if darknet is None:
-            darknet = Darknet(flags)
-            self.ntrain = len(darknet.layers)
-
+        darknet = Darknet(flags) if darknet is None else darknet
+        self.ntrain = len(darknet.layers)
         self.darknet = darknet
         args = [darknet.meta, flags]
         self.num_layer = len(darknet.layers)
         self.framework = Framework.create(*args)
-        self.data = self.framework.parse()
-
-
+        self.annotation_data = self.framework.parse()
         self.meta = darknet.meta
-        if speak:
-            self.logger.info('Building net ...')
-        start = time.time()
         self.graph = tf.Graph()
-        if flags.gpu > 0.0:
-            device_name = flags.gpu_name
-        else:
-            device_name = None
+        device_name = flags.gpu_name if flags.gpu > 0.0 else None
+        start = time.time()
         with tf.device(device_name):
             with self.graph.as_default():
                 self.build_forward()
                 self.setup_meta_ops()
-        self.logger.info('Finished in {}s'.format(
-            time.time() - start))
+        self.logger.info('Finished in {}s'.format(time.time() - start))
 
     def raise_error(self, error: Exception, traceback=None):
         form = "{}\nOriginal Tensorflow Error: {}"
@@ -219,7 +191,7 @@ class TFNet(FlagIO):
 
         # setup trainer
         step_size = int(self.flags.step_size_coefficient *
-                        (len(self.data) // self.flags.batch))
+                        (len(self.annotation_data) // self.flags.batch))
         self.optimizer = self._TRAINER[self.flags.trainer]\
             (
                 cyclic_learning_rate(
