@@ -23,12 +23,13 @@ class MainWindow(BeaglesMainWindow):
 
     # noinspection PyShadowingBuiltins
     def __init__(self, filename=None, predefined_class_file=None,
-                 save_directory=None):
+                 save_directory=None, darkmode=None):
         super(MainWindow, self).__init__()
         self.logger.info("Initializing GUI")
         self.setWindowTitle(APP_NAME)
         self.predefinedClasses = predefined_class_file
         self.defaultSaveDir = save_directory
+        self.darkmode = darkmode
         self.project = ProjectDialog(self)
         # Load setting in the main thread
         self.imageData = None
@@ -117,9 +118,7 @@ class MainWindow(BeaglesMainWindow):
         Shape.difficult = self.difficult
 
         def xbool(x):
-            if isinstance(x, QVariant):
-                return x.toBool()
-            return bool(x)
+            return x.toBool() if isinstance(x, QVariant) else bool(x)
 
         if xbool(self.settings.get(SETTING_ADVANCE_MODE, False)):
             self.actions.advancedMode.setChecked(True)
@@ -176,9 +175,9 @@ class MainWindow(BeaglesMainWindow):
         if not self.canvas.editing:
             return
 
+        # If not selected Item, take the first one
         item = self.currentItem()
-        if not item:  # If not selected Item, take the first one
-            item = self.labelList.item(self.labelList.count() - 1)
+        item = self.labelList.item(self.labelList.count() - 1) if not item else item
 
         difficult = self.difficultButton.isChecked()
 
@@ -193,8 +192,7 @@ class MainWindow(BeaglesMainWindow):
                 shape.difficult = difficult
                 self.setDirty()
             else:  # User probably changed item visibility
-                self.canvas.setShapeVisible(
-                    shape, item.checkState() == Qt.Checked)
+                self.canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
         except UnboundLocalError:
             pass
 
@@ -348,7 +346,6 @@ class MainWindow(BeaglesMainWindow):
             shape.paintLabel = self.displayLabelOption.isChecked()
 
 
-
 def parse_args(args):
     parser = argparse.ArgumentParser()
     img_dir = Flags().imgdir
@@ -359,6 +356,8 @@ def parse_args(args):
     parser.add_argument('-c', '--predefined_class_file', default=Flags().labels,
                         help="text file containing class names")
     parser.add_argument('-s', '--save_directory', default=None, help="save directory")
+    parser.add_argument('-d', '--darkmode', default=True,
+                        help='use qdarkstyle (defaults to system theme on macos)')
     return parser.parse_args(args)
 
 
@@ -368,11 +367,18 @@ def get_main_app(argv=None):
     Do everything but app.exec_()
     -- so that we can test the application in one thread
     """
-    if argv is None:
-        argv = []
+    argv = [] if argv is None else lambda: None
     app = QApplication(argv)
     args = parse_args(sys.argv[1:])
+    darkmode(app) if args.darkmode else lambda: None
+    app.setApplicationName(APP_NAME)
+    app.setWindowIcon(newIcon("app"))
+    win = MainWindow(**vars(args))
+    win.show()
+    return app, win
 
+
+def darkmode(app):
     try:
         # noinspection PyUnresolvedReferences
         import qdarkstyle
@@ -392,11 +398,6 @@ def get_main_app(argv=None):
             app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
     except ImportError as e:
         print(" ".join([str(e), "falling back to system theme"]))
-    app.setApplicationName(APP_NAME)
-    app.setWindowIcon(newIcon("app"))
-    win = MainWindow(**vars(args))
-    win.show()
-    return app, win
 
 
 def main():
