@@ -41,6 +41,7 @@ class TestBackend(TestCase, FlagIO):
         self.io_flags()
         proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
         proc.communicate()
+        self.assertEqual(proc.returncode, 0)
 
     # def testBackendWrapperTrainYoloV1(self):
     #     self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'
@@ -55,14 +56,6 @@ class TestBackend(TestCase, FlagIO):
     #     self.flags.epoch = 1
     #     self.flags.train = True
     #     self.io_flags()
-
-    def testGradientNan(self):
-        with self.assertRaises(GradientNaN):
-            raise GradientNaN(self.flags)
-
-    def testCythonExtensions(self):
-        iou = iou_c(3, 4, 4, 3, 4, 3, 3, 4)
-        self.assertAlmostEqual(0.35211268067359924, iou), "cythonUtils math failure"
 
     def tearDown(self) -> None:
         self.cleanup_ramdisk()

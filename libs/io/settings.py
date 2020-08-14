@@ -36,16 +36,15 @@ class Settings(object):
         if isinstance(value, list):
             try:
                 class_ = self.trans_reverse[value[0]]
-                if str(value[1]).startswith("\\"):
+                if key.endswith('/state'):
                     value = class_(bytearray(codecs.encode(value[1])))
-                elif len(value) == 5:
-                    value = class_.fromRgb(int(value[1]), int(value[2]),
-                                           int(value[3]), int(value[4]))
-                elif len(value) == 3:
-                    value = class_(int(value[1]), int(value[2]))
+                elif key.endswith('/color'):
+                    value = class_.fromRgb(*[int(i) for i in value[1:]])
+                elif key.endswith(('/position', '/size')):
+                    value = class_(*[int(i) for i in value[1:]])
                 else:
                     value = class_(*value)
-            except (KeyError, IndexError):
+            except KeyError:
                 pass
         return value
 

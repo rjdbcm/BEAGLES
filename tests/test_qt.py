@@ -24,26 +24,30 @@ class TestMainWindow(TestCase):
         cls.app, cls.win = get_main_app()
 
     def testCanvas(self):
-        self.canvas = self.win.canvas
-        self.assertRaises(AssertionError, self.canvas.resetAllLines)
+        self.assertRaises(AssertionError, self.win.canvas.resetAllLines)
 
     def testToggleAdvancedMode(self):
+        self.assertTrue(self.win.beginner())
         self.win.advancedMode()
-        self.win.advancedMode()
+        self.assertFalse(self.win.beginner())
+        self.win.advancedMode(False)
+        self.assertTrue(self.win.beginner())
 
     def testChangeFormat(self):
         self.win.changeFormat()
+        self.assertTrue(self.win.usingYoloFormat)
         self.win.changeFormat()
+        self.assertTrue(self.win.usingPascalVocFormat)
 
     def testToggleDrawMode(self):
-        self.win.toggleDrawMode()
-        self.win.toggleDrawMode()
+        self.win.toggleDrawMode(True)
+        self.assertTrue(self.win.canvas.editing)
 
     def testTrainModel(self):
         self.win.trainModel()
 
     def testLoadPascalXMLByFilename(self):
-        self.win.loadPascalXMLByFilename('test.xml')
+        self.win.loadPascalXMLByFilename('tests/resources/test.xml')
 
     def testFileLoadZoom(self):
         self.win.loadFile('data/sample_img/sample_dog.jpg')
@@ -60,9 +64,12 @@ class TestMainWindow(TestCase):
     def testImpVideo(self):
         FileFunctions().frameCapture(os.path.abspath('tests/resources/test.mp4'))
         files = glob.glob('tests/resources/test_frame_*.jpg')
-        self.assertIsNotNone(files)
+        self.assertFalse(files == [])
         for file in files:
             os.remove(file)
+
+    def tearDown(self) -> None:
+        self.win.setClean()
 
     @classmethod
     def tearDownClass(cls) -> None:

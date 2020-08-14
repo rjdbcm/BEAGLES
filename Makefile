@@ -26,7 +26,7 @@ test:
 distclean: clean clean_site_packages
 
 coverage:
-	coverage3 run -m unittest discover tests
+	coverage run -m unittest discover tests
 
 clean:
 	rm -f ~/.BEAGLESSettings.json ./libs/resources.py
