@@ -16,14 +16,7 @@ jobs:
       python: 3.6
 
 before_install:
-  - pip3 install PyQt5
-  - pip3 install defusedxml>=0.6.0
-  - pip3 install lxml>=4.2.4
-  - pip3 install Cython==0.29.6
-  - pip3 install opencv-contrib-python==4.0.0.21
-  - pip3 install tensorflow>2.0.0b
-  - pip3 install numpy==1.16.2
-  - pip3 install traces==0.4.2
+  - pip3 install -r requirements.txt
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev libqt5x11extras5 xvfb build-essential; fi
 install:
   - pyrcc5 -o libs/resources.py resources.qrc

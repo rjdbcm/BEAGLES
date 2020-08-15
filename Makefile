@@ -1,6 +1,6 @@
 # ex: set ts=8 noet:
 
-all: virtualenv qt5 install
+all: virtualenv qt5 cython install
 
 dev_package: qt5 local_package
 

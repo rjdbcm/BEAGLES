@@ -27,8 +27,12 @@ MAC = 'darwin'
 with open("README.md", "r") as f:
     long_description = f.read()
 
+with open('requirements/requirements.txt', 'r') as f:
+    requirements = [x.strip() for x in f.readlines()]
+
 # noinspection SpellCheckingInspection
 short_description = 'BEhavioral Annotation and Gesture LEarning Suite'
+
 
 DESCRIPTION_MIME = 'text/markdown'
 
@@ -118,13 +122,5 @@ setup(
                  "Topic :: Scientific/Engineering :: Bio-Informatics",
                  "Intended Audience :: Science/Research",
                  "Development Status :: 2 - Pre-Alpha"],
-    install_requires=["PyQt5",
-                      "defusedxml>=0.6.0",
-                      "lxml>=4.2.4",
-                      "Cython>=0.29.6",
-                      "opencv-contrib-python==4.0.0.21",
-                      "tensorflow>2.0.0b",
-                      "numpy>=1.16.2",
-                      "traces>=0.4.2"]
-
+    install_requires=requirements
 )
