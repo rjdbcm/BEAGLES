@@ -27,7 +27,7 @@ MAC = 'darwin'
 with open("README.md", "r") as f:
     long_description = f.read()
 
-with open('requirements/requirements.txt', 'r') as f:
+with open('requirements.txt', 'r') as f:
     requirements = [x.strip() for x in f.readlines()]
 
 # noinspection SpellCheckingInspection
