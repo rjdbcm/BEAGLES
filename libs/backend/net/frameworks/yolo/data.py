@@ -18,7 +18,7 @@ def parse(self, exclusive=False):
     return dumps
 
 
-def _batch(self, chunk):
+def batch(self, chunk):
     """
     Takes a chunk of parsed annotations
     returns value for placeholders of net's 
@@ -113,7 +113,6 @@ def get_feed_values(self, chunk, dim1, dim2):
 def shuffle(self, data):
     batch = self.flags.batch
     self.flags.size = len(data)
-    self.io_flags()
     self.logger.info('Dataset of {} instance(s)'.format(self.flags.size))
     if batch > self.flags.size:
         self.flags.batch = batch = self.flags.size
@@ -122,15 +121,17 @@ def shuffle(self, data):
     for i in range(self.flags.epoch):
         shuffle_idx = np.random.permutation(np.arange(self.flags.size))
         for b in range(batch_per_epoch):
+
             # yield these
+            instances = set()
             x_batch = list()
             feed_batch = dict()
 
             for j in range(b*batch, b*batch+batch):
                 train_instance = data[shuffle_idx[j]]
-                self.logger.debug(train_instance[0])
+                instances.add(train_instance[0])
                 try:
-                    inp, new_feed = self._batch(train_instance)
+                    inp, new_feed = self.batch(train_instance, )
                 except ZeroDivisionError:
                     self.logger.error("This image's width or height are zeros: ", train_instance[0])
                     self.logger.error('train_instance:', train_instance)
@@ -143,15 +144,11 @@ def shuffle(self, data):
 
                 for key in new_feed:
                     new = new_feed[key]
-                    old_feed = feed_batch.get(key, 
-                        np.zeros((0,) + new.shape))
-                    feed_batch[key] = np.concatenate([ 
-                        old_feed, [new] 
-                    ])      
-            
+                    old_feed = feed_batch.get(key, np.zeros((0,) + new.shape))
+                    feed_batch[key] = np.concatenate([old_feed, [new]])
+
             x_batch = np.concatenate(x_batch, 0)
-            yield x_batch, feed_batch
+            yield x_batch, feed_batch, instances
         
-        self.logger.info('Finish {} epoch{}'.format(i + 1,
-                                                    'es' if i == 0 else ''))
+        self.logger.info(f'Finish {i + 1} epoch{"es" if i == 0 else ""}')
 

@@ -58,19 +58,15 @@ class TiledCaptureArray(FlagIO):
             for j in range(1, self.div):
                 xs.append(j * w_inc)
 
-        # open ffmpeg subprocesses
-        cmd = 'ffmpeg -y -i "{}" -filter:v "crop={}:{}:{}:{}" -c:a copy "{}"'
-        form = '{}_camera_{}{}'
-        msg = 'Started ffmpeg PID: {} Output: {}'
         for i in range(1, self.num_videos + 1):
             if i in self.unused_cameras:
                 continue
             name, ext = os.path.splitext(self.video)
-            output = form.format(name, i, ext)
             x = xs[i-1]
             y = ys[i-1]
-            self.logger.debug(cmd.format(self.video, w_inc, h_inc, x, y, output))
-            proc = subprocess.Popen(cmd.format(
-                self.video, w_inc, h_inc, x, y, output),
-                stdout=subprocess.PIPE, shell=True)
-            self.logger.info(msg.format(proc.pid, output))
+            output = f'{name}_camera_{i}{ext}'
+            cmd = f'ffmpeg -hide_banner -y -i "{self.video}" -filter:v ' \
+                  f'"crop={w_inc}:{h_inc}:{x}:{y}" -c:a copy "{output}"'
+            self.logger.debug(cmd)
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+            self.logger.info(f'Started ffmpeg PID: {proc.pid} Output: {output}')

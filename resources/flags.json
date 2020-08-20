@@ -34,7 +34,7 @@
   "save": 16000,
   "freeze": false,
   "save_video": true,
-  "size": 0,
+  "size": 1,
   "started": false,
   "step_size_coefficient": 2,
   "summary": "./data/summaries/",

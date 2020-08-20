@@ -1,5 +1,4 @@
 from libs.backend.net.frameworks import vanilla
-from libs.backend.net.frameworks.yolo import predict as predictv1
 from libs.backend.net.frameworks import yolo
 from libs.backend.net.frameworks import yolov2
 from libs.io.flags import FlagIO
@@ -17,6 +16,7 @@ class Framework(FlagIO, object):
         meta['name'] = model
         self.meta = meta
         self.constructor(meta, flags)
+        self.loss = self.loss
 
     def is_inp(self, file_name):
         return True
@@ -29,62 +29,57 @@ class Framework(FlagIO, object):
 
 
 class YOLO(Framework):
+    # Methods
     constructor = yolo.constructor
     parse = yolo.data.parse
     shuffle = yolo.data.shuffle
-    preprocess = predictv1.preprocess
-    postprocess = predictv1.postprocess
+    preprocess = yolo.predict.preprocess
+    postprocess = yolo.predict.postprocess
     loss = yolo.train.loss
     is_inp = yolo.misc.is_inp
     profile = yolo.misc.profile
-    # noinspection PyProtectedMember
-    _batch = yolo.data._batch
+    batch = yolo.data.batch
     get_preprocessed_img = yolo.data.get_preprocessed_img
     get_feed_values = yolo.data.get_feed_values
-    resize_input = predictv1.resize_input
-    findboxes = predictv1.findboxes
-    process_box = predictv1.process_box
+    resize_input = yolo.predict.resize_input
+    findboxes = yolo.predict.findboxes
+    process_box = yolo.predict.process_box
 
 
 class YOLOv2(Framework):
+    # Methods
     constructor = yolo.constructor
     parse = yolo.data.parse
     shuffle = yolo.data.shuffle
-    preprocess = predictv1.preprocess
+    preprocess = yolo.predict.preprocess
     loss = yolov2.train.loss
     is_inp = yolo.misc.is_inp
-    postprocess = predictv1.postprocess
-    # noinspection PyProtectedMember
-    _batch = yolov2.data._batch
+    postprocess = yolo.predict.postprocess
+    batch = yolov2.data.batch
     get_preprocessed_img = yolo.data.get_preprocessed_img
     get_feed_values = yolo.data.get_feed_values
-    resize_input = predictv1.resize_input
+    resize_input = yolo.predict.resize_input
     findboxes = yolov2.predict.findboxes
-    process_box = predictv1.process_box
+    process_box = yolo.predict.process_box
 
 
 class YOLOv3(Framework):
+    # Methods
     constructor = yolo.constructor
     parse = yolo.data.parse
     shuffle = yolov2.data.shuffle
-    preprocess = predictv1.preprocess
+    preprocess = yolo.predict.preprocess
     # loss = yolov3.train.loss  # TODO: yolov3.train
     is_inp = yolo.misc.is_inp
-    postprocess = predictv1.postprocess
-    # batch = yolov3.data._batch  # TODO: yolov3.data._batch
-    resize_input = predictv1.resize_input
+    postprocess = yolo.predict.postprocess
+    # batch = yolov3.data.batch  # TODO: yolov3.data.batch
+    resize_input = yolo.predict.resize_input
     # findboxes = yolov3.predict.findboxes  # TODO: yolov3.predict.findboxes
-    process_box = predictv1.process_box
+    process_box = yolo.predict.process_box
 
-"""
-framework factory
-"""
 
 types = {
-    '[detection]': YOLO,
-    '[region]': YOLOv2,
-    '[yolo]': YOLOv3
-}
-
-
-
+        '[detection]': YOLO,
+        '[region]': YOLOv2,
+        '[yolo]': YOLOv3
+    }

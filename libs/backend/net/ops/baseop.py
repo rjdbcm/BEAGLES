@@ -4,9 +4,8 @@ import numpy as np
 
 FORM = '{:>6} | {:>6} | {:<32} | {}'
 FORM_ = '{}+{}+{}+{}'
-LINE = FORM_.format('-'*7, '-'*8, '-'*34, '-'*15) 
-HEADER = FORM.format('Source', 'Train?','Layer description', 'Output size')
-
+LINE = FORM_.format('-' * 7, '-' * 8, '-' * 34, '-' * 15)
+HEADER = FORM.format('Source', 'Train?', 'Layer description', 'Output size')
 
 def _shape(tensor):  # work for both tf.Tensor & np.ndarray
     if type(tensor) in [tf.Variable, tf.Tensor]: 
@@ -74,20 +73,20 @@ class BaseOp(object):
         if var in self._SLIM: return
         with tf.compat.v1.variable_scope(self.scope):
             self.lay.w[var] = tf.compat.v1.get_variable(var,
-                shape = self.lay.wshape[var],
-                dtype = tf.compat.v1.float32,
-                initializer = self.lay.w[var])
+                shape=self.lay.wshape[var],
+                dtype=tf.compat.v1.float32,
+                initializer=self.lay.w[var])
 
     def wrap_pholder(self, ph, feed):
         """wrap layer.h into placeholders"""
         phtype = type(self.lay.h[ph])
-        if phtype is not dict: return
+        if phtype is not dict:
+            return
 
         sig = '{}/{}'.format(self.scope, ph)
         val = self.lay.h[ph]
 
-        self.lay.h[ph] = tf.compat.v1.placeholder_with_default(
-            val['dfault'], val['shape'], name = sig)
+        self.lay.h[ph] = tf.compat.v1.placeholder_with_default(val['dfault'], val['shape'], name=sig)
         feed[self.lay.h[ph]] = val['feed']
 
     def verbalise(self):  # console speaker
@@ -95,17 +94,13 @@ class BaseOp(object):
         inp = _name(self.inp.out)
         if inp == 'input':
             #  imitating log format from utils.flags
-            msg = FORM.format(
-                '', '', 'input',
-                _shape(self.inp.out)) + '\n' + \
+            msg = FORM.format('', '', 'input', _shape(self.inp.out)) + '\n' + \
                   '{} | {:7} | {:<11} | {:<20} | '.format(
                       datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3],
                       'INFO', 'TFNet', 'build_forward')
         if not self.act:
             return msg
-        return msg + FORM.format(
-            self.act, self.train_msg, 
-            self.speak(), _shape(self.out))
+        return msg + FORM.format(self.act, self.train_msg, self.speak(), _shape(self.out))
 
     def forward(self):
         pass

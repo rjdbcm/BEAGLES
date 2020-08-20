@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+from json.decoder import JSONDecodeError
 import logging
 import subprocess
 import logging.handlers
@@ -73,9 +74,12 @@ class FlagIO(object):
                     try:
                         time.sleep(self.delay)
                         flags = self.flags.from_json(inpfile)
-                    except EOFError:
-                        self.logger.warning("Flags Busy: Reusing old")
-                        flags = self.flags
+                    except JSONDecodeError as e:
+                        if not e.pos:  # char 0 == flags busy
+                            self.logger.warning("Flags Busy: Reusing old")
+                            flags = self.flags
+                        else:
+                            raise
                     self.flags = flags
                     self.logger.debug(self.flags)
                     return self.flags

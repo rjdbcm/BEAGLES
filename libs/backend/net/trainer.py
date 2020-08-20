@@ -1,19 +1,12 @@
 import os
 import math
 import pickle
+from functools import reduce
 import tensorflow as tf
 from libs.utils.errors import GradientNaN
 # noinspection PyUnresolvedReferences
 from libs.backend.net.frameworks.vanilla.train import loss
 from libs.backend.net.tfnet import TFNet
-
-train_stats = (
-    'Training statistics - '
-    'Learning rate: {} '
-    'Batch size: {}    '
-    'Epoch number: {}  '
-    'Backup every: {}  '
-)
 
 
 class Trainer(TFNet):
@@ -23,95 +16,62 @@ class Trainer(TFNet):
     def train(self):
         self.io_flags()
         loss_ph = self.framework.placeholders
-        loss_mva = None
         profile = list()
-        goal = None
-        total_steps = None
-        step_pad = None
         batches = self.framework.shuffle(self.annotation_data)
         loss_op = self.framework.loss
+        self.flags = self.read_flags()
+        fetches = (self.train_op, loss_op, self.summary_op)
+        goal = len(self.annotation_data) * self.flags.epoch
+        self.total_steps = goal // self.flags.batch
+        step_pad = len(str(self.total_steps))
+        batch = self.flags.batch
+        ckpt = 1
+        args = None
 
-        for i, (x_batch, datum) in enumerate(batches):
-            self.flags = self.read_flags()
-            feed_dict = {
-                loss_ph[key]: datum[key]
-                for key in loss_ph}
+        for i, (x_batch, datum, batch_images) in enumerate(batches):
+            feed_dict = {loss_ph[key]: datum[key] for key in loss_ph}
             feed_dict[self.inp] = x_batch
             feed_dict.update(self.feed)
-            fetches = [self.train_op, loss_op]
-            if self.flags.summary:
-                fetches.append(self.summary_op)
-
-            # Start the session
-            try:
-                fetched = self.sess.run(fetches, feed_dict)
-            except tf.errors.OpError as oe:
-                if oe.error_code == 3 and "nan" in oe.message.lower():
-                    self.raise_error(GradientNaN(self.flags), traceback=oe)
-                raise
+            fetched = self.sess.run(fetches, feed_dict)
             loss = fetched[1]
-
-            # single shot calculations
-            if not i:
-                self.logger.info(train_stats.format(
-                    self.flags.lr, self.flags.batch,
-                    self.flags.epoch, self.flags.save
-                ))
-                count = 0
-            if not goal:
-                goal = self.flags.size * self.flags.epoch
-            if not total_steps:
-                total_steps = goal // self.flags.batch
-                step_pad = len(str(total_steps))
-            if not loss_mva:
-                loss_mva = loss
-
             # Check for exploding/vanishing gradient
             if math.isnan(loss) or math.isinf(loss):
                 self.raise_error(GradientNaN(self.flags))
-
-            loss_mva = .9 * loss_mva + .1 * loss
             step_now = self.flags.load + i + 1
-
-            # assign_op = global_step.assign(step_now)
-            # self.sess.run(assign_op)
-
-            # Calculate and send progress
-            # noinspection PyUnboundLocalVariable
-            count += self.flags.batch
+            self.writer.add_summary(fetched[2], step_now)
+            profile += [loss, batch_images]
+            self.logger.info(f'Step {str(step_now).zfill(step_pad)} '
+                             f'- Loss {loss:.4f} - Progress {self.flags.progress:.2f}% '
+                             f'- Batch {batch_images}')
+            args = [step_now, profile]
+            ckpt = (i + 1) % (self.flags.save // self.flags.batch)
+            count = i * batch
             self.flags.progress = count / goal * 100
             self.io_flags()
-
-            if self.flags.summary:
-                self.writer.add_summary(fetched[2], step_now)
-
-            form = 'step {} - loss {} - moving ave loss {} - progress {}'
-            self.logger.info(
-                form.format(str(step_now).zfill(step_pad),
-                            format(loss, '.14f'),
-                            format(loss_mva, '.14f'),
-                            "{:=6.2f}%".format(self.flags.progress)))
-            profile += [(loss, loss_mva)]
-
-            ckpt = (i + 1) % (self.flags.save // self.flags.batch)
-            args = [step_now, profile]
-
             if not ckpt:
                 self._save_ckpt(*args)
-
-        # noinspection PyUnboundLocalVariable
         if ckpt:
-            # noinspection PyUnboundLocalVariable
             self._save_ckpt(*args)
 
     def _save_ckpt(self, step, loss_profile):
         file = '{}-{}{}'
         model = self.meta['name']
 
+        losses = loss_profile[::2]
+        image_sets = loss_profile[1::2]
+        sample = self.total_steps // 10
+        worst_indices = sorted(range(len(losses)), key=lambda sub: losses[sub])[-sample:]
+        worst = [(losses[i], image_sets[i]) for i in worst_indices]
+        self.logger.info(worst)
+        difficult = file.format(model, step, '.difficult')
+        difficult = os.path.join(self.flags.backup, difficult)
+        with open(difficult, 'a') as difficult_images:
+            difficult_images.writelines([f'{str(i)}\n' for i in worst])
+
         profile = file.format(model, step, '.profile')
         profile = os.path.join(self.flags.backup, profile)
         with open(profile, 'wb') as profile_ckpt:
-            pickle.dump(loss_profile, profile_ckpt)
+            pickle.dump(losses, profile_ckpt)
 
         ckpt = file.format(model, step, '')
         ckpt = os.path.join(self.flags.backup, ckpt)

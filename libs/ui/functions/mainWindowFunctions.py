@@ -1,11 +1,12 @@
 import os
 import sys
+import hashlib
 import platform
 from PyQt5.QtCore import QObject, QTimer
-from PyQt5.QtGui import QImage
+from PyQt5.QtGui import QImage, QColor
 from PyQt5.QtWidgets import QWidget, QMessageBox, QListWidgetItem
 from libs.constants import *
-from libs.qtUtils import newIcon, addActions
+from libs.ui.qtUtils import newIcon, addActions
 from libs.io.labelFile import LabelFile
 from libs.widgets.labelDialog import LabelDialog
 from libs.utils.flags import Flags
@@ -148,3 +149,11 @@ class MainWindowFunctions(QWidget, QObject):
             filename = self.mImgList[currIndex]
             if filename:
                 self.loadFile(filename)
+    @staticmethod
+    def generateColorByText(text):
+        s = str(text)
+        hashCode = int(hashlib.sha256(s.encode('utf-8')).hexdigest(), 16)
+        r = int((hashCode / 255) % 255)
+        g = int((hashCode / 65025) % 255)
+        b = int((hashCode / 16581375) % 255)
+        return QColor(r, g, b, 100)

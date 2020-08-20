@@ -1,10 +1,12 @@
 from os.path import expanduser, join
 from os import getcwd
+from datetime import datetime
 
 APP_NAME = 'BEAGLES'
 SAVE_SETTINGS_PATH = join(expanduser("~"), '.BEAGLESSettings.json')
 DEFAULT_FLAGS_PATH = join(getcwd(), 'resources/flags.json')
 BACKEND_ENTRYPOINT = join(getcwd(), 'libs/backend/wrapper.py')
+EPOCH = datetime(1970, 1, 1, 0, 0)
 SETTING_FILENAME = 'filename'
 SETTING_RECENT_FILES = 'recentFiles'
 SETTING_WIN_SIZE = 'window/size'

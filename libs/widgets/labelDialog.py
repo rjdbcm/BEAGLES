@@ -2,8 +2,8 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
-
-from libs.qtUtils import newIcon, labelValidator
+from libs.constants import LABEL_RE
+from libs.ui.qtUtils import newIcon
 
 BB = QDialogButtonBox
 
@@ -15,7 +15,7 @@ class LabelDialog(QDialog):
 
         self.edit = QLineEdit()
         self.edit.setText(text)
-        self.edit.setValidator(labelValidator())
+        self.edit.setValidator(self.labelValidator())
         self.edit.editingFinished.connect(self.postProcess)
 
         model = QStringListModel()
@@ -42,6 +42,10 @@ class LabelDialog(QDialog):
             layout.addWidget(self.listWidget)
 
         self.setLayout(layout)
+
+    @staticmethod
+    def labelValidator():
+        return QRegExpValidator(QRegExp(LABEL_RE), None)
 
     def validate(self):
         try:

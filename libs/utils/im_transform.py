@@ -26,8 +26,8 @@ def imcv2_affine_trans(im):
 	offx = int(np.random.uniform() * max_offx)
 	offy = int(np.random.uniform() * max_offy)
 	
-	im = cv2.resize(im, (0,0), fx = scale, fy = scale)
-	im = im[offy : (offy + h), offx : (offx + w)]
+	im = cv2.resize(im, (0, 0), fx=scale, fy=scale)
+	im = im[offy: (offy + h), offx: (offx + w)]
 	flip = np.random.binomial(1, .5)
 	if flip: im = cv2.flip(im, 1)
 	return im, [w, h, c], [scale, [offx, offy], flip]

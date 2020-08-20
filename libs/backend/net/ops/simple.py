@@ -147,9 +147,8 @@ class upsample(BaseOp):
     def speak(self):
         return 'upsample {}'.format(self.lay.stride)
 
+
 # ---Activations---
-
-
 class stair(BaseOp):
     def forward(self):
         n = tf.floor(self.inp.out)

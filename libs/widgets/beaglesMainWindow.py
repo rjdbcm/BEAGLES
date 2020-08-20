@@ -1,14 +1,19 @@
 import os
 import json
+from PyQt5.QtWidgets import (
+    QMainWindow, QListWidget, QVBoxLayout, QWidget, QToolButton, QDockWidget, QCheckBox,
+    QLineEdit, QHBoxLayout, QWidgetAction
+)
+from PyQt5.QtCore import QSize, Qt
 from libs.widgets.zoomWidget import ZoomWidget
 from libs.io.settings import Settings
-from libs.widgets.canvas import Canvas
+from libs.ui.canvas import Canvas
 from libs.constants import *
 from libs.ui.callbacks.actionCallbacks import ActionCallbacks
 from functools import partial
 from libs.stringBundle import getStr
 from libs.widgets.toolBar import ToolBar
-from libs.qtUtils import *
+from libs.ui.qtUtils import *
 from libs.io.flags import FlagIO
 
 
@@ -241,10 +246,6 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
         self.zoom = QWidgetAction(self)
         self.zoomWidget = ZoomWidget()
         self.zoom.setDefaultWidget(self.zoomWidget)
-        self.zoomWidget.setWhatsThis(
-            u"Zoom in or out of the image. Also accessible with"
-            " %s and %s from the canvas." % (fmtShortcut("Ctrl+[-+]"),
-                                             fmtShortcut("Ctrl+Wheel")))
         self.zoomWidget.setEnabled(False)
 
     def setupCanvasWidget(self):

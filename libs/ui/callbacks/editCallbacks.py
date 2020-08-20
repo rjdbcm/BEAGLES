@@ -1,5 +1,4 @@
 from libs.io.labelFile import LabelFile
-from libs.qtUtils import generateColorByText
 from libs.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
 from libs.ui.functions.editFunctions import EditFunctions
 
@@ -14,7 +13,7 @@ class EditCallbacks(EditFunctions):
         text = self.labelDialog.popUp(item.text())
         if text is not None:
             item.setText(text)
-            item.setBackground(generateColorByText(text))
+            item.setBackground(self.generateColorByText(text))
             self.setDirty()
 
     def setCreateMode(self):

@@ -1,4 +1,4 @@
-from libs.backend.net.frameworks.yolo import data, misc, train
+from libs.backend.net.frameworks.yolo import data, misc, train, predict
 from libs.io.flags import FlagIO
 import numpy as np
 

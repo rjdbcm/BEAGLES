@@ -13,6 +13,7 @@ def loss(self, net_out):
     out_size = m['out_size']
     H, W, _ = m['inp_size']
     HW = H * W
+    loss = float()
     try:
         assert loss_type in _LOSS_TYPE, \
             'Loss type {} not implemented'.format(loss_type)
@@ -50,6 +51,8 @@ def loss(self, net_out):
     elif loss_type == 'softmax':
         loss = tf.nn.softmax_cross_entropy_with_logits(logits=net_out)
         loss = tf.reduce_mean(loss)
+
+    self.loss = loss
 
     # elif loss_type == 'svm':
     #     assert 'train_size' in m, \

@@ -1,4 +1,5 @@
 import os
+import re
 import codecs
 import cv2
 from functools import partial
@@ -9,7 +10,7 @@ from libs.constants import *
 from libs.io.labelFile import LabelFile, LabelFileError
 from libs.io.pascalVoc import XML_EXT, PascalVocReader
 from libs.ui.functions.mainWindowFunctions import MainWindowFunctions
-from libs.qtUtils import newIcon, naturalSort, generateColorByText
+from libs.ui.qtUtils import newIcon
 from libs.shape import Shape
 from libs.io.yolo import TXT_EXT, YoloReader
 
@@ -245,12 +246,12 @@ class FileFunctions(MainWindowFunctions):
             if line_color:
                 shape.line_color = QColor(*line_color)
             else:
-                shape.line_color = generateColorByText(label)
+                shape.line_color = self.generateColorByText(label)
 
             if fill_color:
                 shape.fill_color = QColor(*fill_color)
             else:
-                shape.fill_color = generateColorByText(label)
+                shape.fill_color = self.generateColorByText(label)
 
             self.addLabel(shape)
 
@@ -311,9 +312,22 @@ class FileFunctions(MainWindowFunctions):
                     else:
                         self.labelHist.append(line)
 
+
 def read(filename, default=None):
     try:
         with open(filename, 'rb') as f:
             return f.read()
     except FileNotFoundError:
         return default
+
+
+def naturalSort(items: list, key=lambda s: s):
+    """
+    Sort the list into natural alphanumeric order.
+    """
+    def get_alphanum_key_func(key):
+        def convert(text):
+            return int(text) if text.isdigit() else text
+        return lambda s: [convert(c) for c in re.split('([0-9]+)', key(s))]
+    sort_key = get_alphanum_key_func(key)
+    items.sort(key=sort_key)

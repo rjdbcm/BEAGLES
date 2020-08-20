@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import sys
 import random
 import os.path
 import argparse
 from functools import partial
+from PyQt5.QtWidgets import QApplication, QScrollArea, QLabel
+from PyQt5.QtCore import Qt, QPoint, QSize, QByteArray, QVariant
 
 # Add internal libs
 # noinspection PyUnresolvedReferences
 from libs.resources import *
 from libs.widgets.beaglesMainWindow import BeaglesMainWindow
 from libs.constants import *
-from libs.qtUtils import *
+from libs.ui.qtUtils import *
 from libs.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
 from libs.widgets.labelDialog import LabelDialog
 from libs.utils.flags import Flags
@@ -80,14 +83,8 @@ class MainWindow(BeaglesMainWindow):
         self.statusBar().showMessage('%s started.' % APP_NAME)
         self.statusBar().show()
         self.filePath = str(filename)
-        # Fix the compatible issue for qt4 and qt5.
-        # Convert the QStringList to python list
         if self.settings.get(SETTING_RECENT_FILES):
-            if haveQString():
-                recentFileQStringList = self.settings.get(SETTING_RECENT_FILES)
-                self.recentFiles = [str(i) for i in recentFileQStringList]
-            else:
-                self.recentFiles = self.settings.get(SETTING_RECENT_FILES)
+            self.recentFiles = self.settings.get(SETTING_RECENT_FILES)
 
         size = self.settings.get(SETTING_WIN_SIZE, QSize(600, 500))
         position = QPoint(0, 0)
@@ -218,7 +215,7 @@ class MainWindow(BeaglesMainWindow):
             item = HashableQListWidgetItem(shape.label)
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             item.setCheckState(Qt.Checked)
-            item.setBackground(generateColorByText(shape.label))
+            item.setBackground(self.generateColorByText(shape.label))
             self.itemsToShapes[item] = shape
             self.shapesToItems[shape] = item
             self.labelList.addItem(item)
@@ -250,7 +247,7 @@ class MainWindow(BeaglesMainWindow):
         label = item.text()
         if label != shape.label:
             shape.label = item.text()
-            shape.line_color = generateColorByText(shape.label)
+            shape.line_color = self.generateColorByText(shape.label)
             self.setDirty()
         else:  # User probably changed item visibility
             self.canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
@@ -279,7 +276,7 @@ class MainWindow(BeaglesMainWindow):
         self.difficultButton.setChecked(False)
         if text is not None:
             self.prevLabelText = text
-            generate_color = generateColorByText(text)
+            generate_color = self.generateColorByText(text)
             shape = self.canvas.setLastLabel(text, generate_color,
                                              generate_color)
             self.addLabel(shape)

@@ -1,18 +1,15 @@
-import re
-import sys
 import hashlib
 from math import sqrt
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from libs.constants import LABEL_RE
+from PyQt5.QtGui import QColor, QIcon
+from PyQt5.QtCore import QPointF
+from PyQt5.QtWidgets import QPushButton, QAction, QMenu
 
 
 def newIcon(icon):
     return QIcon(':/' + icon)
 
 
-def newButton(text, icon=None, slot=None):
+def newButton(text: str, icon: str = None, slot=None):
     b = QPushButton(text)
     if icon is not None:
         b.setIcon(newIcon(icon))
@@ -53,10 +50,6 @@ def addActions(widget, actions):
             widget.addAction(action)
 
 
-def labelValidator():
-    return QRegExpValidator(QRegExp(LABEL_RE), None)
-
-
 class Struct(object):
 
     def __init__(self, **kwargs):
@@ -69,36 +62,9 @@ class Struct(object):
         self.__dict__.update(other.__dict__)
 
 
-def distance(p):
+def distance(p: QPointF) -> float:
     return sqrt(p.x() * p.x() + p.y() * p.y())
 
 
-def fmtShortcut(text):
-    mod, key = text.split('+', 1)
-    return '<b>%s</b>+<b>%s</b>' % (mod, key)
 
 
-def generateColorByText(text):
-    s = str(text)
-    hashCode = int(hashlib.sha256(s.encode('utf-8')).hexdigest(), 16)
-    r = int((hashCode / 255) % 255)
-    g = int((hashCode / 65025)  % 255)
-    b = int((hashCode / 16581375)  % 255)
-    return QColor(r, g, b, 100)
-
-
-def haveQString():
-    '''p3/qt5 get rid of QString scripts as py3 has native unicode str type'''
-    return not (sys.version_info.major >= 3 or QT_VERSION_STR.startswith('5.'))
-
-
-def naturalSort(list, key=lambda s:s):
-    """
-    Sort the list into natural alphanumeric order.
-    """
-    def get_alphanum_key_func(key):
-        def convert(text):
-            return int(text) if text.isdigit() else text
-        return lambda s: [convert(c) for c in re.split('([0-9]+)', key(s))]
-    sort_key = get_alphanum_key_func(key)
-    list.sort(key=sort_key)

@@ -3,6 +3,7 @@ import os
 import csv
 import numpy as np
 import cv2
+from libs.constants import EPOCH
 from libs.backend.net.tfnet import TFNet
 
 
@@ -42,7 +43,7 @@ class Annotator(TFNet):
 
                 # This is a hackish way of making sure we can quantify videos
                 # taken at different times
-                epoch = datetime(1970, 1, 1, 0, 0).timestamp()
+                epoch = EPOCH.timestamp()
                 time_elapsed = cap.get(cv2.CAP_PROP_POS_MSEC)
                 self.write_annotations(annotation_file, result, time_elapsed, epoch)
                 out.write(new_frame)
