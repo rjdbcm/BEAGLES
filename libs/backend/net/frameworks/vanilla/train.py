@@ -4,7 +4,6 @@ from tensorflow.keras.losses import hinge
 from libs.io.flags import FlagIO
 
 _LOSS_TYPE = ['sse', 'l2', 'smooth', 'sparse', 'l1', 'softmax']
-              # 'svm', 'fisher'
 
 
 def loss(self, net_out):

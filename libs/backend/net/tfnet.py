@@ -40,9 +40,8 @@ class TFNet(FlagIO):
         darknet = Darknet(flags) if darknet is None else darknet
         self.ntrain = len(darknet.layers)
         self.darknet = darknet
-        args = [darknet.meta, flags]
         self.num_layer = len(darknet.layers)
-        self.framework = Framework.create(*args)
+        self.framework = Framework.create(darknet.meta, flags)
         self.annotation_data = self.framework.parse()
         self.meta = darknet.meta
         self.graph = tf.Graph()
@@ -103,7 +102,7 @@ class TFNet(FlagIO):
         utility = min(self.flags.gpu, 1.)
         if utility > 0.0:
             self.logger.info('GPU mode with {} usage'.format(utility))
-            cfg['gpu_options'] = tf.GPUOptions(
+            cfg['gpu_options'] = tf.compat.v1.GPUOptions(
                 per_process_gpu_memory_fraction=utility)
             cfg['allow_soft_placement'] = True
         else:
@@ -208,16 +207,16 @@ class TFNet(FlagIO):
         self.gradients, self.variables = zip(
             *self.optimizer.compute_gradients(self.framework.loss))
         if self.flags.clip:
-            self.gradients, _ = tf.clip_by_global_norm(self.gradients,
-                                                       self.flags.clip_norm)
+            self.gradients, _ = tf.clip_by_global_norm(self.gradients, self.flags.clip_norm)
         # create histogram summaries
         for grad, var in zip(self.gradients, self.variables):
             name = var.name.split('/')
             with tf.compat.v1.variable_scope(name[0] + '/'):
-                tf.summary.histogram("gradients/" + name[1], _l2_norm(grad))
+                normed_gradients = _l2_norm(grad) if not self.flags.clip else grad
+                tf.summary.histogram("gradients/" + name[1], normed_gradients)
                 # tf.summary.histogram("variables/" + name[1], _l2_norm(var))
 
-        # create train op
+        # create train opt
         self.train_op = self.optimizer.apply_gradients(
             zip(self.gradients, self.variables),
             global_step=self.global_step)

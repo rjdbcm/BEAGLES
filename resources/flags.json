@@ -6,7 +6,7 @@
   "built_graph": "./data/built_graph/",
   "cli": false,
   "clip": false,
-  "clip_norm": 5,
+  "clip_norm": 0,
   "clr_mode": "triangular2",
   "config": "./data/cfg/",
   "dataset": "./data/committedframes/",
