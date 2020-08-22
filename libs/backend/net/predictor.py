@@ -18,7 +18,7 @@ class Predictor(TFNet):
         self.flags = self.read_flags()
         inp_path = self.flags.imgdir
         all_inps = os.listdir(inp_path)
-        all_inps = [i for i in all_inps if self.framework.is_inp(i)]
+        all_inps = [i for i in all_inps if self.framework.is_input(i)]
         if not all_inps:
             exit(f'Error: Failed to find any images in {inp_path}')
 

@@ -1,4 +1,4 @@
-from libs.backend.net import trainer
+from libs.backend.net.frameworks.vanilla import train
 
 
 def constructor(self, meta, flags):

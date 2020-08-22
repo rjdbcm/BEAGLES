@@ -1,5 +1,6 @@
 from unittest import TestCase
 from libs.backend.dark.darknet import Darknet
+from libs.backend.net.framework import Framework
 from libs.backend.io.darknet_config_file import DarknetConfigFile
 from libs.utils.errors import DarknetConfigEmpty
 from libs.utils.flags import Flags
@@ -87,6 +88,10 @@ class TestDarknet(TestCase):
         cls.flags = Flags()
         cls.maxDiff = None
 
+    def testFrameworkImproperInitialization(self):
+        darknet = Darknet(self.flags)
+        self.assertRaises(NotImplementedError, Framework, self, darknet.meta, self.flags)
+
     def testParseAndYieldYoloV2Config(self):
         self.flags.model = 'tests/resources/test.cfg'
         self.flags.labels = 'tests/resources/test_classes.txt'
@@ -113,7 +118,6 @@ class TestDarknet(TestCase):
                           'tests/resources/phonybologna.cfg')
         self.flags.model = json_cfg_file
         self.flags.labels = 'tests/resources/test_classes.txt'
-        print(self.flags)
         darknet = Darknet(self.flags)
         self.assertDictEqual(darknet.meta, meta,
                              'Failed to correctly parse darknet metadata')

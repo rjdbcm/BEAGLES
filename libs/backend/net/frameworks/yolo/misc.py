@@ -15,7 +15,7 @@ def labels(meta, flags):
             meta['labels'] += [lab]
 
 
-def is_inp(self, name):
+def is_input(self, name):
     """checks if input has a valid image file extension"""
     # TODO: Replace with a filetype based checker
     return name.lower().endswith(('.jpg', '.jpeg', '.png'))
@@ -39,6 +39,3 @@ def show(im, allobj, S, w, h, cellx, celly):
     cv2.waitKey()
     cv2.destroyAllWindows()
 
-
-def profile(self):
-    pass
