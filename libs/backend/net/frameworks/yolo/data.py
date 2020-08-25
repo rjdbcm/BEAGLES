@@ -9,7 +9,6 @@ import os
 
 def parse(self, exclusive=False):
     meta = self.meta
-    ext = '.parsed'
     ann = self.flags.annotation
     if not os.path.isdir(ann):
         exit(f'Error: Annotation directory not found {ann}')

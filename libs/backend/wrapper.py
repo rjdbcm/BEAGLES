@@ -39,7 +39,7 @@ class BackendWrapper(FlagIO):
             parser.add_argument('--train', default=Flags().train,
                                 action='store_true',
                                 help='train a model on annotated data')
-            parser.add_argument('--fbf', default=Flags().fbf,
+            parser.add_argument('--video', default=Flags().video,
                                 help='generate frame-by-frame annotation')
             parser.add_argument('--saveVideo', default=Flags().saveVideo,
                                 help='filename of video output')
@@ -121,7 +121,7 @@ class BackendWrapper(FlagIO):
         self.io_flags()
         if self.flags.train:
             Trainer(self.flags).train()
-        elif self.flags.fbf != '':
+        elif self.flags.video != '':
             Annotator(self.flags).annotate()
         else:
             Predictor(self.flags).predict()

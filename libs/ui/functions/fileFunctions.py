@@ -202,8 +202,8 @@ class FileFunctions(MainWindowFunctions):
         return os.path.dirname(self.filePath) if self.filePath else '.'
 
     def saveFileDialog(self, removeExt=True):
-        caption = '%s - Choose File' % APP_NAME
-        filters = 'File (*%s)' % LabelFile.suffix
+        caption = f'{APP_NAME} - Choose File'
+        filters = f'File (*{LabelFile.suffix})'
         openDialogPath = self.currentPath()
         dlg = QFileDialog(self, caption, openDialogPath, filters)
         dlg.setDefaultSuffix(LabelFile.suffix[1:])
@@ -214,7 +214,6 @@ class FileFunctions(MainWindowFunctions):
         if dlg.exec_():
             fullFilePath = str(dlg.selectedFiles()[0])
             if removeExt:
-                # Return file path without the extension.
                 return os.path.splitext(fullFilePath)[0]
             else:
                 return fullFilePath

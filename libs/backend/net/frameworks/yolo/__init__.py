@@ -7,6 +7,7 @@ import numpy as np
 
 def constructor(self, meta, flags):
     self.flags = flags
+    self.logger.info(f'Framework type: {self.token}')
 
     def _to_color(indx, base):
         """ return (b, r, g) tuple"""

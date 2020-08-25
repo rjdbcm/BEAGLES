@@ -3,6 +3,7 @@ import os
 from libs.backend import dark
 import numpy as np
 from os.path import basename
+from libs.constants import WEIGHTS_FILE_KEYS
 
 
 class loader(object):
@@ -10,7 +11,7 @@ class loader(object):
     interface to work with both .weights and .ckpt files
     in loading / recollecting / resolving mode
     """
-    VAR_LAYER = ['convolutional', 'connected', 'local', 
+    VAR_LAYER = ['convolutional', 'connected', 'local',
                  'select', 'conv-select', 'extract', 'conv-extract']
 
     def __init__(self, *args):
@@ -41,14 +42,6 @@ class loader(object):
 
 class weights_loader(loader):
     """one who understands .weights files"""
-    
-    _W_ORDER = dict({ # order of param flattened into .weights file
-        'convolutional': [
-            'biases','gamma','moving_mean','moving_variance','kernel'
-        ],
-        'connected': ['biases', 'weights'],
-        'local': ['biases', 'kernels']
-    })
 
     def load(self, path, src_layers):
         self.src_layers = src_layers
@@ -68,7 +61,7 @@ class weights_loader(loader):
 
             if new is None:
                 continue
-            order = self._W_ORDER[new.type]
+            order = WEIGHTS_FILE_KEYS[new.type]
             for par in order:
                 if par not in new.wshape:
                     continue

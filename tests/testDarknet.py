@@ -20,6 +20,16 @@ meta = {
     'class_scale': 1, 'coord_scale': 1, 'absolute': 1, 'thresh': 0.1, 'random': 1,
     'model': 'tests/resources/test.cfg', 'inp_size': [608, 608, 3], 'out_size': 16245}
 
+yolov1_meta = {
+    'net': {'type': '[net]', 'batch': 64, 'subdivisions': 64, 'height': 448, 'width': 448,
+            'channels': 3, 'momentum': 0.9, 'decay': 0.0005, 'learning_rate': 0.0001,
+            'policy': 'steps', 'steps': '20,40,60,80,20000,30000',
+            'scales': '5,5,2,2,.1,.1', 'max_batches': 40000}, 'type': '[detection]',
+    'classes': 4, 'coords': 4, 'rescore': 1, 'side': 7, 'num': 2, 'softmax': 0, 'sqrt': 1,
+    'jitter': 0.2, 'object_scale': 1, 'noobject_scale': 0.5, 'class_scale': 1,
+    'coord_scale': 5, 'model': 'tests/resources/test_yolov1.cfg',
+    'inp_size': [448, 448, 3], 'out_size': 686}
+
 layers = \
     [Layer('convolutional', 0, 3, 3, 32, 1, 1, 1, 'leaky'),
      Layer('maxpool', 1, 2, 2, 0),
@@ -92,6 +102,11 @@ class TestDarknet(TestCase):
         darknet = Darknet(self.flags)
         self.assertRaises(NotImplementedError, Framework, self, darknet.meta, self.flags)
 
+    def testUnregisteredFrameworkToken(self):
+        self.flags.model = 'tests/resources/test_phony.cfg'
+        darknet = Darknet(self.flags)
+        self.assertRaises(KeyError, Framework.create, darknet.meta, self.flags)
+
     def testParseAndYieldYoloV2Config(self):
         self.flags.model = 'tests/resources/test.cfg'
         self.flags.labels = 'tests/resources/test_classes.txt'
@@ -104,8 +119,8 @@ class TestDarknet(TestCase):
         self.flags.labels = 'tests/resources/test_classes.txt'
         self.flags.model = 'tests/resources/test_yolov1.cfg'
         darknet = Darknet(self.flags)
-        # self.assertDictEqual(darknet.meta, meta,
-        #                      'Failed to correctly parse darknet metadata')
+        self.assertDictEqual(darknet.meta, yolov1_meta,
+                             'Failed to correctly parse darknet metadata')
         self.assertEqual(darknet.layers, yolov1_layer)
 
     def testDarknetConfigToAndFromJson(self):

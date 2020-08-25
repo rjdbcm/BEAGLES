@@ -8,14 +8,14 @@ _LOSS_TYPE = ['sse', 'l2', 'smooth', 'sparse', 'l1', 'softmax']
 
 def loss(self, net_out):
     m = self.meta
+    losses = self.type.keys()
     loss_type = m['type'].strip('[]')
     out_size = m['out_size']
     H, W, _ = m['inp_size']
     HW = H * W
     loss = float()
     try:
-        assert loss_type in _LOSS_TYPE, \
-            'Loss type {} not implemented'.format(loss_type)
+        assert loss_type in losses, f'Loss type {loss_type} not implemented'
     except AssertionError as e:
         self.flags.error = str(e)
         self.logger.error(str(e))
@@ -38,15 +38,12 @@ def loss(self, net_out):
     diff = _truth - out
     if loss_type in ['sse', '12']:
         loss = tf.nn.l2_loss(diff)
-
     elif loss_type == ['smooth']:
         small = tf.cast(diff < 1, tf.float32)
         large = 1. - small
         loss = L1L2(tf.multiply(diff, large), tf.multiply(diff, small))
-
     elif loss_type in ['sparse', 'l1']:
         loss = l1(diff)
-
     elif loss_type == 'softmax':
         loss = tf.nn.softmax_cross_entropy_with_logits(logits=net_out)
         loss = tf.reduce_mean(loss)

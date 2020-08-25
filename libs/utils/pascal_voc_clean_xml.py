@@ -6,13 +6,13 @@ import defusedxml.ElementTree as ET
 import glob
 
 
-def pascal_voc_clean_xml(self, ANN, pick, exclusive=False):
+def pascal_voc_clean_xml(self, annotation_dir, pick, exclusive=False):
     self.logger.info('Parsing for {} {}'.format(
             pick, 'exclusively' * int(exclusive)))
 
     dumps = list()
     cur_dir = os.getcwd()
-    os.chdir(ANN)
+    os.chdir(annotation_dir)
     annotations = os.listdir('.')
     annotations = glob.glob(str(annotations)+'*.xml')
     size = len(annotations)

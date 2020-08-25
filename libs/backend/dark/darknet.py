@@ -5,6 +5,7 @@ from libs.backend.dark.darkop import create_darkop
 from libs.utils.config_yielder import ConfigYielder
 from libs.io.flags import FlagIO
 from libs.utils import loader
+from libs.constants import CFG_EXT
 
 
 class Darknet(FlagIO, object):
@@ -49,14 +50,11 @@ class Darknet(FlagIO, object):
             elif not exist:
                 self.src_bin = None
         else:
-            assert os.path.isfile(flags.load), '{} not found'.format(flags.load)
             self.src_bin = flags.load
             name = loader.model_name(flags.load)
-            cfg_path = os.path.join(flags.config, name + '.cfg')
+            cfg_path = os.path.join(flags.config, name + CFG_EXT)
             if not os.path.isfile(cfg_path):
-                warnings.warn(
-                    '{} not found, use {} instead'.format(
-                        cfg_path, flags.model))
+                self.logger.warn(f'{cfg_path} not found, use {flags.model} instead')
                 cfg_path = flags.model
             self.src_cfg = cfg_path
             flags.load = int()
@@ -78,7 +76,7 @@ class Darknet(FlagIO, object):
                 else:
                     new = create_darkop(*info)
                 layers.append(new)
-        except (TypeError, AssertionError) as e:
+        except TypeError as e:
             self.flags.error = str(e)
             self.logger.error(str(e))
             self.send_flags()
@@ -89,7 +87,7 @@ class Darknet(FlagIO, object):
         """
         Use `layers` and Loader to load .weights file
         """
-        self.logger.info('Loading {} ...'.format(self.src_bin))
+        self.logger.info(f'Loading {self.src_bin} ...')
         start = time.time()
 
         args = [self.src_bin, self.src_layers]

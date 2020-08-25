@@ -27,5 +27,24 @@ SETTING_DRAW_SQUARE = 'draw/square'
 DEFAULT_ENCODING = 'utf-8'
 XML_EXT = '.xml'
 TXT_EXT = '.txt'
+CFG_EXT = '.cfg'
+WGT_EXT = '.weights'
 FLOAT_RE = r'(([+-]?\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)'
 LABEL_RE = r'^[^ \t].+'
+WEIGHTS_FILE_KEYS = dict({  # order of param flattened into .weights file
+    'convolutional': [
+        'biases',
+        'gamma',
+        'moving_mean',
+        'moving_variance',
+        'kernel'
+    ],
+    'connected': [
+        'biases',
+        'weights'
+    ],
+    'local': [
+        'biases',
+        'kernels'
+    ]
+})

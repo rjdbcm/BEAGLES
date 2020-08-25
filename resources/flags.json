@@ -14,7 +14,7 @@
   "done": false,
   "epoch": 1,
   "error": "",
-  "fbf": "",
+  "video": "",
   "gpu": 0.0,
   "gpu_name": "/gpu:0",
   "imgdir": "./data/sample_img/",

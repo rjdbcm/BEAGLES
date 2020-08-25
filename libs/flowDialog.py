@@ -177,7 +177,7 @@ class FlowDialog(BackendDialog):
             filename = QFileDialog.getOpenFileName(self,
                                                    'BEAGLES Annotate - Choose Video file',
                                                    os.getcwd(), filters, options=options)
-            self.flags.fbf = filename[0]
+            self.flags.video = filename[0]
         if [self.flowCmb.currentText() == "Train"]:
             proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
             self.thread = BackendThread(self, proc=proc, flags=self.flags)

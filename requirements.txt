@@ -9,3 +9,4 @@ traces>=0.4.2
 googletrans~=3.0.0
 pandas~=0.24.2
 setuptools~=41.0.1
+imutils>=0.5.3
