@@ -174,7 +174,7 @@ class FlowDialog(BackendDialog):
                 formats + ['*%s' % LabelFile.suffix])
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
-            filename = QFileDialog.getOpenFileName(self,
+            filename = QFileDialog.getOpenFileNames(self,
                                                    'BEAGLES Annotate - Choose Video file',
                                                    os.getcwd(), filters, options=options)
             self.flags.video = filename[0]
