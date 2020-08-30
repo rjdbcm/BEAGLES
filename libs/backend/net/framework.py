@@ -1,39 +1,30 @@
 from __future__ import annotations
+import os
 from libs.backend.net.frameworks import vanilla
 from libs.backend.net.frameworks import yolo
 from libs.backend.net.frameworks import yolov2
-from abc import abstractmethod
 from libs.io.flags import FlagIO
-from os.path import basename
 
 
-class FrameworkMeta(type):
-    def __new__(mcs, name, bases, dct):
-        if "__init__" in dct:
-            raise NameError("Framework subclasses should not have an __init__ method")
-        return type.__new__(mcs, name, bases, dct)
-
-
-class Framework(FlagIO, object):
-    __metaclass__ = FrameworkMeta
+class Framework(object):
     __create_key = object()
     token = dict()
 
     def __init__(self, create_key, meta, flags):
-        msg = "Framework must be created using Framework.create"
+        msg = f"Frameworks must be created using {self.__name__}.create"
         if not create_key == Framework.__create_key:
             raise NotImplementedError(msg)
-        FlagIO.__init__(self, delay=0.5, subprogram=True)
-        model = basename(meta['model'])
+        model = os.path.basename(meta['model'])
         model = '.'.join(model.split('.')[:-1])
         meta['name'] = model
+        self.logger = FlagIO(subprogram=True).logger
         self.meta = meta
         self.flags = flags
         self.constructor(meta, flags)
 
     @staticmethod
-    def register(framework_token):
-        """Decorator to register Framework subclass type tokens"""
+    def register_token(framework_token):
+        """Decorator to register_token NoInit subclass type tokens"""
         def deco(cls):
             types = framework_token.split(' ')
             multi = dict(zip(types, list([cls]) * len(types)))
@@ -45,9 +36,9 @@ class Framework(FlagIO, object):
     @classmethod
     def create(cls, meta, flags) -> Framework:
         """
-        Factory method to create a Framework.
+        Factory method to create a NoInit.
         Uses Darknet configuration metadata type token to find the right registered
-        Framework subclass and passes metadata and flags into the subclass constructor method.
+        NoInit subclass and passes metadata and flags into the subclass constructor method.
         """
         types = dict()
         for subclass in cls.__subclasses__():
@@ -58,17 +49,11 @@ class Framework(FlagIO, object):
             raise KeyError(f'Unregistered framework type token: {type_token}')
         return this(cls.__create_key, meta, flags)
 
-    @abstractmethod
-    def constructor(self, meta, flags) -> str:
-        """Constructor to be defined in a framework module __init__.py"""
-        pass
-
-    @abstractmethod
-    def loss(self):
+    def constructor(self, flags, meta):
         pass
 
 
-@Framework.register('[detection]')
+@Framework.register_token('[detection]')
 class Yolo(Framework):
 
     constructor = yolo.constructor
@@ -90,7 +75,7 @@ class Yolo(Framework):
     process_box = yolo.predict.process_box
 
 
-@Framework.register('[region]')
+@Framework.register_token('[region]')
 class YoloV2(Framework):
 
     constructor = Yolo.constructor
@@ -112,7 +97,7 @@ class YoloV2(Framework):
     process_box = Yolo.process_box
 
 
-@Framework.register('[yolo]')
+@Framework.register_token('[yolo]')
 class YoloV3(Framework):
 
     # Methods
@@ -133,7 +118,7 @@ class YoloV3(Framework):
     process_box = Yolo.process_box
 
 
-@Framework.register('sse l1 l2 smooth sparse softmax')
+@Framework.register_token('sse l1 l2 smooth sparse softmax')
 class MultiLayerPerceptron(Framework):
     constructor = vanilla.constructor
     loss = vanilla.train.loss

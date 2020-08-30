@@ -6,11 +6,13 @@ import cv2
 from imutils.video import FileVideoStream
 from libs.constants import EPOCH
 from libs.backend.net.tfnet import TFNet
+from libs.io.flags import FlagIO
 
 
-class Annotator(TFNet):
+class Annotator:
     def __init__(self, flags):
-        super(Annotator, self).__init__(flags)
+        self.flags = flags
+        self.net = TFNet(flags)
 
     def annotate(self):
         input_video = self.flags.video
@@ -21,17 +23,17 @@ class Annotator(TFNet):
             annotation_file = f'{os.path.splitext(i)[0]}_annotations.csv'
 
             if os.path.exists(annotation_file):
-                self.logger.info("Overwriting existing annotations")
+                self.net.logger.info("Overwriting existing annotations")
                 os.remove(annotation_file)
 
-            self.logger.info(f'Annotating {input_video}')
+            self.net.logger.info(f'Annotating {input_video}')
 
             while fvs.more():
                 frame_count += 1
                 frame = fvs.read()
                 self.flags.progress = round((100 * frame_count / total_frames), 0)
                 if frame_count % 10 == 0:
-                    self.io_flags()
+                    self.net.io_flags()
                 frame = np.asarray(frame)
                 result = self.return_predict(frame)
 
@@ -101,16 +103,16 @@ class Annotator(TFNet):
     def return_predict(self, im):
         assert isinstance(im, np.ndarray), 'Image is not a np.ndarray'
         h, w, _ = im.shape
-        im = self.framework.resize_input(im)
+        im = self.net.framework.resize_input(im)
         this_inp = np.expand_dims(im, 0)
-        feed_dict = {self.inp: this_inp}
+        feed_dict = {self.net.inp: this_inp}
 
-        out = self.sess.run(self.out, feed_dict)[0]
-        boxes = self.framework.findboxes(out)
+        out = self.net.sess.run(self.net.out, feed_dict)[0]
+        boxes = self.net.framework.findboxes(out)
         threshold = self.flags.threshold
         boxesInfo = list()
         for box in boxes:
-            processed_box = self.framework.process_box(box, h, w, threshold)
+            processed_box = self.net.framework.process_box(box, h, w, threshold)
             if processed_box is None:
                 continue
             boxesInfo.append(processed_box)

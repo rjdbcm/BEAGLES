@@ -7,7 +7,6 @@ import numpy as np
 
 def constructor(self, meta, flags):
     self.flags = flags
-    self.logger.info(f'Framework type: {self.token}')
 
     def _to_color(indx, base):
         """ return (b, r, g) tuple"""
@@ -27,7 +26,6 @@ def constructor(self, meta, flags):
         self.logger.error(str(e))
         FlagIO.send_flags(self)
         raise
-
 
     # assign a color for each label
     colors = list()

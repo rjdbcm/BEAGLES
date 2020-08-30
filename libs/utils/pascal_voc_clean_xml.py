@@ -4,6 +4,7 @@ parse PASCAL VOC xml annotations
 import os
 import defusedxml.ElementTree as ET
 import glob
+from libs.io.flags import FlagIO
 
 
 def pascal_voc_clean_xml(self, annotation_dir, pick, exclusive=False):

@@ -6,7 +6,7 @@ from libs.backend.net.ops import op_create, identity
 from libs.backend.net.ops.baseop import HEADER, LINE
 from libs.backend.net.framework import Framework
 from libs.backend.dark.darknet import Darknet
-from libs.utils.loader import create_loader
+from libs.backend.io.loader import LoaderFactory
 from libs.io.flags import FlagIO
 from libs.utils.errors import *
 from libs.backend.net.hyperparameters.cyclic_learning_rate import cyclic_learning_rate
@@ -15,7 +15,7 @@ from libs.backend.net.hyperparameters.cyclic_learning_rate import cyclic_learnin
 old_graph_msg = 'Resolving old graph def {} (no guarantee)'
 
 
-class TFNet(FlagIO):
+class TFNet:
     _TRAINER = dict({
         'rmsprop': tf.compat.v1.train.RMSPropOptimizer,
         'adadelta': tf.compat.v1.train.AdadeltaOptimizer,
@@ -31,11 +31,12 @@ class TFNet(FlagIO):
 
     # Interface Methods:
     def __init__(self, flags, darknet=None):
-        FlagIO.__init__(self, subprogram=True)
+        self.io = FlagIO(subprogram=True)
         # disable eager mode for TF1-dependent code
         tf.compat.v1.disable_eager_execution()
-        self.flags = self.read_flags() if self.read_flags() is not None else flags
-        self.io_flags()
+        self.flags = self.io.read_flags() if self.io.read_flags() is not None else flags
+        self.io_flags = self.io.io_flags
+        self.logger = self.io.logger
         self.ntrain = 0
         darknet = Darknet(flags) if darknet is None else darknet
         self.ntrain = len(darknet.layers)
@@ -64,7 +65,7 @@ class TFNet(FlagIO):
             else:
                 self.flags.error = str(e)
             self.logger.error(str(e))
-            self.send_flags()
+            self.io.send_flags()
             raise
 
     def build_forward(self):
@@ -133,7 +134,7 @@ class TFNet(FlagIO):
                 self.load_from_ckpt()
         except tf.errors.NotFoundError as e:
             self.flags.error = str(e.message)
-            self.send_flags()
+            self.io.send_flags()
             raise
 
         if self.flags.summary:
@@ -158,7 +159,7 @@ class TFNet(FlagIO):
             self.load_old_graph(load_point)
 
     def load_old_graph(self, ckpt):
-        ckpt_loader = create_loader(ckpt)
+        ckpt_loader = LoaderFactory.create(ckpt)
         self.logger.info(old_graph_msg.format(ckpt))
 
         for var in tf.compat.v1.global_variables():

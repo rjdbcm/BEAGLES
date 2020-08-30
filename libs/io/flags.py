@@ -6,14 +6,14 @@ import logging
 import subprocess
 import logging.handlers
 from libs.utils.flags import Flags
+#  TODO: extract logging and ramdisk
 
 
 class FlagIO(object):
     """Base object for logging and shared memory flag read/write operations"""
 
-    def __init__(self, subprogram=False, delay=0.1):
+    def __init__(self, subprogram=False):
         self.subprogram = subprogram
-        self.delay = delay
         self.flags = Flags()
 
         logging.captureWarnings(True)
@@ -72,7 +72,6 @@ class FlagIO(object):
             try:
                 with open(r"{}".format(self.flagpath), "r") as inpfile:
                     try:
-                        time.sleep(self.delay)
                         flags = self.flags.from_json(inpfile)
                     except JSONDecodeError as e:
                         if not e.pos:  # char 0 == flags busy
@@ -86,8 +85,6 @@ class FlagIO(object):
             except FileNotFoundError:
                 if count > 10:
                     break
-                else:
-                    time.sleep(self.delay)
 
     def io_flags(self):
         self.send_flags()
@@ -106,7 +103,6 @@ class FlagIO(object):
                     self.logger.info(line)
                 if stderr:
                     self.logger.debug(stderr.decode('utf-8'))
-                time.sleep(self.delay)  # Give the OS time to finish
         else:
             ramdisk = "/dev/shm"
         flagpath = os.path.join(ramdisk, flagfile)

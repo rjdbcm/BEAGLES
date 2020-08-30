@@ -6,7 +6,7 @@ from os.path import basename
 from libs.constants import WEIGHTS_FILE_KEYS
 
 
-class loader(object):
+class LoaderFactory:
     """
     interface to work with both .weights and .ckpt files
     in loading / recollecting / resolving mode
@@ -17,7 +17,7 @@ class loader(object):
     def __init__(self, *args):
         self.src_key = list()
         self.vals = list()
-        self.load(*args)
+        self.constructor(*args)
 
     def __call__(self, key):
         for idx in range(len(key)):
@@ -39,13 +39,42 @@ class loader(object):
         del self.vals[idx]
         return temp
 
+    @classmethod
+    def create(cls, path, cfg=None):
+        if path is None:
+            load_type = WeightsLoader
+        elif '.weights' in path:
+            load_type = WeightsLoader
+        else:
+            load_type = CheckpointLoader
 
-class weights_loader(loader):
+        return load_type(path, cfg)
+
+    @staticmethod
+    def model_name(file_path):
+        file_name = basename(file_path)
+        ext = str()
+        if '.' in file_name:  # exclude extension
+            file_name = file_name.split('.')
+            ext = file_name[-1]
+            file_name = '.'.join(file_name[:-1])
+        if ext == str() or ext == 'meta':  # ckpt file
+            file_name = file_name.split('-')
+            num = int(file_name[-1])
+            return '-'.join(file_name[:-1])
+        if ext == 'weights':
+            return file_name
+
+    def constructor(self, *args):
+        pass
+
+
+class WeightsLoader(LoaderFactory):
     """one who understands .weights files"""
 
-    def load(self, path, src_layers):
+    def constructor(self, path, src_layers):
         self.src_layers = src_layers
-        walker = weights_walker(path)
+        walker = WeightsWalker(path)
 
         for i, layer in enumerate(src_layers):
             if layer.type not in self.VAR_LAYER:
@@ -77,11 +106,11 @@ class weights_loader(loader):
                 walker.offset))
 
 
-class checkpoint_loader(loader):
+class CheckpointLoader(LoaderFactory):
     """
     one who understands .ckpt files, very much
     """
-    def load(self, ckpt, ignore):
+    def constructor(self, ckpt, ignore):
         meta = ckpt + '.meta'
         with tf.Graph().as_default() as graph:
             with tf.compat.v1.Session().as_default() as sess:
@@ -94,18 +123,7 @@ class checkpoint_loader(loader):
                     self.vals += [var.eval(sess)]
 
 
-def create_loader(path, cfg=None):
-    if path is None:
-        load_type = weights_loader
-    elif '.weights' in path:
-        load_type = weights_loader
-    else: 
-        load_type = checkpoint_loader
-    
-    return load_type(path, cfg)
-
-
-class weights_walker(object):
+class WeightsWalker(object):
     """incremental reader of float32 binary files"""
     def __init__(self, path):
         self.eof = False  # end of file
@@ -134,16 +152,4 @@ class weights_walker(object):
         return float32_1D_array
 
 
-def model_name(file_path):
-    file_name = basename(file_path)
-    ext = str()
-    if '.' in file_name:  # exclude extension
-        file_name = file_name.split('.')
-        ext = file_name[-1]
-        file_name = '.'.join(file_name[:-1])
-    if ext == str() or ext == 'meta':  # ckpt file
-        file_name = file_name.split('-')
-        num = int(file_name[-1])
-        return '-'.join(file_name[:-1])
-    if ext == 'weights':
-        return file_name
+

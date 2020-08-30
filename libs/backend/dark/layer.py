@@ -1,4 +1,4 @@
-from libs.utils import loader
+from libs.backend.io.loader import WeightsLoader
 import numpy as np
 
 
@@ -26,7 +26,7 @@ class Layer(object):
             return
 
         src_type = type(src_loader)
-        if src_type is loader.weights_loader:
+        if src_type is WeightsLoader:
             wdict = self.load_weights(src_loader)
         else: 
             wdict = self.load_ckpt(src_loader)
