@@ -4,7 +4,7 @@ import warnings
 from libs.backend.dark.darkop import create_darkop
 from libs.utils.config_yielder import ConfigYielder
 from libs.io.flags import FlagIO
-from libs.backend.io.loader import LoaderFactory
+from libs.backend.io.loader import Loader
 from libs.constants import CFG_EXT
 
 
@@ -51,7 +51,7 @@ class Darknet(FlagIO, object):
                 self.src_bin = None
         else:
             self.src_bin = flags.load
-            name = LoaderFactory.model_name(flags.load)
+            name = Loader.model_name(flags.load)
             cfg_path = os.path.join(flags.config, name + CFG_EXT)
             if not os.path.isfile(cfg_path):
                 self.logger.warn(f'{cfg_path} not found, use {flags.model} instead')
@@ -85,13 +85,13 @@ class Darknet(FlagIO, object):
 
     def load_weights(self):
         """
-        Use `layers` and LoaderFactory to load .weights file
+        Use `layers` and Loader to load .weights file
         """
         self.logger.info(f'Loading {self.src_bin} ...')
         start = time.time()
 
         args = [self.src_bin, self.src_layers]
-        wgts_loader = LoaderFactory.create(*args)
+        wgts_loader = Loader.create(*args)
         for layer in self.layers:
             layer.load(wgts_loader)
 

@@ -10,21 +10,15 @@ class Framework(object):
     __create_key = object()
     token = dict()
 
-    def __init__(self, create_key, meta, flags):
-        msg = f"Frameworks must be created using {self.__name__}.create"
+    def __init__(self, create_key, *args):
+        msg = f"Frameworks must be created using Framework.create"
         if not create_key == Framework.__create_key:
             raise NotImplementedError(msg)
-        model = os.path.basename(meta['model'])
-        model = '.'.join(model.split('.')[:-1])
-        meta['name'] = model
-        self.logger = FlagIO(subprogram=True).logger
-        self.meta = meta
-        self.flags = flags
-        self.constructor(meta, flags)
+        self.constructor(*args)
 
     @staticmethod
     def register_token(framework_token):
-        """Decorator to register_token NoInit subclass type tokens"""
+        """Decorator to register_token Framework subclass type tokens"""
         def deco(cls):
             types = framework_token.split(' ')
             multi = dict(zip(types, list([cls]) * len(types)))
@@ -36,9 +30,8 @@ class Framework(object):
     @classmethod
     def create(cls, meta, flags) -> Framework:
         """
-        Factory method to create a NoInit.
         Uses Darknet configuration metadata type token to find the right registered
-        NoInit subclass and passes metadata and flags into the subclass constructor method.
+        Framework subclass and passes metadata and flags into the subclass constructor method.
         """
         types = dict()
         for subclass in cls.__subclasses__():
@@ -55,7 +48,6 @@ class Framework(object):
 
 @Framework.register_token('[detection]')
 class Yolo(Framework):
-
     constructor = yolo.constructor
 
     parse = yolo.data.parse

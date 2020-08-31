@@ -6,7 +6,7 @@ from libs.backend.net.ops import op_create, identity
 from libs.backend.net.ops.baseop import HEADER, LINE
 from libs.backend.net.framework import Framework
 from libs.backend.dark.darknet import Darknet
-from libs.backend.io.loader import LoaderFactory
+from libs.backend.io.loader import Loader
 from libs.io.flags import FlagIO
 from libs.utils.errors import *
 from libs.backend.net.hyperparameters.cyclic_learning_rate import cyclic_learning_rate
@@ -159,7 +159,7 @@ class TFNet:
             self.load_old_graph(load_point)
 
     def load_old_graph(self, ckpt):
-        ckpt_loader = LoaderFactory.create(ckpt)
+        ckpt_loader = Loader.create(ckpt)
         self.logger.info(old_graph_msg.format(ckpt))
 
         for var in tf.compat.v1.global_variables():

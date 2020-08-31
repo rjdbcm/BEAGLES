@@ -1,20 +1,24 @@
 import tensorflow as tf
 import os
-from libs.backend import dark
+from libs.backend.dark import darknet
 import numpy as np
 from os.path import basename
-from libs.constants import WEIGHTS_FILE_KEYS
+from libs.constants import WEIGHTS_FILE_KEYS, WGT_EXT
 
 
-class LoaderFactory:
+class Loader:
+    __create_key = object()
     """
     interface to work with both .weights and .ckpt files
     in loading / recollecting / resolving mode
     """
-    VAR_LAYER = ['convolutional', 'connected', 'local',
-                 'select', 'conv-select', 'extract', 'conv-extract']
+    VAR_LAYER = ['convolutional', 'connected', 'local', 'select', 'conv-select',
+                        'extract', 'conv-extract']
 
-    def __init__(self, *args):
+    def __init__(self, create_key, *args):
+        msg = f"Loaders must be created using Loader.create"
+        if not create_key == Loader.__create_key:
+            raise NotImplementedError(msg)
         self.src_key = list()
         self.vals = list()
         self.constructor(*args)
@@ -22,7 +26,8 @@ class LoaderFactory:
     def __call__(self, key):
         for idx in range(len(key)):
             val = self.find(key, idx)
-            if val is not None: return val
+            if val is not None:
+                return val
         return None
     
     def find(self, key, idx):
@@ -43,12 +48,12 @@ class LoaderFactory:
     def create(cls, path, cfg=None):
         if path is None:
             load_type = WeightsLoader
-        elif '.weights' in path:
+        elif WGT_EXT in path:
             load_type = WeightsLoader
         else:
             load_type = CheckpointLoader
 
-        return load_type(path, cfg)
+        return load_type(cls.__create_key, path, cfg)
 
     @staticmethod
     def model_name(file_path):
@@ -69,7 +74,7 @@ class LoaderFactory:
         pass
 
 
-class WeightsLoader(LoaderFactory):
+class WeightsLoader(Loader):
     """one who understands .weights files"""
 
     def constructor(self, path, src_layers):
@@ -85,7 +90,7 @@ class WeightsLoader(LoaderFactory):
                 new = None
             else: 
                 args = layer.signature
-                new = dark.darknet.create_darkop(*args)
+                new = darknet.create_darkop(*args)
             self.vals.append(new)
 
             if new is None:
@@ -106,7 +111,7 @@ class WeightsLoader(LoaderFactory):
                 walker.offset))
 
 
-class CheckpointLoader(LoaderFactory):
+class CheckpointLoader(Loader):
     """
     one who understands .ckpt files, very much
     """

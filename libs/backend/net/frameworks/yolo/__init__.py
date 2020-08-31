@@ -1,12 +1,18 @@
 from libs.backend.net.frameworks.yolo import data, misc, train, predict
 from libs.io.flags import FlagIO
 import numpy as np
+import os
 
 """ YOLO framework __init__ equivalent"""
 
 
 def constructor(self, meta, flags):
+    self.logger = FlagIO(subprogram=True).logger
+    model = os.path.basename(meta['model'])
+    model = '.'.join(model.split('.')[:-1])
+    meta['name'] = model
     self.flags = flags
+    self.meta = meta
 
     def _to_color(indx, base):
         """ return (b, r, g) tuple"""
