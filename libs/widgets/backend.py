@@ -93,15 +93,6 @@ class BackendDialog(QDialog):
             d.update(self.widgetFromIndex(i))
         return d
 
-    def setupProjectWidgets(self, layout) -> None:
-        self.projectLayout = QHBoxLayout()
-        self.projectBtn = QPushButton(getStr('selectProject'))
-        self.projectLbl = QLabel(self.project.default)
-        self.projectBtn.clicked.connect(self.project.open)
-        self.projectLayout.addWidget(self.projectLbl)
-        self.projectLayout.addWidget(self.projectBtn)
-        layout.addRow(QLabel("Project"), self.projectLayout)
-
     def setupTrainingWidgets(self):
         self.flowCmb.addItems(
             [getStr('train'),
@@ -188,7 +179,6 @@ class BackendDialog(QDialog):
         layout = QFormLayout()
         self.formGroupBox = QGroupBox("Select Model and Checkpoint")
         self.formGroupBox.setLayout(layout)
-        self.setupProjectWidgets(layout)
         self.setupTrainingWidgets()
         training_widgets = self.getWidgetsByIndex(0, 4)
         self.addRowsToLayout(layout, training_widgets)

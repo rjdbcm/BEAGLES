@@ -18,7 +18,6 @@ from libs.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
 from libs.widgets.labelDialog import LabelDialog
 from libs.utils.flags import Flags
 from libs.widgets.colorDialog import ColorDialog
-from libs.widgets.projectDialog import ProjectDialog
 from libs.widgets.hashableQListWidgetItem import HashableQListWidgetItem
 
 
@@ -33,7 +32,6 @@ class MainWindow(BeaglesMainWindow):
         self.predefinedClasses = predefined_class_file
         self.defaultSaveDir = save_directory
         self.darkmode = darkmode
-        self.project = ProjectDialog(self)
         # Load setting in the main thread
         self.imageData = None
         self.labelFile = None

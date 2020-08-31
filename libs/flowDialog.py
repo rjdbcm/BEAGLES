@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import *
 from libs.io.labelFile import LabelFile
 from libs.constants import *
 from libs.utils.flags import Flags
-from libs.widgets.projectDialog import ProjectDialog
 from libs.widgets.backend import BackendDialog, BackendThread
 #from libs.scripts.genConfig import genConfigYOLOv2
 from subprocess import Popen, PIPE
@@ -19,20 +18,8 @@ class FlowDialog(BackendDialog):
         super(FlowDialog, self).__init__(parent)
         self.labelfile = labelfile
         self.flags = Flags()
-        self.project = ProjectDialog(self)
-        self.project.accepted.connect(self.set_project_name)
         self.setupDialog()
-        if self.project.check_open_project():
-            self.project.name = self.project.check_open_project()
-            self.project.show_classes()
-            # swapButtons method fails here
-            self.project.buttonLoad.hide()
-            self.project.buttonOk.show()
-            self.set_project_name()
         self.findCkpt()
-
-    def selectProject(self):
-        self.project.exec_()
 
     def findCkpt(self):
         self.loadCmb.clear()
@@ -96,15 +83,8 @@ class FlowDialog(BackendDialog):
     #     pass
     #     genConfigYOLOv2()
 
-    def set_project_name(self):
-        try:
-            self.projectLbl.setText(self.project.name)
-        except TypeError:
-            print(self.project.name)
-            pass
-
     def assign_flags(self):
-        self.flags.project_name = self.projectLbl.text()
+        self.flags.project_name = 'default'
         self.flags.model = os.path.join(
             self.flags.config, self.modelCmb.currentText())
         try:
@@ -222,7 +202,6 @@ class FlowDialog(BackendDialog):
                 self.flowGroupBox.setEnabled(True)
                 self.trainGroupBox.setEnabled(True)
                 self.formGroupBox.setEnabled(True)
-                # self.findProject()
                 try:
                     event.accept()
                 except AttributeError:
@@ -267,7 +246,6 @@ class FlowDialog(BackendDialog):
         self.buttonStop.hide()
         self.buttonRun.show()
         self.findCkpt()
-        # self.findProject()
 
     @pyqtSlot(int)
     def updateProgress(self, value):
