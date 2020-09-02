@@ -4,14 +4,14 @@ from libs.utils.errors import DarknetConfigEmpty
 
 
 class DarknetConfigFile:
-    """Read the .cfg file to extract layers and metadata"""
+    """Parse darknet style .cfg file to layers and metadata"""
 
     def __init__(self, path):
         self.config_file = path
         file_ext = os.path.splitext(self.config_file)[1]
 
         if file_ext == '.cfg' and os.path.exists(path):
-            self.layers, self.metadata = self.__parse()
+            self.layers, self.metadata = self.__tokenize()
         elif file_ext == '.json' and os.path.exists(path):
             self.from_json(path)
         else:
@@ -41,9 +41,9 @@ class DarknetConfigFile:
         self.layers = self.layers + other.layers
         return self
 
-    def to_json(self):
+    def to_json(self, **kwargs):
         name = os.path.splitext(self.config_file)[0] + '.json'
-        data = json.dumps(self.__dict__, indent=4)
+        data = json.dumps(self.__dict__, **kwargs)
         with open(name, 'w') as f:
             f.write(data)
         return name
@@ -53,7 +53,11 @@ class DarknetConfigFile:
             self.__dict__.update(json.load(f))
         return self
 
-    def __parse(self):
+    @property
+    def tokens(self):
+        return self.layers, self.metadata
+
+    def __tokenize(self):
         def split_on_eq(line, i=1):
             return line.split('=')[i].strip()
 

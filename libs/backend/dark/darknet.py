@@ -1,33 +1,23 @@
 import os
 import time
-import warnings
 from libs.backend.dark.darkop import create_darkop
-from libs.utils.config_yielder import ConfigYielder
+from libs.utils.config_parser import ConfigParser
 from libs.io.flags import FlagIO
 from libs.backend.io.loader import Loader
-from libs.constants import CFG_EXT
+from libs.constants import CFG_EXT, WGT_EXT
 
 
 class Darknet(FlagIO, object):
-    _EXT = '.weights'
 
     def __init__(self, flags):
         FlagIO.__init__(self, subprogram=True)
         self.get_weight_src(flags)
         self.modify = False
-        self.config = ConfigYielder(self.src_cfg)
+        self.config = ConfigParser(self.src_cfg)
 
         self.logger.info('Parsing {}'.format(self.src_cfg))
-        src_parsed = self.parse_cfg(self.src_cfg, flags)
-        self.src_meta, self.src_layers = src_parsed
-
-        if self.src_cfg == flags.model:
-            self.meta, self.layers = src_parsed
-        else:
-            self.logger.info('Parsing {}'.format(flags.model))
-            des_parsed = self.parse_cfg(flags.model, flags)
-            self.meta, self.layers = des_parsed
-
+        src_parsed = self.create_ops()
+        self.meta, self.layers = src_parsed
         self.load_weights()
 
     def get_weight_src(self, flags):
@@ -36,7 +26,7 @@ class Darknet(FlagIO, object):
         source binary and what is its config.
         can be: None, flags.model, or some other
         """
-        self.src_bin = flags.model + self._EXT
+        self.src_bin = flags.model + WGT_EXT
         self.src_bin = flags.binary + self.src_bin
         self.src_bin = os.path.abspath(self.src_bin)
         exist = os.path.isfile(self.src_bin)
@@ -59,12 +49,12 @@ class Darknet(FlagIO, object):
             self.src_cfg = cfg_path
             flags.load = int()
 
-    def parse_cfg(self, model, flags):
+    def create_ops(self):
         """
         return a list of `layers` objects (darkop.py)
         given path to binaries/ and configs/
         """
-        cfg_layers = self.config.yield_layers()
+        cfg_layers = self.config.parse_layers()
 
         meta = dict()
         layers = list()
@@ -90,7 +80,7 @@ class Darknet(FlagIO, object):
         self.logger.info(f'Loading {self.src_bin} ...')
         start = time.time()
 
-        args = [self.src_bin, self.src_layers]
+        args = [self.src_bin, self.layers]
         wgts_loader = Loader.create(*args)
         for layer in self.layers:
             layer.load(wgts_loader)

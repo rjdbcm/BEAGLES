@@ -3,9 +3,10 @@ from typing import Generator
 from libs.backend.io.darknet_config_file import DarknetConfigFile
 
 
-class ConfigYielder(DarknetConfigFile):
+class ConfigParser:
     def __init__(self, model):
-        super(ConfigYielder, self).__init__(model)
+        config = DarknetConfigFile(model)
+        self.layers, self.metadata = config.tokens
         self.h, self.w, self.c = self.metadata['inp_size']
         self.l = self.h * self.w * self.c
         self._flat = False
@@ -19,7 +20,7 @@ class ConfigYielder(DarknetConfigFile):
     def flat(self, val: bool):
         self._flat = val
 
-    def yield_layers(self) -> Generator[dict, list, None]:
+    def parse_layers(self) -> Generator[dict, list, None]:
         yield self.metadata
         for i, section in enumerate(self.layers):
             layer_handler = self.get_layer_handler(section, i)
