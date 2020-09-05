@@ -1,7 +1,7 @@
 import os
 import time
 import tensorflow as tf
-from tensorflow.python.platform import tf_logging
+from libs.backend.base import Subsystem
 from libs.backend.net.ops import op_create, identity
 from libs.backend.net.ops.baseop import HEADER, LINE
 from libs.backend.net.framework import Framework
@@ -53,6 +53,7 @@ class TFNet:
                 self.build_forward()
                 self.setup_meta_ops()
         self.logger.info('Finished in {}s'.format(time.time() - start))
+
 
     def raise_error(self, error: Exception, traceback=None):
         form = "{}\nOriginal Tensorflow Error: {}"
@@ -165,7 +166,7 @@ class TFNet:
         for var in tf.compat.v1.global_variables():
             name = var.name.split(':')[0]
             args = [name, var.get_shape()]
-            val = ckpt_loader(args)
+            val = ckpt_loader(*args)
             if val is None:
                 self.raise_error(VariableIsNone(var))
             shp = val.shape

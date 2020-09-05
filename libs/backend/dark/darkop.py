@@ -62,7 +62,7 @@ class reorg_layer(Layer):
 
 
 """
-Darkop Factory
+Darkop SubsystemFactory
 """
 
 darkops = {

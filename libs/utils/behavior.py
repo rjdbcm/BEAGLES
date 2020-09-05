@@ -1,10 +1,9 @@
 import os
-import sys
 import csv
-from traces import TimeSeries, plot
-from datetime import timedelta, datetime
-import pandas as pd
+import sys
 import json
+from datetime import timedelta
+from traces import TimeSeries, plot
 from libs.constants import EPOCH
 
 
@@ -106,7 +105,7 @@ class BehaviorAnalysis:
 
     def csv_report(self, target=sys.stdout):
         report = self.report()
-        fields = ['file'] + self.classes + ['beh_interval', 'beh_index', 'total_bouts']
+        fields = ['file', 'beh_interval', 'beh_index', 'total_bouts'] + self.classes
         w = csv.DictWriter(target, fields)
         w.writeheader()
         for key, val in sorted(report.items()):

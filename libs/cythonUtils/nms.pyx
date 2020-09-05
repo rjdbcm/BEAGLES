@@ -97,8 +97,8 @@ cdef nms(float[:, ::1] final_probs , float[:, ::1] final_bbox):
                 indices.add(index)
     return boxes
 
-@cython.boundscheck(False) # turn off bounds-checking for entire function
-@cython.wraparound(False)  # turn off negative index wrapping for entire function
+@cython.boundscheck(False)
+@cython.wraparound(False)
 @cython.cdivision(True)
 cdef soft_nms(float[:, ::1] final_probs , float[:, ::1] final_bbox):
     cdef list boxes = list()

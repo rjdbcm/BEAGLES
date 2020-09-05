@@ -41,13 +41,28 @@ class Darknet(FlagIO, object):
                 self.src_bin = None
         else:
             self.src_bin = flags.load
-            name = Loader.model_name(flags.load)
+            name = self.model_name(flags.load)
             cfg_path = os.path.join(flags.config, name + CFG_EXT)
             if not os.path.isfile(cfg_path):
                 self.logger.warn(f'{cfg_path} not found, use {flags.model} instead')
                 cfg_path = flags.model
             self.src_cfg = cfg_path
             flags.load = int()
+
+    @staticmethod
+    def model_name(file_path):
+        file_name = os.path.basename(file_path)
+        ext = str()
+        if '.' in file_name:  # exclude extension
+            file_name = file_name.split('.')
+            ext = file_name[-1]
+            file_name = '.'.join(file_name[:-1])
+        if ext == str() or ext == 'meta':  # ckpt file
+            file_name = file_name.split('-')
+            num = int(file_name[-1])
+            return '-'.join(file_name[:-1])
+        if ext == 'weights':
+            return file_name
 
     def create_ops(self):
         """

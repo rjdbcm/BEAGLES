@@ -1,27 +1,23 @@
+from __future__ import annotations
 import tensorflow as tf
 import os
+import sys
 from libs.backend.dark import darknet
+from libs.backend.base import SubsystemFactory, Subsystem, register_subsystem
 import numpy as np
 from os.path import basename
 from libs.constants import WEIGHTS_FILE_KEYS, WGT_EXT
 
 
-class Loader:
-    __create_key = object()
+class Loader(SubsystemFactory):
     """
-    interface to work with both .weights and .ckpt files
+    SubsystemFactory to work with both .weights and .ckpt files
     in loading / recollecting / resolving mode
     """
+    src_key = list()
+    vals = list()
     VAR_LAYER = ['convolutional', 'connected', 'local', 'select', 'conv-select',
-                        'extract', 'conv-extract']
-
-    def __init__(self, create_key, *args):
-        msg = f"Loaders must be created using Loader.create"
-        if not create_key == Loader.__create_key:
-            raise NotImplementedError(msg)
-        self.src_key = list()
-        self.vals = list()
-        self.constructor(*args)
+                 'extract', 'conv-extract']
 
     def __call__(self, key):
         for idx in range(len(key)):
@@ -45,36 +41,17 @@ class Loader:
         return temp
 
     @classmethod
-    def create(cls, path, cfg=None):
-        if path is None:
-            load_type = WeightsLoader
-        elif WGT_EXT in path:
-            load_type = WeightsLoader
-        else:
-            load_type = CheckpointLoader
-
-        return load_type(cls.__create_key, path, cfg)
-
-    @staticmethod
-    def model_name(file_path):
-        file_name = basename(file_path)
-        ext = str()
-        if '.' in file_name:  # exclude extension
-            file_name = file_name.split('.')
-            ext = file_name[-1]
-            file_name = '.'.join(file_name[:-1])
-        if ext == str() or ext == 'meta':  # ckpt file
-            file_name = file_name.split('-')
-            num = int(file_name[-1])
-            return '-'.join(file_name[:-1])
-        if ext == 'weights':
-            return file_name
-
-    def constructor(self, *args):
-        pass
+    def create(cls, path, cfg=None) -> Loader(Subsystem):
+        types = dict()
+        for subclass in cls.__subclasses__():
+            types.update(subclass.token)
+        token = os.path.splitext(path)[1] if path else WGT_EXT
+        this = types.get(token, None)
+        return this(cls.create_key, path, cfg)
 
 
-class WeightsLoader(Loader):
+@register_subsystem('.weights', Loader)
+class WeightsLoader(Subsystem):
     """one who understands .weights files"""
 
     def constructor(self, path, src_layers):
@@ -111,13 +88,14 @@ class WeightsLoader(Loader):
                 walker.offset))
 
 
-class CheckpointLoader(Loader):
+@register_subsystem('', Loader)
+class CheckpointLoader(Subsystem):
     """
     one who understands .ckpt files, very much
     """
     def constructor(self, ckpt, ignore):
         meta = ckpt + '.meta'
-        with tf.Graph().as_default() as graph:
+        with tf.Graph().as_default():
             with tf.compat.v1.Session().as_default() as sess:
                 saver = tf.compat.v1.train.import_meta_graph(meta)
                 saver.restore(sess, ckpt)
