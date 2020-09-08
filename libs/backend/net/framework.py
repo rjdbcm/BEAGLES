@@ -1,32 +1,30 @@
 from __future__ import annotations
-from libs.backend.base import SubsystemFactory, Subsystem, register_subsystem
+from libs.backend.base import SubsystemPrototype, Subsystem, register_subsystem
 from libs.backend.net.frameworks import vanilla
 from libs.backend.net.frameworks import yolo
 from libs.backend.net.frameworks import yolov2
 
 
-class Framework(SubsystemFactory):
+class Framework(SubsystemPrototype):
 
-    def __init__(self, create_key, *args):
-        super(Framework, self).__init__(create_key, *args)
+    def __init__(self, create_key, *args, **kwargs):
+        super(Framework, self).__init__(create_key, *args, **kwargs)
 
     @classmethod
     def create(cls, meta, flags) -> Framework(Subsystem):
         """
         Uses Darknet configuration metadata type token to find the right registered
-        Product and passes metadata and flags into the Product constructor method.
+        Subsystem and passes metadata and flags into the Product constructor method.
         """
-        types = dict()
-        for subclass in cls.__subclasses__():
-            types.update(subclass.token)
         type_token = meta['type']
+        types = cls.get_register()
         this = types.get(type_token, None)
         if not this:
             raise KeyError(f'Unregistered framework type token: {type_token}')
         return this(cls.create_key, meta, flags)
 
 
-@register_subsystem(token='[detection]', factory=Framework)
+@register_subsystem(token='[detection]', prototype=Framework)
 class Yolo(Subsystem):
     constructor = yolo.constructor
 
@@ -47,9 +45,8 @@ class Yolo(Subsystem):
     process_box = yolo.predict.process_box
 
 
-@register_subsystem(token='[region]', factory=Framework)
+@register_subsystem(token='[region]', prototype=Framework)
 class YoloV2(Yolo):
-
     constructor = Yolo.constructor
 
     parse = Yolo.parse
@@ -69,7 +66,7 @@ class YoloV2(Yolo):
     process_box = Yolo.process_box
 
 
-@register_subsystem(token='sse l1 l2 smooth sparse softmax', factory=Framework)
+@register_subsystem(token='sse l1 l2 smooth sparse softmax', prototype=Framework)
 class MultiLayerPerceptron(Subsystem):
     constructor = vanilla.constructor
     loss = vanilla.train.loss

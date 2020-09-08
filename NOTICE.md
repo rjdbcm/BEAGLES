@@ -1,6 +1,6 @@
 Copyright (c) for portions of the project BEAGLES are held by TzuTa Lin, 2015-Present as part of the project labelImg.
 Copyright (c) for portions of the project BEAGLES are held by Mahmoud Aslan, 2018-Present as part of project Cyclic Learning Rate
-
+The BEAGLES icon is a derivative of WikiMedia User Saper's Beagle puppy's head released under a CC 4.0 License https://creativecommons.org/licenses/by-sa/4.0/deed.en
 All other copyright (c) for the project BEAGLES are held by Ross J. Duff, 2019-Present
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:

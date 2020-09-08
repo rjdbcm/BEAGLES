@@ -6,7 +6,7 @@ from subprocess import Popen, PIPE
 from zipfile import ZipFile
 from libs.io.flags import FlagIO
 from libs.utils.flags import Flags
-from libs.backend.net.trainer import Trainer
+from libs.backend.trainer import Trainer
 from libs.utils.errors import GradientNaN
 from libs.constants import BACKEND_ENTRYPOINT
 

@@ -29,6 +29,7 @@ coverage:
 	coverage run -m unittest discover tests
 
 clean:
+	find . -name “.DS_Store” -depth -exec rm {} \;
 	rm -f ~/.BEAGLESSettings.json ./libs/resources.py
 	rm -rf ./.pytest_cache
 	rm -f ./libs/cythonUtils/*.c

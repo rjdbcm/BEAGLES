@@ -1,23 +1,28 @@
 from __future__ import annotations
-import tensorflow as tf
 import os
-import sys
-from libs.backend.dark import darknet
-from libs.backend.base import SubsystemFactory, Subsystem, register_subsystem
 import numpy as np
-from os.path import basename
+import tensorflow as tf
+from libs.backend.dark import darknet
+from libs.backend.base import SubsystemPrototype, Subsystem, register_subsystem
 from libs.constants import WEIGHTS_FILE_KEYS, WGT_EXT
 
 
-class Loader(SubsystemFactory):
+class Loader(SubsystemPrototype):
     """
-    SubsystemFactory to work with both .weights and .ckpt files
+    SubsystemPrototype to work with both .weights and .ckpt files
     in loading / recollecting / resolving mode
     """
     src_key = list()
     vals = list()
     VAR_LAYER = ['convolutional', 'connected', 'local', 'select', 'conv-select',
                  'extract', 'conv-extract']
+
+    @classmethod
+    def create(cls, path, cfg=None) -> Loader(Subsystem):
+        types = cls.get_register()
+        token = os.path.splitext(path)[1] if path else WGT_EXT
+        this = types.get(token, None)
+        return this(cls.create_key, path, cfg)
 
     def __call__(self, key):
         for idx in range(len(key)):
@@ -36,36 +41,37 @@ class Loader(SubsystemFactory):
 
     def yields(self, idx):
         del self.src_key[idx]
-        temp = self.vals[idx]
-        del self.vals[idx]
+        temp = self.vals.pop(idx)
         return temp
 
-    @classmethod
-    def create(cls, path, cfg=None) -> Loader(Subsystem):
-        types = dict()
-        for subclass in cls.__subclasses__():
-            types.update(subclass.token)
-        token = os.path.splitext(path)[1] if path else WGT_EXT
-        this = types.get(token, None)
-        return this(cls.create_key, path, cfg)
 
-
-@register_subsystem('.weights', Loader)
+@register_subsystem(token='.weights', prototype=Loader)
 class WeightsLoader(Subsystem):
     """one who understands .weights files"""
 
     def constructor(self, path, src_layers):
+        self.eof = False  # end of file
+        self.path = path  # current pos
+        if path is None:
+            self.eof = True
+            return
+        else:
+            self.size = os.path.getsize(path)  # save the path
+            major, minor, revision, seen = np.memmap(path, shape=(), mode='r', offset=0,
+                                                     dtype='({})i4,'.format(4))
+            self.transpose = major > 1000 or minor > 1000
+            self.offset = 16
+
         self.src_layers = src_layers
-        walker = WeightsWalker(path)
 
         for i, layer in enumerate(src_layers):
             if layer.type not in self.VAR_LAYER:
                 continue
             self.src_key.append([layer])
-            
-            if walker.eof:
+
+            if self.eof:
                 new = None
-            else: 
+            else:
                 args = layer.signature
                 new = darknet.create_darkop(*args)
             self.vals.append(new)
@@ -76,19 +82,33 @@ class WeightsLoader(Subsystem):
             for par in order:
                 if par not in new.wshape:
                     continue
-                val = walker.walk(new.wsize[par])
+                val = self.walk(new.wsize[par])
                 new.w[par] = val
-            new.finalize(walker.transpose)
+            new.finalize(self.transpose)
 
-        if walker.path is not None:
-            assert walker.offset == walker.size, \
-            'expect {} bytes, found {}'.format(
-                walker.offset, walker.size)
-            print('Successfully identified {} bytes'.format(
-                walker.offset))
+        if self.path is not None:
+            assert self.offset == self.size, \
+                'expect {} bytes, found {}'.format(
+                    self.offset, self.size)
+            print('Successfully identified {} bytes'.format(self.offset))
+
+    def walk(self, size):
+        if self.eof:
+            return None
+        end_point = self.offset + 4 * size
+        assert end_point <= self.size, \
+            'Over-read {}'.format(self.path)
+        float32_1D_array = np.memmap(self.path, shape=(), mode='r',
+                                     offset=self.offset,
+                                     dtype='({})float32,'.format(size))
+
+        self.offset = end_point
+        if end_point == self.size:
+            self.eof = True
+        return float32_1D_array
 
 
-@register_subsystem('', Loader)
+@register_subsystem(token='', prototype=Loader)
 class CheckpointLoader(Subsystem):
     """
     one who understands .ckpt files, very much
@@ -104,35 +124,3 @@ class CheckpointLoader(Subsystem):
                     packet = [name, var.get_shape().as_list()]
                     self.src_key += [packet]
                     self.vals += [var.eval(sess)]
-
-
-class WeightsWalker(object):
-    """incremental reader of float32 binary files"""
-    def __init__(self, path):
-        self.eof = False  # end of file
-        self.path = path  # current pos
-        if path is None: 
-            self.eof = True
-            return
-        else: 
-            self.size = os.path.getsize(path)# save the path
-            major, minor, revision, seen = np.memmap(path, shape=(), mode='r', offset=0, dtype='({})i4,'.format(4))
-            self.transpose = major > 1000 or minor > 1000
-            self.offset = 16
-
-    def walk(self, size):
-        if self.eof:
-            return None
-        end_point = self.offset + 4 * size
-        assert end_point <= self.size, \
-            'Over-read {}'.format(self.path)
-        float32_1D_array = np.memmap(self.path, shape=(), mode='r', offset=self.offset,
-                                     dtype='({})float32,'.format(size))
-
-        self.offset = end_point
-        if end_point == self.size: 
-            self.eof = True
-        return float32_1D_array
-
-
-

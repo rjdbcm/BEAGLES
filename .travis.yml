@@ -16,14 +16,14 @@ jobs:
       python: 3.6
 
 before_install:
-  - pip3 install -r requirements.txt
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev libqt5x11extras5 xvfb build-essential; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev libqt5x11extras5 xvfb; fi
 install:
   - pyrcc5 -o libs/resources.py resources.qrc
   - python3 setup.py build_ext --inplace
   - pip3 install codecov
+  - pip3 install tox-travis
 script:
-  - xvfb-run --auto-servernum make test
+  - xvfb-run --auto-servernum tox
   - make coverage
   - codecov
   - exit 0
