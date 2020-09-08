@@ -20,7 +20,10 @@ before_install:
 install:
   - pip3 install Cython>=0.29.6
   - pip3 install tox-travis
+  - make qt5
+  - make cython
 script:
   - xvfb-run --auto-servernum tox
+  - coverage run -m unittest discover tests
   - codecov
   - exit 0
