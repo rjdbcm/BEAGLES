@@ -23,6 +23,5 @@ install:
   - pip3 install tox-travis
 script:
   - xvfb-run --auto-servernum tox
-  - make coverage
   - codecov
   - exit 0
