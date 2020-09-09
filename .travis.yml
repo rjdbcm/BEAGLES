@@ -18,13 +18,13 @@ jobs:
 before_install:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev libqt5x11extras5 xvfb; fi
 install:
-  - pip3 install Cython>=0.29.6
   - pip3 install tox-travis
   - pip3 install codecov
+script:
+  - pip3 install -r requirements.txt
   - make qt5
   - make cython
-script:
-  - xvfb-run --auto-servernum tox
+  - xvfb-run --auto-servernum make test
   - coverage run -m unittest discover tests
   - codecov
   - exit 0
