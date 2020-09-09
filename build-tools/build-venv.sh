@@ -34,6 +34,8 @@ else
     exit 1
 fi
 
+echo Compiling and installing BEAGLES in place using virtualenv!
+
 cd ../
 virtualenv --python=python3 .
 . bin/activate

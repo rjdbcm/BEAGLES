@@ -7,13 +7,13 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 
 ##### Created Using:
 
-[![python](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7%20|%203.8-blue.svg)](https://www.python.org/downloads/release/python-360/)
+[![python](https://img.shields.io/badge/python-3.7%20|%203.8-blue.svg)](https://www.python.org/downloads/release/python-360/)
 [![tensorflow](https://raw.githubusercontent.com/aleen42/badges/master/src/tensorflow.svg?)](https://www.tensorflow.org/)
 [![cython](https://img.shields.io/badge/Cython-0.29.6-%23646464)](https://cython.org)
 [![numpy](https://img.shields.io/badge/NumPy-1.18-013243)](https://numpy.org/)
 [![opencv](https://img.shields.io/badge/OpenCV-4.0-%233a6aeb)](https://opencv.org/)
 [![pyqt5](https://img.shields.io/badge/PyQt-5.12-41cd52.svg)](https://pypi.org/project/PyQt5/)
-
+[![traces](https://img.shields.io/badge/traces-0.5.0-orange.svg)](https://github.com/datascopeanalytics/traces)
 
 ##### Build Status:
 

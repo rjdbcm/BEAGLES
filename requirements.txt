@@ -5,8 +5,7 @@ Cython>=0.29.6
 opencv-contrib-python==4.0.0.21
 tensorflow>2.0.0b
 numpy>=1.16.2
-traces>=0.4.2
+traces>=0.5.0
 googletrans~=3.0.0
-pandas~=0.24.2
 setuptools~=41.0.1
 imutils>=0.5.3

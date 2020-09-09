@@ -1,4 +1,3 @@
-# ex: set ts=8 noet:
 
 all: virtualenv qt5 cython install
 
