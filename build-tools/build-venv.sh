@@ -1,13 +1,15 @@
 #!/bin/sh
 
 echo Installing platform specific requirements...
+platform=$(uname)
 
-if [[ $OSTYPE == "linux-gnu" ]]; then
+
+if [ "$platform" = "linux" ]; then
     sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev build-essential
 
-elif [[ $OSTYPE == "darwin"* ]]; then
-    which -s brew
-    if [[ $? != 0 ]] ; then
+elif [ "$platform" = "Darwin" ]; then
+
+    if ! command -v brew ; then
         # Install Homebrew
         /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
     fi
@@ -22,8 +24,7 @@ elif [[ $OSTYPE == "darwin"* ]]; then
         brew install qt
     fi
 
-    which -s python3
-    if [[ $? != 0 ]] ; then
+    if ! command -v python3 ; then
         # Install Python3
         brew install python@3
     fi
@@ -34,4 +35,8 @@ else
 fi
 
 cd ../
-make
+virtualenv --python=python3 .
+. bin/activate
+pip3 install -r requirements.txt
+pyrcc5 -o libs/resources.py resources.qrc
+python3 setup.py build_ext --inplace
