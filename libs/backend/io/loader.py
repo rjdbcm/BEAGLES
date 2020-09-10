@@ -1,4 +1,3 @@
-from __future__ import annotations
 import os
 import numpy as np
 import tensorflow as tf
@@ -18,7 +17,7 @@ class Loader(SubsystemPrototype):
                  'extract', 'conv-extract']
 
     @classmethod
-    def create(cls, path, cfg=None) -> Loader(Subsystem):
+    def create(cls, path, cfg=None):
         types = cls.get_register()
         token = os.path.splitext(path)[1] if path else WGT_EXT
         this = types.get(token, None)

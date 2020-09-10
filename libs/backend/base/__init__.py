@@ -1,4 +1,3 @@
-from __future__ import annotations
 from typing import Union, AnyStr, List, Type, Callable
 from abc import abstractmethod, ABC
 
@@ -39,7 +38,7 @@ class SubsystemPrototype(object):
 
     @classmethod
     @abstractmethod
-    def create(cls, *args) -> SubsystemPrototype(Subsystem):
+    def create(cls, *args):
         raise NotImplementedError(cls.msg)
 
 

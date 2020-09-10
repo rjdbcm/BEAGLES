@@ -1,4 +1,3 @@
-from __future__ import annotations
 from libs.backend.base import SubsystemPrototype, Subsystem, register_subsystem
 from libs.backend.net.frameworks import vanilla
 from libs.backend.net.frameworks import yolo
@@ -11,7 +10,7 @@ class Framework(SubsystemPrototype):
         super(Framework, self).__init__(create_key, *args, **kwargs)
 
     @classmethod
-    def create(cls, meta, flags) -> Framework(Subsystem):
+    def create(cls, meta, flags):
         """
         Uses Darknet configuration metadata type token to find the right registered
         Subsystem and passes metadata and flags into the Product constructor method.
