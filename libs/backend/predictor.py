@@ -11,7 +11,7 @@ class Predictor:
         self.net = TFNet(flags)
         self.pool = ThreadPool()
 
-    def predict(self):
+    def __call__(self):
         def speak_total_time(last, inp_feed):
             self.net.logger.info(f'Total time = {last}s / {len(inp_feed)} inps = {len(inp_feed) / last} ips')
 

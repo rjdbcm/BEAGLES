@@ -14,7 +14,7 @@ class Annotator:
         self.flags = flags
         self.net = TFNet(flags)
 
-    def annotate(self):
+    def __call__(self):
         input_video = self.flags.video
         frame_count = 0
         for i in input_video:

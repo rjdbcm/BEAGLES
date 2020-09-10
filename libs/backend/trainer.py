@@ -13,7 +13,7 @@ class Trainer:
     def __init__(self, flags):
         self.net = TFNet(flags)
 
-    def train(self):
+    def __call__(self):
         self.net.io_flags()
         loss_ph = self.net.framework.placeholders
         profile = list()

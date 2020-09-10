@@ -43,7 +43,7 @@ cp_tf_contrib () {
 }
 
 cp_tf_contrib all_reduce autograph batching bayesflow bigtable boosted_trees checkpoint cloud cluster_resolver cmake coder compiler constrained_optimization copy_graph crf cudnn_rnn data decision_trees deprecated distribute distributions eager estimator factorization feature_column ffmpeg framework fused_conv gan graph_editor grid_rnn hadoop hooks ignite image input_pipeline integrate kafka keras kernel_methods kinesis labeled_tensor layers learn legacy_seq2seq libsvm linear_optimizer lite lookup losses memory_stats meta_graph_transform metrics mixed_precision model_pruning nearest_neighbor nn opt optimizer_v2 periodic_resample predictor proto quantization quantize rate receptive_field recurrent reduce_slice_ops remote_fused_graph resampler rnn rpc saved_model seq2seq session_bundle signal slim solvers sparsemax specs staging stateless stat_summarizer summary tensorboard tensor_forest tensorrt testing text tfprof timeseries tpu training util
-cp libs/cython_utils/nms.cpython-* dist/BEAGLES/libs/cython_utils # TODO: Figure out why Cython won't copy this during setup
+cp libs/cython_utils/nms.cpython-* dist/BEAGLES/libs/cython_utils # Figure out why Cython won't copy this during setup
 
 # Creating a zipfile
 cp -rf dist/BEAGLES $FOLDER

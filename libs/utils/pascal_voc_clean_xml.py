@@ -2,9 +2,9 @@
 parse PASCAL VOC xml annotations
 """
 import os
+import sys
 import defusedxml.ElementTree as ET
 import glob
-from libs.io.flags import FlagIO
 
 
 def pascal_voc_clean_xml(self, annotation_dir, pick, exclusive=False):
@@ -13,10 +13,7 @@ def pascal_voc_clean_xml(self, annotation_dir, pick, exclusive=False):
 
     dumps = list()
     cur_dir = os.getcwd()
-    os.chdir(annotation_dir)
-    annotations = os.listdir('.')
-    annotations = glob.glob(str(annotations)+'*.xml')
-    size = len(annotations)
+    annotations = glob.glob(annotation_dir +'*.xml')
 
     for i, file in enumerate(annotations):
         with open(file) as in_file:

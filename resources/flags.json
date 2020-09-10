@@ -43,7 +43,5 @@
   "trainer": "rmsprop",
   "verbalise": false,
   "video_out": "./data/video_out/",
-  "train": false,
-  "pb_load": false,
-  "meta_load": false
+  "train": false
 }
