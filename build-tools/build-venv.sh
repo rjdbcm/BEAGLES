@@ -4,7 +4,7 @@ echo Installing platform specific requirements...
 platform=$(uname)
 
 
-if [ "$platform" = "linux" ]; then
+if [ "$platform" = "Linux" ]; then
     sudo apt-get install python3-pip pyqt5-dev-tools libomp-dev build-essential
 
 elif [ "$platform" = "Darwin" ]; then
