@@ -2,15 +2,15 @@ import numpy as np
 import cv2
 
 
-def imcv2_recolor(im, a = .1):
+def imcv2_recolor(image, alpha=.1):
 	t = [np.random.uniform()]
 	t += [np.random.uniform()]
 	t += [np.random.uniform()]
 	t = np.array(t) * 2. - 1.
 
 	# random amplify each channel
-	im = im * (1 + t * a)
-	mx = 255. * (1 + a)
+	im = image * (1 + t * alpha)
+	mx = 255. * (1 + alpha)
 	up = np.random.uniform() * 2 - 1
 # 	im = np.power(im/mx, 1. + up * .5)
 	im = cv2.pow(im/mx, 1. + up * .5)

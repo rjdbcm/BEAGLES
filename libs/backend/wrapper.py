@@ -30,20 +30,20 @@ finally:
 
 class BackendWrapper(FlagIO):
     def __init__(self, args):
-        FlagIO.__init__(self, subprogram=False)
+        FlagIO.__init__(self, subprogram=True)
         self.flags = self.parse_arguments() if args else self.read_flags()
+        if not self.flags and not args:
+            raise RuntimeError(f"Wrapper started in flag mode without a prior call to io_flags()")
         self.send_flags()
-        if not self.flags:
-            raise RuntimeError(f"Wrapper script must be run from {BACKEND_ENTRYPOINT}")
         self.flags.started = True
         self.io_flags()
         if self.flags.train:
             trainer = Trainer(self.flags)
             trainer()
         elif self.flags.video != '':
-            Annotator(self.flags).annotate()
+            Annotator(self.flags)()
         else:
-            Predictor(self.flags).predict()
+            Predictor(self.flags)()
         self.done()
 
     def done(self):

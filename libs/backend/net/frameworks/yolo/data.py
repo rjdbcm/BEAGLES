@@ -1,9 +1,6 @@
-from libs.utils.pascal_voc_clean_xml import pascal_voc_clean_xml
-from .predict import preprocess
+from libs.backend.io.pascal_voc_clean_xml import pascal_voc_clean_xml
 # from .misc import show
-from libs.io.flags import FlagIO
 from copy import deepcopy
-import pickle
 import numpy as np
 import os 
 

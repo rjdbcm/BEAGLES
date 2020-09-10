@@ -65,14 +65,14 @@ class FlagIO(object):
             self.flags.to_json(outfile)
 
     def read_flags(self):
-        inpfile = None
+        file = None
         count = 0
-        while inpfile is None:  # retry-while inpfile is None and count < 10:
+        while file is None:  # retry-while file is None and count < 10:
             count += 1
             try:
-                with open(r"{}".format(self.flagpath), "r") as inpfile:
+                with open(r"{}".format(self.flagpath), "r") as file:
                     try:
-                        flags = self.flags.from_json(inpfile)
+                        flags = self.flags.from_json(file)
                     except JSONDecodeError as e:
                         if not e.pos:  # char 0 == flags busy
                             self.logger.warning("Flags Busy: Reusing old")
@@ -85,6 +85,8 @@ class FlagIO(object):
             except FileNotFoundError:
                 if count > 10:
                     break
+        if not isinstance(self.flags, Flags):
+            raise RuntimeError
 
     def io_flags(self):
         self.send_flags()

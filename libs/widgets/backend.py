@@ -9,7 +9,6 @@ from PyQt5.QtWidgets import QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QHBo
                             QDialogButtonBox, QStyle, QLayout, QFormLayout, QGroupBox
 
 
-
 class BackendConnection(QObject):
     progressUpdate = pyqtSignal(int)
 

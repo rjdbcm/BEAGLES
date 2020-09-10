@@ -1,7 +1,7 @@
 import os
 import time
 from libs.backend.dark.darkop import create_darkop
-from libs.utils.config_parser import ConfigParser
+from libs.backend.io.config_parser import ConfigParser
 from libs.io.flags import FlagIO
 from libs.backend.io.loader import Loader
 from libs.constants import CFG_EXT, WGT_EXT

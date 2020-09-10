@@ -1,4 +1,4 @@
-from libs.utils.im_transform import imcv2_recolor, imcv2_affine_trans
+from libs.backend.net.augmentation.im_transform import imcv2_recolor, imcv2_affine_trans
 from collections import namedtuple
 import numpy as np
 import cv2

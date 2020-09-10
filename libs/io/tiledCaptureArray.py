@@ -17,11 +17,9 @@ class TiledCaptureArray(FlagIO):
     """
     def __init__(self, num_divisions: int, video, unused_cameras: list):
         FlagIO.__init__(self, subprogram=True)
-        self.div = math.sqrt(num_divisions)
-        try:  # make sure the number of camera divisions is always an integer
-            assert isinstance(self.div, int)
-        except AssertionError:
-            self.div = int(math.ceil(self.div))
+        # make sure the number of camera divisions is always an integer
+        root = math.sqrt(num_divisions)
+        self.div = root if isinstance(root, int) else int(math.ceil(root))
 
         self.video = video
 

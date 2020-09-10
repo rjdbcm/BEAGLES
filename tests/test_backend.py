@@ -1,6 +1,7 @@
 from unittest import TestCase
 import os
 import sys
+import time
 from shutil import rmtree
 from subprocess import Popen, PIPE
 from zipfile import ZipFile
@@ -17,6 +18,7 @@ class TestBackend(TestCase, FlagIO):
         open('tests/resources/checkpoint', 'w').close()
         with ZipFile('tests/resources/BCCD.v1-resize-416x416.voc.zip', 'r') as f:
             f.extractall('tests/resources/BCCD')
+        time.sleep(5)
 
     def setUp(self):
         FlagIO.__init__(self)
@@ -68,7 +70,7 @@ class TestBackend(TestCase, FlagIO):
         self.flags.epoch = 1
         self.flags.train = True
         t = Trainer(self.flags)
-        self.assertRaises(GradientNaN, t.train)
+        self.assertRaises(GradientNaN, t)
 
     # def testBackendWrapperTrainYoloV1(self):
     #     self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'

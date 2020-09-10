@@ -1,14 +1,3 @@
-from libs.utils.pascal_voc_clean_xml import pascal_voc_clean_xml
-from numpy.random import permutation as perm
-from libs.backend.net.frameworks.yolo.predict import preprocess
-from libs.backend.net.frameworks.yolo.data import shuffle
-from libs.backend.net.frameworks.yolo.data import get_feed_values
-from copy import deepcopy
-import pickle
-import numpy as np
-import os
-
-
 def batch(self, chunk):
     """
     Takes a chunk of parsed annotations
