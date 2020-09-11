@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# TODO: refactor needed, this is fragile and difficult to properly test
+# TODO: refactor needed, this is fragile and difficult to properly test move all CLI
+#       argument parsing to the frontend
 import os
 import sys
 import argparse
