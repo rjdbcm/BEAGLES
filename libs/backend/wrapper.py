@@ -3,8 +3,11 @@
 import os
 import sys
 import argparse
-EXEC_PATH = os.path.abspath("../../") if sys.argv else os.getcwd()
-print(EXEC_PATH, file=sys.stderr)
+try:
+    argv = sys.argv[1]
+except IndexError:
+    argv = []
+EXEC_PATH = os.path.abspath("../../") if argv else os.getcwd()
 sys.path.append(EXEC_PATH)
 from libs.backend.trainer import Trainer
 from libs.backend.predictor import Predictor
@@ -112,7 +115,7 @@ if __name__ == '__main__':
              (BEhavioral Annotation and Gesture LEarning Suite) Backend Wrapper""", '\n'
     )
     io = FlagIO(subprogram=True)
-    flags = parse_arguments() if sys.argv else io.read_flags()
+    flags = parse_arguments() if argv else io.read_flags()
     if not flags and not argv:
         raise RuntimeError(
             f"Wrapper started in flag mode without a prior call to io_flags()")
