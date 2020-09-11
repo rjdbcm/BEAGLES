@@ -17,10 +17,10 @@ from libs.ui.qtUtils import *
 from libs.io.flags import FlagIO
 
 
-class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
+class BeaglesMainWindow(QMainWindow, ActionCallbacks):
     def __init__(self):
         super(BeaglesMainWindow, self).__init__()
-        FlagIO.__init__(self, subprogram=True)
+        self.io = FlagIO(subprogram=True)
 
         def createActions(actions: list):
             nonlocal self
@@ -36,7 +36,7 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks, FlagIO):
                 callback = 'self.' + act
                 cmd_string = cmd.format(_str, action_str, callback, shortcut, icon,
                                         detail, checkable, enabled)
-                self.logger.debug(cmd_string)
+                self.io.logger.debug(cmd_string)
                 exec(cmd_string)
         with open('resources/actions/actions.json', 'r') as json_file:
             self.actionFile = json.load(json_file)

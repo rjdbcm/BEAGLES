@@ -27,7 +27,7 @@ class MainWindow(BeaglesMainWindow):
     def __init__(self, filename=None, predefined_class_file=None,
                  save_directory=None, darkmode=None):
         super(MainWindow, self).__init__()
-        self.logger.info("Initializing GUI")
+        self.io.logger.info("Initializing GUI")
         self.setWindowTitle(APP_NAME)
         self.predefinedClasses = predefined_class_file
         self.defaultSaveDir = save_directory
@@ -211,7 +211,7 @@ class MainWindow(BeaglesMainWindow):
         try:
             shape.paintLabel = self.displayLabelOption.isChecked()
             item = HashableQListWidgetItem(shape.label)
-            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            item.setFlags(int(item.flags()) | Qt.ItemIsUserCheckable)
             item.setCheckState(Qt.Checked)
             item.setBackground(self.generateColorByText(shape.label))
             self.itemsToShapes[item] = shape

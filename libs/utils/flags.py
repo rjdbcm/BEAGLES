@@ -40,7 +40,7 @@ class Flags(dict):
         self.gpu_name = '/gpu:0'
         self.imgdir = './data/sample_img/'
         self.img_out = './data/img_out/'
-        self.output_type = []
+        self.output_type = ''
         self.keep = 20
         self.kill = False
         self.labels = './data/predefined_classes.txt'

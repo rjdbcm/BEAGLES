@@ -7,15 +7,15 @@ from libs.backend.io.loader import Loader
 from libs.constants import CFG_EXT, WGT_EXT
 
 
-class Darknet(FlagIO, object):
+class Darknet(object):
 
     def __init__(self, flags):
-        FlagIO.__init__(self, subprogram=True)
+        self.io = FlagIO(subprogram=True)
         self.get_weight_src(flags)
         self.modify = False
         self.config = ConfigParser(self.src_cfg)
 
-        self.logger.info('Parsing {}'.format(self.src_cfg))
+        self.io.logger.info('Parsing {}'.format(self.src_cfg))
         src_parsed = self.create_ops()
         self.meta, self.layers = src_parsed
         self.load_weights()
@@ -44,7 +44,7 @@ class Darknet(FlagIO, object):
             name = self.model_name(flags.load)
             cfg_path = os.path.join(flags.config, name + CFG_EXT)
             if not os.path.isfile(cfg_path):
-                self.logger.warn(f'{cfg_path} not found, use {flags.model} instead')
+                self.io.logger.warn(f'{cfg_path} not found, use {flags.model} instead')
                 cfg_path = flags.model
             self.src_cfg = cfg_path
             flags.load = int()
@@ -82,9 +82,9 @@ class Darknet(FlagIO, object):
                     new = create_darkop(*info)
                 layers.append(new)
         except TypeError as e:
-            self.flags.error = str(e)
-            self.logger.error(str(e))
-            self.send_flags()
+            self.io.flags.error = str(e)
+            self.io.logger.error(str(e))
+            self.io.send_flags()
             raise
         return meta, layers
 
@@ -92,7 +92,7 @@ class Darknet(FlagIO, object):
         """
         Use `layers` and Loader to load .weights file
         """
-        self.logger.info(f'Loading {self.src_bin} ...')
+        self.io.logger.info(f'Loading {self.src_bin} ...')
         start = time.time()
 
         args = [self.src_bin, self.layers]
@@ -101,4 +101,4 @@ class Darknet(FlagIO, object):
             layer.load(wgts_loader)
 
         stop = time.time()
-        self.logger.info('Finished in {}s'.format(stop - start))
+        self.io.logger.info('Finished in {}s'.format(stop - start))

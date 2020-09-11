@@ -1,5 +1,5 @@
 
-all: virtualenv qt5 cython install
+all: virtualenv qt5 cython
 
 dev_package: qt5 local_package
 

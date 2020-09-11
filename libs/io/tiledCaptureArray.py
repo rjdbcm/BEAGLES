@@ -5,7 +5,7 @@ import subprocess
 from libs.io.flags import FlagIO
 
 
-class TiledCaptureArray(FlagIO):
+class TiledCaptureArray:
     """Object definition for tiled capture arrays.
     __init__ Args:
             num_divisions: number of tiles to process
@@ -16,7 +16,7 @@ class TiledCaptureArray(FlagIO):
             stream copies processed tiles to labeled files
     """
     def __init__(self, num_divisions: int, video, unused_cameras: list):
-        FlagIO.__init__(self, subprogram=True)
+        self.logger = FlagIO(subprogram=True).logger
         # make sure the number of camera divisions is always an integer
         root = math.sqrt(num_divisions)
         self.div = root if isinstance(root, int) else int(math.ceil(root))

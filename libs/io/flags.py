@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import inspect
 from json.decoder import JSONDecodeError
 import logging
 import subprocess
@@ -17,7 +18,11 @@ class FlagIO(object):
         self.flags = Flags()
 
         logging.captureWarnings(True)
-        self.logger = logging.getLogger(type(self).__name__)
+        try:
+            caller = inspect.stack()[1][0].f_locals["self"].__class__.__name__
+        except KeyError:
+            caller = 'BackendWrapper'
+        self.logger = logging.getLogger(caller)
         formatter = logging.Formatter(
             '{asctime} | {levelname:7} | {name:<11} | {funcName:<20} |'
             ' {message}', style='{')
@@ -61,8 +66,11 @@ class FlagIO(object):
 
     def send_flags(self):
         self.logger.debug(self.flags)
-        with open(r"{}".format(self.flagpath), "w") as outfile:
-            self.flags.to_json(outfile)
+        try:
+            with open(r"{}".format(self.flagpath), "w") as outfile:
+                self.flags.to_json(outfile)
+        except FileNotFoundError:
+            pass
 
     def read_flags(self):
         file = None
@@ -85,8 +93,6 @@ class FlagIO(object):
             except FileNotFoundError:
                 if count > 10:
                     break
-        if not isinstance(self.flags, Flags):
-            raise RuntimeError
 
     def io_flags(self):
         self.send_flags()

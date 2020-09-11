@@ -12,7 +12,7 @@ from libs.utils.errors import GradientNaN
 from libs.constants import BACKEND_ENTRYPOINT
 
 
-class TestBackend(TestCase, FlagIO):
+class TestBackend(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         open('tests/resources/checkpoint', 'w').close()
@@ -21,8 +21,8 @@ class TestBackend(TestCase, FlagIO):
         time.sleep(5)
 
     def setUp(self):
-        FlagIO.__init__(self)
-        self.flags = Flags()
+        self.io = FlagIO(subprogram=False)
+        self.flags = self.io.flags
 
     def testBackendWrapperYoloV2(self):
         self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'
@@ -38,19 +38,18 @@ class TestBackend(TestCase, FlagIO):
         self.flags.batch = 4
         self.flags.epoch = 1
         self.flags.train = True
-        self.io_flags()
+        self.io.io_flags()
         proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
         proc.communicate()
         self.assertEqual(proc.returncode, 0)
         self.flags.load = 63
-        self.io_flags()
+        self.io.io_flags()
         proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
         proc.communicate()
         self.assertEqual(proc.returncode, 0)
         self.flags.train = False
         self.flags.imgdir = 'tests/resources/BCCD/test'
-        self.flags.predict = True
-        self.io_flags()
+        self.io.io_flags()
         proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
         proc.communicate()
         self.assertEqual(proc.returncode, 0)
@@ -87,7 +86,7 @@ class TestBackend(TestCase, FlagIO):
     #     self.io_flags()
 
     def tearDown(self) -> None:
-        self.cleanup_ramdisk()
+        self.io.cleanup_ramdisk()
 
     @classmethod
     def tearDownClass(cls):

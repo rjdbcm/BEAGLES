@@ -9,13 +9,14 @@ from libs.backend.net.tfnet import TFNet
 class Predictor:
     def __init__(self, flags):
         self.net = TFNet(flags)
+        self.flags = flags
         self.pool = ThreadPool()
 
     def __call__(self):
         def speak_total_time(last, inp_feed):
             self.net.logger.info(f'Total time = {last}s / {len(inp_feed)} inps = {len(inp_feed) / last} ips')
 
-        self.flags = self.net.io.read_flags()
+        self.net.io_flags()
         inp_path = self.flags.imgdir
         all_inps = os.listdir(inp_path)
         all_inps = [i for i in all_inps if self.net.framework.is_input(i)]
