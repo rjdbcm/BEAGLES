@@ -11,10 +11,15 @@ class Loader(SubsystemPrototype):
     SubsystemPrototype to work with both .weights and .ckpt files
     in loading / recollecting / resolving mode
     """
+    VAR_LAYER = ['convolutional',
+                 'connected',
+                 'local',
+                 'select',
+                 'conv-select',
+                 'extract',
+                 'conv-extract']
     src_key = list()
     vals = list()
-    VAR_LAYER = ['convolutional', 'connected', 'local', 'select', 'conv-select',
-                 'extract', 'conv-extract']
 
     @classmethod
     def create(cls, path, cfg=None):
@@ -86,20 +91,16 @@ class WeightsLoader(Subsystem):
             new.finalize(self.transpose)
 
         if self.path is not None:
-            assert self.offset == self.size, \
-                'expect {} bytes, found {}'.format(
-                    self.offset, self.size)
-            print('Successfully identified {} bytes'.format(self.offset))
+            assert self.offset == self.size, f'expect {self.offset} bytes, found {self.size}'
+            print(f'Successfully identified {self.offset} bytes')
 
     def walk(self, size):
         if self.eof:
             return None
         end_point = self.offset + 4 * size
-        assert end_point <= self.size, \
-            'Over-read {}'.format(self.path)
-        float32_1D_array = np.memmap(self.path, shape=(), mode='r',
-                                     offset=self.offset,
-                                     dtype='({})float32,'.format(size))
+        assert end_point <= self.size, f'Over-read {self.path}'
+        float32_1D_array = np.memmap(self.path, shape=(), mode='r', offset=self.offset,
+                                     dtype=f'({size})float32,')
 
         self.offset = end_point
         if end_point == self.size:

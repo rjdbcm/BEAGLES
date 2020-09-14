@@ -1,8 +1,19 @@
 import cv2
 import math
 import os
+import re
 import subprocess
+from datetime import datetime
 from libs.io.flags import FlagIO
+
+DATETIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
+DATETIME_RE = re.compile(r'([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])[_\s][0-1][0-9]-[0-6][0-9]-[0-6][0-9])')
+
+
+def datetime_from_filename(filename):
+    """Extracts a datetime object from OBS Video Filename
+       containing %CCYY-%MM-%DD %hh-%mm-%ss or %CCYY-%MM-%DD_%hh-%mm-%ss"""
+    return datetime.strptime(DATETIME_RE.search(filename).groups()[0], DATETIME_FORMAT)
 
 
 class TiledCaptureArray:
@@ -64,7 +75,8 @@ class TiledCaptureArray:
             y = ys[i-1]
             output = f'{name}_camera_{i}{ext}'
             cmd = f'ffmpeg -hide_banner -y -i "{self.video}" -filter:v ' \
-                  f'"crop={w_inc}:{h_inc}:{x}:{y}" -c:a copy "{output}"'
+                  f'"crop={w_inc}:{h_inc}:{x}:{y}" -c:a copy -map_metadata 0 ' \
+                  f'-map_metadata:s:v 0:s:v -map_metadata:s:a 0:s:a "{output}"'
             self.logger.debug(cmd)
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
             self.logger.info(f'Started ffmpeg PID: {proc.pid} Output: {output}')

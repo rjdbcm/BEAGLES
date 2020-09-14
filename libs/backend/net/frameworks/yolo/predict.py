@@ -29,7 +29,7 @@ def process_box(self, b, h, w, threshold):
     max_indx = np.argmax(b.probs)
     max_prob = b.probs[max_indx]
     label = self.meta['labels'][max_indx]
-    box = namedtuple('Box', 'left right top bot label max_index max_prob')
+    box = namedtuple('Box', 'left right top bot mess max_indx max_prob')
     if max_prob > threshold:
         left = int((b.x - b.w / 2.) * w)
         right = int((b.x + b.w / 2.) * w)

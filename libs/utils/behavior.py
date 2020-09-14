@@ -2,61 +2,72 @@ import os
 import csv
 import sys
 import json
-from datetime import timedelta
+from dateutil.parser import parse as date_parse
+from datetime import timedelta, datetime
 from traces import TimeSeries, plot
+import re
 from libs.constants import EPOCH
 
 
 class BehaviorAnalysis:
     """
-    Takes a list of csv files and analyzes.
+    Takes a list of header-less csv files and analyzes.
     """
-    def __init__(self, file_list, classes: list, start_time=None, measure_interval=None):
-        if start_time:
-            start_minutes, start_seconds = start_time.split(':')
-            self.start_time = EPOCH + timedelta(minutes=int(start_minutes),
-                                                seconds=int(start_seconds))
-        else:
-            self.start_time = EPOCH
+    def __init__(self, file_list, classes: list, start_time: timedelta, measure_interval: timedelta, ordinal=False, **kwargs):
+        self.start_time = start_time
         self.measure_interval = measure_interval
-        self.end_time = self.start_time + timedelta(seconds=measure_interval)
-        self.classes = classes
+        self.end_time = self.start_time + measure_interval
+        self._classes = classes
+        self._ordinal = ordinal
         self.series = list()
-        self.empties = list()
+        kwargs.update({'value_transform': lambda cls: self.order.get(cls)}) if ordinal else None
+
         for file in file_list:
             if not os.path.isfile(file):
                 print(f'File {file} not found. Skipping...')
                 continue
             try:
-                ts = TimeSeries.from_csv(file)
-                ts = self.trim(ts)
+                ts = TimeSeries.from_csv(file, **kwargs)
+                ts = self._trim(ts)
             except StopIteration:
                 ts = TimeSeries()
             self.series.append(ts)
         self.file_list = file_list
+        self._data = self.report()
+
+    def __call__(self):
+        return self.data
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def classes(self):
+        return self._classes
+
+    @property
+    def ordinal(self):
+        return self._ordinal
+
+    @property
+    def order(self):
+        return {v: i for i, v in enumerate(self.classes)} if self.ordinal else None
 
     def __len__(self):
         return len(self.series)
 
     def save_plot(self):
         for ts in self.series:
-            plt, _ = plot.plot(ts)
+            plt, _ = plot.plot(ts, linewidth=2, figure_width=13)
             plt.show()
 
-    def trim(self, ts):
-        before_start = list()
-        after_end = list()
-        for i, time in enumerate(ts._d.keys()):
-            if self.start_time > time:
-                before_start.append(time)
-            elif time > self.end_time:
-                after_end.append(time)
-        if before_start:
-            for time in before_start:
-                del ts._d[time]
-        if after_end:
-            for time in after_end:
-                del ts._d[time]
+    def _trim(self, ts):
+        before = [time for time in ts._d.keys() if time < self.start_time]
+        after = [time for time in ts._d.keys() if time > self.end_time]
+        [print(i) for i in after]
+        unused = before + after
+        [ts.remove(time) for time in unused] if unused else None
         return ts
 
     def individuals(self):
@@ -85,7 +96,7 @@ class BehaviorAnalysis:
 
     def total_behavior_index(self):
         values = self.total_intervals().values()
-        beh_indices = [val / self.measure_interval for val in values]
+        beh_indices = [val / self.measure_interval.total_seconds() for val in values]
         return dict(zip(self.file_list, beh_indices))
 
     def report(self):
@@ -94,17 +105,17 @@ class BehaviorAnalysis:
         report = self.individuals()
         for indv, behs in report.items():
             behs.update({'beh_interval': intervals[indv]})
-            behs.update({'beh_index': intervals[indv] / self.measure_interval})
+            behs.update({'beh_index': intervals[indv] / self.measure_interval.total_seconds()})
             behs.update({'total_bouts': bouts[indv]})
         return report
 
     def json_report(self, **kwargs):
-        report = self.report()
+        report = self.data
         report = json.dumps(report, **kwargs)
         return report
 
     def csv_report(self, target=sys.stdout):
-        report = self.report()
+        report = self.data
         fields = ['file', 'beh_interval', 'beh_index', 'total_bouts'] + self.classes
         w = csv.DictWriter(target, fields)
         w.writeheader()
@@ -129,5 +140,3 @@ class BehaviorAnalysis:
         delta = ts.last_key() - ts.first_key()
         delta = delta.total_seconds()
         return delta
-
-

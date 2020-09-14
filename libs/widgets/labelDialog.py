@@ -45,7 +45,7 @@ class LabelDialog(QDialog):
 
     @staticmethod
     def labelValidator():
-        return QRegExpValidator(QRegExp(LABEL_RE), None)
+        return QRegExpValidator(QRegExp(LABEL_RE.pattern), None)
 
     def validate(self):
         try:

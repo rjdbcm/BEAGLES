@@ -1,12 +1,13 @@
 from os.path import expanduser, join
 from os import getcwd
 from datetime import datetime
+import re
 
 APP_NAME = 'BEAGLES'
 SAVE_SETTINGS_PATH = join(expanduser("~"), '.BEAGLESSettings.json')
 DEFAULT_FLAGS_PATH = join(getcwd(), 'resources/flags.json')
 BACKEND_ENTRYPOINT = join(getcwd(), 'libs/backend/wrapper.py')
-EPOCH = datetime(1970, 1, 1, 0, 0)
+EPOCH = datetime.fromtimestamp(0)
 SETTING_FILENAME = 'filename'
 SETTING_RECENT_FILES = 'recentFiles'
 SETTING_WIN_SIZE = 'window/size'
@@ -29,8 +30,9 @@ XML_EXT = '.xml'
 TXT_EXT = '.txt'
 CFG_EXT = '.cfg'
 WGT_EXT = '.weights'
-FLOAT_RE = r'(([+-]?\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)'
-LABEL_RE = r'^[^ \t].+'
+FLOAT_RE = re.compile(r'(([+-]?\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)')
+LABEL_RE = re.compile(r'^[^ \t].+')
+
 WEIGHTS_FILE_KEYS = dict({  # order of param flattened into .weights file
     'convolutional': [
         'biases',
