@@ -2,16 +2,14 @@ import os
 import csv
 import sys
 import json
-from dateutil.parser import parse as date_parse
-from datetime import timedelta, datetime
+from datetime import timedelta
 from traces import TimeSeries, plot
-import re
-from libs.constants import EPOCH
 
 
 class BehaviorAnalysis:
     """
-    Takes a list of header-less csv files and analyzes.
+    Takes a list of header-less csv files and analyzes. Extends traces.TimeSeries to work
+    with datetime.timedelta instead of datetime.datetime.
     """
     def __init__(self, file_list, classes: list, start_time: timedelta, measure_interval: timedelta, ordinal=False, **kwargs):
         self.start_time = start_time
@@ -21,7 +19,7 @@ class BehaviorAnalysis:
         self._ordinal = ordinal
         self.series = list()
         kwargs.update({'value_transform': lambda cls: self.order.get(cls)}) if ordinal else None
-
+        kwargs.update({'time_transform': lambda t: timedelta(seconds=float(t))})
         for file in file_list:
             if not os.path.isfile(file):
                 print(f'File {file} not found. Skipping...')
@@ -57,9 +55,9 @@ class BehaviorAnalysis:
     def __len__(self):
         return len(self.series)
 
-    def save_plot(self):
+    def save_plot(self, **kwargs):
         for ts in self.series:
-            plt, _ = plot.plot(ts, linewidth=2, figure_width=13)
+            plt, _ = plot.plot(ts, **kwargs)
             plt.show()
 
     def _trim(self, ts):
@@ -127,10 +125,8 @@ class BehaviorAnalysis:
     def beh_indices(self, ts):
         behaviors = dict()
         distribution = ts.distribution().items() if not ts.is_empty() else dict()
-        for beh, value in distribution:
-            behaviors.update({beh: value})
-        for beh in self.classes:
-            behaviors.update({beh: 0.0}) if beh not in behaviors.keys() else None
+        [behaviors.update({beh: val}) for beh, val in distribution]
+        [behaviors.update({beh: 0.0}) for beh in self.classes if beh not in behaviors.keys()]
         return behaviors
 
     @staticmethod
