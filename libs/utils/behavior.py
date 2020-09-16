@@ -2,39 +2,33 @@ import os
 import csv
 import sys
 import json
+from typing import List, AnyStr
 from datetime import timedelta
 from traces import TimeSeries, plot
 
 
 class BehaviorAnalysis:
     """
-    Takes a list of header-less csv files and analyzes. Extends traces.TimeSeries to work
-    with datetime.timedelta instead of datetime.datetime.
+    Create behavior analyses from unevenly-spaced timeseries annotation data.
     """
-    def __init__(self, file_list, classes: list, start_time: timedelta, measure_interval: timedelta, ordinal=False, **kwargs):
-        self.start_time = start_time
-        self.measure_interval = measure_interval
-        self.end_time = self.start_time + measure_interval
-        self._classes = classes
+    def __init__(self, classes: List[AnyStr], start_time: timedelta, measure_interval: timedelta, ordinal=False):
+        self.start_time = start_time.total_seconds()
+        self.measure_interval = measure_interval.total_seconds()
+        self.end_time = self.start_time + self.measure_interval
         self._ordinal = ordinal
+        self._classes = classes
         self.series = list()
-        kwargs.update({'value_transform': lambda cls: self.order.get(cls)}) if ordinal else None
-        kwargs.update({'time_transform': lambda t: timedelta(seconds=float(t))})
-        for file in file_list:
-            if not os.path.isfile(file):
-                print(f'File {file} not found. Skipping...')
-                continue
-            try:
-                ts = TimeSeries.from_csv(file, **kwargs)
-                ts = self._trim(ts)
-            except StopIteration:
-                ts = TimeSeries()
-            self.series.append(ts)
-        self.file_list = file_list
-        self._data = self.report()
+        self.file_list = list()
+        self._data = dict()
 
-    def __call__(self):
-        return self.data
+    def __repr__(self):
+        name = self.__class__.__name__
+        files = self.file_list
+        classes = self.classes
+        start = self.start_time
+        mi = self.measure_interval
+        ordinal = self.ordinal
+        return f'{name}({files}, {classes}, {start}, {mi}, {ordinal})'
 
     @property
     def data(self):
@@ -50,38 +44,29 @@ class BehaviorAnalysis:
 
     @property
     def order(self):
-        return {v: i for i, v in enumerate(self.classes)} if self.ordinal else None
+        return {cls: i for i, cls in enumerate(self.classes)}
 
-    def __len__(self):
-        return len(self.series)
+    @property
+    def rev_order(self):
+        return {i: cls for i, cls in enumerate(self.classes)}
 
-    def save_plot(self, **kwargs):
-        for ts in self.series:
-            plt, _ = plot.plot(ts, **kwargs)
-            plt.show()
-
-    def _trim(self, ts):
-        before = [time for time in ts._d.keys() if time < self.start_time]
-        after = [time for time in ts._d.keys() if time > self.end_time]
-        [print(i) for i in after]
-        unused = before + after
-        [ts.remove(time) for time in unused] if unused else None
-        return ts
-
-    def individuals(self):
+    @property
+    def individual_behs(self):
         """
         Returns: dict of individual single behavior indices per csv
         """
-        indices = [self.beh_indices(ts) for ts in self.series]
+        indices = [self._beh_indices(ts) for ts in self.series]
         return dict(zip(self.file_list, indices))
 
+    @property
     def total_intervals(self):
         """
         Returns: dict of form {file_name: total_beh_interval)
         """
-        intervals = [self.beh_interval(ts) for ts in self.series]
+        intervals = [self._beh_interval(ts) for ts in self.series]
         return dict(zip(self.file_list, intervals))
 
+    @property
     def total_bouts(self):
         bouts = list()
         for ts in self.series:
@@ -92,27 +77,80 @@ class BehaviorAnalysis:
                 bouts.append(0)
         return dict(zip(self.file_list, bouts))
 
+    @property
     def total_behavior_index(self):
-        values = self.total_intervals().values()
-        beh_indices = [val / self.measure_interval.total_seconds() for val in values]
+        values = self.total_intervals.values()
+        beh_indices = [val / self.measure_interval for val in values]
         return dict(zip(self.file_list, beh_indices))
 
-    def report(self):
-        intervals = self.total_intervals()
-        bouts = self.total_bouts()
-        report = self.individuals()
+    def _report(self):
+        intervals = self.total_intervals
+        bouts = self.total_bouts
+        report = self.individual_behs
         for indv, behs in report.items():
             behs.update({'beh_interval': intervals[indv]})
-            behs.update({'beh_index': intervals[indv] / self.measure_interval.total_seconds()})
+            behs.update({'beh_index': intervals[indv] / self.measure_interval})
             behs.update({'total_bouts': bouts[indv]})
         return report
 
-    def json_report(self, **kwargs):
+    def _trim(self, ts):
+        before = [time for time in ts._d.keys() if time < self.start_time]
+        after = [time for time in ts._d.keys() if time > self.end_time]
+        unused = before + after
+        [ts.remove(time) for time in unused] if unused else None
+        return ts
+
+    def _beh_indices(self, ts):
+        behaviors = dict()
+        distribution = ts.distribution().items() if not ts.is_empty() else dict()
+        if self.ordinal:
+            [behaviors.update({self.rev_order.get(beh): val}) for beh, val in distribution]
+            [behaviors.update({cls: 0.0}) for cls in self.order.keys() if cls not in behaviors.keys()]
+        else:
+            [behaviors.update({beh: val}) for beh, val in distribution]
+            [behaviors.update({beh: 0.0}) for beh in self.classes if beh not in behaviors.keys()]
+        return behaviors
+
+    @staticmethod
+    def _beh_interval(ts):
+        if ts.is_empty():
+            return 0
+        delta = ts.last_key() - ts.first_key()
+        return delta
+
+    # METHODS #
+    def add_annotations(self, files: List[os.PathLike], **kwargs):
+        [self.file_list.append(file) for file in files]
+        kwargs.update({'value_transform': lambda cls: self.order.get(cls)}) if self.ordinal else None
+        kwargs.update({'time_transform': lambda t: timedelta(seconds=float(t))}) if not kwargs['time_transform'] else None
+        for file in files:
+            if not os.path.isfile(file):
+                print(f'File {file} not found. Skipping...')
+                continue
+            try:
+                ts = TimeSeries.from_csv(file, **kwargs)
+                ts = self._trim(ts)
+            except StopIteration:
+                ts = TimeSeries()
+            self.series.append(ts)
+        self._data = self._report()
+
+    def rem_annotations(self, files: List[os.PathLike]):
+        files_removed = list()
+        series_removed = list()
+        for file in files:
+            idx = self.file_list.index(file)
+            files_removed.append(self.file_list.pop(idx))
+            series_removed.append(self.series.pop(idx))
+        self._data = self._report()
+        return dict(zip(files_removed, series_removed))
+
+    def to_json(self, **kwargs):
         report = self.data
         report = json.dumps(report, **kwargs)
         return report
 
-    def csv_report(self, target=sys.stdout):
+    def to_csv(self, target=sys.stdout):
         report = self.data
         fields = ['file', 'beh_interval', 'beh_index', 'total_bouts'] + self.classes
         w = csv.DictWriter(target, fields)
@@ -122,17 +160,12 @@ class BehaviorAnalysis:
             row.update(val)
             w.writerow(row)
 
-    def beh_indices(self, ts):
-        behaviors = dict()
-        distribution = ts.distribution().items() if not ts.is_empty() else dict()
-        [behaviors.update({beh: val}) for beh, val in distribution]
-        [behaviors.update({beh: 0.0}) for beh in self.classes if beh not in behaviors.keys()]
-        return behaviors
-
-    @staticmethod
-    def beh_interval(ts):
-        if ts.is_empty():
-            return 0
-        delta = ts.last_key() - ts.first_key()
-        delta = delta.total_seconds()
-        return delta
+    def generate_plots(self, **kwargs):
+        for ts in self.series:
+            plt, axes = plot.plot(ts, **kwargs)
+            plt.set_tight_layout(False)
+            axes.set_ylabel('Behaviors')
+            axes.set_yticks([0.0, 1.0, 2.0, 3.0])
+            axes.set_yticklabels(self.classes)
+            axes.set_xlim(0, self.measure_interval)
+            yield plt, axes

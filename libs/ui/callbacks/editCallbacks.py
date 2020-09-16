@@ -50,7 +50,7 @@ class EditCallbacks(EditFunctions):
                                           default=DEFAULT_FILL_COLOR)
         if color:
             self.canvas.selectedShape.fill_color = color
-            self.canvas.update()
+            self.canvas.updates_data()
             self.setDirty()
 
     def shapeLineColor(self):
@@ -58,7 +58,7 @@ class EditCallbacks(EditFunctions):
                                           default=DEFAULT_LINE_COLOR)
         if color:
             self.canvas.selectedShape.line_color = color
-            self.canvas.update()
+            self.canvas.updates_data()
             self.setDirty()
 
     def boxLineColor(self):
@@ -68,7 +68,7 @@ class EditCallbacks(EditFunctions):
             self.lineColor = color
             Shape.line_color = color
             self.canvas.setDrawingColor(color)
-            self.canvas.update()
+            self.canvas.updates_data()
             self.setDirty()
 
     def copySelectedShape(self):

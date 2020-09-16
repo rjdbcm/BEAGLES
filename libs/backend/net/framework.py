@@ -13,7 +13,7 @@ class Framework(SubsystemPrototype):
     def create(cls, meta, flags):
         """
         Uses Darknet configuration metadata type token to find the right registered
-        Subsystem and passes metadata and flags into the Product constructor method.
+        Subsystem and passes metadata and flags into the Subsystem's constructor method.
         """
         type_token = meta['type']
         types = cls.get_register()

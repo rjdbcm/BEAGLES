@@ -304,7 +304,7 @@ class MainWindow(BeaglesMainWindow):
         assert not self.image.isNull(), "cannot paint null image"
         self.canvas.scale = 0.01 * self.zoomWidget.value()
         self.canvas.adjustSize()
-        self.canvas.update()
+        self.canvas.updates_data()
 
     def copyShape(self):
         self.canvas.endMove(copy=True)
