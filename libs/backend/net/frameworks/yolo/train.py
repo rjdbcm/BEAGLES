@@ -87,6 +87,6 @@ def loss(self, net_out):
     loss = tf.compat.v1.multiply(loss, wght)
     loss = tf.compat.v1.reduce_sum(loss, 1)
     self.loss = .5 * tf.compat.v1.reduce_mean(loss)
-    tf.summary.scalar("/".join([os.path.basename(m['model']),
+    tf.compat.v1.summary.scalar("/".join([os.path.basename(m['model']),
                                 self.flags.trainer,
                                 "loss"]), self.loss)

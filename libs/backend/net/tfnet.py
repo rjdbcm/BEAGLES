@@ -115,9 +115,9 @@ class TFNet:
             self.build_train_op()
 
         if self.flags.summary:
-            writer_name = self.flags.summary + self.flags.project_name
-            self.writer = tf.summary.create_file_writer(writer_name)
-            self.writer.set_as_default()
+            self.summary_op = tf.compat.v1.summary.merge_all()
+            self.writer = tf.compat.v1.summary.FileWriter(
+                self.flags.summary + self.flags.project_name)
 
         self.sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(**cfg))
         # uncomment next 3 lines to enable tb debugger
@@ -213,8 +213,9 @@ class TFNet:
         # create histogram summaries
         for grad, var in zip(self.gradients, self.variables):
             name = var.name.split('/')
-            normed_gradients = _l2_norm(grad) if not self.flags.clip else grad
-            tf.summary.histogram("gradients/" + name[1], normed_gradients)
+            with tf.compat.v1.variable_scope(name[0] + '/'):
+                normed_gradients = _l2_norm(grad) if not self.flags.clip else grad
+                tf.summary.histogram("gradients/" + name[1], normed_gradients)
                 # tf.summary.histogram("variables/" + name[1], _l2_norm(var))
 
         # create train opt
