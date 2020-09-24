@@ -1,19 +1,26 @@
+from typing import Dict
+
 import cv2
 import math
 import os
 import re
 import subprocess
-from datetime import datetime
+from datetime import datetime as dt
 from libs.io.flags import FlagIO
 
-DATETIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
-DATETIME_RE = re.compile(r'([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])[_\s][0-1][0-9]-[0-6][0-9]-[0-6][0-9])')
+DT_FORMAT = {'underscore': '%Y-%m-%d_%H-%M-%S',
+             'space':      '%Y-%m-%d %H-%M-%S'}
+DT_RE = re.compile(r'([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])[_\s][0-1][0-9]-[0-6][0-9]-[0-6][0-9])')
 
 
 def datetime_from_filename(filename):
     """Extracts a datetime object from OBS Video Filename
        containing %CCYY-%MM-%DD %hh-%mm-%ss or %CCYY-%MM-%DD_%hh-%mm-%ss"""
-    return datetime.strptime(DATETIME_RE.search(filename).groups()[0], DATETIME_FORMAT)
+    try:
+        datetime = dt.strptime(DT_RE.search(filename).groups()[0], DT_FORMAT['underscore'])
+    except ValueError:
+        datetime = dt.strptime(DT_RE.search(filename).groups()[0], DT_FORMAT['space'])
+    return datetime
 
 
 class TiledCaptureArray:

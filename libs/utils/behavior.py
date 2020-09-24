@@ -1,34 +1,50 @@
 import os
+import io
 import csv
 import sys
 import json
+from datetime import datetime
+from functools import partial
+import numpy as np
+import matplotlib.pyplot as plt
+import tensorflow as tf
+import pandas as pd
+from matplotlib.ticker import AutoMinorLocator, AutoLocator
 from typing import List, AnyStr
 from datetime import timedelta
-from traces import TimeSeries, plot
+from traces import TimeSeries
+from matplotlib import font_manager
+from libs.io.obs import datetime_from_filename, DT_FORMAT
+
+COLUMNS = {
+    'time': 0,
+    'beh': 1,
+    'prob': 2,
+    'center_x': 3,
+    'center_y': 4,
+    'left': 5,
+    'top': 6,
+    'right': 7,
+    'bottom': 8
+}
 
 
 class BehaviorAnalysis:
     """
     Create behavior analyses from unevenly-spaced timeseries annotation data.
     """
-    def __init__(self, classes: List[AnyStr], start_time: timedelta, measure_interval: timedelta, ordinal=False):
-        self.start_time = start_time.total_seconds()
-        self.measure_interval = measure_interval.total_seconds()
+    def __init__(self, classes: List[AnyStr], start_time: int = 0,
+                 measure_interval: int = 600, decay_time: float = 1.0, ordinal=False):
+        self.decay_time = decay_time
+        self.start_time = start_time
+        self.measure_interval = measure_interval
         self.end_time = self.start_time + self.measure_interval
         self._ordinal = ordinal
         self._classes = classes
-        self.series = list()
+        self.metadata: List[pd.DataFrame] = list()
+        self.series: List[TimeSeries] = list()
         self.file_list = list()
         self._data = dict()
-
-    def __repr__(self):
-        name = self.__class__.__name__
-        files = self.file_list
-        classes = self.classes
-        start = self.start_time
-        mi = self.measure_interval
-        ordinal = self.ordinal
-        return f'{name}({files}, {classes}, {start}, {mi}, {ordinal})'
 
     @property
     def data(self):
@@ -93,13 +109,6 @@ class BehaviorAnalysis:
             behs.update({'total_bouts': bouts[indv]})
         return report
 
-    def _trim(self, ts):
-        before = [time for time in ts._d.keys() if time < self.start_time]
-        after = [time for time in ts._d.keys() if time > self.end_time]
-        unused = before + after
-        [ts.remove(time) for time in unused] if unused else None
-        return ts
-
     def _beh_indices(self, ts):
         behaviors = dict()
         distribution = ts.distribution().items() if not ts.is_empty() else dict()
@@ -111,37 +120,42 @@ class BehaviorAnalysis:
             [behaviors.update({beh: 0.0}) for beh in self.classes if beh not in behaviors.keys()]
         return behaviors
 
-    @staticmethod
-    def _beh_interval(ts):
+    def _beh_interval(self, ts: TimeSeries):
         if ts.is_empty():
             return 0
-        delta = ts.last_key() - ts.first_key()
-        return delta
+        return sum([en-st for st, en, _ in ts.iterperiods() if en-st < self.decay_time])
 
     # METHODS #
-    def add_annotations(self, files: List[os.PathLike], **kwargs):
-        [self.file_list.append(file) for file in files]
-        kwargs.update({'value_transform': lambda cls: self.order.get(cls)}) if self.ordinal else None
-        kwargs.update({'time_transform': lambda t: timedelta(seconds=float(t))}) if not kwargs['time_transform'] else None
-        for file in files:
-            if not os.path.isfile(file):
-                print(f'File {file} not found. Skipping...')
-                continue
-            try:
-                ts = TimeSeries.from_csv(file, **kwargs)
-                ts = self._trim(ts)
-            except StopIteration:
-                ts = TimeSeries()
-            self.series.append(ts)
+    def add_annotation(self, file: os.PathLike, **kwargs):
+        self.file_list.append(file)
+
+        # setup default kwargs #
+        if self.ordinal:
+            kwargs.update({'value_transform': lambda cls: self.order.get(cls)})
+        if not kwargs.get('time_transform', None):
+            kwargs.update({'time_transform': lambda t: float(t)})
+        if not kwargs.get('skip_header', None):
+            kwargs.update({'skip_header': False})
+        if not os.path.isfile(file):
+            raise FileNotFoundError(f'File {file} not found.')
+        if os.path.getsize(file):
+            ts = TimeSeries.from_csv(file, **kwargs).slice(self.start_time, self.end_time)
+            meta = pd.read_csv(file, names=COLUMNS.keys())
+            meta.drop(meta[meta['time'] < self.start_time].index)
+            meta.drop(meta[meta['time'] > self.end_time].index)
+        else:
+            ts = TimeSeries()
+            meta = pd.DataFrame()
+        self.metadata.append(meta)
+        self.series.append(ts)
         self._data = self._report()
 
-    def rem_annotations(self, files: List[os.PathLike]):
+    def rem_annotation(self, file: os.PathLike):
         files_removed = list()
         series_removed = list()
-        for file in files:
-            idx = self.file_list.index(file)
-            files_removed.append(self.file_list.pop(idx))
-            series_removed.append(self.series.pop(idx))
+        idx = self.file_list.index(file)
+        files_removed.append(self.file_list.pop(idx))
+        series_removed.append(self.series.pop(idx))
         self._data = self._report()
         return dict(zip(files_removed, series_removed))
 
@@ -149,6 +163,38 @@ class BehaviorAnalysis:
         report = self.data
         report = json.dumps(report, **kwargs)
         return report
+
+    def to_markdown(self):
+        md = list()
+        header = str()
+        header_line = str()
+        row = u''
+        head = u'|{}'
+        end = u'|'
+        line = head.format('--')
+        report = self.data
+        first = True
+        for file, data in report.items():
+            if first:
+                header += head.format('file')
+                header_line += line
+            row += head.format(os.path.basename(file))
+            for k, v in data.items():
+                if first:
+                    header += head.format(k)
+                    header_line += line
+                row += head.format(str(v)[:4])
+            if first:
+                header += end
+                header_line += end
+            row += end
+            info = '\n'.join([row])
+            first = False
+            md.append(info)
+            row = str()
+        header = '\n'.join([header, header_line])
+
+        return header, md
 
     def to_csv(self, target=sys.stdout):
         report = self.data
@@ -160,12 +206,112 @@ class BehaviorAnalysis:
             row.update(val)
             w.writerow(row)
 
-    def generate_plots(self, **kwargs):
-        for ts in self.series:
-            plt, axes = plot.plot(ts, **kwargs)
-            plt.set_tight_layout(False)
-            axes.set_ylabel('Behaviors')
-            axes.set_yticks([0.0, 1.0, 2.0, 3.0])
-            axes.set_yticklabels(self.classes)
-            axes.set_xlim(0, self.measure_interval)
-            yield plt, axes
+    @property
+    def experiment_names(self):
+        names = [datetime_from_filename(i).strftime(DT_FORMAT['underscore']) for i in self.file_list]
+        return list(dict.fromkeys(names))
+
+    def write_data_summary(self):
+        writer = tf.summary.create_file_writer('./data/summaries/')
+        writer.set_as_default()
+        for name in self.experiment_names:
+            idx = [i for i, fname in enumerate(self.file_list) if name in fname]
+            header, table = self.to_markdown()
+            table = [table[i] for i in idx]
+            tf.summary.text(name, tf.constant('\n'.join([header, *table]),
+                                              dtype=tf.string), step=0)
+            writer.flush()
+
+    def write_plot_summary(self, **kwargs):
+        def pad(x, y=0.02):
+            return x + x*y
+
+        def plot_to_image(figure):
+            """Converts the matplotlib plot specified by 'figure' to a PNG image and
+            returns it. The supplied figure is closed and inaccessible after this call."""
+            # Save the plot to a PNG in memory.
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png')
+            # Closing the figure prevents it from being displayed directly inside
+            # the notebook.
+            plt.close(figure)
+            buf.seek(0)
+            # Convert PNG buffer to TF image
+            image = tf.image.decode_png(buf.getvalue(), channels=4)
+            # Add the batch dimension
+            image = tf.expand_dims(image, 0)
+            return image
+
+        writer = tf.summary.create_file_writer('./data/summaries/')
+        for i, ts in enumerate(self.series):
+            if ts.is_empty():
+                print(f'Skipping empty annotation {self.file_list[i]}')
+                continue
+            pl, ax = plot(ts, **kwargs)
+            pl.set_size_inches(11.0, 4.2)
+            ax.set_adjustable("box")
+            file = os.path.basename(self.file_list[i])
+            ax.set_title(file)
+            ax.set_ylabel('Behaviors')
+            ytop = pad(len(self.classes)-1)
+            yticks = [*[float(i) for i, _ in enumerate(self.classes)], ytop]
+            ax.set_yticks(yticks)
+            ax.set_yticklabels(self.classes)
+            ax.set_xlabel('Time in Seconds')
+            xticks = [*[float(i)*60.0 for i in range(self.end_time // 60)], self.end_time]
+            ax.set_xticks(xticks)
+            ax.set_xticklabels([*[x - self.start_time for x in xticks], 600])
+            ax.set_xlim(self.start_time, pad(self.end_time, 0.002))
+            with writer.as_default():
+                name = datetime_from_filename(self.file_list[i]).strftime(DT_FORMAT['underscore'])
+                name = f'{name}/{file}'
+                head, table = self.to_markdown()
+                md = '/n'.join([head, table[i]])
+                tf.summary.image(name, plot_to_image(pl), max_outputs=1, step=0, description=md)
+        writer.close()
+
+
+
+MIN_ASPECT_RATIO = 1 / 15
+MAX_ASPECT_RATIO = 1 / 3
+MAX_ASPECT_POINTS = 10
+
+FONTS = [
+    ".SF Compact Rounded",
+    "Helvetica Neue",
+    "Segoe UI",
+    "Helvetica",
+    "Arial",
+    None,
+]
+
+
+def plot(ts, figure_width=12, linewidth=1, marker=".", color="mediumvioletred", aspect_ratio=None, font=None):
+    if font is None:
+        available_fonts = set(f.name for f in font_manager.fontManager.ttflist)
+        for font in FONTS:
+            if font in available_fonts:
+                break
+
+    if aspect_ratio is None:
+        try:
+            n_unique_values = len(ts.distribution())
+        except KeyError:
+            n_unique_values = 0
+        scaled = min(MAX_ASPECT_POINTS, max(2, n_unique_values) - 2)
+        aspect_ratio = MIN_ASPECT_RATIO + (MAX_ASPECT_RATIO - MIN_ASPECT_RATIO) * (scaled / MAX_ASPECT_POINTS)
+
+    with plt.style.context('seaborn'):
+        fig, ax = plt.subplots(figsize=(figure_width, aspect_ratio * figure_width))
+        items = ts.items()
+        x, y = zip(*items) if items else ([], [])
+        ax.scatter(x, y, linewidth=linewidth, marker=marker, color=color)
+        ax.set_aspect(75)
+        ax.xaxis.set_minor_locator(AutoMinorLocator())
+        ax.xaxis.set_major_locator(AutoLocator())
+        if font:
+            plt.xticks(fontname=font)
+            plt.yticks(fontname=font)
+
+    return fig, ax
+
