@@ -58,15 +58,19 @@ base
 scripts
 #######
 
-# RAMDisk::
+*******
+RAMDisk
+*******
 
-if [[ "$1" = "mount" ]]; then
-	RAMDisk_mount
-elif [[ "$1" = "unmount" ]]; then
-	RAMDisk_unmount
-else
-	>&2 echo "line $LINENO: $NAME_$1: command not found"
-fi
+.. code-block:: bash
+
+	if [[ "$1" = "mount" ]]; then
+		RAMDisk_mount
+	elif [[ "$1" = "unmount" ]]; then
+		RAMDisk_unmount
+	else
+		>&2 echo "line $LINENO: $NAME_$1: command not found"
+	fi
 
 ##
 ui
