@@ -5,11 +5,10 @@ import time
 from shutil import rmtree
 from subprocess import Popen, PIPE
 from zipfile import ZipFile
-from libs.io.flags import FlagIO
-from libs.utils.flags import Flags
-from libs.backend.trainer import Trainer
-from libs.utils.errors import GradientNaN
-from libs.constants import BACKEND_ENTRYPOINT
+from beagles.io.flags import SharedFlagIO
+from beagles.backend.trainer import Trainer
+from beagles.base.errors import GradientNaN
+from beagles.base.constants import BACKEND_ENTRYPOINT
 
 
 class TestBackend(TestCase):
@@ -21,7 +20,7 @@ class TestBackend(TestCase):
         time.sleep(5)
 
     def setUp(self):
-        self.io = FlagIO(subprogram=False)
+        self.io = SharedFlagIO(subprogram=False)
         self.flags = self.io.flags
 
     def testBackendWrapperYoloV2(self):
@@ -86,7 +85,7 @@ class TestBackend(TestCase):
     #     self.io_flags()
 
     def tearDown(self) -> None:
-        self.io.cleanup_ramdisk()
+        self.io.cleanup_flags()
 
     @classmethod
     def tearDownClass(cls):

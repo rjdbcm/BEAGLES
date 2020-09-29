@@ -1,7 +1,7 @@
 import os
 import sys
 import unittest
-from libs.ui.functions.mainWindowFunctions import MainWindowFunctions
+from beagles.ui.functions.mainWindowFunctions import MainWindowFunctions
 
 
 class TestLib(unittest.TestCase):

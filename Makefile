@@ -11,7 +11,7 @@ virtualenv:
 	. bin/activate
 
 qt5:
-	pyrcc5 -o libs/resources.py resources.qrc
+	pyrcc5 -o beagles/resources.py resources.qrc
 
 cython:
 	python3 setup.py build_ext --inplace
@@ -31,7 +31,7 @@ clean:
 	find . -name “.DS_Store” -depth -exec rm {} \;
 	rm -f ~/.BEAGLESSettings.json ./libs/resources.py
 	rm -rf ./.pytest_cache
-	rm -f ./libs/cythonUtils/*.c
+	rm -f ./libs/backend/net/frameworks/extensions/*.c
 	rm -rf *.egg-info
 	rm -rf BEAGLES-*
 	rm -f ./libs/cythonUtils/*.so

@@ -1,10 +1,10 @@
 from unittest import TestCase
-from libs.backend.dark.darknet import Darknet
-from libs.backend.net.framework import Framework
-from libs.backend.io.darknet_config_file import DarknetConfigFile
-from libs.utils.errors import DarknetConfigEmpty
-from libs.utils.flags import Flags
-from libs.backend.dark.layer import Layer
+from beagles.backend.dark.darknet import Darknet
+from beagles.backend.net.framework import Framework
+from beagles.backend.io.darknet_config_file import DarknetConfigFile
+from beagles.base.errors import DarknetConfigEmpty
+from beagles.base.flags import Flags
+from beagles.backend.dark.layer import Layer
 
 meta = {
     'net': {'type': '[net]', 'batch': 1, 'subdivisions': 1, 'width': 608, 'height': 608,
@@ -118,6 +118,7 @@ class TestDarknet(TestCase):
     def testParseAndYieldYoloV1Config(self):
         self.flags.labels = 'tests/resources/test_classes.txt'
         self.flags.model = 'tests/resources/test_yolov1.cfg'
+        print(self.flags)
         darknet = Darknet(self.flags)
         self.assertDictEqual(darknet.meta, yolov1_meta,
                              'Failed to correctly parse darknet metadata')

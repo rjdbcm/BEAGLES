@@ -1,7 +1,7 @@
 import os
 import sys
 import unittest
-from libs.ui.functions.fileFunctions import naturalSort, FileFunctions
+from beagles.ui.functions.fileFunctions import naturalSort, FileFunctions
 
 
 class TestUtils(unittest.TestCase):

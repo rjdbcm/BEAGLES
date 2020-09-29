@@ -1,10 +1,10 @@
 from unittest import TestCase, mock
 import os
 import glob
-from libs.ui.functions.fileFunctions import FileFunctions
-from BEAGLES import get_main_app
+from beagles.ui.functions.fileFunctions import FileFunctions
+from app import get_main_app
 import argparse
-from libs.utils.flags import Flags
+from beagles.base.flags import Flags
 
 
 class TestMainWindow(TestCase):

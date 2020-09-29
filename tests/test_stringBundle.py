@@ -1,6 +1,6 @@
 import os
 import unittest
-from libs.stringBundle import StringBundle
+from beagles.base.stringBundle import StringBundle
 
 
 class TestStringBundle(unittest.TestCase):

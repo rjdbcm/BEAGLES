@@ -11,6 +11,8 @@ BEAGLES.egg-info*
 build/
 dist/
 
+docs/.*/
+
 tags
 cscope*
 .ycm_extra_conf.py

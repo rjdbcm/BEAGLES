@@ -5,8 +5,8 @@ from urllib.parse import urljoin
 import numpy
 import sys
 import os
-from libs.constants import APP_NAME
-from libs.version import __version__
+from beagles.base.constants import APP_NAME
+from beagles.base.version import __version__
 
 GITHUB = urljoin('https://github.com/rjdbcm/', APP_NAME)
 
@@ -17,9 +17,9 @@ def module_to_path(module):
     return [module]
 
 
-NMS = 'libs.cythonUtils.nms'
-CY_YOLO_FINDBOXES = 'libs.cythonUtils.cy_yolo_findboxes'
-CY_YOLO2_FINDBOXES = 'libs.cythonUtils.cy_yolo2_findboxes'
+NMS = 'beagles.backend.net.frameworks.extensions.nms'
+CY_YOLO_FINDBOXES = 'beagles.backend.net.frameworks.extensions.cy_yolo_findboxes'
+CY_YOLO2_FINDBOXES = 'beagles.backend.net.frameworks.extensions.cy_yolo2_findboxes'
 WINDOWS = 'nt'
 MAC = 'darwin'
 
