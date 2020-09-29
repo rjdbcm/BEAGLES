@@ -2,6 +2,7 @@ import cv2
 import math
 import os
 import re
+from typing import Union, AnyStr
 import subprocess
 from datetime import datetime
 from beagles.io.flags import SharedFlagIO
@@ -13,10 +14,8 @@ DATETIME_FORMAT = {
 DATETIME_RE = re.compile(r'([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])[_\s][0-1][0-9]-[0-6][0-9]-[0-6][0-9])')
 
 
-def datetime_from_filename(filename):
-    """Extracts a datetime object from OBS Video Filename
-       containing %CCYY-%MM-%DD %hh-%mm-%ss or %CCYY-%MM-%DD_%hh-%mm-%ss"""
-    return datetime.strptime(DATETIME_RE.search(filename).groups()[0], DATETIME_FORMAT['underscore'])
+def datetime_from_filename(filename: Union[AnyStr, os.PathLike], fmt: str = 'underscore'):
+    return datetime.strptime(DATETIME_RE.search(filename).groups()[0], DATETIME_FORMAT[fmt])
 
 
 class TiledCaptureArray:
