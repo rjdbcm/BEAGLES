@@ -93,8 +93,9 @@ html_favicon = 'favicon.ico'
 # documentation.
 #
 html_theme_options = {'navigation_depth': 5,
-                      'html_logo': '.static/logo.png',
                       'logo_only': True}
+
+html_logo = '.static/logo.png',
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
