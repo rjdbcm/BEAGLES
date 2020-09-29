@@ -64,6 +64,14 @@ RAMDisk
 
 .. code-block:: bash
 
+	RAMDisk_mount() {
+	...
+	}
+
+	RAMDisk_unmount() {
+	...
+	}
+
 	if [[ "$1" = "mount" ]]; then
 		RAMDisk_mount
 	elif [[ "$1" = "unmount" ]]; then
