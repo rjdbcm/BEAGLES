@@ -53,6 +53,13 @@ base
 	:members:
 	:undoc-members:
 
+##
+io
+##
+
+.. automodule:: beagles.io
+	:members:
+	:undoc-members:
 
 #######
 scripts
@@ -61,6 +68,8 @@ scripts
 *******
 RAMDisk
 *******
+
+MacOS-specific tool used by `SharedMemory` to create a shared memory drive.
 
 .. code-block:: bash
 
