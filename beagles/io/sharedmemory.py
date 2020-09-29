@@ -1,5 +1,6 @@
 from subprocess import Popen, PIPE, STDOUT
 from contextlib import contextmanager
+from typing import Callable
 import sys
 import os
 
@@ -10,6 +11,8 @@ LINUX_PATH = "/dev/shm"
 class SharedMemory:
     """Stateful interface for shared memory on mac or linux"""
     def __init__(self):
+        self.mount: Callable[..., None]
+        self.unmount: Callable[..., None]
         if sys.platform == 'darwin':
             self._path = MAC_PATH
             self._mount_point = str()
