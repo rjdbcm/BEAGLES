@@ -45,26 +45,26 @@ tfnet
 .. automodule:: beagles.backend.net.tfnet
 	:members:
 
-****
+####
 base
-****
+####
 
 .. automodule:: beagles.base
 	:members:
 	:undoc-members:
 
 
-*******
+#######
 scripts
-*******
+#######
 
 .. automodule:: beagles.scripts
 	:members:
 	:undoc-members:
 
-**
+##
 ui
-**
+##
 
 .. automodule:: beagles.ui
 	:members:
