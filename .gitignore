@@ -11,7 +11,7 @@ BEAGLES.egg-info*
 build/
 dist/
 
-docs/.*/
+docs/.build/
 
 tags
 cscope*
