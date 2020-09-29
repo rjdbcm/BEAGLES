@@ -15,6 +15,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
+import subprocess
 
 # -- Project information -----------------------------------------------------
 
@@ -195,3 +196,8 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+
+os.chdir('../')
+subprocess.call(['make', 'cython', 'qt5'])
+os.chdir('docs')
