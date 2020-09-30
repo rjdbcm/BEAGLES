@@ -7,12 +7,13 @@ import argparse
 from functools import partial
 from PyQt5.QtWidgets import QApplication, QScrollArea, QLabel
 from PyQt5.QtCore import Qt, QPoint, QSize, QByteArray, QVariant
+from PyQt5.QtGui import QColor
 # Add internal libs
 # noinspection PyUnresolvedReferences
 from beagles.resources import *
+from beagles.ui import newIcon
 from beagles.ui.widgets.beaglesMainWindow import BeaglesMainWindow
 from beagles.base.constants import *
-from beagles.ui.qtUtils import *
 from beagles.base.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
 from beagles.ui.widgets.labelDialog import LabelDialog
 from beagles.base.flags import Flags

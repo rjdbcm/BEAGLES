@@ -2,7 +2,7 @@ import os
 import json
 from PyQt5.QtWidgets import (
     QMainWindow, QListWidget, QVBoxLayout, QWidget, QToolButton, QDockWidget, QCheckBox,
-    QLineEdit, QHBoxLayout, QWidgetAction
+    QLineEdit, QHBoxLayout, QWidgetAction, QAction, QMenu
 )
 from PyQt5.QtCore import QSize, Qt
 from beagles.ui.widgets.zoomWidget import ZoomWidget
@@ -13,7 +13,7 @@ from beagles.ui.callbacks.actionCallbacks import ActionCallbacks
 from functools import partial
 from beagles.base.stringBundle import getStr
 from beagles.ui.widgets.toolBar import ToolBar
-from beagles.ui.qtUtils import *
+from beagles.ui import newAction, addActions, Struct
 from beagles.io.flags import SharedFlagIO
 
 

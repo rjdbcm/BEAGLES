@@ -1,6 +1,5 @@
 from subprocess import Popen, PIPE, STDOUT
 from contextlib import contextmanager
-from typing import Callable
 import sys
 import os
 
@@ -11,20 +10,14 @@ LINUX_PATH = "/dev/shm"
 class SharedMemory:
     """Stateful interface for shared memory on mac or linux"""
     def __init__(self):
-        self.mount: Callable[..., None]
-        self.unmount: Callable[..., None]
         if sys.platform == 'darwin':
             self._path = MAC_PATH
             self._mount_point = str()
             self._info = dict()
-            self.mount = self._mount
-            self.unmount = self._unmount
         else:
             self._path = LINUX_PATH
             self._mount_point = self._path
             self._info = {self.__class__.__name__: self._path}
-            self.mount = self._noop
-            self.unmount = self._noop
 
     @contextmanager
     def __call__(self):
@@ -41,10 +34,12 @@ class SharedMemory:
 
     @property
     def path(self):
+        """:obj:`str`: Path to the shared memory drive."""
         return self._path
 
     @property
     def info(self):
+        """:obj:`dict`: Info about the shared memory drive."""
         if not self._info:
             proc = Popen("diskutil info RAMDisk".split(' '), stdout=PIPE, stderr=STDOUT)
             stdout, stderr = proc.communicate()
@@ -57,7 +52,26 @@ class SharedMemory:
 
     @property
     def mounted(self):
+        """:obj:`bool`: `True` if the shared memory drive is mounted otherwise false."""
         return os.path.ismount(self._path)
+
+    def mount(self):
+        """Mounts a shared memory drive using
+        :ref:`RAMDisk mount <ramdisk-ref>` if MacOS otherwise no operation.
+        """
+        if sys.platform == 'darwin':
+            return self._mount()
+        else:
+            return self._noop()
+
+    def unmount(self):
+        """Unmounts a shared memory drive using
+        :ref:`RAMDisk unmount <ramdisk-ref>` if MacOS otherwise no operation.
+        """
+        if sys.platform == 'darwin':
+            return self._unmount()
+        else:
+            return self._noop()
 
     def _noop(self):
         pass

@@ -3,7 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 from beagles.base.constants import LABEL_RE
-from beagles.ui.qtUtils import newIcon
+from beagles.ui import newIcon
 
 BB = QDialogButtonBox
 

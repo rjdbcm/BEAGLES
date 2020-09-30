@@ -2,7 +2,7 @@ import cv2
 import math
 import os
 import re
-from typing import Union, AnyStr
+from typing import Union, AnyStr, List
 import subprocess
 from datetime import datetime
 from beagles.io.flags import SharedFlagIO
@@ -20,15 +20,19 @@ def datetime_from_filename(filename: Union[AnyStr, os.PathLike], fmt: str = 'und
 
 class TiledCaptureArray:
     """Object definition for tiled capture arrays.
-    __init__ Args:
-            num_divisions: number of tiles to process
-            video: path to source video
-            unused_cameras: list of camera sources to skip during processing
-    Methods:
-        crop:
-            stream copies processed tiles to labeled files
+
+    Args:
+        num_divisions: number of tiles to process
+
+        video: path to source video
+
+        unused_cameras: camera sources to skip during processing.
+
+    Note:
+        Cameras are numbered as follows:
+        :math:`\\begin{bmatrix} 1 & 2 & 3 \\\\ 4 & 5 & 6 \\\\ 7 & 8 & 9 \\end{bmatrix}`
     """
-    def __init__(self, num_divisions: int, video, unused_cameras: list):
+    def __init__(self, num_divisions: int, video: os.PathLike, unused_cameras: List[int]):
         self.logger = SharedFlagIO().logger
         # make sure the number of camera divisions is always an integer
         root = math.sqrt(num_divisions)
@@ -52,6 +56,7 @@ class TiledCaptureArray:
         return width, height
 
     def crop(self):
+        """Stream copies processed tiles to labeled files using ffmpeg"""
         xs = list()
         ys = list()
         h_inc = int(self.height / self.div)

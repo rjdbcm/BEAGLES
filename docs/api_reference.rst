@@ -65,6 +65,8 @@ io
 scripts
 #######
 
+.. _ramdisk-ref:
+
 *******
 RAMDisk
 *******

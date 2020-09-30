@@ -9,7 +9,7 @@ from beagles.base.constants import *
 from beagles.io.labelFile import LabelFile, LabelFileError
 from beagles.io.pascalVoc import XML_EXT, PascalVocReader
 from beagles.ui.functions.mainWindowFunctions import MainWindowFunctions
-from beagles.ui.qtUtils import newIcon
+from beagles.ui import newIcon
 from beagles.base.shape import Shape
 from beagles.io.yolo import TXT_EXT, YoloReader
 
