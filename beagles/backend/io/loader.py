@@ -129,7 +129,7 @@ class CheckpointLoader(Subsystem):
         meta = ckpt + '.meta'
         with tf.Graph().as_default():
             with tf.compat.v1.Session().as_default() as sess:
-                saver = tf.compat.v1.train.import_meta_graph(meta)
+                saver = tf.saved_model.load(meta)
                 saver.restore(sess, ckpt)
                 for var in tf.compat.v1.global_variables():
                     name = var.name.split(':')[0]

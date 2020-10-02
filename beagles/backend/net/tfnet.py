@@ -6,6 +6,7 @@ from beagles.backend.net.ops.baseop import HEADER, LINE
 from beagles.backend.net.framework import Framework
 from beagles.backend.darknet.dark import Darknet
 from beagles.backend.io.loader import Loader
+from beagles.base import VariableIsNone
 from beagles.io.logs import get_logger
 from beagles.io.flags import SharedFlagIO
 from beagles.backend.net.hyperparameters.cyclic_learning_rate import cyclic_learning_rate
@@ -16,16 +17,15 @@ old_graph_msg = 'Resolving old graph def {} (no guarantee)'
 
 class TFNet:
     _TRAINER = dict({
-        'rmsprop': tf.compat.v1.train.RMSPropOptimizer,
-        'adadelta': tf.compat.v1.train.AdadeltaOptimizer,
-        'adagrad': tf.compat.v1.train.AdagradOptimizer,
-        'adagradDA': tf.compat.v1.train.AdagradDAOptimizer,
-        'momentum': tf.compat.v1.train.MomentumOptimizer,
-        'nesterov': tf.compat.v1.train.MomentumOptimizer,
-        'adam': tf.compat.v1.train.AdamOptimizer,
-        'AMSGrad': tf.compat.v1.keras.optimizers.Adam,
-        'ftrl': tf.compat.v1.train.FtrlOptimizer,
-        'sgd': tf.compat.v1.train.GradientDescentOptimizer
+        'rmsprop': tf.keras.optimizers.RMSprop,
+        'adadelta': tf.keras.optimizers.Adadelta,
+        'adagrad': tf.keras.optimizers.Adagrad,
+        'momentum': tf.keras.optimizers.SGD,
+        'nesterov': tf.keras.optimizers.SGD,
+        'adam': tf.keras.optimizers.Adam,
+        'AMSGrad': tf.keras.optimizers.Adam,
+        'ftrl': tf.keras.optimizers.Ftrl,
+        'sgd': tf.keras.optimizers.SGD
     })
 
     # Interface Methods:
@@ -176,7 +176,7 @@ class TFNet:
             return t
         self.framework.loss(self.out)
         self.logger.info('Building {} train op'.format(self.meta['model']))
-        self.global_step = tf.compat.v1.Variable(0, trainable=False)
+        self.global_step = tf.Variable(0, trainable=False)
         # setup kwargs for trainer
         kwargs = dict()
         if self.flags.trainer in ['momentum', 'rmsprop', 'nesterov']:
@@ -189,8 +189,7 @@ class TFNet:
         # setup trainer
         step_size = int(self.flags.step_size_coefficient *
                         (len(self.annotation_data) // self.flags.batch))
-        self.optimizer = self._TRAINER[self.flags.trainer]\
-            (
+        self.optimizer = self._TRAINER[self.flags.trainer](
                 cyclic_learning_rate(
                     self,
                     global_step=self.global_step,
@@ -202,19 +201,9 @@ class TFNet:
             )
 
         # setup gradients
-        self.gradients, self.variables = zip(
-            *self.optimizer.compute_gradients(self.framework.loss))
+        self.gradients = self.optimizer.get_gradients(self.framework.loss, tf.compat.v1.local_variables())
         if self.flags.clip:
             self.gradients, _ = tf.clip_by_global_norm(self.gradients, self.flags.clip_norm)
-        # create histogram summaries
-        for grad, var in zip(self.gradients, self.variables):
-            name = var.name.split('/')
-            with tf.compat.v1.variable_scope(name[0] + '/'):
-                normed_gradients = _l2_norm(grad) if not self.flags.clip else grad
-                tf.summary.histogram("gradients/" + name[1], normed_gradients)
-                # tf.summary.histogram("variables/" + name[1], _l2_norm(var))
 
         # create train opt
-        self.train_op = self.optimizer.apply_gradients(
-            zip(self.gradients, self.variables),
-            global_step=self.global_step)
+        self.train_op = self.optimizer.apply_gradients(zip(self.gradients, tf.compat.v1.local_variables()))
