@@ -1,4 +1,5 @@
 import os
+import tensorflow as tf
 import math
 import pickle
 from beagles.base.errors import GradientNaN
@@ -7,8 +8,9 @@ from beagles.backend.net.frameworks.vanilla.train import loss
 from beagles.backend.net.tfnet import TFNet
 
 
-class Trainer:
+class Trainer(tf.Module):
     def __init__(self, flags):
+        super(Trainer, self).__init__()
         self.net = TFNet(flags)
 
     def __call__(self):
@@ -74,6 +76,6 @@ class Trainer:
         ckpt = file.format(model, step, '')
         ckpt = os.path.join(self.flags.backup, ckpt)
         self.net.logger.info('Checkpoint at step {}'.format(step))
-        self.net.saver.save(self.net.sess, ckpt)
+        tf.saved_model.save(self, ckpt)
 
 

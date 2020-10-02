@@ -123,15 +123,15 @@ class TFNet:
 
         if not self.ntrain:
             return
-        try:
-            self.saver = tf.compat.v1.train.Saver(tf.compat.v1.global_variables())
-
-            if self.flags.load != 0:
-                self.load_from_ckpt()
-        except tf.errors.NotFoundError as e:
-            self.flags.error = str(e.message)
-            self.io.send_flags()
-            raise
+        # try:
+        #     self.saver = tf.compat.v1.train.Saver(tf.compat.v1.global_variables())
+        #
+        #     if self.flags.load != 0:
+        #         self.load_from_ckpt()
+        # except tf.errors.NotFoundError as e:
+        #     self.flags.error = str(e.message)
+        #     self.io.send_flags()
+        #     raise
 
         if self.flags.summary:
             self.writer.add_graph(self.sess.graph)
@@ -182,9 +182,11 @@ class TFNet:
         if self.flags.trainer in ['momentum', 'rmsprop', 'nesterov']:
             kwargs.update({'momentum': self.flags.momentum})
         if self.flags.trainer == 'nesterov':
-            kwargs.update({'use_nesterov': True})
+            kwargs.update({self.flags.trainer: True})
         if self.flags.trainer == 'AMSGrad':
-            kwargs.update({'amsgrad': True})
+            kwargs.update({self.flags.trainer.lower(): True})
+        if self.flags.clip:
+            kwargs.update({'clipnorm': self.flags.clip_norm})
 
         # setup trainer
         step_size = int(self.flags.step_size_coefficient *
@@ -202,8 +204,6 @@ class TFNet:
 
         # setup gradients
         self.gradients = self.optimizer.get_gradients(self.framework.loss, tf.compat.v1.local_variables())
-        if self.flags.clip:
-            self.gradients, _ = tf.clip_by_global_norm(self.gradients, self.flags.clip_norm)
 
         # create train opt
         self.train_op = self.optimizer.apply_gradients(zip(self.gradients, tf.compat.v1.local_variables()))
