@@ -1,6 +1,8 @@
 [run]
 omit =
     *tests*
-    libs/scripts/*
+    beagles/scripts/*
     dev/*
+    *docs*
+    *data*
     *__init__.py*
