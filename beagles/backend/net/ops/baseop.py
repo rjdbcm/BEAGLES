@@ -1,6 +1,7 @@
 import tensorflow as tf
 from datetime import datetime
 import numpy as np
+from beagles.io.logs import get_logger
 
 FORM = '{:>6} | {:>6} | {:<32} | {}'
 FORM_ = '{}+{}+{}+{}'
@@ -29,9 +30,10 @@ class BaseOp(object):
     _SLIM = ['gamma', 'moving_mean', 'moving_variance']
 
     def __init__(self, layer, inp, num, roof, feed):
-        self.inp = inp # BaseOp
-        self.num = num # int
-        self.out = None # tf.Tensor
+        self.inp = inp  # BaseOp
+        self.num = num  # int
+        self.out = None  # tf.Tensor
+        self.logger = get_logger()
         self.lay = layer
         self.scope = '{}-{}'.format(
             str(self.num), self.lay.type)
@@ -66,11 +68,13 @@ class BaseOp(object):
                 val = np.random.normal(*args)
             self.lay.w[var] = val.astype(np.float32)
             self.act = 'Init '
-        if not self.var: return
+        if not self.var:
+            return
 
         val = self.lay.w[var]
-        self.lay.w[var] = tf.compat.v1.constant_initializer(val)
-        if var in self._SLIM: return
+        self.lay.w[var] = tf.constant_initializer(val)
+        if var in self._SLIM:
+            return
         with tf.compat.v1.variable_scope(self.scope):
             self.lay.w[var] = tf.compat.v1.get_variable(var,
                 shape=self.lay.wshape[var],
@@ -94,13 +98,10 @@ class BaseOp(object):
         inp = _name(self.inp.out)
         if inp == 'input':
             #  imitating log format from utils.flags
-            msg = FORM.format('', '', 'input', _shape(self.inp.out)) + '\n' + \
-                  '{} | {:7} | {:<11} | {:<20} | '.format(
-                      datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3],
-                      'INFO', 'TFNet', 'build_forward')
+            self.logger.info(FORM.format('', '', 'input', _shape(self.inp.out)))
         if not self.act:
             return msg
-        return msg + FORM.format(self.act, self.train_msg, self.speak(), _shape(self.out))
+        self.logger.info(FORM.format(self.act, self.train_msg, self.speak(), _shape(self.out)))
 
     def forward(self):
         pass

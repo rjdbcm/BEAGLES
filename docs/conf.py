@@ -94,8 +94,7 @@ html_favicon = 'favicon.ico'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-html_theme_options = {'navigation_depth': 5,
-                      'logo_only': True}
+html_theme_options = {'navigation_depth': 5}
 
 html_logo = '.static/logo.png'
 

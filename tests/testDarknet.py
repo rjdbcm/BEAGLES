@@ -1,10 +1,10 @@
 from unittest import TestCase
-from beagles.backend.dark.darknet import Darknet
+from beagles.backend.darknet.dark import Darknet
 from beagles.backend.net.framework import Framework
 from beagles.backend.io.darknet_config_file import DarknetConfigFile
 from beagles.base.errors import DarknetConfigEmpty
 from beagles.base.flags import Flags
-from beagles.backend.dark.layer import Layer
+from beagles.backend.darknet.layer import Layer
 
 meta = {
     'net': {'type': '[net]', 'batch': 1, 'subdivisions': 1, 'width': 608, 'height': 608,

@@ -2,13 +2,21 @@
 backend
 #######
 
-****
-dark
-****
+*******
+darknet
+*******
 
-.. automodule:: beagles.backend.dark
+dark
+----
+
+.. automodule:: beagles.backend.darknet.dark
 	:members:
+	:inherited-members:
 	:undoc-members:
+	:exclude-members: darkops
+
+.. autodata:: darkops
+	:annotation:
 
 **
 io
@@ -71,25 +79,9 @@ scripts
 RAMDisk
 *******
 
-MacOS-specific tool used by `SharedMemory` to create a shared memory drive.
+MacOS-specific tool used by :class:`beagles.io.SharedMemory` to create a shared memory drive.
 
-.. code-block:: bash
-
-	RAMDisk_mount() {
-	...
-	}
-
-	RAMDisk_unmount() {
-	...
-	}
-
-	if [[ "$1" = "mount" ]]; then
-		RAMDisk_mount
-	elif [[ "$1" = "unmount" ]]; then
-		RAMDisk_unmount
-	else
-		>&2 echo "line $LINENO: $NAME_$1: command not found"
-	fi
+.. literalinclude:: ../beagles/scripts/RAMDisk
 
 ##
 ui
@@ -97,5 +89,6 @@ ui
 
 .. automodule:: beagles.ui
 	:members:
+	:special-members: __init__, __ior__
 	:undoc-members:
 

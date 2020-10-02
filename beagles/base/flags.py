@@ -74,30 +74,32 @@ class Flags(dict):
     # noinspection PyMethodMayBeStatic
     def get_defaults(self):
         self.annotation = './data/committedframes/'
+        self.dataset = './data/committedframes/'
         self.backup = './data/ckpt/'
-        self.batch = 16
+        self.summary = './data/summaries/'
+        self.log = './data/logs/flow.log'
+        self.config = './data/cfg/'
         self.binary = './data/bin/'
         self.built_graph = './data/built_graph/'
+        self.imgdir = './data/sample_img/'
+        self.img_out = './data/img_out/'
+        self.video_out = './data/video_out/'
+        self.batch = 16
         self.cli = False
         self.clip = False
         self.clip_norm = 0
         self.clr_mode = 'triangular2'
-        self.config = './data/cfg/'
-        self.dataset = './data/committedframes/'
         self.done = False
         self.epoch = 1
         self.error = ''
         self.video = []
         self.gpu = 0.0
         self.gpu_name = '/gpu:0'
-        self.imgdir = './data/sample_img/'
-        self.img_out = './data/img_out/'
         self.output_type = []
         self.keep = 20
         self.kill = False
         self.labels = './data/predefined_classes.txt'
         self.load = -1
-        self.log = './data/logs/flow.log'
         self.lr = 1e-05
         self.max_lr = 1e-05
         self.model = ''
@@ -105,16 +107,12 @@ class Flags(dict):
         self.progress = 0.0
         self.project_name = 'default'
         self.save = 16000
-        self.save_video = True
         self.size = 1
         self.started = False
         self.step_size_coefficient = 2
-        self.summary = './data/summaries/'
         self.threshold = 0.4
-        self.timeout = 0
         self.trainer = 'rmsprop'
         self.verbalise = False
-        self.video_out = './data/video_out/'
         self.train = False
 
     def from_json(self, file):

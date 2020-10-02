@@ -1,10 +1,27 @@
 from math import sqrt
-from PyQt5.QtGui import QColor, QIcon
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QPointF
 from PyQt5.QtWidgets import QPushButton, QAction, QMenu
 
 
-def newIcon(icon):
+class Struct(object):
+
+    def __init__(self, **kwargs):
+        """Updates `self.__dict__` with `**kwargs`."""
+        self.__dict__.update(kwargs)
+
+    def __repr__(self):
+        """
+        Returns: `str(self.__dict__)`
+        """
+        return str(self.__dict__)
+
+    def __ior__(self, other):
+        """Merges :obj:`self.__dict__` and :obj:`other.__dict__` using the | operator"""
+        self.__dict__ = {**self.__dict__, **other.__dict__}
+
+
+def newIcon(icon: str):
     return QIcon(':/' + icon)
 
 
@@ -49,17 +66,9 @@ def addActions(widget, actions):
             widget.addAction(action)
 
 
-class Struct(object):
-
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
-
-    def __repr__(self):
-        return str(self.__dict__)
-
-    def __add__(self, other):
-        self.__dict__.update(other.__dict__)
-
-
 def distance(p: QPointF) -> float:
-    return sqrt(p.x() * p.x() + p.y() * p.y())
+    """
+    Returns:
+        Distance from the origin (0,0).
+    """
+    return sqrt(p.x()**2 + p.y()**2)

@@ -2,5 +2,5 @@
 omit =
     *tests*
     libs/scripts/*
-    build-tools/*
+    dev/*
     *__init__.py*

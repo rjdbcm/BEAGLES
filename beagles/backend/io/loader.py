@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import tensorflow as tf
-from beagles.backend.dark import darknet
+from beagles.backend.darknet import dark
 from beagles.base import SubsystemPrototype, Subsystem, register_subsystem
 from beagles.base.constants import WEIGHTS_FILE_KEYS, WGT_EXT
 
@@ -89,7 +89,7 @@ class WeightsLoader(Subsystem):
                 new = None
             else:
                 args = layer.signature
-                new = darknet.create_darkop(*args)
+                new = dark.create_darkop(*args)
             self.vals.append(new)
 
             if new is None:

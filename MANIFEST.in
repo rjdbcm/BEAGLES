@@ -5,12 +5,11 @@ include resources.qrc
 include requirements.txt
 
 graft data
-graft resources
-graft libs
+graft beagles
 
 prune data/summaries
 prune data/committedframes
 prune data/rawframes
 prune data/ckpt
 prune data/logs
-prune build-tools
+

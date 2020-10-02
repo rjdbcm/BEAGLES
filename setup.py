@@ -104,7 +104,6 @@ setup(
     version=__version__,
     name=APP_NAME,
     description=short_description,
-    description_content_type=DESCRIPTION_MIME,
     long_description=long_description,
     long_description_content_type=DESCRIPTION_MIME,
     license='GPLv3',

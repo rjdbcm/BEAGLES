@@ -5,7 +5,7 @@ from logging.handlers import RotatingFileHandler
 from beagles.io.flags import Flags
 
 FORMAT = logging.Formatter(
-    '{asctime} | {levelname:7} | {name:<11} | {funcName:<20} |'
+    '{asctime} | {levelname:7} | {name:<13} | {funcName:<20} |'
     ' {message}', style='{')
 
 logging.captureWarnings(True)

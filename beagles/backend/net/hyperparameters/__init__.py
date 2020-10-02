@@ -16,7 +16,15 @@ cyclic_learning_rate = cyclic_learning_rate
       
     It returns the cyclic learning rate. It is computed as:
        
-       .. code-block:: python
+       .. math::
+
+            \\begin{equation}
+               \\text{learning_rate} + (\\text{max_lr} - \\text{learning_rate})\\cdot\\max\\left(1 - \\bigg|\\frac{\\text{global_step}}{\\text{step_size} - 2 \\cdot \\lfloor\\frac{1 + \\text{global_step}}{2\\cdot\\text{step_size}}\\rfloor}\\bigg| \\right)
+            \\end{equation}
+        
+       Pseudocode:
+        
+        .. code-block:: python
         
             cycle = floor( 1 + global_step / ( 2 * step_size ) )
             x = abs( global_step / step_size – 2 * cycle + 1 )

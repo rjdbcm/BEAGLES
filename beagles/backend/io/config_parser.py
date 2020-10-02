@@ -14,6 +14,15 @@ class ConfigParser:
         self.conv = '.conv.' in model
 
     def parse_layers(self) -> Generator[dict, list, None]:
+        """Generator used to create Layer subclass *args from darknet .cfg files.
+
+        Yields:
+
+            0: metadata
+
+            1 ... N: *args for Layer subclass returned by :meth:`beagles.backend.darknet.dark.create_darkop` for layers 1 to N
+        """
+
         yield self.metadata
         for i, section in enumerate(self.layers):
             layer_handler = self.get_layer_handler(section, i)

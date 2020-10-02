@@ -72,7 +72,7 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 Navigate to the source directory and run the following commands:
 
 ```
-cd build/
+cd dev/build-tools/
 ./build-venv.sh
 cd ..
 make

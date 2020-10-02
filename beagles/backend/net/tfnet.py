@@ -4,7 +4,7 @@ import tensorflow as tf
 from beagles.backend.net.ops import op_create, identity
 from beagles.backend.net.ops.baseop import HEADER, LINE
 from beagles.backend.net.framework import Framework
-from beagles.backend.dark.darknet import Darknet
+from beagles.backend.darknet.dark import Darknet
 from beagles.backend.io.loader import Loader
 from beagles.io.logs import get_logger
 from beagles.io.flags import SharedFlagIO
@@ -84,14 +84,11 @@ class TFNet:
             args = [layer, state, i, roof, self.feed]
             state = op_create(*args)
             mess = state.verbalise()
-            if mess:
-                self.logger.info(mess)
-            else:
-                self.logger.info(LINE)
-        self.logger.info(LINE)
+            msg = mess if mess else LINE
+            self.logger.info(msg)
 
         self.top = state
-        self.out = tf.compat.v1.identity(state.out, name='output')
+        self.out = tf.identity(state.out, name='output')
 
     def setup_meta_ops(self):
         cfg = dict({

@@ -1,4 +1,3 @@
-import tensorflow.compat.v1.layers as slim
 from beagles.backend.net.ops.baseop import BaseOp
 import tensorflow as tf
 import numpy as np
