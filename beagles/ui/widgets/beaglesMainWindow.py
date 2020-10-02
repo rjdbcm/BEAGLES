@@ -38,7 +38,7 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks):
                                         detail, checkable, enabled)
                 self.io.logger.debug(cmd_string)
                 exec(cmd_string)
-        with open('resources/actions/actions.json', 'r') as json_file:
+        with open('beagles/resources/actions/actions.json', 'r') as json_file:
             self.actionFile = json.load(json_file)
         actionList = list(self.actionFile.keys())
         createActions(actionList)
