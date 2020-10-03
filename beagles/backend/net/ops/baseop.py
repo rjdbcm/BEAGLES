@@ -1,6 +1,4 @@
 import tensorflow as tf
-import tensorflow.keras as K
-from datetime import datetime
 import numpy as np
 from beagles.io.logs import get_logger
 
