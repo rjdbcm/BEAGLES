@@ -12,17 +12,6 @@ DarknetConfigFile = DarknetConfigFile
 :class:`DarknetConfigFile`
 """
 
-#
-# CheckpointLoader = CheckpointLoader
-# """
-# :class:`CheckpointLoader`
-# """
-#
-# WeightsLoader = WeightsLoader
-# """
-# :class:`WeightsLoader`
-# """
-
 pascal_voc_clean_xml = pascal_voc_clean_xml
 """
 Parses PASCAL VOC XML annotations

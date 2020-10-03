@@ -2,6 +2,7 @@ import os
 import errno
 import shutil
 import subprocess
+import webbrowser
 from PyQt5.QtWidgets import QMessageBox
 from beagles.ui.functions.machineLearningFunctions import MachineLearningFunctions
 
@@ -9,8 +10,7 @@ from beagles.ui.functions.machineLearningFunctions import MachineLearningFunctio
 class MachineLearningCallbacks(MachineLearningFunctions):
 
     def visualize(self):
-        subprocess.Popen(self.getAvailableScreencastViewer() +
-                         ['http://localhost:6006/#scalars&_smoothingWeight=0'])
+        webbrowser.open_new_tab('http://localhost:6006/#scalars&_smoothingWeight=0')
 
     def trainModel(self):
         if not self.mayContinue():

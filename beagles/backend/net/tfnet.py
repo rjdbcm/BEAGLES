@@ -4,7 +4,7 @@ import tensorflow as tf
 from beagles.backend.net.ops import op_create, identity
 from beagles.backend.net.ops.baseop import HEADER, LINE
 from beagles.backend.net.framework import Framework
-from beagles.backend.darknet.dark import Darknet
+from beagles.backend.darknet.darknet import Darknet
 from beagles.backend.io.loader import Loader
 from beagles.base import VariableIsNone
 from beagles.io.logs import get_logger
@@ -91,47 +91,26 @@ class TFNet:
         self.out = tf.identity(state.out, name='output')
 
     def setup_meta_ops(self):
-        cfg = dict({
-            'allow_soft_placement': False,
-            'log_device_placement': False
-        })
-
+        tf.config.set_soft_device_placement(False)
+        tf.debugging.set_log_device_placement(False)
         utility = min(self.flags.gpu, 1.)
         if utility > 0.0:
-            self.logger.info('GPU mode with {} usage'.format(utility))
-            cfg['gpu_options'] = tf.compat.v1.GPUOptions(
-                per_process_gpu_memory_fraction=utility)
-            cfg['allow_soft_placement'] = True
+            tf.config.set_soft_device_placement(True)
         else:
             self.logger.info('Running entirely on CPU')
-            cfg['device_count'] = {'GPU': 0}
 
         if self.flags.train:
             self.build_train_op()
 
         if self.flags.summary:
             self.summary_op = tf.compat.v1.summary.merge_all()
-            self.writer = tf.compat.v1.summary.FileWriter(
-                self.flags.summary + self.flags.project_name)
+            self.writer = tf.compat.v1.summary.FileWriter(self.flags.summary + self.flags.project_name)
 
-        self.sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(**cfg))
-        # uncomment next 3 lines to enable tb debugger
-        # from tensorflow.python import debug as tf_debug
-        # self.sess = tf_debug.TensorBoardDebugWrapperSession(self.sess,
-        #                                                     'localhost:6064')
+        self.sess = tf.compat.v1.Session()
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
         if not self.ntrain:
             return
-        # try:
-        #     self.saver = tf.compat.v1.train.Saver(tf.compat.v1.global_variables())
-        #
-        #     if self.flags.load != 0:
-        #         self.load_from_ckpt()
-        # except tf.errors.NotFoundError as e:
-        #     self.flags.error = str(e.message)
-        #     self.io.send_flags()
-        #     raise
 
         if self.flags.summary:
             self.writer.add_graph(self.sess.graph)

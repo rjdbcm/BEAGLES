@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow.keras as K
 from datetime import datetime
 import numpy as np
 from beagles.io.logs import get_logger
@@ -7,6 +8,7 @@ FORM = '{:>6} | {:>6} | {:<32} | {}'
 FORM_ = '{}+{}+{}+{}'
 LINE = FORM_.format('-' * 7, '-' * 8, '-' * 34, '-' * 15)
 HEADER = FORM.format('Source', 'Train?', 'Layer description', 'Output size')
+
 
 def _shape(tensor):  # work for both tf.Tensor & np.ndarray
     if type(tensor) in [tf.Variable, tf.Tensor]: 
@@ -19,7 +21,7 @@ def _name(tensor):
     return tensor.name.split(':')[0]
 
 
-class BaseOp(object):
+class BaseOp(tf.Module):
     """
     BaseOp objects initialise with a darknet's `layer` object
     and input tensor of that layer `inp`, it calculates the 
@@ -37,6 +39,7 @@ class BaseOp(object):
         self.lay = layer
         self.scope = '{}-{}'.format(
             str(self.num), self.lay.type)
+        super(BaseOp, self).__init__(name=self.lay.type)
         self.gap = roof - self.num
         self.var = not self.gap > 0
         self.act = 'Load '
@@ -70,16 +73,11 @@ class BaseOp(object):
             self.act = 'Init '
         if not self.var:
             return
-
         val = self.lay.w[var]
-        self.lay.w[var] = tf.constant_initializer(val)
         if var in self._SLIM:
             return
-        with tf.compat.v1.variable_scope(self.scope):
-            self.lay.w[var] = tf.compat.v1.get_variable(var,
-                shape=self.lay.wshape[var],
-                dtype=tf.compat.v1.float32,
-                initializer=self.lay.w[var])
+        with self.name_scope:
+            self.lay.w[var] = tf.Variable(val, shape=self.lay.wshape[var], dtype=tf.float32)
 
     def wrap_pholder(self, ph, feed):
         """wrap layer.h into placeholders"""
@@ -90,7 +88,7 @@ class BaseOp(object):
         sig = '{}/{}'.format(self.scope, ph)
         val = self.lay.h[ph]
 
-        self.lay.h[ph] = tf.compat.v1.placeholder_with_default(val['dfault'], val['shape'], name=sig)
+        self.lay.h[ph] = tf.Variable(val['dfault'], val['shape'], name=sig)
         feed[self.lay.h[ph]] = val['feed']
 
     def verbalise(self):  # console speaker

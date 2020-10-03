@@ -24,11 +24,7 @@ class route(BaseOp):
 
 class connected(BaseOp):
     def forward(self):
-        self.out = xw_plus_b(
-            self.inp.out,
-            self.lay.w['weights'],
-            self.lay.w['biases'],
-            name=self.scope)
+        self.out = self.inp.out * self.lay.w['weights'] + self.lay.w['biases']
 
     def speak(self):
         layer = self.lay

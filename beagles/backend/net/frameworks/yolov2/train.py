@@ -104,6 +104,5 @@ def loss(self, net_out):
     loss = tf.reshape(loss, [-1, H*W*B*(4 + 1 + C)])
     loss = tf.math.reduce_sum(loss, 1)
     self.loss = .5 * tf.math.reduce_mean(loss)
-    tf.compat.v1.summary.scalar("/".join([os.path.basename(m['model']),
-                                self.flags.trainer,
-                                "loss"]), self.loss)
+    scope = "/".join([os.path.basename(m['model']), self.flags.trainer, "loss"])
+    tf.compat.v1.summary.scalar(scope, self.loss)

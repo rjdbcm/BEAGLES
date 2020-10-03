@@ -33,7 +33,7 @@ class FileCallbacks(FileFunctions):
         filters = "Video Files (%s)" % ' '.join(
             formats + ['*%s' % LabelFile.suffix])
         filename = QFileDialog.getOpenFileName(
-            self, '%s - Choose Image or Label file' % APP_NAME,
+            self, '%s - Choose Video File' % APP_NAME,
             path, filters, options=options)
         target = os.path.join(
             self.rawframesDataPath,

@@ -1,5 +1,5 @@
 import sys
-import subprocess
+import webbrowser
 import cv2
 from cython import __version__ as cy_version
 from PyQt5.QtCore import PYQT_VERSION_STR, QT_VERSION_STR
@@ -32,5 +32,4 @@ class HelpCallbacks(HelpFunctions):
         QMessageBox.information(self, u'Information', msg)
 
     def showTutorialDialog(self):
-        link = ["https://youtu.be/p0nR2YsCY_U"]
-        subprocess.Popen(self.getAvailableScreencastViewer() + link)
+        webbrowser.open_new_tab("https://youtu.be/p0nR2YsCY_U")

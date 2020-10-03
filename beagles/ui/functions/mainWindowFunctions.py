@@ -37,16 +37,6 @@ class MainWindowFunctions(QWidget, QObject):
             self.committedframesDataPath = os.path.abspath(Flags().dataset)
         self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist)
 
-    @staticmethod
-    def getAvailableScreencastViewer():
-        os_name = platform.system()
-        if os_name == 'Windows':
-            return ['C:\\Program Files\\Internet Explorer\\iexplore.exe']
-        elif os_name == 'Linux':
-            return ['xdg-open']
-        elif os_name == 'Darwin':
-            return ['open', '-a', 'Safari']
-
     # noinspection PyMethodMayBeStatic
     def queueEvent(self, function):
         QTimer.singleShot(0, function)

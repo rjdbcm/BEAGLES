@@ -1,5 +1,5 @@
 from unittest import TestCase
-from beagles.backend.darknet.dark import Darknet
+from beagles.backend.darknet.darknet import Darknet
 from beagles.backend.net.framework import Framework
 from beagles.backend.io.darknet_config_file import DarknetConfigFile
 from beagles.base.errors import DarknetConfigEmpty

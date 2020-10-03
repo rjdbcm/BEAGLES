@@ -1,5 +1,6 @@
 from beagles.backend.net.ops.baseop import BaseOp
 import tensorflow as tf
+import tensorflow.keras as K
 import numpy as np
 
 

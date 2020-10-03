@@ -103,7 +103,7 @@ From the source directory run:
 | Space    | Flag the current image as verified             |
 | w        | Create a new bounding box                      |
 | d        | Next image                                     |
-| s        | Previous Image                                 |
+| a        | Previous Image                                 |
 | del      | Delete the selected bounding box               |
 | ↑→↓←     | Move the selected bounding box                 |
 

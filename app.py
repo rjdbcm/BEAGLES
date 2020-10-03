@@ -159,7 +159,7 @@ class MainWindow(BeaglesMainWindow):
         self.actions.setEditMode.setEnabled(not drawing)
         if not drawing and self.beginner():
             # Cancel creation.
-            self.logger.info('Cancel creation.')
+            self.io.logger.info('Cancel creation.')
             self.canvas.editing = True
             self.canvas.restoreCursor()
             self.actions.create.setEnabled(True)
