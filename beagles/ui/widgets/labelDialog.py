@@ -1,6 +1,6 @@
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QRegExpValidator, QCursor
+from PyQt5.QtCore import QStringListModel, Qt, QRegExp
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QCompleter, QVBoxLayout, QListWidget
 
 from beagles.base.constants import LABEL_RE
 from beagles.ui import newIcon

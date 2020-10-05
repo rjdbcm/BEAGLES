@@ -5,11 +5,11 @@ import platform
 from PyQt5.QtCore import QObject, QTimer
 from PyQt5.QtGui import QImage, QColor
 from PyQt5.QtWidgets import QWidget, QMessageBox, QListWidgetItem
+from beagles.base import Flags
 from beagles.base.constants import *
 from beagles.ui import newIcon, addActions
-from beagles.io.labelFile import LabelFile
 from beagles.ui.widgets.labelDialog import LabelDialog
-from beagles.base.flags import Flags
+from beagles.io.labelFile import LabelFile
 
 
 class MainWindowFunctions(QWidget, QObject):

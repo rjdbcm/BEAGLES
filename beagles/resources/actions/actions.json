@@ -1,182 +1,38 @@
 {
-   "openFile":[
-      "Ctrl+o",
-      false,
-      true
-   ],
-   "openDir":[
-      "Ctrl+u",
-      false,
-      true
-   ],
-   "impVideo":[
-      "Ctrl+i",
-      false,
-      true
-   ],
-   "changeSaveDir":[
-      "Ctrl+r",
-      false,
-      true
-   ],
-   "openAnnotation":[
-      "Ctrl+Shift+o",
-      false,
-      true
-   ],
-   "nextImg":[
-      "d",
-      false,
-      true
-   ],
-   "prevImg":[
-      "a",
-      false,
-      true
-   ],
-   "verifyImg":[
-      "space",
-      false,
-      true
-   ],
-   "saveFile":[
-      "Ctrl+s",
-      false,
-      false
-   ],
-   "changeFormat":[
-      null,
-      false,
-      true
-   ],
-   "saveAs":[
-      "Ctrl+Shift+s",
-      false,
-      false
-   ],
-   "closeFile":[
-      "Ctrl+w",
-      false,
-      true
-   ],
-   "resetAll":[
-      null,
-      false,
-      true
-   ],
-   "boxLineColor":[
-      "Ctrl+l",
-      false,
-      true
-   ],
-   "setCreateMode":[
-      "w",
-      false,
-      false
-   ],
-   "createShape":[
-      "w",
-      false,
-      false
-   ],
-   "setEditMode":[
-      "e",
-      false,
-      false
-   ],
-   "commitAnnotatedFrames":[
-      null,
-      false,
-      true
-   ],
-   "visualize":[
-      null,
-      false,
-      true
-   ],
-   "hideAll":[
-      "Ctrl+h",
-      false,
-      false
-   ],
-   "showAll":[
-      "Ctrl+a",
-      false,
-      false
-   ],
-   "trainModel":[
-      "Ctrl+t",
-      false,
-      true
-   ],
-   "delBox":[
-      "Delete",
-      false,
-      false
-   ],
-   "advancedMode":[
-      "Ctrl+Shift+a",
-      true,
-      true
-   ],
-   "showInfo":[
-      null,
-      false,
-      true
-   ],
-   "showTutorialDialog":[
-      null,
-      false,
-      true
-   ],
-   "close":[
-      "Ctrl+q",
-      false,
-      true
-   ],
-   "zoomIn":[
-      "Ctrl++",
-      false,
-      false
-   ],
-   "zoomOut":[
-      "Ctrl+-",
-      false,
-      false
-   ],
-   "zoomOrg":[
-      "Ctrl+Shift++",
-      false,
-      false
-   ],
-   "setFitWin":[
-      "Ctrl+f",
-      true,
-      false
-   ],
-   "setFitWidth":[
-      "Ctrl+Shift+f",
-      true,
-      false
-   ],
-   "editLabel":[
-      "Ctrl+e",
-      false,
-      false
-   ],
-   "shapeFillColor": [
-      null,
-      false,
-      false
-   ],
-   "shapeLineColor":[
-      null,
-      false,
-      false
-   ],
-   "copySelectedShape":[
-      "Ctrl+d",
-      false,
-      false
-   ]
+   "openFile":["Ctrl+o", false, true],
+   "openDir": ["Ctrl+u", false, true],
+   "impVideo":["Ctrl+i", false, true],
+   "changeSaveDir":["Ctrl+r", false, true],
+   "openAnnotation":["Ctrl+Shift+o", false, true],
+   "nextImg":["d", false, true],
+   "prevImg":["a", false, true],
+   "verifyImg":["space", false, true],
+   "saveFile":["Ctrl+s", false, false],
+   "changeFormat":[null, false, true],
+   "saveAs":["Ctrl+Shift+s", false, false],
+   "closeFile":["Ctrl+w", false, true],
+   "resetAll":[null, false, true],
+   "boxLineColor":["Ctrl+l", false, true],
+   "setCreateMode":["w", false, false],
+   "createShape":["w", false, false],
+   "setEditMode":["e", false, false],
+   "commitAnnotatedFrames":[null, false, true],
+   "visualize":[null, false, true],
+   "hideAll":["Ctrl+h", false, false],
+   "showAll":["Ctrl+a", false, false],
+   "trainModel":["Ctrl+t", false, true],
+   "delBox":["Delete", false, false],
+   "advancedMode":["Ctrl+Shift+a", true, true],
+   "showInfo":[null, false, true],
+   "showTutorialDialog":[null, false, true],
+   "close":["Ctrl+q", false, true],
+   "zoomIn":["Ctrl++", false, false],
+   "zoomOut":["Ctrl+-", false, false],
+   "zoomOrg":["Ctrl+Shift++", false, false],
+   "setFitWin":["Ctrl+f", true, false],
+   "setFitWidth":["Ctrl+Shift+f", true, false],
+   "editLabel":["Ctrl+e", false, false],
+   "shapeFillColor": [null, false, false],
+   "shapeLineColor":[null, false, false],
+   "copySelectedShape":["Ctrl+d", false, false]
 }

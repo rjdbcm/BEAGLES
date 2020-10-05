@@ -1,8 +1,9 @@
 import os
 import json
 from PyQt5.QtWidgets import (
-    QMainWindow, QListWidget, QVBoxLayout, QWidget, QToolButton, QDockWidget, QCheckBox,
-    QLineEdit, QHBoxLayout, QWidgetAction, QAction, QMenu
+    QMainWindow, QListWidget, QVBoxLayout, QWidget, QToolButton,
+    QDockWidget, QCheckBox, QLineEdit, QHBoxLayout, QWidgetAction,
+    QAction, QMenu
 )
 from PyQt5.QtCore import QSize, Qt
 from beagles.ui.widgets.zoomWidget import ZoomWidget

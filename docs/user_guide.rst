@@ -74,9 +74,19 @@ Recording
 Tiled Captures with OBS
 ***********************
 
-1. Add camera sources.
+1. Add camera sources to the scene
 
-2. Calculate the number of tiles :math:`T=\left\lceil \sqrt{N} \right\rceil^{2}`; N = number of cameras
+2. Calculate the number of tiles :math:`T`
+
+   .. math::
+
+      T=\left\lceil \sqrt{N} \right\rceil^{2}; N = \text{number of cameras}
+
+3. Use the Transform menu item to adjust the height and width of each source :math:`D_{source}`
+
+   .. math::
+
+         D_{source} = \frac{D_{total}}{\sqrt{T}}; D_{total} = \text{total record height or width}
 
 
 

@@ -10,7 +10,8 @@ from PyQt5.QtWidgets import QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QHBo
 
 
 class BackendConnection(QObject):
-    progressUpdate = pyqtSignal(int)
+    """Signal other QObjects from BackendThread"""
+    progressUpdate: pyqtSignal = pyqtSignal(int)
 
 
 class BackendThread(QThread, SharedFlagIO):

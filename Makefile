@@ -11,7 +11,7 @@ virtualenv:
 	. bin/activate
 
 qt5:
-	pyrcc5 -o beagles/resources.py resources.qrc
+	pyrcc5 -o beagles/resources.py beagles/resources/resources.qrc
 
 cython:
 	python3 setup.py build_ext --inplace
