@@ -18,7 +18,7 @@ Keyboard Shortcuts
 :kbd:`w`         Create a new bounding box
 :kbd:`d`         Next image
 :kbd:`a`         Previous Image
-:kbd:`del`       Delete the selected bounding box
+:kbd:`delete`    Delete the selected bounding box
 :kbd:`↑→↓←`      Move the selected bounding box
 ===============  ================================================
 
@@ -35,6 +35,7 @@ or press :kbd:`Ctrl i`.
 
 .. figure:: .static/import-video-dialog.png
 	:class: with-shadow
+	:target: _images/import-video-dialog.png
 
 	This will import video frames to :file:`data/rawframes/test/` using ffmpeg.
 
@@ -42,6 +43,16 @@ or press :kbd:`Ctrl i`.
 ################
 Training a Model
 ################
+
+***********************
+Machine Learning Dialog
+***********************
+
+.. figure:: .static/train-dialog.png
+	:class: with-shadow
+	:target: _images/train-dialog.png
+
+	About to train a YOLOv2 model.
 
 *******************
 Monitoring Progress
@@ -51,6 +62,7 @@ This will open TensorBoard in the default web browser for your system.
 
 .. image:: .static/tensorboard-scalars.png
 	:class: with-shadow
+	:target: _images/tensorboard-scalars.png
 
 Or just navigate to: `<http://localhost:6006>`_
 

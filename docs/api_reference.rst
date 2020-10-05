@@ -6,10 +6,10 @@ backend
 darknet
 *******
 
-dark
-----
+darknet
+-------
 
-.. automodule:: beagles.backend.darknet.dark
+.. automodule:: beagles.backend.darknet.darknet
 	:members:
 	:inherited-members:
 	:undoc-members:

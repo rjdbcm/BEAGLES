@@ -20,7 +20,7 @@ class ConfigParser:
 
             0: metadata
 
-            1 ... N: *args for Layer subclass returned by :meth:`beagles.backend.darknet.dark.create_darkop` for layers 1 to N
+            1 ... N: *args for Layer subclass returned by :meth:`beagles.backend. darknet.darknet.create_darkop` for layers 1 to N
         """
 
         yield self.metadata

@@ -11,33 +11,33 @@ darkops = darkops
 """:obj:`dict`: darknet layer types
    
    Items:                                                   
-         'dropout': :obj:`beagles.backend.darknet.dark.dropout_layer`
+         'dropout': :obj:`beagles.backend. darknet.darknet.dropout_layer`
         
-         'connected': :obj:`beagles.backend.darknet.dark.connected_layer`
+         'connected': :obj:`beagles.backend. darknet.darknet.connected_layer`
         
-         'maxpool': :obj:`beagles.backend.darknet.dark.maxpool_layer`
+         'maxpool': :obj:`beagles.backend. darknet.darknet.maxpool_layer`
         
-         'shortcut': :obj:`beagles.backend.darknet.dark.shortcut_layer`
+         'shortcut': :obj:`beagles.backend. darknet.darknet.shortcut_layer`
         
-         'upsample': :obj:`beagles.backend.darknet.dark.upsample_layer`
+         'upsample': :obj:`beagles.backend. darknet.darknet.upsample_layer`
         
-         'convolutional': :obj:`beagles.backend.darknet.dark.convolutional_layer`
+         'convolutional': :obj:`beagles.backend. darknet.darknet.convolutional_layer`
         
-         'avgpool': :obj:`beagles.backend.darknet.dark.avgpool_layer`
+         'avgpool': :obj:`beagles.backend. darknet.darknet.avgpool_layer`
         
-         'softmax': :obj:`beagles.backend.darknet.dark.softmax_layer`
+         'softmax': :obj:`beagles.backend. darknet.darknet.softmax_layer`
         
-         'crop': :obj:`beagles.backend.darknet.dark.crop_layer`
+         'crop': :obj:`beagles.backend. darknet.darknet.crop_layer`
         
-         'local': :obj:`beagles.backend.darknet.dark.local_layer`
+         'local': :obj:`beagles.backend. darknet.darknet.local_layer`
         
-         'select': :obj:`beagles.backend.darknet.dark.select_layer`
+         'select': :obj:`beagles.backend. darknet.darknet.select_layer`
         
-         'route': :obj:`beagles.backend.darknet.dark.route_layer`
+         'route': :obj:`beagles.backend. darknet.darknet.route_layer`
         
-         'reorg': :obj:`beagles.backend.darknet.dark.reorg_layer`
+         'reorg': :obj:`beagles.backend. darknet.darknet.reorg_layer`
         
-         'conv-select': :obj:`beagles.backend.darknet.dark.conv_select_layer`
+         'conv-select': :obj:`beagles.backend. darknet.darknet.conv_select_layer`
         
          'conv-extract': :obj:`beagles.backend.darknet.darkop.conv_extract_layer`
         
@@ -49,7 +49,7 @@ create_darkop = create_darkop
 """Darknet operations factory method.
 
     Args:
-        ltype: layer type one of :obj:`beagles.backend.darknet.dark.darkops` keys.
+        ltype: layer type one of :obj:`beagles.backend. darknet.darknet.darkops` keys.
         
         num: numerical index of layer
         

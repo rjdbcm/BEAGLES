@@ -118,7 +118,6 @@ class TestDarknet(TestCase):
     def testParseAndYieldYoloV1Config(self):
         self.flags.labels = 'tests/resources/test_classes.txt'
         self.flags.model = 'tests/resources/test_yolov1.cfg'
-        print(self.flags)
         darknet = Darknet(self.flags)
         self.assertDictEqual(darknet.meta, yolov1_meta,
                              'Failed to correctly parse darknet metadata')
