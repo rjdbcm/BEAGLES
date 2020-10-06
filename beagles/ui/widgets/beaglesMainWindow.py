@@ -293,6 +293,8 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks):
         super(BeaglesMainWindow, self).resizeEvent(event)
 
     def closeEvent(self, event):
+        for handler in self.io.logger.handlers:
+            handler.doRollover()
         if not self.mayContinue():
             event.ignore()
         if self.tb_process.pid() > 0:

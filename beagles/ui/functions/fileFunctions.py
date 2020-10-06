@@ -292,8 +292,7 @@ class FileFunctions(MainWindowFunctions):
                 self.labelFile.save(annotationFilePath, shapes, self.filePath,
                                     self.imageData, self.lineColor.getRgb(),
                                     self.fillColor.getRgb())
-            self.logger.info('Image:{0} -> Annotation:{1}'.format(
-                self.filePath, annotationFilePath))
+            self.io.logger.info('Image:{0} -> Annotation:{1}'.format(self.filePath, annotationFilePath))
             return True
         except LabelFileError as e:
             self.errorMessage(u'Error saving label data', u'<b>%s</b>' % e)
