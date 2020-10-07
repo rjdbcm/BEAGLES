@@ -132,19 +132,18 @@ class Select(DarknetConfigLayer):
             layer = inp
         return layer
 
-    @staticmethod
-    def select_inps(i, parser):
+    def select_inps(self, i):
         k = 1
-        while parser.layers[i - k][TYPE] not in SELECTABLE_LAY:
+        while self.parser.layers[i - k][TYPE] not in SELECTABLE_LAY:
             k += 1
             if i - k < 0:
                 break
         if i - k < 0:
-            l_ = parser.l
-        elif parser.layers[i - k][TYPE] == CONNECTED:
-            l_ = parser.layers[i - k]['output']
+            l_ = self.parser.l
+        elif self.parser.layers[i - k][TYPE] == CONNECTED:
+            l_ = self.parser.layers[i - k]['output']
         else:
-            l_ = parser.layers[i - k].get('old', [parser.l])[-1]
+            l_ = self.parser.layers[i - k].get('old', [self.parser.l])[-1]
         return l_
 
 
@@ -206,17 +205,7 @@ class ConvExtract(DarknetConfigLayer):
         out_layer = profiles[out]
         n, size, stride, padding, batch_norm, activation = self._get_section_defaults(
             section)
-        k = 1
-        while p.layers[i - k][TYPE] not in EXTRACTABLE_LAY:
-            k += 1
-            if i - k < 0:
-                break
-        if i - k >= 0:
-            previous_layer = p.layers[i - k]
-            c_ = previous_layer['filters']
-        else:
-            c_ = p.c
-
+        c_ = self.extract_channels(i)
         yield [_fix_name(section[TYPE], snake_case=False), i, size, c_, n,
                stride, padding, batch_norm, activation, inp_layer, out_layer]
         if activation != LINEAR:
@@ -226,6 +215,18 @@ class ConvExtract(DarknetConfigLayer):
         p.w, p.h, p.c = w_, h_, len(out_layer)
         p.l = p.w * p.h * p.c
 
+    def extract_channels(self, i):
+        k = 1
+        while self.parser.layers[i - k][TYPE] not in EXTRACTABLE_LAY:
+            k += 1
+            if i - k < 0:
+                break
+        if i - k >= 0:
+            previous_layer = self.parser.layers[i - k]
+            c_ = previous_layer['filters']
+        else:
+            c_ = self.parser.c
+        return c_
 
 @register_subsystem('conv-select', ConfigParser)
 class ConvSelect(DarknetConfigLayer):
