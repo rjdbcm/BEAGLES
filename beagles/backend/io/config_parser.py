@@ -90,23 +90,23 @@ class ConfigParser(SubsystemPrototype):
         else:
             cls.metadata[OUT_SIZE] = cls.l
 
-@register_subsystem('select', ConfigParser)
-class SelectConfig(Subsystem):
+@register_subsystem('', ConfigParser)
+class DarknetConfigLayer(Subsystem):
     def constructor(self, parser):
         self.parser = parser
 
+@register_subsystem('select', ConfigParser)
+class Select(DarknetConfigLayer):
+
+    constructor = DarknetConfigLayer.constructor
+
     def __call__(self, section, i):
-        if not self.parser.flat:
+        p = self.parser
+        if not p.flat:
             yield [FLATTEN, i]
-            self.parser.flat = True
+            p.flat = True
         inp = section.get(*INPUT)
-        if type(inp) is str:
-            file = inp.split(',')[0]
-            layer_num = int(inp.split(',')[1])
-            profiles = self._load_profile(section['profile'])
-            layer = profiles[layer_num]
-        else:
-            layer = inp
+        layer = self.profile(inp, section)
         activation = section.get(ACTIVATION)
         section[KEEP] = section[KEEP].split(KEEP_DELIMITER)
         classes = int(section[KEEP][-1])
@@ -114,30 +114,44 @@ class SelectConfig(Subsystem):
         keep_n = len(keep)
         train_from = classes * section[BINS]
         for count in range(section[BINS] - 1):
-            for num in keep[-keep_n:]:
-                keep += [num + classes]
-        k = 1
-        while self.parser.layers[i - k][TYPE] not in SELECTABLE_LAY:
-            k += 1
-            if i - k < 0:
-                break
-        if i - k < 0:
-            l_ = self.parser.l
-        elif self.layers[i - k][TYPE] == CONNECTED:
-            l_ = self.parser.layers[i - k]['output']
-        else:
-            l_ = self.parser.layers[i - k].get('old', [self.parser.l])[-1]
+            keep += [num + classes for num in keep[-keep_n:]]
+        l_ = self.select_inps(i, p)
         yield [_fix_name(section[TYPE]), i, l_, section['old_output'], activation, layer,
                section['output'], keep, train_from]
         if activation != LINEAR:
             yield [activation, i]
-        self.parser.l = section['output']
+        p.l = section['output']
+
+    def profile(self, inp, section):
+        if type(inp) is str:
+            file = inp.split(',')[0]
+            layer_num = int(inp.split(',')[1])
+            profiles = self._load_profile(section['profile'])
+            layer = profiles[layer_num]
+        else:
+            layer = inp
+        return layer
+
+    @staticmethod
+    def select_inps(i, parser):
+        k = 1
+        while parser.layers[i - k][TYPE] not in SELECTABLE_LAY:
+            k += 1
+            if i - k < 0:
+                break
+        if i - k < 0:
+            l_ = parser.l
+        elif parser.layers[i - k][TYPE] == CONNECTED:
+            l_ = parser.layers[i - k]['output']
+        else:
+            l_ = parser.layers[i - k].get('old', [parser.l])[-1]
+        return l_
 
 
 @register_subsystem('convolutional', ConfigParser)
-class ConvolutionalConfig(Subsystem):
-    def constructor(self, parser):
-        self.parser = parser
+class Convolutional(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
     def __call__(self, section, i):
         p = self.parser
         n, size, stride, padding, batch_norm, activation = self._get_section_defaults(section)
@@ -151,16 +165,16 @@ class ConvolutionalConfig(Subsystem):
         p.l = p.w * p.h * p.c
 
 @register_subsystem('crop', ConfigParser)
-class CropConfig(Subsystem):
-    def constructor(self, *args, **kwargs):
-        pass
+class Crop(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
     def __call__(self, section, i):
         yield [_fix_name(section[TYPE]), i]
 
 @register_subsystem('local', ConfigParser)
-class LocalConfig(Subsystem):
-    def constructor(self, parser):
-        self.parser = parser
+class Local(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
     def __call__(self, section, i):
         p = self.parser
         n, size, stride, *_, activation = self._get_section_defaults(section)
@@ -175,9 +189,9 @@ class LocalConfig(Subsystem):
         p.l = p.w * p.h * p.c
 
 @register_subsystem('conv-extract', ConfigParser)
-class ConvExtractConfig(Subsystem):
-    def constructor(self, parser):
-        self.parser = parser
+class ConvExtract(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
     def __call__(self, section, i):
         p = self.parser
         profiles = self._load_profile(section['profile'])
@@ -214,9 +228,8 @@ class ConvExtractConfig(Subsystem):
 
 
 @register_subsystem('conv-select', ConfigParser)
-class ConvSelectConfig(Subsystem):
-    def constructor(self, parser):
-        self.parser = parser
+class ConvSelect(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
 
     def __call__(self, section, i):
         p = self.parser
@@ -242,9 +255,9 @@ class ConvSelectConfig(Subsystem):
 
 
 @register_subsystem('maxpool', ConfigParser)
-class MaxPoolConfig(Subsystem):
-    def constructor(self, parser):
-        self.parser = parser
+class MaxPool(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
     def __call__(self, section, i):
         p = self.parser
         stride = section.get(*STRIDE)
@@ -258,9 +271,9 @@ class MaxPoolConfig(Subsystem):
 
 
 @register_subsystem('connected', ConfigParser)
-class ConnectedConfig(Subsystem):
-    def constructor(self, parser):
-        self.parser = parser
+class Connected(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
     def __call__(self, section, i):
         p = self.parser
         if not p.flat:
@@ -273,9 +286,9 @@ class ConnectedConfig(Subsystem):
         p.l = section['output']
 
 @register_subsystem('extract', ConfigParser)
-class ExtractConfig(Subsystem):
-    def constructor(self, parser):
-        self.parser = parser
+class Extract(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
     def new(input_layer, channels: list, heights: list, widths: list):
         new_inp = list()
         for p in range(channels[1]):
@@ -315,9 +328,9 @@ class ExtractConfig(Subsystem):
         p.l = len(out_layer)
 
 @register_subsystem('route', ConfigParser)
-class RouteConfig(Subsystem):
-    def constructor(self, parser):
-        self.parser = parser
+class Route(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
     def __call__(self, section, i):
         p = self.parser
         routes = section['layers']
@@ -340,9 +353,9 @@ class RouteConfig(Subsystem):
         p.l = p.w * p.h * p.c
 
 @register_subsystem('shortcut', ConfigParser)
-class ShortcutConfig(Subsystem):
-    def constructor(self, parser):
-        self.parser = parser
+class Shortcut(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
     def __call__(self, section, i):
         p = self.parser
         index = int(section['from'])
@@ -354,9 +367,9 @@ class ShortcutConfig(Subsystem):
         p.l = p.w * p.h * p.c
 
 @register_subsystem('upsample', ConfigParser)
-class UpsampleConfig(Subsystem):
-    def constructor(self, parser):
-        self.parser = parser
+class Upsample(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
     def __call__(self, section, i):
         p = self.parser
         stride = section.get(*STRIDE)
@@ -368,9 +381,9 @@ class UpsampleConfig(Subsystem):
         p.l = p.w * p.h * p.c
 
 @register_subsystem('reorg', ConfigParser)
-class ReorgConfig(Subsystem):
-    def constructor(self, parser):
-        self.parser = parser
+class Reorg(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
     def __call__(self, section, i):
         p = self.parser
         stride = section.get(*STRIDE)
@@ -381,26 +394,24 @@ class ReorgConfig(Subsystem):
         p.l = p.w * p.h * p.c
 
 @register_subsystem('avgpool', ConfigParser)
-class AvgPoolConfig(Subsystem):
-
-    def constructor(self, parser):
-        self.parser = parser
-        self.parser.flat = True
-        self.parser.l = self.parser.c
+class AvgPool(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
 
     def __call__(self, section, i):
+        self.parser.flat = True
+        self.parser.l = self.parser.c
         yield [_fix_name(section[TYPE]), i]
 
 @register_subsystem('dropout', ConfigParser)
-class DropoutConfig(Subsystem):
-    def constructor(self, parser):
-        self.parser = parser
+class Dropout(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
     def __call__(self, section, i):
         yield [_fix_name(section[TYPE]), i, section['probability']]
 
 @register_subsystem('softmax', ConfigParser)
-class SoftMaxConfig(Subsystem):
-    def constructor(self, parser):
-        self.parser = parser
+class SoftMax(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
     def __call__(self, section, i):
         yield [_fix_name(section[TYPE]), i, section['groups']]

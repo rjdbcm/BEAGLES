@@ -60,9 +60,12 @@ class Loader(SubsystemPrototype):
         temp = self.vals.pop(idx)
         return temp
 
+class FileLoader(Subsystem):
+    def constructor(self, *args, **kwargs):
+        pass
 
 @register_subsystem(token='.weights', prototype=Loader)
-class WeightsLoader(Subsystem):
+class WeightsLoader(FileLoader):
     """one who understands .weights files"""
 
     def constructor(self, path, src_layers):
@@ -121,7 +124,7 @@ class WeightsLoader(Subsystem):
 
 
 @register_subsystem(token='', prototype=Loader)
-class CheckpointLoader(Subsystem):
+class CheckpointLoader(FileLoader):
     """
     one who understands .ckpt files, very much
     """

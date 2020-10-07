@@ -27,6 +27,9 @@ distclean: clean clean_site_packages
 coverage:
 	coverage run -m unittest discover tests
 
+diagrams:
+	pyreverse -ASmy -k -o png -p BEAGLES ./beagles
+
 clean:
 	find . -name “.DS_Store” -depth -exec rm {} \;
 	rm -f ~/.BEAGLESSettings.json ./libs/resources.py

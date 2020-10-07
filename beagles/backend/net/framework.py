@@ -20,9 +20,13 @@ class Framework(SubsystemPrototype):
             raise KeyError(f'Unregistered framework type token: {type_token}')
         return this(cls.create_key, meta, flags)
 
+@register_subsystem(token='', prototype=Framework)
+class NeuralNet(Subsystem):
+    def constructor(self, *args, **kwargs):
+        pass
 
 @register_subsystem(token='[detection]', prototype=Framework)
-class Yolo(Subsystem):
+class Yolo(NeuralNet):
     constructor = yolo.constructor
 
     parse = yolo.data.parse
@@ -64,7 +68,7 @@ class YoloV2(Yolo):
 
 
 @register_subsystem(token='sse l1 l2 smooth sparse softmax', prototype=Framework)
-class MultiLayerPerceptron(Subsystem):
+class MultiLayerPerceptron(NeuralNet):
     constructor = vanilla.constructor
     loss = vanilla.train.loss
 
