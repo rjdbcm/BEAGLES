@@ -1,14 +1,35 @@
 import pickle
 import sys
 from typing import Generator
+from itertools import product
 from beagles.backend.io.darknet_config_file import DarknetConfigFile
+
+
+ACTIVATION = 'activation'
+FILTERS = ('filters', 1)
+SIZE = ('size', 1)
+STRIDE = ('stride', 1)
+PAD = ('pad', 0)
+PADDING = ('padding', 0)
+INPUT = ('input', None)
+BATCHNORM = ('batch_normalize', 0)
+FLATTEN = 'flatten'
+TYPE = 'type'
+INP_SIZE = 'inp_size'
+OUT_SIZE = 'out_size'
+KEEP = 'keep'
+BINS = 'bins'
+LINEAR = 'linear'
+SELECTABLE_LAY = ['[connected]', '[extract]']
+EXTRACTABLE_LAY = ['[convolutional]', '[conv-extract]']
+KEEP_DELIMITER = '/'
 
 
 class ConfigParser:
     def __init__(self, model):
         config = DarknetConfigFile(model)
         self.layers, self.metadata = config.tokens
-        self.h, self.w, self.c = self.metadata['inp_size']
+        self.h, self.w, self.c = self.metadata[INP_SIZE]
         self.l = self.h * self.w * self.c
         self.flat = False
         self.conv = '.conv.' in model
@@ -25,21 +46,31 @@ class ConfigParser:
 
         yield self.metadata
         for i, section in enumerate(self.layers):
-            layer_handler = self.get_layer_handler(section, i)
+            layer_handler = self._get_layer_handler(section, i)
             try:
                 yield [layer for layer in layer_handler(section, i)][0]
             except TypeError:
-                raise TypeError('Layer {} not implemented'.format(section['type']))
+                raise TypeError('Layer {} not implemented'.format(section[TYPE]))
             section['_size'] = list([self.h, self.w, self.c, self.l, self.flat])
         if not self.flat:
-            self.metadata['out_size'] = [self.h, self.w, self.c]
+            self.metadata[OUT_SIZE] = [self.h, self.w, self.c]
         else:
-            self.metadata['out_size'] = self.l
+            self.metadata[OUT_SIZE] = self.l
 
-    def get_layer_handler(self, section: dict, i):
-        handler_name = self._fixup_name(section['type'], prefix='_')
+    def _get_layer_handler(self, section: dict, i):
+        handler_name = _fix_name(section[TYPE], prefix='_')
         handler = getattr(self, handler_name, [lambda section: str, lambda i: int])
         return handler
+    
+    def _get_section_defaults(self, section):
+        n = section.get(*FILTERS)
+        size = section.get(*SIZE)
+        stride = section.get(*STRIDE)
+        pad = section.get(*PAD)
+        padding = size // 2 if pad else section.get(*PADDING)
+        activation = section.get(ACTIVATION)
+        batch_norm = section.get(*BATCHNORM) or self.conv
+        return [n, size, stride, padding, batch_norm, activation]
 
     @staticmethod
     def _pad(dimension, padding, size, stride):
@@ -48,14 +79,6 @@ class ConfigParser:
     @staticmethod
     def _local_pad(dimension, padding, size, stride):
         return (dimension - 1 - (1 - padding) * (size - 1)) // stride + 1
-
-    @staticmethod
-    def _fixup_name(section_name: str, snake_case=True, prefix: str = ''):
-        name = section_name.strip('[]')
-        if snake_case:
-            name = name.replace('-', '_')
-        name = prefix + name
-        return name
 
     @staticmethod
     def _load_profile(file):
@@ -69,9 +92,9 @@ class ConfigParser:
 
     def _select(self, section, i):
         if not self.flat:
-            yield ['flatten', i]
+            yield [FLATTEN, i]
             self.flat = True
-        inp = section.get('input', None)
+        inp = section.get(*INPUT)
         if type(inp) is str:
             file = inp.split(',')[0]
             layer_num = int(inp.split(',')[1])
@@ -79,45 +102,38 @@ class ConfigParser:
             layer = profiles[layer_num]
         else:
             layer = inp
-        activation = section.get('activation', 'logistic')
-        section['keep'] = section['keep'].split('/')
-        classes = int(section['keep'][-1])
-        keep = self._list_keep(section['keep'][0])
+        activation = section.get(ACTIVATION)
+        section[KEEP] = section[KEEP].split(KEEP_DELIMITER)
+        classes = int(section[KEEP][-1])
+        keep = self._list_keep(section[KEEP][0])
         keep_n = len(keep)
-        train_from = classes * section['bins']
-        for count in range(section['bins'] - 1):
+        train_from = classes * section[BINS]
+        for count in range(section[BINS] - 1):
             for num in keep[-keep_n:]:
                 keep += [num + classes]
         k = 1
-        while self.layers[i - k]['type'] not in ['[connected]', '[extract]']:
+        while self.layers[i - k][TYPE] not in SELECTABLE_LAY:
             k += 1
             if i - k < 0:
                 break
         if i - k < 0:
             l_ = self.l
-        elif self.layers[i - k]['type'] == 'connected':
+        elif self.layers[i - k][TYPE] == 'connected':
             l_ = self.layers[i - k]['output']
         else:
             l_ = self.layers[i - k].get('old', [self.l])[-1]
-        yield ['select', i, l_, section['old_output'], activation, layer,
+        yield [_fix_name(section[TYPE]), i, l_, section['old_output'], activation, layer,
                section['output'], keep, train_from]
-        if activation != 'linear':
+        if activation != LINEAR:
             yield [activation, i]
         self.l = section['output']
 
     def _convolutional(self, section, i):
-        n = section.get('filters', 1)
-        size = section.get('size', 1)
-        stride = section.get('stride', 1)
-        pad = section.get('pad', 0)
-        padding = section.get('padding', 0)
-        if pad:
-            padding = size // 2
-        activation = section.get('activation', 'logistic')
-        batch_norm = section.get('batch_normalize', 0) or self.conv
-        yield [self._fixup_name(section['type']), i, size, self.c, n, stride, padding,
+        n, size, stride, padding, batch_norm, activation = self._get_section_defaults(
+            section)
+        yield [_fix_name(section[TYPE]), i, size, self.c, n, stride, padding,
                batch_norm, activation]
-        if activation != 'linear':
+        if activation != LINEAR:
             yield [activation, i]
         w_ = self._pad(self.w, padding, size, stride)
         h_ = self._pad(self.h, padding, size, stride)
@@ -125,18 +141,15 @@ class ConfigParser:
         self.l = self.w * self.h * self.c
 
     def _crop(self, section, i):
-        yield [self._fixup_name(section['type']), i]
+        yield [_fix_name(section[TYPE]), i]
 
     def _local(self, section, i):
-        n = section.get('filters', 1)
-        size = section.get('size', 1)
-        stride = section.get('stride', 1)
-        pad = section.get('pad', 0)
-        activation = section.get('activation', 'logistic')
+        n, size, stride, *_, activation = self._get_section_defaults(section)
+        pad = section.get(*PAD)
         w_ = self._local_pad(self.w, pad, size, stride)
         h_ = self._local_pad(self.w, pad, size, stride)
-        yield ['local', i, size, self.c, n, stride, pad, w_, h_, activation]
-        if activation != 'linear':
+        yield [_fix_name(section[TYPE]), i, size, self.c, n, stride, pad, w_, h_, activation]
+        if activation != LINEAR:
             yield [activation, i]
         self.w, self.h, self.c = w_, h_, n
         self.l = self.w * self.h * self.c
@@ -150,23 +163,12 @@ class ConfigParser:
         if inp >= 0:
             inp_layer = profiles[inp]
         if inp_layer is not None:
-            assert len(inp_layer) == self.c, \
-                'Conv-extract does not match input dimension'
+            assert len(inp_layer) == self.c, 'Conv-extract does not match input dimension'
         out_layer = profiles[out]
-
-        n = section.get('filters', 1)
-        size = section.get('size', 1)
-        stride = section.get('stride', 1)
-        pad = section.get('pad', 0)
-        padding = section.get('padding', 0)
-        if pad:
-            padding = size // 2
-        activation = section.get('activation', 'logistic')
-        batch_norm = section.get('batch_normalize', 0) or self.conv
-
+        n, size, stride, padding, batch_norm, activation  = self._get_section_defaults(
+            section)
         k = 1
-        find = ['[convolutional]', '[conv-extract]']
-        while self.layers[i - k]['type'] not in find:
+        while self.layers[i - k][TYPE] not in EXTRACTABLE_LAY:
             k += 1
             if i - k < 0:
                 break
@@ -176,9 +178,9 @@ class ConfigParser:
         else:
             c_ = self.c
 
-        yield [self._fixup_name(section['type'], snake_case=False), i, size, c_, n,
+        yield [_fix_name(section[TYPE], snake_case=False), i, size, c_, n,
                stride, padding, batch_norm, activation, inp_layer, out_layer]
-        if activation != 'linear':
+        if activation != LINEAR:
             yield [activation, i]
         w_ = self._pad(self.w, padding, size, stride)
         h_ = self._pad(self.h, padding, size, stride)
@@ -186,60 +188,48 @@ class ConfigParser:
         self.l = self.w * self.h * self.c
 
     def _conv_select(self, section, i):
-        n = section.get('filters', 1)
-        size = section.get('size', 1)
-        stride = section.get('stride', 1)
-        pad = section.get('pad', 0)
-        padding = section.get('padding', 0)
-        if pad:
-            padding = size // 2
-        activation = section.get('activation', 'logistic')
-        batch_norm = section.get('batch_normalize', 0) or self.conv
-        section['keep'] = section['keep'].split('/')
-        classes = int(section['keep'][-1])
-        keep = self._list_keep(section['keep'][0])
-
+        n, size, stride, padding, *mess = self._get_section_defaults(section)
+        section[KEEP] = section[KEEP].split(KEEP_DELIMITER)
+        classes = int(section[KEEP][-1])
+        keep = self._list_keep(section[KEEP][0])
         segment = classes + 5
-        assert n % segment == 0, \
-            'conv-select: segment failed'
+        assert n % segment == 0, 'conv-select: segment failed'
         bins = n // segment
         keep_idx = list()
         for j in range(bins):
             offset = j * segment
-            for k in range(5):
-                keep_idx += [offset + k]
-            for k in keep:
-                keep_idx += [offset + 5 + k]
+            keep_idx.append([offset + k for k in range(5)])
+            keep_idx.append([offset + 5 + k for k in keep])
         w_ = self._pad(self.w, padding, size, stride)
         h_ = self._pad(self.h, padding, size, stride)
         c_ = len(keep_idx)
-        yield [self._fixup_name(section['type'], snake_case=False), i, size, self.c, n,
-               stride, padding, batch_norm, activation, keep_idx, c_]
+        name = _fix_name(section[TYPE], snake_case=False)
+        yield [name, i, size, self.c, n, stride, padding, *mess, keep_idx, c_]
         self.w, self.h, self.c = w_, h_, c_
         self.l = self.w * self.h * self.c
 
     def _maxpool(self, section, i):
-        stride = section.get('stride', 1)
-        size = section.get('size', stride)
-        padding = section.get('padding', (size - 1) // 2)
-        yield [self._fixup_name(section['type']), i, size, stride, padding]
-        w_ = (self.w + 2 * padding) // section['stride']
-        h_ = (self.h + 2 * padding) // section['stride']
+        stride = section.get(*STRIDE)
+        size = section.get(SIZE[0], stride)
+        padding = section.get(PADDING[0], (size - 1) // 2)
+        yield [_fix_name(section[TYPE]), i, size, stride, padding]
+        w_ = (self.w + 2 * padding) // section[STRIDE[0]]
+        h_ = (self.h + 2 * padding) // section[STRIDE[0]]
         self.w, self.h = w_, h_
         self.l = self.w * self.h * self.c
 
     def _connected(self, section, i):
         if not self.flat:
-            yield ['flatten', i]
+            yield [FLATTEN, i]
             self.flat = True
-        activation = section.get('activation', 'logistic')
+        activation = section.get(ACTIVATION)
         yield ['connected', i, self.l, section['output'], activation]
-        if activation != 'linear':
+        if activation != LINEAR:
             yield [activation, i]
         self.l = section['output']
 
     def _softmax(self, section, i):
-        yield [self._fixup_name(section['type']), i, section['groups']]
+        yield [_fix_name(section[TYPE]), i, section['groups']]
 
     def _extract(self, section, i):
         def new_input_layer(input_layer, colors: list, heights: list, widths: list):
@@ -252,9 +242,9 @@ class ConfigParser:
                         new_inp += [r + widths[0] * (q + heights[0] * p)]
             return new_inp
         if not self.flat:
-            yield ['flatten', i]
+            yield [FLATTEN, i]
             self.flat = True
-        activation = section.get('activation', 'logistic')
+        activation = section.get(ACTIVATION)
         profiles = self._load_profile(section['profile'])
         inp_layer = None
         inp = section['input']
@@ -271,8 +261,8 @@ class ConfigParser:
                 old = [h_ * w_ * c_, n_]
             assert len(inp_layer) == self.l, 'Extract does not match input dimension {} =/= {}'.format(len(inp_layer), self.l)
         section['old'] = old
-        yield [self._fixup_name(section['type']), i] + old + [activation] + [inp_layer, out_layer]
-        if activation != 'linear':
+        yield [_fix_name(section[TYPE]), i] + old + [activation] + [inp_layer, out_layer]
+        if activation != LINEAR:
             yield [activation, i]
         self.l = len(out_layer)
 
@@ -285,7 +275,7 @@ class ConfigParser:
         routes = [i + x if x < 0 else x for x in routes]
         for j, x in enumerate(routes):
             lx = self.layers[x]
-            xtype = lx['type']
+            xtype = lx[TYPE]
             _size = lx['_size'][:3]
             if j == 0:
                 self.h, self.w, self.c = _size
@@ -294,39 +284,46 @@ class ConfigParser:
                 assert w_ == self.w and h_ ==  self.h, \
                     'Routing incompatible conv sizes'
                 self.c += c_
-        yield ['route', i, routes]
+        yield [_fix_name(section[TYPE]), i, routes]
         self.l = self.w * self.h * self.c
 
     def _shortcut(self, section, i):
         index = int(section['from'])
-        activation = section.get('activation', 'logistic')
-        assert activation == 'linear', \
-            'Layer {} can only use linear activation'.format(section['type'])
+        activation = section.get(ACTIVATION)
+        assert activation == LINEAR, 'Layer {} can only use linear activation'.format(section[TYPE])
         from_layer = self.layers[index]
-        yield ['shortcut', i, from_layer]
+        yield [_fix_name(section[TYPE]), i, from_layer]
         self.l = self.w * self.h * self.c
 
     def _upsample(self, section, i):
-        stride = section.get('stride', 1)
+        stride = section.get(*STRIDE)
         assert stride == 2, \
-            'Layer {} can only be of stride 2'.format(section['type'])
+            'Layer {} can only be of stride 2'.format(section[TYPE])
         w = self.w * stride
         h = self.h * stride
-        yield [self._fixup_name(section['type']), i, stride, h, w]
+        yield [_fix_name(section[TYPE]), i, stride, h, w]
         self.l = self.w * self.h * self.c
 
     def _reorg(self, section, i):
-        stride = section.get('stride', 1)
-        yield [self._fixup_name(section['type']), i, stride]
+        stride = section.get(*STRIDE)
+        yield [_fix_name(section[TYPE]), i, stride]
         self.w = self.w // stride
         self.h = self.h // stride
         self.c = self.c * (stride ** 2)
         self.l = self.w * self.h * self.c
 
     def _dropout(self, section, i):
-        yield [self._fixup_name(section['type']), i, section['probability']]
+        yield [_fix_name(section[TYPE]), i, section['probability']]
 
     def _avgpool(self, section, i):
         self.flat = True
         self.l = self.c
-        yield [self._fixup_name(section['type']), i]
+        yield [_fix_name(section[TYPE]), i]
+
+
+def _fix_name(section_name: str, snake_case=True, prefix: str = ''):
+    name = section_name.strip('[]')
+    if snake_case:
+        name = name.replace('-', '_')
+    name = prefix + name
+    return name

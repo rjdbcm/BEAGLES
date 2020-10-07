@@ -12,7 +12,10 @@ from PyQt5.QtGui import QColor
 # noinspection PyUnresolvedReferences
 from beagles.resources import *
 from beagles.ui import newIcon
-from beagles.ui.widgets import BeaglesMainWindow, LabelDialog, HashableQListWidgetItem, ColorDialog
+from beagles.ui.widgets.beaglesMainWindow import BeaglesMainWindow
+from beagles.ui.widgets.hashableQListWidgetItem import HashableQListWidgetItem
+from beagles.ui.widgets.colorDialog import ColorDialog
+from beagles.ui.widgets.labelDialog import LabelDialog
 from beagles.base.constants import *
 from beagles.base.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
 from beagles.base.flags import Flags

@@ -1,6 +1,7 @@
 [run]
 omit =
     *tests*
+    beagles/resources/*
     beagles/scripts/*
     dev/*
     *docs*
