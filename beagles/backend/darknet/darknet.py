@@ -2,7 +2,7 @@ import os
 import time
 import sys
 from beagles.backend.darknet.darkop import *
-from beagles.backend.io import ConfigParser
+from beagles.backend.io.config_parser import ConfigParser
 from beagles.io.flags import SharedFlagIO
 from beagles.backend.io.loader import Loader
 from beagles.base.constants import CFG_EXT, WGT_EXT
@@ -64,8 +64,6 @@ class Darknet(object):
         self.io = SharedFlagIO(subprogram=True)
         self.get_weight_src(flags)
         self.modify = False
-        self.config = ConfigParser(self.src_cfg)
-
         self.io.logger.info('Parsing {}'.format(self.src_cfg))
         src_parsed = self.create_ops()
         self.meta, self.layers = src_parsed
@@ -120,7 +118,7 @@ class Darknet(object):
         return a list of `layers` objects (darkop.py)
         given path to binaries/ and configs/
         """
-        cfg_layers = self.config.parse_layers()
+        cfg_layers = ConfigParser.create(self.src_cfg)
 
         meta = dict()
         layers = list()

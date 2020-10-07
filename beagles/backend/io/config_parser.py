@@ -3,9 +3,10 @@ import sys
 from typing import Generator
 from itertools import product
 from beagles.backend.io.darknet_config_file import DarknetConfigFile
+from beagles.base import SubsystemPrototype, Subsystem, register_subsystem
 
 
-ACTIVATION = 'activation'
+NAME, DEFAULT = range(2)
 FILTERS = ('filters', 1)
 SIZE = ('size', 1)
 STRIDE = ('stride', 1)
@@ -13,7 +14,10 @@ PAD = ('pad', 0)
 PADDING = ('padding', 0)
 INPUT = ('input', None)
 BATCHNORM = ('batch_normalize', 0)
+ACTIVATION = 'activation'
+OUTPUT = 'output'
 FLATTEN = 'flatten'
+CONNECTED = 'connected'
 TYPE = 'type'
 INP_SIZE = 'inp_size'
 OUT_SIZE = 'out_size'
@@ -24,44 +28,18 @@ SELECTABLE_LAY = ['[connected]', '[extract]']
 EXTRACTABLE_LAY = ['[convolutional]', '[conv-extract]']
 KEEP_DELIMITER = '/'
 
+def _fix_name(section_name: str, snake_case=True, prefix: str = ''):
+    name = section_name.strip('[]')
+    if snake_case:
+        name = name.replace('-', '_')
+    name = prefix + name
+    return name
 
-class ConfigParser:
-    def __init__(self, model):
-        config = DarknetConfigFile(model)
-        self.layers, self.metadata = config.tokens
-        self.h, self.w, self.c = self.metadata[INP_SIZE]
-        self.l = self.h * self.w * self.c
-        self.flat = False
-        self.conv = '.conv.' in model
 
-    def parse_layers(self) -> Generator[dict, list, None]:
-        """Generator used to create Layer subclass *args from darknet .cfg files.
+class ConfigParser(SubsystemPrototype):
+    def __init__(self, create_key, *args, **kwargs):
+        super(ConfigParser, self).__init__(create_key, *args, **kwargs)
 
-        Yields:
-
-            0: metadata
-
-            1 ... N: *args for Layer subclass returned by :meth:`beagles.backend. darknet.darknet.create_darkop` for layers 1 to N
-        """
-
-        yield self.metadata
-        for i, section in enumerate(self.layers):
-            layer_handler = self._get_layer_handler(section, i)
-            try:
-                yield [layer for layer in layer_handler(section, i)][0]
-            except TypeError:
-                raise TypeError('Layer {} not implemented'.format(section[TYPE]))
-            section['_size'] = list([self.h, self.w, self.c, self.l, self.flat])
-        if not self.flat:
-            self.metadata[OUT_SIZE] = [self.h, self.w, self.c]
-        else:
-            self.metadata[OUT_SIZE] = self.l
-
-    def _get_layer_handler(self, section: dict, i):
-        handler_name = _fix_name(section[TYPE], prefix='_')
-        handler = getattr(self, handler_name, [lambda section: str, lambda i: int])
-        return handler
-    
     def _get_section_defaults(self, section):
         n = section.get(*FILTERS)
         size = section.get(*SIZE)
@@ -90,10 +68,37 @@ class ConfigParser:
     def _list_keep(inp):
         return [int(x) for x in inp.split(',')]
 
-    def _select(self, section, i):
-        if not self.flat:
+    @classmethod
+    def create(cls, model):
+        config = DarknetConfigFile(model)
+        cls.layers, cls.metadata = config.tokens
+        cls.h, cls.w, cls.c = cls.metadata[INP_SIZE]
+        cls.l = cls.h * cls.w * cls.c
+        cls.flat = False
+        cls.conv = '.conv.' in model
+        yield cls.metadata
+        for i, section in enumerate(cls.layers):
+            layer_handler = cls.get_register().get(_fix_name(section[TYPE]))
+            handler = layer_handler(cls.create_key, cls)
+            try:
+                yield [layer for layer in handler(section, i)][0]
+            except TypeError:
+                raise TypeError('Layer {} not implemented'.format(section[TYPE]))
+            section['_size'] = list([cls.h, cls.w, cls.c, cls.l, cls.flat])
+        if not cls.flat:
+            cls.metadata[OUT_SIZE] = [cls.h, cls.w, cls.c]
+        else:
+            cls.metadata[OUT_SIZE] = cls.l
+
+@register_subsystem('select', ConfigParser)
+class SelectConfig(Subsystem):
+    def constructor(self, parser):
+        self.parser = parser
+
+    def __call__(self, section, i):
+        if not self.parser.flat:
             yield [FLATTEN, i]
-            self.flat = True
+            self.parser.flat = True
         inp = section.get(*INPUT)
         if type(inp) is str:
             file = inp.split(',')[0]
@@ -112,82 +117,109 @@ class ConfigParser:
             for num in keep[-keep_n:]:
                 keep += [num + classes]
         k = 1
-        while self.layers[i - k][TYPE] not in SELECTABLE_LAY:
+        while self.parser.layers[i - k][TYPE] not in SELECTABLE_LAY:
             k += 1
             if i - k < 0:
                 break
         if i - k < 0:
-            l_ = self.l
-        elif self.layers[i - k][TYPE] == 'connected':
-            l_ = self.layers[i - k]['output']
+            l_ = self.parser.l
+        elif self.layers[i - k][TYPE] == CONNECTED:
+            l_ = self.parser.layers[i - k]['output']
         else:
-            l_ = self.layers[i - k].get('old', [self.l])[-1]
+            l_ = self.parser.layers[i - k].get('old', [self.parser.l])[-1]
         yield [_fix_name(section[TYPE]), i, l_, section['old_output'], activation, layer,
                section['output'], keep, train_from]
         if activation != LINEAR:
             yield [activation, i]
-        self.l = section['output']
+        self.parser.l = section['output']
 
-    def _convolutional(self, section, i):
-        n, size, stride, padding, batch_norm, activation = self._get_section_defaults(
-            section)
-        yield [_fix_name(section[TYPE]), i, size, self.c, n, stride, padding,
+
+@register_subsystem('convolutional', ConfigParser)
+class ConvolutionalConfig(Subsystem):
+    def constructor(self, parser):
+        self.parser = parser
+    def __call__(self, section, i):
+        p = self.parser
+        n, size, stride, padding, batch_norm, activation = self._get_section_defaults(section)
+        yield [_fix_name(section[TYPE]), i, size, p.c, n, stride, padding,
                batch_norm, activation]
         if activation != LINEAR:
             yield [activation, i]
-        w_ = self._pad(self.w, padding, size, stride)
-        h_ = self._pad(self.h, padding, size, stride)
-        self.w, self.h, self.c = w_, h_, n
-        self.l = self.w * self.h * self.c
+        w_ = self._pad(p.w, padding, size, stride)
+        h_ = self._pad(p.h, padding, size, stride)
+        p.w, p.h, p.c = w_, h_, n
+        p.l = p.w * p.h * p.c
 
-    def _crop(self, section, i):
+@register_subsystem('crop', ConfigParser)
+class CropConfig(Subsystem):
+    def constructor(self, *args, **kwargs):
+        pass
+    def __call__(self, section, i):
         yield [_fix_name(section[TYPE]), i]
 
-    def _local(self, section, i):
+@register_subsystem('local', ConfigParser)
+class LocalConfig(Subsystem):
+    def constructor(self, parser):
+        self.parser = parser
+    def __call__(self, section, i):
+        p = self.parser
         n, size, stride, *_, activation = self._get_section_defaults(section)
         pad = section.get(*PAD)
         w_ = self._local_pad(self.w, pad, size, stride)
         h_ = self._local_pad(self.w, pad, size, stride)
-        yield [_fix_name(section[TYPE]), i, size, self.c, n, stride, pad, w_, h_, activation]
+        yield [_fix_name(section[TYPE]), i, size, p.c, n, stride, pad, w_, h_,
+               activation]
         if activation != LINEAR:
             yield [activation, i]
-        self.w, self.h, self.c = w_, h_, n
-        self.l = self.w * self.h * self.c
+        p.w, p.h, p.c = w_, h_, n
+        p.l = p.w * p.h * p.c
 
-    def _conv_extract(self, section, i):
+@register_subsystem('conv-extract', ConfigParser)
+class ConvExtractConfig(Subsystem):
+    def constructor(self, parser):
+        self.parser = parser
+    def __call__(self, section, i):
+        p = self.parser
         profiles = self._load_profile(section['profile'])
         inp_layer = None
-        inp = section['input']
+        inp = section[INPUT[NAME]]
         out = section['output']
         inp_layer = None
         if inp >= 0:
             inp_layer = profiles[inp]
         if inp_layer is not None:
-            assert len(inp_layer) == self.c, 'Conv-extract does not match input dimension'
+            assert len(inp_layer) == p.c, 'Conv-extract does not match input dimension'
         out_layer = profiles[out]
-        n, size, stride, padding, batch_norm, activation  = self._get_section_defaults(
+        n, size, stride, padding, batch_norm, activation = self._get_section_defaults(
             section)
         k = 1
-        while self.layers[i - k][TYPE] not in EXTRACTABLE_LAY:
+        while p.layers[i - k][TYPE] not in EXTRACTABLE_LAY:
             k += 1
             if i - k < 0:
                 break
         if i - k >= 0:
-            previous_layer = self.layers[i - k]
+            previous_layer = p.layers[i - k]
             c_ = previous_layer['filters']
         else:
-            c_ = self.c
+            c_ = p.c
 
         yield [_fix_name(section[TYPE], snake_case=False), i, size, c_, n,
                stride, padding, batch_norm, activation, inp_layer, out_layer]
         if activation != LINEAR:
             yield [activation, i]
-        w_ = self._pad(self.w, padding, size, stride)
-        h_ = self._pad(self.h, padding, size, stride)
-        self.w, self.h, self.c = w_, h_, len(out_layer)
-        self.l = self.w * self.h * self.c
+        w_ = self._pad(p.w, padding, size, stride)
+        h_ = self._pad(p.h, padding, size, stride)
+        p.w, p.h, p.c = w_, h_, len(out_layer)
+        p.l = p.w * p.h * p.c
 
-    def _conv_select(self, section, i):
+
+@register_subsystem('conv-select', ConfigParser)
+class ConvSelectConfig(Subsystem):
+    def constructor(self, parser):
+        self.parser = parser
+
+    def __call__(self, section, i):
+        p = self.parser
         n, size, stride, padding, *mess = self._get_section_defaults(section)
         section[KEEP] = section[KEEP].split(KEEP_DELIMITER)
         classes = int(section[KEEP][-1])
@@ -200,54 +232,68 @@ class ConfigParser:
             offset = j * segment
             keep_idx.append([offset + k for k in range(5)])
             keep_idx.append([offset + 5 + k for k in keep])
-        w_ = self._pad(self.w, padding, size, stride)
-        h_ = self._pad(self.h, padding, size, stride)
+        w_ = self._pad(p.w, padding, size, stride)
+        h_ = self._pad(p.h, padding, size, stride)
         c_ = len(keep_idx)
         name = _fix_name(section[TYPE], snake_case=False)
-        yield [name, i, size, self.c, n, stride, padding, *mess, keep_idx, c_]
-        self.w, self.h, self.c = w_, h_, c_
-        self.l = self.w * self.h * self.c
+        yield [name, i, size, p.c, n, stride, padding, *mess, keep_idx, c_]
+        p.w, p.h, p.c = w_, h_, c_
+        p.l = p.w * p.h * p.c
 
-    def _maxpool(self, section, i):
+
+@register_subsystem('maxpool', ConfigParser)
+class MaxPoolConfig(Subsystem):
+    def constructor(self, parser):
+        self.parser = parser
+    def __call__(self, section, i):
+        p = self.parser
         stride = section.get(*STRIDE)
         size = section.get(SIZE[0], stride)
         padding = section.get(PADDING[0], (size - 1) // 2)
         yield [_fix_name(section[TYPE]), i, size, stride, padding]
-        w_ = (self.w + 2 * padding) // section[STRIDE[0]]
-        h_ = (self.h + 2 * padding) // section[STRIDE[0]]
-        self.w, self.h = w_, h_
-        self.l = self.w * self.h * self.c
+        w_ = (p.w + 2 * padding) // section[STRIDE[0]]
+        h_ = (p.h + 2 * padding) // section[STRIDE[0]]
+        p.w, p.h = w_, h_
+        p.l = p.w * p.h * p.c
 
-    def _connected(self, section, i):
-        if not self.flat:
+
+@register_subsystem('connected', ConfigParser)
+class ConnectedConfig(Subsystem):
+    def constructor(self, parser):
+        self.parser = parser
+    def __call__(self, section, i):
+        p = self.parser
+        if not p.flat:
             yield [FLATTEN, i]
-            self.flat = True
+            p.flat = True
         activation = section.get(ACTIVATION)
-        yield ['connected', i, self.l, section['output'], activation]
+        yield [CONNECTED, i, p.l, section['output'], activation]
         if activation != LINEAR:
             yield [activation, i]
-        self.l = section['output']
+        p.l = section['output']
 
-    def _softmax(self, section, i):
-        yield [_fix_name(section[TYPE]), i, section['groups']]
-
-    def _extract(self, section, i):
-        def new_input_layer(input_layer, colors: list, heights: list, widths: list):
-            new_inp = list()
-            for p in range(colors[1]):
-                for q in range(heights[1]):
-                    for r in range(widths[1]):
-                        if p not in input_layer:
-                            continue
-                        new_inp += [r + widths[0] * (q + heights[0] * p)]
-            return new_inp
-        if not self.flat:
+@register_subsystem('extract', ConfigParser)
+class ExtractConfig(Subsystem):
+    def constructor(self, parser):
+        self.parser = parser
+    def new(input_layer, channels: list, heights: list, widths: list):
+        new_inp = list()
+        for p in range(channels[1]):
+            for q in range(heights[1]):
+                for r in range(widths[1]):
+                    if p not in input_layer:
+                        continue
+                    new_inp += [r + widths[0] * (q + heights[0] * p)]
+        return new_inp
+    def __call__(self, section, i):
+        p = self.parser
+        if not p.flat:
             yield [FLATTEN, i]
-            self.flat = True
+            p.flat = True
         activation = section.get(ACTIVATION)
         profiles = self._load_profile(section['profile'])
         inp_layer = None
-        inp = section['input']
+        inp = section[INPUT[NAME]]
         out = section['output']
         if inp >= 0:
             inp_layer = profiles[inp]
@@ -257,16 +303,23 @@ class ConfigParser:
         if inp_layer is not None:
             if len(old) > 2:
                 h_, w_, c_, n_ = old
-                inp_layer = new_input_layer(inp_layer, [c_, self.c], [h_, self.h], [w_, self.w])
+                inp_layer = self.new(inp_layer, [c_, p.c], [h_, p.h], [w_, p.w])
                 old = [h_ * w_ * c_, n_]
-            assert len(inp_layer) == self.l, 'Extract does not match input dimension {} =/= {}'.format(len(inp_layer), self.l)
+            if len(inp_layer) == p.l:
+                msg = f'Extract does not match input dimension {len(inp_layer)} != {p.l}.'
+                raise ValueError(msg)
         section['old'] = old
-        yield [_fix_name(section[TYPE]), i] + old + [activation] + [inp_layer, out_layer]
+        yield [_fix_name(section[TYPE]), i, *old, activation, inp_layer, out_layer]
         if activation != LINEAR:
             yield [activation, i]
-        self.l = len(out_layer)
+        p.l = len(out_layer)
 
-    def _route(self, section, i):
+@register_subsystem('route', ConfigParser)
+class RouteConfig(Subsystem):
+    def constructor(self, parser):
+        self.parser = parser
+    def __call__(self, section, i):
+        p = self.parser
         routes = section['layers']
         if type(routes) is int:
             routes = [routes]
@@ -274,56 +327,80 @@ class ConfigParser:
             routes = [int(x.strip()) for x in routes.split(',')]
         routes = [i + x if x < 0 else x for x in routes]
         for j, x in enumerate(routes):
-            lx = self.layers[x]
-            xtype = lx[TYPE]
+            lx = p.layers[x]
             _size = lx['_size'][:3]
             if j == 0:
-                self.h, self.w, self.c = _size
+                p.h, p.w, p.c = _size
             else:
                 h_, w_, c_ = _size
-                assert w_ == self.w and h_ ==  self.h, \
-                    'Routing incompatible conv sizes'
-                self.c += c_
+                assert w_ == p.w and h_ == p.h, \
+                    f'Routing incompatible sizes from {lx[TYPE]}({h_}x{w_}x{c_})'
+                p.c += c_
         yield [_fix_name(section[TYPE]), i, routes]
-        self.l = self.w * self.h * self.c
+        p.l = p.w * p.h * p.c
 
-    def _shortcut(self, section, i):
+@register_subsystem('shortcut', ConfigParser)
+class ShortcutConfig(Subsystem):
+    def constructor(self, parser):
+        self.parser = parser
+    def __call__(self, section, i):
+        p = self.parser
         index = int(section['from'])
         activation = section.get(ACTIVATION)
-        assert activation == LINEAR, 'Layer {} can only use linear activation'.format(section[TYPE])
-        from_layer = self.layers[index]
+        assert activation == LINEAR, 'Layer {} can only use linear activation'.format(
+            section[TYPE])
+        from_layer = p.layers[index]
         yield [_fix_name(section[TYPE]), i, from_layer]
-        self.l = self.w * self.h * self.c
+        p.l = p.w * p.h * p.c
 
-    def _upsample(self, section, i):
+@register_subsystem('upsample', ConfigParser)
+class UpsampleConfig(Subsystem):
+    def constructor(self, parser):
+        self.parser = parser
+    def __call__(self, section, i):
+        p = self.parser
         stride = section.get(*STRIDE)
         assert stride == 2, \
             'Layer {} can only be of stride 2'.format(section[TYPE])
-        w = self.w * stride
-        h = self.h * stride
+        w = p.w * stride
+        h = p.h * stride
         yield [_fix_name(section[TYPE]), i, stride, h, w]
-        self.l = self.w * self.h * self.c
+        p.l = p.w * p.h * p.c
 
-    def _reorg(self, section, i):
+@register_subsystem('reorg', ConfigParser)
+class ReorgConfig(Subsystem):
+    def constructor(self, parser):
+        self.parser = parser
+    def __call__(self, section, i):
+        p = self.parser
         stride = section.get(*STRIDE)
         yield [_fix_name(section[TYPE]), i, stride]
-        self.w = self.w // stride
-        self.h = self.h // stride
-        self.c = self.c * (stride ** 2)
-        self.l = self.w * self.h * self.c
+        p.w = p.w // stride
+        p.h = p.h // stride
+        p.c = p.c * (stride ** 2)
+        p.l = p.w * p.h * p.c
 
-    def _dropout(self, section, i):
-        yield [_fix_name(section[TYPE]), i, section['probability']]
+@register_subsystem('avgpool', ConfigParser)
+class AvgPoolConfig(Subsystem):
 
-    def _avgpool(self, section, i):
-        self.flat = True
-        self.l = self.c
+    def constructor(self, parser):
+        self.parser = parser
+        self.parser.flat = True
+        self.parser.l = self.parser.c
+
+    def __call__(self, section, i):
         yield [_fix_name(section[TYPE]), i]
 
+@register_subsystem('dropout', ConfigParser)
+class DropoutConfig(Subsystem):
+    def constructor(self, parser):
+        self.parser = parser
+    def __call__(self, section, i):
+        yield [_fix_name(section[TYPE]), i, section['probability']]
 
-def _fix_name(section_name: str, snake_case=True, prefix: str = ''):
-    name = section_name.strip('[]')
-    if snake_case:
-        name = name.replace('-', '_')
-    name = prefix + name
-    return name
+@register_subsystem('softmax', ConfigParser)
+class SoftMaxConfig(Subsystem):
+    def constructor(self, parser):
+        self.parser = parser
+    def __call__(self, section, i):
+        yield [_fix_name(section[TYPE]), i, section['groups']]
