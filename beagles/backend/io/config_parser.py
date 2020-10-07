@@ -95,6 +95,14 @@ class DarknetConfigLayer(Subsystem):
     def constructor(self, parser):
         self.parser = parser
 
+    def seek(self, layers, i):
+        k = 1
+        while self.parser.layers[i - k][TYPE] not in layers:
+            k += 1
+            if i - k < 0:
+                break
+        return k
+
 @register_subsystem('select', ConfigParser)
 class Select(DarknetConfigLayer):
 
@@ -133,11 +141,7 @@ class Select(DarknetConfigLayer):
         return layer
 
     def select_inps(self, i):
-        k = 1
-        while self.parser.layers[i - k][TYPE] not in SELECTABLE_LAY:
-            k += 1
-            if i - k < 0:
-                break
+        k = self.seek(SELECTABLE_LAY, i)
         if i - k < 0:
             l_ = self.parser.l
         elif self.parser.layers[i - k][TYPE] == CONNECTED:
@@ -216,17 +220,15 @@ class ConvExtract(DarknetConfigLayer):
         p.l = p.w * p.h * p.c
 
     def extract_channels(self, i):
-        k = 1
-        while self.parser.layers[i - k][TYPE] not in EXTRACTABLE_LAY:
-            k += 1
-            if i - k < 0:
-                break
+        k = self.seek(EXTRACTABLE_LAY, i)
         if i - k >= 0:
             previous_layer = self.parser.layers[i - k]
             c_ = previous_layer['filters']
         else:
             c_ = self.parser.c
         return c_
+
+
 
 @register_subsystem('conv-select', ConfigParser)
 class ConvSelect(DarknetConfigLayer):
