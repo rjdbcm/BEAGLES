@@ -113,13 +113,13 @@ def register_subsystem(token: Union[AnyStr, List],
         .. code-block:: python
 
             @register_subsystem(token='sse l1 l2 smooth sparse softmax', prototype=Framework)
-            class MultiLayerPerceptron(Subsystem):
+            class NeuralNet(Subsystem):
                 ...
 
         .. code-block:: pycon
 
-            >>> MultiLayerPerceptron.token
-            {'sse': MultiLayerPerceptron, l1: MultiLayerPerceptron, l2: MultiLayerPerceptron, ...}
+            >>> NeuralNet.token
+            {'sse': NeuralNet, l1: NeuralNet, l2: NeuralNet, ...}
 
     Returns:
         A registered :class:`Subsystem` with :attr:`Subsystem.token` set to `{cls: token}`

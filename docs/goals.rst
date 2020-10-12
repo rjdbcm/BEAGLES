@@ -25,7 +25,7 @@ Darknet Layers Implemented
 | ☑ connected
 | ☑ conv-lstm
 | ☑ convolutional
-| ☑ cost - Not handled as layer, uses :obj:`beagles.backend.framework.MultiLayerPerceptron`
+| ☑ cost - Not handled as layer, uses :obj:`beagles.backend.framework.NeuralNet`
 | ☐ crnn
 | ☑ crop
 | ☐ deconvolutional
