@@ -35,17 +35,16 @@ class BaseOp(tf.Module):
         self.out = None  # tf.Tensor
         self.logger = get_logger()
         self.lay = layer
-        self.scope = '{}-{}'.format(
-            str(self.num), self.lay.type)
+        self.scope = '{}-{}'.format(str(self.num), self.lay.type)
         super(BaseOp, self).__init__(name=self.lay.type)
         self.gap = roof - self.num
         self.var = not self.gap > 0
         self.act = 'Load '
         self.convert(feed)
         if self.var:
-            self.train_msg = 'Yep! '
+            self.train_msg = 'Yes  '
         else:
-            self.train_msg = 'Nope '
+            self.train_msg = 'No   '
         self.forward()
 
     def convert(self, feed):

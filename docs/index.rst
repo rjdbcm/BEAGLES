@@ -7,6 +7,12 @@ Table of Contents
 	getting_started
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Project Goals
+
+   goals
+
+.. toctree::
 	:maxdepth: 2
 	:caption: User Guide
 

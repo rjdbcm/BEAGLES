@@ -6,8 +6,6 @@ from shutil import rmtree
 from subprocess import Popen, PIPE
 from zipfile import ZipFile
 from beagles.io.flags import SharedFlagIO
-from beagles.backend.trainer import Trainer
-from beagles.base.errors import GradientNaN
 from beagles.base.constants import BACKEND_ENTRYPOINT
 
 
@@ -31,8 +29,9 @@ class TestBackend(TestCase):
         self.flags.backup = 'tests/resources'
         self.flags.project_name = '_test'
         self.flags.trainer = 'adam'
-        self.flags.lr = .001
-        self.flags.max_lr = .001
+        self.flags.lr = 10.0
+        self.flags.max_lr = 100.0
+        self.flags.step_size_coefficient = 10
         self.flags.load = 0
         self.flags.batch = 4
         self.flags.epoch = 1

@@ -105,7 +105,6 @@ class DarknetConfigLayer(Subsystem):
         batch_norm = section.get(*BATCHNORM) or self.conv
         return [n, size, stride, padding, batch_norm, activation]
 
-
 @register_subsystem('select', ConfigParser)
 class Select(DarknetConfigLayer):
 
@@ -157,12 +156,12 @@ class Select(DarknetConfigLayer):
 @register_subsystem('convolutional', ConfigParser)
 class Convolutional(DarknetConfigLayer):
     constructor = DarknetConfigLayer.constructor
-    _get_section_defaults = DarknetConfigLayer._get_conv_properties
+    _get_conv_properties = DarknetConfigLayer._get_conv_properties
 
 
     def __call__(self, section, i):
         p = self.parser
-        n, size, stride, padding, batch_norm, activation = self._get_section_defaults(section)
+        n, size, stride, padding, batch_norm, activation = self._get_conv_properties(section)
         yield [self.layer_name, i, size, p.c, n, stride, padding,
                batch_norm, activation]
         _yield_activation(activation, i)
@@ -181,11 +180,11 @@ class Crop(DarknetConfigLayer):
 @register_subsystem('local', ConfigParser)
 class Local(DarknetConfigLayer):
     constructor = DarknetConfigLayer.constructor
-    _get_section_defaults = DarknetConfigLayer._get_conv_properties
+    _get_conv_properties = DarknetConfigLayer._get_conv_properties
 
     def __call__(self, section, i):
         p = self.parser
-        n, size, stride, *_, activation = self._get_section_defaults(section)
+        n, size, stride, *_, activation = self._get_conv_properties(section)
         pad = section.get(*PAD)
         w_ = _local_pad(self.w, pad, size, stride)
         h_ = _local_pad(self.w, pad, size, stride)
@@ -199,7 +198,7 @@ class Local(DarknetConfigLayer):
 class ConvExtract(DarknetConfigLayer):
     constructor = DarknetConfigLayer.constructor
     seek = DarknetConfigLayer.seek
-    _get_section_defaults = DarknetConfigLayer._get_conv_properties
+    _get_conv_properties = DarknetConfigLayer._get_conv_properties
 
     def __call__(self, section, i):
         p = self.parser
@@ -213,7 +212,7 @@ class ConvExtract(DarknetConfigLayer):
         if inp_layer is not None:
             assert len(inp_layer) == p.c, 'Conv-extract does not match input dimension'
         out_layer = profiles[out]
-        n, size, stride, padding, batch_norm, activation = self._get_section_defaults(section)
+        n, size, stride, padding, batch_norm, activation = self._get_conv_properties(section)
         c_ = self.extract_channels(i)
         yield [self.layer_name, i, size, c_, n,
                stride, padding, batch_norm, activation, inp_layer, out_layer]
@@ -237,11 +236,11 @@ class ConvExtract(DarknetConfigLayer):
 @register_subsystem('conv-select', ConfigParser)
 class ConvSelect(DarknetConfigLayer):
     constructor = DarknetConfigLayer.constructor
-    _get_section_defaults = DarknetConfigLayer._get_conv_properties
+    _get_conv_properties = DarknetConfigLayer._get_conv_properties
 
     def __call__(self, section, i):
         p = self.parser
-        n, size, stride, padding, *mess = self._get_section_defaults(section)
+        n, size, stride, padding, *mess = self._get_conv_properties(section)
         section[KEEP] = section[KEEP].split(KEEP_DELIMITER)
         classes = int(section[KEEP][-1])
         keep = _list_keep(section[KEEP][0])
@@ -294,16 +293,7 @@ class Connected(DarknetConfigLayer):
 @register_subsystem('extract', ConfigParser)
 class Extract(DarknetConfigLayer):
     constructor = DarknetConfigLayer.constructor
-    def new(self, input_layer, heights, widths):
-        range_c = range(self.parser.c)
-        range_h = range(self.parser.h)
-        range_w = range(self.parser.w)
-        new_inp = list()
-        for i in range_c:
-            if i not in input_layer:
-                continue
-            new_inp += [k + widths * (j + heights * i) for j in range_h for k in range_w]
-        return new_inp
+
     def __call__(self, section, i):
         p = self.parser
         if not p.flat:
@@ -331,6 +321,17 @@ class Extract(DarknetConfigLayer):
         yield [self.layer_name, i, *old, activation, inp_layer, out_layer]
         _yield_activation(activation, i)
         p.l = len(out_layer)
+
+    def new(self, input_layer, heights, widths):
+        range_c = range(self.parser.c)
+        range_h = range(self.parser.h)
+        range_w = range(self.parser.w)
+        new_inp = list()
+        for i in range_c:
+            if i not in input_layer:
+                continue
+            new_inp += [k + widths * (j + heights * i) for j in range_h for k in range_w]
+        return new_inp
 
 @register_subsystem('route', ConfigParser)
 class Route(DarknetConfigLayer):
@@ -367,7 +368,7 @@ class Shortcut(DarknetConfigLayer):
         activation = section.get(ACTIVATION)
         assert activation == LINEAR, 'Layer {} can only use linear activation'.format(
             section[TYPE])
-        from_layer = p.layers[index]
+        from_layer = i + index
         yield [self.layer_name, i, from_layer]
         p.l = p.w * p.h * p.c
 
@@ -420,3 +421,24 @@ class SoftMax(DarknetConfigLayer):
 
     def __call__(self, section, i):
         yield [self.layer_name, i, section['groups']]
+
+@register_subsystem(token='lstm', prototype=ConfigParser)
+class LSTM(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
+    def __call__(self, section, i):
+        yield [self.layer_name, i, section[OUTPUT], section.get(*BATCHNORM)]
+
+@register_subsystem(token='rnn', prototype=ConfigParser)
+class RNN(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
+    def __call__(self, section, i):
+        yield [self.layer_name, i, section[OUTPUT], section.get(*BATCHNORM), section[ACTIVATION]]        \
+
+@register_subsystem(token='gru', prototype=ConfigParser)
+class GRU(DarknetConfigLayer):
+    constructor = DarknetConfigLayer.constructor
+
+    def __call__(self, section, i):
+        yield [self.layer_name, i, section[OUTPUT], section.get(*BATCHNORM)]

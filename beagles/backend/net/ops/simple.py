@@ -1,6 +1,6 @@
 import tensorflow.compat.v1.layers as slim
-from tensorflow.compat.v1.nn import xw_plus_b
 from beagles.backend.net.ops.baseop import BaseOp
+from deprecated.sphinx import deprecated
 import tensorflow as tf
 
 
@@ -34,8 +34,8 @@ class connected(BaseOp):
         return msg.format(*args)
 
 
+@deprecated(reason='DEPRECATION', version="1.0.0a1")
 class select(connected):
-    """a weird connected layer"""
 
     def speak(self):
         layer = self.lay
@@ -45,8 +45,8 @@ class select(connected):
         return msg.format(*args)
 
 
+@deprecated(reason='DEPRECATION', version="1.0.0a1")
 class extract(connected):
-    """a weird connected layer"""
 
     def speak(self):
         layer = self.lay
@@ -121,14 +121,11 @@ class shortcut(BaseOp):
     def forward(self):
         from_layer = self.lay.from_layer
         this = self.inp
+        # walk backwards thru inputs until we reach the target from_layer
         while this.lay.number != from_layer:
             this = this.inp
-            assert this is not None, \
-                'Shortcut to non-existence {}'.format(self.lay.from_layer)
-        from_layer = this.inp.out
-        self.out = tf.add(self.inp.out,
-                          from_layer,
-                          name=self.scope)
+            assert this is not None, f'Shortcut to non-existence {self.lay.from_layer}'
+        self.out = tf.add(self.inp.out, this.out, name=self.scope)
 
     def speak(self):
         l = self.lay
@@ -162,8 +159,7 @@ class hardtan(BaseOp):
     def forward(self):
         # self.out = 1 if x > -1 and x < 1 else 0
         t = tf.shape(self.inp.out)
-        cond = tf.less(self.inp.out, tf.ones(t)) and \
-            tf.greater(self.inp.out, tf.negative(tf.ones(t)))
+        cond = tf.less(self.inp.out, tf.ones(t)) and tf.greater(self.inp.out, tf.negative(tf.ones(t)))
         self.out = tf.where(cond, tf.ones(t), tf.zeros(t), name=self.scope)
 
     def verbalise(self):
@@ -188,11 +184,7 @@ class elu(BaseOp):
 
 class leaky(BaseOp):
     def forward(self):
-        self.out = tf.maximum(
-            .1 * self.inp.out,
-            self.inp.out,
-            name=self.scope
-        )
+        self.out = tf.maximum(.1 * self.inp.out, self.inp.out, name=self.scope)
 
     def verbalise(self):
         pass

@@ -64,7 +64,7 @@ class Layer(object):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return self._signature
+        return str(self._signature)
 
     def __str__(self):
         return str(self._signature)

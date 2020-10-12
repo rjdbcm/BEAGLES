@@ -11,7 +11,7 @@ from nms cimport nms
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
 @cython.cdivision(True)
 cdef float expit_c(float x):
-    cdef float y= 1/(1+exp(-x))
+    cdef float y = 1/(1+exp(-x))
     return y
 
 #MAX

@@ -1,17 +1,21 @@
 from beagles.backend.darknet.layer import Layer
 import numpy as np
+from deprecated.sphinx import deprecated
+
+DEPRECATION = """
+conv-select and conv-extract classes should no longer be used. Use the tf.summary API and
+Tensorboard to inspect network weights and biases. Use tf.saved_model API to extract 
+graph definitions."""
 
 
 class local_layer(Layer):
-    def setup(self, ksize, c, n, stride, 
-              pad, w_, h_, activation):
+    def setup(self, ksize, c, n, stride, pad, w_, h_, activation):
         self.pad = pad * int(ksize / 2)
         self.activation = activation
         self.stride = stride
         self.ksize = ksize
         self.h_out = h_
         self.w_out = w_
-
         self.dnshape = [h_ * w_, n, c, ksize, ksize]
         self.wshape = dict({
             'biases': [h_ * w_ * n],
@@ -27,10 +31,9 @@ class local_layer(Layer):
         self.w['kernels'] = weights
 
 
+@deprecated(reason=DEPRECATION, version="1.0.0a1")
 class conv_extract_layer(Layer):
-    def setup(self, ksize, c, n, stride, 
-              pad, batch_norm, activation,
-              inp, out):
+    def setup(self, ksize, c, n, stride, pad, batch_norm, activation, inp, out):
         if inp is None: inp = range(c)
         self.activation = activation
         self.batch_norm = batch_norm
@@ -74,10 +77,9 @@ class conv_extract_layer(Layer):
         pass
 
 
+@deprecated(reason=DEPRECATION, version="1.0.0a1")
 class conv_select_layer(Layer):
-    def setup(self, ksize, c, n, stride, 
-              pad, batch_norm, activation,
-              keep_idx, real_n):
+    def setup(self, ksize, c, n, stride, pad, batch_norm, activation, keep_idx, real_n):
         self.batch_norm = bool(batch_norm)
         self.activation = activation
         self.keep_idx = keep_idx
@@ -133,8 +135,7 @@ class conv_select_layer(Layer):
 
 
 class convolutional_layer(Layer):
-    def setup(self, ksize, c, n, stride, 
-              pad, batch_norm, activation):
+    def setup(self, ksize, c, n, stride, pad, batch_norm, activation):
         self.batch_norm = bool(batch_norm)
         self.activation = activation
         self.stride = stride
@@ -144,7 +145,7 @@ class convolutional_layer(Layer):
         self.wshape = dict({
             'biases': [n], 
             'kernel': [ksize, ksize, c, n]
-        })
+            })
         if self.batch_norm:
             self.wshape.update({
                 'moving_variance': [n],

@@ -62,13 +62,13 @@ layers = \
      Layer('reorg', 28, 2),
      Layer('route', 29, [28, 25]),
      Layer('convolutional', 30, 3, 1280, 1024, 1, 1, 1, 'leaky'),
-     Layer('connected', 31, 369664, 4096, 'ramp'),
-     Layer('dropout', 32, 0.5),
-     Layer('connected', 33, 4096, 1000, 'ramp'),
-     Layer('convolutional', 34, 3, 1024, 1024, 1, 1, 1, 'leaky'),
-     Layer('shortcut', 35, {'type': '[connected]', 'output': 1000, 'activation': 'ramp',
-                            '_size': [19, 19, 1024, 1000, True]}),
-     Layer('convolutional', 36, 1, 1024, 45, 1, 0, False, 'linear')]
+     Layer('lstm', 31, 1024, 1),
+     Layer('connected', 32, 369664, 4096, 'ramp'),
+     Layer('dropout', 33, 0.5),
+     Layer('connected', 34, 4096, 1000, 'ramp'),
+     Layer('convolutional', 35, 3, 1024, 1024, 1, 1, 1, 'leaky'),
+     Layer('shortcut', 36, 32),
+     Layer('convolutional', 37, 1, 1024, 45, 1, 0, False, 'linear')]
 
 yolov1_layer = [Layer('crop', 0),
                 Layer('convolutional', 1, 3, 3, 16, 1, 1, False, 'leaky'),

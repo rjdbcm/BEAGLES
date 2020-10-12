@@ -1,6 +1,7 @@
+from warnings import warn
 from beagles.backend.net.ops.baseop import BaseOp
+from deprecated.sphinx import deprecated
 import tensorflow as tf
-import tensorflow.keras as K
 import numpy as np
 
 
@@ -25,8 +26,7 @@ class reorg(BaseOp):
     def forward(self):
         inp = self.inp.out
         s = self.lay.stride
-        self.out = tf.extract_image_patches(
-            inp, [1,s,s,1], [1,s,s,1], [1,1,1,1], 'VALID')
+        self.out = tf.extract_image_patches(inp, [1,s,s,1], [1,s,s,1], [1,1,1,1], 'VALID')
 
     def speak(self):
         args = [self.lay.stride] * 2
@@ -36,7 +36,7 @@ class reorg(BaseOp):
 
 class local(BaseOp):
     def forward(self):
-        pad = [[self.lay.pad, self.lay.pad]] * 2;
+        pad = [[self.lay.pad, self.lay.pad]] * 2
         temp = tf.pad(self.inp.out, [[0, 0]] + pad + [[0, 0]])
 
         k = self.lay.w['kernels']
@@ -67,7 +67,7 @@ class local(BaseOp):
 
 class convolutional(BaseOp):
     def forward(self):
-        pad = [[self.lay.pad, self.lay.pad]] * 2;
+        pad = [[self.lay.pad, self.lay.pad]] * 2
         temp = tf.pad(self.inp.out, [[0, 0]] + pad + [[0, 0]])
         temp = tf.nn.conv2d(temp, self.lay.w['kernel'], padding = 'VALID', 
             name = self.scope, strides = [1] + [self.lay.stride] * 2 + [1])
@@ -101,13 +101,13 @@ class convolutional(BaseOp):
         args += [l.activation]
         return args
 
-
+@deprecated(reason='DEPRECATION', version="1.0.0a1")
 class conv_select(convolutional):
     def speak(self):
         msg = 'sele {}x{}p{}_{}  {}  {}'.format(*self.get_args())
         return msg
 
-
+@deprecated(reason='DEPRECATION', version="1.0.0a1")
 class conv_extract(convolutional):
     def speak(self):
         msg = 'extr {}x{}p{}_{}  {}  {}'.format(*self.get_args())

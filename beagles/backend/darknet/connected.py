@@ -1,10 +1,15 @@
 from beagles.backend.darknet.layer import Layer
+from deprecated.sphinx import deprecated
 import numpy as np
 
+DEPRECATION = """
+select and extract classes should no longer be used. Use the tf.summary API and
+Tensorboard to inspect network weights and biases. Use tf.saved_model API to extract 
+graph definitions."""
 
+@deprecated(reason=DEPRECATION, version="1.0.0a1")
 class extract_layer(Layer):
-    def setup(self, old_inp, old_out,
-              activation, inp, out):
+    def setup(self, old_inp, old_out, activation, inp, out):
         if inp is None:
             inp = range(old_inp)
         self.activation = activation
@@ -45,11 +50,9 @@ class extract_layer(Layer):
         """Not Implemented"""
         pass
     
-
+@deprecated(reason=DEPRECATION, version="1.0.0a1")
 class select_layer(Layer):
-    def setup(self, inp, old, 
-              activation, inp_idx,
-              out, keep, train):
+    def setup(self, inp, old, activation, inp_idx, out, keep, train):
         self.old = old
         self.keep = keep
         self.train = train
@@ -95,8 +98,7 @@ class select_layer(Layer):
 
 
 class connected_layer(Layer):
-    def setup(self, input_size, 
-              output_size, activation):
+    def setup(self, input_size, output_size, activation):
         self.activation = activation
         self.inp = input_size
         self.out = output_size

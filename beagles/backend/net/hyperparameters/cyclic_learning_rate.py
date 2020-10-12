@@ -16,12 +16,9 @@ def cyclic_learning_rate(self,
                          mode='triangular',
                          name=None):
     if global_step is None:
-        raise ValueError(
-            "global_step is required for cyclic_learning_rate.")
-    with ops.name_scope(name, os.path.basename(self.flags.model),
-                        [learning_rate, global_step]) as name:
-        learning_rate = ops.convert_to_tensor(learning_rate,
-                                              name="learning_rate")
+        raise ValueError("global_step is required for cyclic_learning_rate.")
+    with ops.name_scope(name, os.path.basename(self.flags.model),[learning_rate, global_step]) as name:
+        learning_rate = ops.convert_to_tensor(learning_rate, name="learning_rate")
         dtype = learning_rate.dtype
         global_step = math_ops.cast(global_step, dtype)
         step_size = math_ops.cast(step_size, dtype)

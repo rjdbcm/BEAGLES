@@ -1,7 +1,8 @@
 from beagles.backend.io.pascal_voc_clean_xml import pascal_voc_clean_xml
 from copy import deepcopy
 import numpy as np
-import os 
+import os
+import tensorflow as tf
 
 
 def parse(self, exclusive=False):
@@ -103,7 +104,6 @@ def get_feed_values(self, chunk, dim1, dim2):
     }
 
     return inp_feed_val, loss_feed_val
-
 
 def shuffle(self, data):
     batch = self.flags.batch

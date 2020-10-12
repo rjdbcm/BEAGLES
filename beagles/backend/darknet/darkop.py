@@ -2,6 +2,7 @@
 from beagles.backend.darknet.layer import Layer
 from beagles.backend.darknet.convolution import *
 from beagles.backend.darknet.connected import *
+from beagles.backend.darknet.rnn import *
 
 
 class avgpool_layer(Layer):
@@ -117,7 +118,10 @@ darkops = {
     'reorg': reorg_layer,
     'conv-select': conv_select_layer,
     'conv-extract': conv_extract_layer,
-    'extract': extract_layer
+    'extract': extract_layer,
+    'lstm': lstm_layer,
+    'rnn': rnn_layer,
+    'gru': gru_layer
 }
 
 
