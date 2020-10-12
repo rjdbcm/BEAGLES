@@ -38,6 +38,8 @@ def loss(self, net_out):
     diff = _truth - out
     if loss_type in ['sse', '12']:
         loss = tf.nn.l2_loss(diff)
+    elif loss_type == 'mse':
+        loss = tf.keras.losses.MSE(_truth, out)
     elif loss_type == ['smooth']:
         small = tf.cast(diff < 1, tf.float32)
         large = 1. - small
