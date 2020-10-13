@@ -69,8 +69,8 @@ class TFNet:
 
     def build_forward(self):
         # Placeholders
-        inp_size = [None] + self.meta['inp_size']
-        self.inp = tf.compat.v1.placeholder(tf.compat.v1.float32, inp_size, 'input')
+        inp_size = self.meta['inp_size']
+        self.inp = tf.keras.layers.Input(dtype=tf.float32, shape=tuple(inp_size), name='input')
         self.feed = dict()  # other placeholders
 
         # Build the forward pass

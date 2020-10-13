@@ -13,6 +13,16 @@ class Trainer(tf.Module):
         super(Trainer, self).__init__()
         self.net = TFNet(flags)
 
+    # @tf.function
+    # def _train_step(self, batch, data, **kwargs):
+    #     self.net.inp = batch
+    #     for key in kwargs:
+    #         kwargs[key] = data[key]
+    #     grads = self.net.train_op
+    #     self.net.framework.loss()
+    #     loss = self.net.framework.loss
+    #     return grads, loss
+
     def __call__(self):
         self.net.io_flags()
         loss_ph = self.net.framework.placeholders
@@ -33,6 +43,7 @@ class Trainer(tf.Module):
             feed_dict[self.net.inp] = x_batch
             feed_dict.update(self.net.feed)
             fetched = self.net.sess.run(fetches, feed_dict)
+            #fetched = self._train_step(x_batch, datum, **loss_ph)
             loss = fetched[1]
             # Check for exploding/vanishing gradient
             if math.isnan(loss) or math.isinf(loss):
