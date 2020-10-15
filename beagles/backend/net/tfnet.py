@@ -13,10 +13,7 @@ from beagles.backend.net.hyperparameters.cyclic_learning_rate import cyclic_lear
 
 
 old_graph_msg = 'Resolving old graph def {} (no guarantee)'
-
-
-class TFNet:
-    _TRAINER = dict({
+_TRAINER = dict({
         'rmsprop': tf.keras.optimizers.RMSprop,
         'adadelta': tf.keras.optimizers.Adadelta,
         'adagrad': tf.keras.optimizers.Adagrad,
@@ -27,6 +24,8 @@ class TFNet:
         'ftrl': tf.keras.optimizers.Ftrl,
         'sgd': tf.keras.optimizers.SGD
     })
+
+class TFNet:
 
     # Interface Methods:
     def __init__(self, flags, darknet=None):
@@ -187,7 +186,7 @@ class TFNet:
         }
 
         # setup trainer
-        self.optimizer = self._TRAINER[self.flags.trainer](clr(self, **clr_kwargs), **kwargs)
+        self.optimizer = _TRAINER[self.flags.trainer](clr(self, **clr_kwargs), **kwargs)
 
         # setup gradients for all globals except the global_step
         vars = tf.compat.v1.global_variables()[:-1] #
