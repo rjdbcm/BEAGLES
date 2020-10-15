@@ -9,7 +9,7 @@ from beagles.backend.io.loader import Loader
 from beagles.base import VariableIsNone
 from beagles.io.logs import get_logger
 from beagles.io.flags import SharedFlagIO
-from beagles.backend.net.hyperparameters.cyclic_learning_rate import cyclic_learning_rate
+from beagles.backend.net.hyperparameters.cyclic_learning_rate import cyclic_learning_rate as clr
 
 
 old_graph_msg = 'Resolving old graph def {} (no guarantee)'
@@ -112,6 +112,17 @@ class TFNet:
         if not self.ntrain:
             return
 
+        try:
+            self.saver = tf.compat.v1.train.Saver(tf.compat.v1.global_variables())
+
+            if self.flags.load != 0:
+                self.load_from_ckpt()
+
+        except tf.errors.NotFoundError as e:
+            self.flags.error = str(e.message)
+            self.send_flags()
+            raise
+
         if self.flags.summary:
             self.writer.add_graph(self.sess.graph)
 
@@ -150,9 +161,6 @@ class TFNet:
             self.sess.run(op, {plh: val})
 
     def build_train_op(self):
-        def _l2_norm(t):
-            t = tf.sqrt(tf.reduce_sum(tf.pow(t, 2)))
-            return t
         self.framework.loss(self.out)
         self.logger.info('Building {} train op'.format(self.meta['model']))
         self.global_step = tf.Variable(0, trainable=False)
@@ -167,22 +175,21 @@ class TFNet:
         if self.flags.clip:
             kwargs.update({'clipnorm': self.flags.clip_norm})
 
+        # setup cyclic_learning_rate args
+        ssc = self.flags.step_size_coefficient
+        step_size = int(ssc * (len(self.annotation_data) // self.flags.batch))
+        clr_kwargs = {
+            'global_step':   self.global_step,
+            'mode':          self.flags.clr_mode,
+            'step_size':     step_size,
+            'learning_rate': self.flags.lr,
+            'max_lr':        self.flags.max_lr
+        }
+
         # setup trainer
-        step_size = int(self.flags.step_size_coefficient *
-                        (len(self.annotation_data) // self.flags.batch))
-        self.optimizer = self._TRAINER[self.flags.trainer](
-                cyclic_learning_rate(
-                    self,
-                    global_step=self.global_step,
-                    mode=self.flags.clr_mode,
-                    step_size=step_size,
-                    learning_rate=self.flags.lr,
-                    max_lr=self.flags.max_lr
-                ), **kwargs
-            )
+        self.optimizer = self._TRAINER[self.flags.trainer](clr(self, **clr_kwargs), **kwargs)
 
-        # setup gradients
-        self.gradients = self.optimizer.get_gradients(self.framework.loss, tf.compat.v1.local_variables())
-
-        # create train opt
-        self.train_op = self.optimizer.apply_gradients(zip(self.gradients, tf.compat.v1.local_variables()))
+        # setup gradients for all globals except the global_step
+        vars = tf.compat.v1.global_variables()[:-1] #
+        grads = self.optimizer.get_gradients(self.framework.loss, vars)
+        self.train_op = self.optimizer.apply_gradients(zip(grads, vars))

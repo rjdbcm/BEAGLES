@@ -6,7 +6,8 @@ from shutil import rmtree
 from subprocess import Popen, PIPE
 from zipfile import ZipFile
 from beagles.io.flags import SharedFlagIO
-from beagles.base.constants import BACKEND_ENTRYPOINT
+from beagles.base import BACKEND_ENTRYPOINT, GradientNaN
+from beagles.backend.trainer import Trainer
 
 
 class TestBackend(TestCase):
@@ -29,8 +30,8 @@ class TestBackend(TestCase):
         self.flags.backup = 'tests/resources'
         self.flags.project_name = '_test'
         self.flags.trainer = 'adam'
-        self.flags.lr = 10.0
-        self.flags.max_lr = 100.0
+        self.flags.lr = 0.00001
+        self.flags.max_lr = 0.0001
         self.flags.step_size_coefficient = 10
         self.flags.load = 0
         self.flags.batch = 4
@@ -52,23 +53,22 @@ class TestBackend(TestCase):
         proc.communicate()
         self.assertEqual(proc.returncode, 0)
 
-    # Gradients don't seem to explode much using the Keras backend
-    # def testBackendGradientExplosion(self):
-    #     self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'
-    #     self.flags.dataset = 'tests/resources/BCCD/train'
-    #     self.flags.labels = 'tests/resources/BCCD.classes'
-    #     self.flags.annotation = 'tests/resources/BCCD/train'
-    #     self.flags.backup = 'tests/resources'
-    #     self.flags.project_name = '_test'
-    #     self.flags.trainer = 'adam'
-    #     self.flags.lr = 100000000.0
-    #     self.flags.max_lr = 100000000.0
-    #     self.flags.load = 0
-    #     self.flags.batch = 4
-    #     self.flags.epoch = 1
-    #     self.flags.train = True
-    #     t = Trainer(self.flags)
-    #     self.assertRaises(GradientNaN, t)
+    def testBackendGradientExplosion(self):
+        self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'
+        self.flags.dataset = 'tests/resources/BCCD/train'
+        self.flags.labels = 'tests/resources/BCCD.classes'
+        self.flags.annotation = 'tests/resources/BCCD/train'
+        self.flags.backup = 'tests/resources'
+        self.flags.project_name = '_test'
+        self.flags.trainer = 'adam'
+        self.flags.lr = 100000000.0
+        self.flags.max_lr = 100000000.0
+        self.flags.load = 0
+        self.flags.batch = 4
+        self.flags.epoch = 1
+        self.flags.train = True
+        t = Trainer(self.flags)
+        self.assertRaises(GradientNaN, t)
 
     # def testBackendWrapperTrainYoloV1(self):
     #     self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'

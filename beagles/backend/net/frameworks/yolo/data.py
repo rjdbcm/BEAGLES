@@ -143,7 +143,7 @@ def shuffle(self, data):
                     feed_batch[key] = np.concatenate([old_feed, [new]])
 
             x_batch = np.concatenate(x_batch, 0)
-            yield x_batch, feed_batch, instances
+            yield x_batch, feed_batch
         
         self.logger.info(f'Finish {i + 1} epoch{"es" if i == 0 else ""}')
 

@@ -13,15 +13,6 @@ class Trainer(tf.Module):
         super(Trainer, self).__init__()
         self.net = TFNet(flags)
 
-    # @tf.function
-    # def _train_step(self, batch, data, **kwargs):
-    #     self.net.inp = batch
-    #     for key in kwargs:
-    #         kwargs[key] = data[key]
-    #     grads = self.net.train_op
-    #     self.net.framework.loss()
-    #     loss = self.net.framework.loss
-    #     return grads, loss
 
     def __call__(self):
         self.net.io_flags()
@@ -32,28 +23,29 @@ class Trainer(tf.Module):
         self.flags = self.net.io.read_flags()
         fetches = (self.net.train_op, loss_op, self.net.summary_op)
         goal = len(self.net.annotation_data) * self.flags.epoch
-        self.total_steps = goal // self.flags.batch
-        step_pad = len(str(self.total_steps))
+        total_steps = goal // self.flags.batch
+        step_pad = len(str(total_steps))
         batch = self.flags.batch
         ckpt = 1
         args = None
 
-        for i, (x_batch, datum, batch_images) in enumerate(batches):
+        for i, (x_batch, datum) in enumerate(batches):
             feed_dict = {loss_ph[key]: datum[key] for key in loss_ph}
             feed_dict[self.net.inp] = x_batch
             feed_dict.update(self.net.feed)
             fetched = self.net.sess.run(fetches, feed_dict)
-            #fetched = self._train_step(x_batch, datum, **loss_ph)
-            loss = fetched[1]
+            loss_val = fetched[1]
             # Check for exploding/vanishing gradient
-            if math.isnan(loss) or math.isinf(loss):
+            if math.isnan(loss_val) or math.isinf(loss_val):
                 self.net.raise_error(GradientNaN(self.flags))
             step_now = self.flags.load + i + 1
             self.net.writer.add_summary(fetched[2], step_now)
-            profile += [loss, batch_images]
-            self.net.logger.info(f'Step {str(step_now).zfill(step_pad)} '
-                             f'- Loss {loss:.4f} - Progress {self.flags.progress:.2f}% '
-                             f'- Batch {batch_images}')
+            profile += loss_val
+
+            step = str(step_now).zfill(step_pad)
+            prg = self.flags.progress
+            self.net.logger.info(f'Step {step} - Loss {loss_val:.4f} - Progress {prg:.2f}%')
+
             args = [step_now, profile]
             ckpt = (i + 1) % (self.flags.save // self.flags.batch)
             count = i * batch
@@ -68,25 +60,14 @@ class Trainer(tf.Module):
         file = '{}-{}{}'
         model = self.net.meta['name']
 
-        losses = loss_profile[::2]
-        image_sets = loss_profile[1::2]
-        sample = self.total_steps // 10
-        worst_indices = sorted(range(len(losses)), key=lambda sub: losses[sub])[-sample:]
-        worst = [(losses[i], image_sets[i]) for i in worst_indices]
-        self.net.logger.info(worst)
-        difficult = file.format(model, step, '.difficult')
-        difficult = os.path.join(self.flags.backup, difficult)
-        with open(difficult, 'a') as difficult_images:
-            difficult_images.writelines([f'{str(i)}\n' for i in worst])
-
         profile = file.format(model, step, '.profile')
         profile = os.path.join(self.flags.backup, profile)
         with open(profile, 'wb') as profile_ckpt:
-            pickle.dump(losses, profile_ckpt)
+            pickle.dump(loss_profile, profile_ckpt)
 
         ckpt = file.format(model, step, '')
         ckpt = os.path.join(self.flags.backup, ckpt)
         self.net.logger.info('Checkpoint at step {}'.format(step))
-        tf.saved_model.save(self, ckpt)
+        self.net.saver.save(self.net.sess, ckpt)
 
 
