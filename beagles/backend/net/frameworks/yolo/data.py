@@ -97,10 +97,10 @@ def get_feed_values(self, chunk, dim1, dim2):
     inp_feed_val = img
     # value for placeholder at loss layer
     loss_feed_val = {
-        'probs': probs, 'confs': confs,
-        'coord': coord, 'proid': proid,
-        'areas': areas, 'upleft': upleft,
-        'botright': botright
+        '_probs': probs, '_confs': confs,
+        '_coord': coord, '_proid': proid,
+        '_areas': areas, '_upleft': upleft,
+        '_botright': botright
     }
 
     return inp_feed_val, loss_feed_val
@@ -143,7 +143,7 @@ def shuffle(self, data):
                     feed_batch[key] = np.concatenate([old_feed, [new]])
 
             x_batch = np.concatenate(x_batch, 0)
-            yield x_batch, feed_batch
+            yield (x_batch, feed_batch)
         
         self.logger.info(f'Finish {i + 1} epoch{"es" if i == 0 else ""}')
 

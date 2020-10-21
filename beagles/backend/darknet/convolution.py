@@ -139,6 +139,7 @@ class convolutional_layer(Layer):
         self.batch_norm = bool(batch_norm)
         self.activation = activation
         self.stride = stride
+        self.filters = n
         self.ksize = ksize
         self.pad = pad
         self.dnshape = [n, c, ksize, ksize] # darknet shape

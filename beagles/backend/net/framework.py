@@ -3,13 +3,13 @@ from beagles.backend.net.frameworks import vanilla
 from beagles.backend.net.frameworks import yolo
 from beagles.backend.net.frameworks import yolov2
 
-
 class Framework(SubsystemPrototype):
     """
     SubsystemPrototype that uses Darknet configuration metadata type token to find a framework
     """
     def __init__(self, create_key, *args, **kwargs):
         super(Framework, self).__init__(create_key, *args, **kwargs)
+        self.first = True
 
     @classmethod
     def create(cls, meta, flags):
@@ -56,6 +56,7 @@ class YoloV2(Yolo):
 
     postprocess = Yolo.postprocess
     loss = yolov2.train.loss
+    lossv2 = yolov2.train.lossv2
     is_input = Yolo.is_input
 
     batch = yolov2.data.batch

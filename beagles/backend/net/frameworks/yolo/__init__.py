@@ -31,7 +31,7 @@ def constructor(self, meta, flags):
     except AssertionError as e:
         self.flags.error = str(e)
         self.logger.error(str(e))
-        SharedFlagIO.send_flags(self)
+        # SharedFlagIO.send_flags(self)
         raise
 
     # assign a color for each label

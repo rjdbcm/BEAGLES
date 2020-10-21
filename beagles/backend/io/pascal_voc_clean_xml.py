@@ -6,7 +6,7 @@ from beagles.io.flags import SharedFlagIO
 
 
 def pascal_voc_clean_xml(self, annotation_dir, pick, exclusive=False):
-    self.logger.info(f'Parsing {annotation_dir}/*.xml for {pick} {"exclusively" * int(exclusive)}')
+    self.logger.info(f'Parsing {os.path.join(annotation_dir,"*.xml")} for {pick} {"exclusively" * int(exclusive)}')
     dumps = list()
     cur_dir = os.getcwd()
     os.chdir(annotation_dir)
@@ -56,9 +56,7 @@ def pascal_voc_clean_xml(self, annotation_dir, pick, exclusive=False):
         self.logger.info('{}: {}'.format(i, stat[i]))
         count += stat[i]
     try:
-        assert count >= len(dumps), \
-            "There are {} images but only {} annotations".format(
-                len(dumps), count)
+        assert count >= len(dumps), f"There are {len(dumps)} images but only {count} annotations"
     except AssertionError as e:
         self.flags.error = str(e)
         self.logger.error(str(e))

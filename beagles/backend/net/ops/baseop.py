@@ -16,8 +16,21 @@ def _shape(tensor):  # work for both tf.Tensor & np.ndarray
 
 
 def _name(tensor):
-    return tensor.name.split(':')[0]
+    try:
+        name = tensor.name.split(':')[0]
+    except AttributeError:
+        name = 'input'
+    return name
 
+
+class BaseOpV2(tf.keras.layers.Layer):
+    def __init__(self, layer, num, roof):
+        super(BaseOpV2, self).__init__()
+        self.lay = layer
+        self.num = num
+        self.gap = roof - self.num
+        self.var = not self.gap > 0
+        self.scope = '{}-{}'.format(str(self.num), self.lay.type)
 
 class BaseOp(tf.Module):
     """
@@ -30,13 +43,13 @@ class BaseOp(tf.Module):
     _SLIM = ['gamma', 'moving_mean', 'moving_variance']
 
     def __init__(self, layer, inp, num, roof, feed):
+        super(BaseOp, self).__init__()
         self.inp = inp  # BaseOp
         self.num = num  # int
         self.out = None  # tf.Tensor
         self.logger = get_logger()
         self.lay = layer
         self.scope = '{}-{}'.format(str(self.num), self.lay.type)
-        super(BaseOp, self).__init__(name=self.lay.type)
         self.gap = roof - self.num
         self.var = not self.gap > 0
         self.act = 'Load '
@@ -86,7 +99,10 @@ class BaseOp(tf.Module):
         val = self.lay.h[ph]
 
         self.lay.h[ph] = tf.Variable(val['dfault'], val['shape'], name=sig)
-        feed[self.lay.h[ph]] = val['feed']
+        try:
+            feed[self.lay.h[ph]] = val['feed']
+        except TypeError:
+            feed[self.lay.h[ph].experimental_ref()] = val['feed']
 
     def verbalise(self):  # console speaker
         msg = str()

@@ -1,8 +1,17 @@
 from warnings import warn
-from beagles.backend.net.ops.baseop import BaseOp
+from beagles.backend.net.ops.baseop import BaseOp, BaseOpV2
 from deprecated.sphinx import deprecated
 import tensorflow as tf
 import numpy as np
+
+class Reorg(tf.keras.layers.Layer):
+    def __init__(self, layer):
+        super(Reorg, self).__init__()
+        self.lay = layer
+
+    def call(self, inputs):
+        s = self.lay.stride
+        return tf.image.extract_patches(inputs, [1,s,s,1], [1,s,s,1], [1,1,1,1], 'VALID')
 
 
 class reorg(BaseOp):
@@ -26,7 +35,7 @@ class reorg(BaseOp):
     def forward(self):
         inp = self.inp.out
         s = self.lay.stride
-        self.out = tf.extract_image_patches(inp, [1,s,s,1], [1,s,s,1], [1,1,1,1], 'VALID')
+        self.out = tf.image.extract_patches(inp, [1,s,s,1], [1,s,s,1], [1,1,1,1], 'VALID')
 
     def speak(self):
         args = [self.lay.stride] * 2
@@ -65,15 +74,57 @@ class local(BaseOp):
         return msg
 
 
+class Convolutional(BaseOpV2):
+    def __init__(self, *args, **kwargs):
+        super(Convolutional,self).__init__(*args, **kwargs)
+
+    def build(self, input_shape):
+        self.b = self.add_weight(
+            shape=tuple(self.lay.wshape['biases']),
+            initializer="random_normal",
+            trainable=True,
+            name=f'{self.scope}-bias'
+        )
+
+    def call(self, inputs, **kwargs):
+        pad = [[self.lay.pad, self.lay.pad]] * 2
+        temp = tf.pad(inputs, [[0, 0]] + pad + [[0, 0]])
+        self.kw = self.add_weight(shape=tuple(self.lay.wshape['kernel']), dtype=tf.float32, name=f'{self.scope}-kweight' )
+        temp = tf.nn.conv2d(temp, self.kw, padding='VALID',
+                            name=self.scope, strides=[1] + [self.lay.stride] * 2 + [1])
+        if self.lay.batch_norm:
+            temp = self.batchnorm(temp)
+        return tf.nn.bias_add(temp, self.b)
+
+    def batchnorm(self, inputs):
+        if not self.var:
+            temp = (inputs - self.lay.w['moving_mean'])
+            temp /= (np.sqrt(self.lay.w['moving_variance']) + 1e-5)
+            temp *= self.lay.w['gamma']
+            return temp
+        else:
+            args = dict({
+                'center': False,
+                'scale': True,
+                'epsilon': 1e-5,
+                'name': self.scope,
+            })
+            return tf.keras.layers.BatchNormalization(**args)(inputs)
+
+
 class convolutional(BaseOp):
     def forward(self):
         pad = [[self.lay.pad, self.lay.pad]] * 2
         temp = tf.pad(self.inp.out, [[0, 0]] + pad + [[0, 0]])
-        temp = tf.nn.conv2d(temp, self.lay.w['kernel'], padding = 'VALID', 
+        dtype = temp.dtype
+        # import sys
+        # print(self.lay.w['kernel'], self.lay.ksize, file=sys.stderr)
+        # temp = tf.keras.layers.Conv2D(self.lay.filters, self.lay.ksize, padding='VALID', name=self.scope, strides=tuple([self.lay.stride]*2))(temp)
+        temp = tf.nn.conv2d(temp, tf.cast(self.lay.w['kernel'], dtype), padding = 'VALID',
             name = self.scope, strides = [1] + [self.lay.stride] * 2 + [1])
-        if self.lay.batch_norm: 
+        if self.lay.batch_norm:
             temp = self.batchnorm(self.lay, temp)
-        self.out = tf.nn.bias_add(temp, self.lay.w['biases'])
+        self.out = tf.nn.bias_add(temp, tf.cast(self.lay.w['biases'], dtype))
 
     def batchnorm(self, layer, inp):
         if not self.var:

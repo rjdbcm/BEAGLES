@@ -1,5 +1,5 @@
 import tensorflow.compat.v1.layers as slim
-from beagles.backend.net.ops.baseop import BaseOp
+from beagles.backend.net.ops.baseop import BaseOp, BaseOpV2
 from deprecated.sphinx import deprecated
 import tensorflow as tf
 
@@ -21,6 +21,26 @@ class route(BaseOp):
         msg = 'concat {}'
         return msg.format(self.lay.routes)
 
+class Connected(BaseOpV2):
+    def __init__(self, layer):
+        super(Connected, self).__init__()
+
+    def build(self, input_shape):
+        self.w = self.add_weight(
+            shape=tuple(self.lay.wshape['weights']),
+            initializer="random_normal",
+            trainable=True,
+            name=f'{self.scope}-weights'
+        )
+        self.b = self.add_weight(
+            shape=tuple(self.lay.wshape['biases']),
+            initializer="random_normal",
+            trainable=True,
+            name=f'{self.scope}-bias'
+        )
+
+    def call(self, inputs, **kwargs):
+        return tf.matmul(inputs, self.w) + self.b
 
 class connected(BaseOp):
     def forward(self):
@@ -93,6 +113,12 @@ class dropout(BaseOp):
 
     def speak(self): return 'drop'
 
+class Crop(tf.keras.layers.Layer):
+    def __init__(self):
+        super(Crop, self).__init__()
+
+    def call(self, inputs):
+        return inputs * 2.0 - 1.0
 
 class crop(BaseOp):
     def forward(self):
@@ -101,6 +127,14 @@ class crop(BaseOp):
     def speak(self):
         return 'scale to (-1, 1)'
 
+class MaxPool(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        return tf.nn.max_pool(
+            inputs, padding='SAME',
+            ksize=[1] + [self.lay.ksize] * 2 + [1],
+            strides=[1] + [self.lay.stride] * 2 + [1],
+            name=self.scope
+        )
 
 class maxpool(BaseOp):
     def forward(self):
@@ -188,6 +222,10 @@ class leaky(BaseOp):
 
     def verbalise(self):
         pass
+
+class Identity(BaseOpV2):
+    def __init__(self, input):
+        return input
 
 
 class identity(BaseOp):

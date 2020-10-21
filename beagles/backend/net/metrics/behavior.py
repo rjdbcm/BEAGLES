@@ -204,7 +204,10 @@ class BehaviorAnalysis:
         for key, val in sorted(report.items()):
             row = {'file': key}
             row.update(val)
-            w.writerow(row)
+            try:
+                w.writerow(row)
+            except ValueError:
+                pass
 
     @property
     def experiment_names(self):
