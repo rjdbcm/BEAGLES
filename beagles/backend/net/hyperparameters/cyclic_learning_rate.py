@@ -21,7 +21,6 @@ def cyclic_learning_rate(global_step,
         dtype = learning_rate.dtype
         max_lr = math_ops.cast(max_lr, dtype)
         global_step = math_ops.cast(global_step, dtype)
-        print(global_step)
         step_size = math_ops.cast(step_size, dtype)
 
         def cyclic_lr():

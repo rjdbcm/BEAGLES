@@ -1,6 +1,7 @@
 import os
 import json
 from typing import Union, List, Any
+from functools import partial
 from collections import namedtuple
 import cv2
 import numpy as np
@@ -93,7 +94,6 @@ def preprocess(self, image: Union[np.ndarray, Any], allobj: List = None) -> np.n
         return image
     return image  # , np.array(im) # for unit testing
 
-
 def postprocess(self, net_out, im: os.PathLike, save: bool = True) -> np.ndarray:
     """Takes net output, draw predictions, saves to disk
         turns :class:`ProcessedBox` into :class:`PostprocessedBox`
@@ -110,7 +110,7 @@ def postprocess(self, net_out, im: os.PathLike, save: bool = True) -> np.ndarray
         or
         None if save == True
     """
-    boxes = self.findboxes(net_out)
+    boxes = self.findboxes(np.asarray(net_out))
 
     # meta
     meta = self.meta
@@ -148,14 +148,13 @@ def postprocess(self, net_out, im: os.PathLike, save: bool = True) -> np.ndarray
 
     img_name = os.path.join(self.flags.imgdir, os.path.basename(im))
     if "json" in self.flags.output_type:
-        textJSON = json.dumps(resultsForJSON)
-        textFile = os.path.splitext(img_name)[0] + ".json"
-        with open(textFile, 'w') as f:
-            f.write(textJSON)
+        text_json = json.dumps(resultsForJSON)
+        text_file = os.path.splitext(img_name)[0] + ".json"
+        with open(text_file, 'w') as f:
+            f.write(text_json)
     if "voc" in self.flags.output_type:
-        writer.save(
-            os.path.join(self.flags.imgdir,
-                         os.path.splitext(os.path.basename(im))[0] + XML_EXT))
+        img_file = os.path.splitext(img_name)[0] + XML_EXT
+        writer.save(img_file)
 
 # uncomment to write annotated images
 # cv2.imwrite(img_name, imgcv)

@@ -11,7 +11,6 @@ Progress:
    .. image:: https://progress-bar.dev/60
 
 The following checklist tracks the progress toward that goal:
-
    | ☑ activation - Not handled as a layer, more of a decoration for other layers.
 
       | ☐ logistic
@@ -67,10 +66,20 @@ goal to remove all :obj:`tensorflow.compat.v1` symbols from the BEAGLES codebase
 There are several advantages to migrating:
 
    - Simplified summary API
-   - Simplified and more portable checkpointing with the saved_model API
+   - Simplified and more portable checkpointing
+   - Improved performance with :meth:`tensorflow.function` decorator
    - Improved code maintainability
+
+Update 2020-Oct-22:
+   Created a NetBuilder API. Currently assessing how much code can be deprecated
+   by using the Keras API to manage weights and checkpoints.
+
+Update 2020-Nov-03:
+   Converted all code to TF 2.0. Keeping legacy code in case anyone still wants
+   to toy with TF 1.x.
+   3x the FPS performance for YOLOV2 detection.
 
 Progress:
 
-   .. image:: https://progress-bar.dev/50
+   .. image:: https://progress-bar.dev/95
 

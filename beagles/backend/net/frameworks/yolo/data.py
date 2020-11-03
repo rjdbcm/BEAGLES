@@ -118,13 +118,11 @@ def shuffle(self, data):
         for b in range(batch_per_epoch):
 
             # yield these
-            instances = set()
             x_batch = list()
             feed_batch = dict()
 
             for j in range(b*batch, b*batch+batch):
                 train_instance = data[shuffle_idx[j]]
-                instances.add(train_instance[0])
                 try:
                     inp, new_feed = self.batch(train_instance)
                 except ZeroDivisionError:
@@ -143,7 +141,7 @@ def shuffle(self, data):
                     feed_batch[key] = np.concatenate([old_feed, [new]])
 
             x_batch = np.concatenate(x_batch, 0)
-            yield (x_batch, feed_batch)
+            yield x_batch, feed_batch
         
         self.logger.info(f'Finish {i + 1} epoch{"es" if i == 0 else ""}')
 

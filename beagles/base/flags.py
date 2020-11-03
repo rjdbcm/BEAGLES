@@ -17,7 +17,7 @@ _FLAGS = {
         'batch': (16,                               int, 'Images per Batch'),
         'cli': (False,                             bool, 'Using Command Line'),
         'clip': (False,                            bool, 'Clipping Gradients'),
-        'clip_norm': (0,                          float, 'Gradient Clip Norm'),
+        'clip_norm': (0.0,                        float, 'Gradient Clip Norm'),
         'clr_mode': ('triangular2',                 str, 'Cyclic Learning Policy'),
         'done': (False,                            bool, 'Done Signal'),
         'epoch': (1,                                int, 'Epochs to Train'),
@@ -25,9 +25,9 @@ _FLAGS = {
         'video': ([],                              list, 'Videos to Annotate'),
         'gpu': (0.0,                              float, 'GPU Utilization'),
         'gpu_name': ('/gpu:0',                      str, 'Current GPU'),
-        'output_type': ([],                         str, 'Predict Output Type'),
+        'output_type': ([],                        list, 'Predict Output Type'),
         'keep': (20,                                int, 'Checkpoint to Keep'),
-        'kill': (False,                             str, 'Kill Signal'),
+        'kill': (False,                            bool, 'Kill Signal'),
         'labels': ('./data/predefined_classes.txt', str, 'Class Labels File'),
         'load': (-1,                                int, 'Checkpoint to Use'),
         'lr': (1e-05,                             float, 'Initial Learning Rate'),
@@ -53,67 +53,41 @@ DEFAULTS = {
    'DESCS': {k: v[2] for k, v in _FLAGS.items()}
 }
 
+def get_defaults(k):
+    data = DEFAULTS['FLAGS'].get(k)
+    dtype = DEFAULTS['TYPES'].get(k)
+    desc = DEFAULTS['DESCS'].get(k)
+    return k, data, dtype, desc
+
+def gen_defaults():
+    for flag in _FLAGS:
+        yield get_defaults(flag)
 
 class Flags(dict):
     """
     Allows you to set and get {key: value} pairs like attributes.
+    Enforces type-checking during flag setting.
     This allows compatibility with argparse.Namespace objects.
     """
 
     def __init__(self, defaults=True):
         super(Flags, self).__init__()
         if defaults:
-            self.get_defaults()
+            self._get_defaults()
+
+    def _get_defaults(self):
+        for flag, value, *_ in gen_defaults():
+            self.__setattr__(flag, value)
 
     def __getattr__(self, attr):
         return self[attr]
 
     def __setattr__(self, attr, value):
-        self[attr] = value
-
-    # noinspection PyMethodMayBeStatic
-    def get_defaults(self):
-        self.annotation = './data/committedframes/'
-        self.dataset = './data/committedframes/'
-        self.backup = './data/ckpt/'
-        self.summary = './data/summaries/'
-        self.log = './data/logs/flow.log'
-        self.config = './data/cfg/'
-        self.binary = './data/bin/'
-        self.built_graph = './data/built_graph/'
-        self.imgdir = './data/sample_img/'
-        self.img_out = './data/img_out/'
-        self.video_out = './data/video_out/'
-        self.batch = 16
-        self.cli = False
-        self.clip = False
-        self.clip_norm = 0
-        self.clr_mode = 'triangular2'
-        self.done = False
-        self.epoch = 1
-        self.error = ''
-        self.video = []
-        self.gpu = 0.0
-        self.gpu_name = '/gpu:0'
-        self.output_type = []
-        self.keep = 20
-        self.kill = False
-        self.labels = './data/predefined_classes.txt'
-        self.load = -1
-        self.lr = 1e-05
-        self.max_lr = 1e-05
-        self.model = ''
-        self.momentum = 0.0
-        self.progress = 0.0
-        self.project_name = 'default'
-        self.save = 16000
-        self.size = 1
-        self.started = False
-        self.step_size_coefficient = 2
-        self.threshold = 0.4
-        self.trainer = 'rmsprop'
-        self.verbalise = False
-        self.train = False
+        attr, _, dtype, _ = get_defaults(attr)
+        if isinstance(value, dtype):
+            self[attr] = value
+        else:
+            raise ValueError(f'Expected type {dtype} for {attr} found {type(value)}')
 
     def from_json(self, file):
         data = dict(json.load(file))

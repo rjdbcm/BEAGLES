@@ -7,6 +7,7 @@ from beagles.base.errors import *
 from beagles.base.flags import *
 from beagles.base.shape import *
 from beagles.base.stringBundle import *
+from beagles.base.timer import *
 import beagles.base.version
 
 PreprocessedBox = PreprocessedBox
@@ -32,6 +33,11 @@ Flags = Flags
 Shape = Shape
 """
 :class:`Shape`
+"""
+
+Timer = Timer
+"""
+:class:`Timer`
 """
 
 StringBundle = StringBundle

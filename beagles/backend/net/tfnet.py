@@ -1,4 +1,5 @@
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import time
 import tensorflow as tf
 from beagles.backend.net.ops import op_create, identity
@@ -10,7 +11,6 @@ from beagles.base import VariableIsNone
 from beagles.io.logs import get_logger
 from beagles.io.flags import SharedFlagIO
 from beagles.backend.net.hyperparameters.cyclic_learning_rate import cyclic_learning_rate as clr
-
 
 old_graph_msg = 'Resolving old graph def {} (no guarantee)'
 MOMENTUM = 'momentum'
@@ -30,7 +30,6 @@ TRAINERS = dict({
 MOMENTUM_USERS = [MOMENTUM, 'rmsprop', NESTEROV]
 
 class TFNet:
-
     # Interface Methods:
     def __init__(self, flags, darknet=None):
         self.io = SharedFlagIO(subprogram=True)
@@ -197,133 +196,3 @@ class TFNet:
         vars = tf.compat.v1.global_variables()[:-1] #
         grads = self.optimizer.get_gradients(self.framework.loss, vars)
         self.train_op = self.optimizer.apply_gradients(zip(grads, vars))
-
-
-class Net(tf.keras.Model):
-    """A simple linear model."""
-    def __init__(self, layers: list, **kwargs):
-        super(Net, self).__init__(**kwargs)
-        for i, layer in enumerate(layers):
-            setattr(self, '_'.join([layer.lay.type, str(i)]), layer)
-
-    def call(self, x, training=False, **loss_feed):
-        with tf.GradientTape() as t:
-            for layer in self.layers:
-                x = layer(x)
-            loss = self.loss(x, **loss_feed)
-            if training: # update gradients
-                variables = self.trainable_variables
-                gradients = t.gradient(loss, variables)
-                self.optimizer.apply_gradients(zip(gradients, variables))
-        return loss
-
-class NetBuilder(tf.Module):
-    """Initializes a net builder with flags that builds a :obj:`Net` upon being called"""
-    def __init__(self, flags, darknet=None):
-        super(NetBuilder, self).__init__(name=self.__class__.__name__)
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
-        tf.autograph.set_verbosity(0)
-        self.io = SharedFlagIO(subprogram=True)
-        self.flags = self.io.read_flags() if self.io.read_flags() is not None else flags
-        self.io_flags = self.io.io_flags
-        self.logger = get_logger()
-        self.darknet = Darknet(flags) if darknet is None else darknet
-        self.num_layer = self.ntrain = len(self.darknet.layers) or 0
-        self.meta = self.darknet.meta
-
-    def __call__(self):
-        self.global_step = tf.Variable(0, trainable=False)
-        framework = Framework.create(self.darknet.meta, self.flags)
-        self.annotation_data = framework.parse()
-        optimizer = self.build_optimizer()
-        layers = self.compile_darknet()
-        net = Net(layers, dtype=tf.float32)
-        ckpt_kwargs = {
-            'step': self.global_step,
-            'net': net,
-            'optimizer': optimizer,
-        }
-        self.checkpoint = tf.train.Checkpoint(**ckpt_kwargs)
-        name = f"{self.meta['name']}"
-        manager = tf.train.CheckpointManager(self.checkpoint, self.flags.backup,
-                                             self.flags.keep,
-                                             checkpoint_name=name)
-
-        # try to load a checkpoint from flags.load
-        self.load_checkpoint(manager)
-
-        if self.flags.train:
-            self.train(net, framework, manager, optimizer)
-
-    def train(self, net: Net, framework, manager: tf.train.CheckpointManager,
-              optimizer: tf.keras.optimizers.Optimizer):
-        self.logger.info('Building {} train op'.format(self.meta['model']))
-        goal = len(self.annotation_data) * self.flags.epoch
-        net.compile(loss=framework.lossv2, optimizer=optimizer)
-        ssc = self.flags.step_size_coefficient
-        step_size = int(ssc * (len(self.annotation_data) // self.flags.batch))
-        clr_kwargs = {
-            'global_step': self.global_step,
-            'mode': self.flags.clr_mode,
-            'step_size': step_size,
-            'learning_rate': self.flags.lr,
-            'max_lr': self.flags.max_lr,
-            'name': self.flags.model
-        }
-
-        batches = framework.shuffle(self.annotation_data)
-        for i, (x_batch, loss_feed) in enumerate(batches):
-            self.global_step.assign_add(1)
-            loss = net(x_batch, training=True, **loss_feed)
-            count = i * self.flags.batch
-            self.flags.progress = count / goal * 100
-            ckpt = self.checkpoint.step.numpy()
-            lr = net.optimizer.learning_rate.numpy()
-            line = 'step: {} loss: {} lr: {} progress: {}'
-            self.logger.info(line.format(ckpt, loss, lr, self.flags.progress))
-            # cycle learning rate
-            net.optimizer.learning_rate = clr(**clr_kwargs)
-            ckpt = i % 10
-            if not ckpt:
-                manager.save()
-        if ckpt:
-            manager.save()
-
-    def build_optimizer(self):
-        # setup kwargs for trainer
-        kwargs = dict()
-        if self.flags.trainer in MOMENTUM_USERS:
-            kwargs.update({MOMENTUM: self.flags.momentum})
-        if self.flags.trainer is NESTEROV:
-            kwargs.update({self.flags.trainer: True})
-        if self.flags.trainer is AMSGRAD:
-            kwargs.update({AMSGRAD.lower(): True})
-        if self.flags.clip:
-            kwargs.update({'clipnorm': self.flags.clip_norm})
-
-        # setup trainer
-        return TRAINERS[self.flags.trainer](self.flags.lr, **kwargs)
-
-    def compile_darknet(self):
-        layers = list()
-        roof = self.num_layer - self.ntrain
-        for i, layer in enumerate(self.darknet.layers):
-            layer = op_create(layer, i, roof)
-            layers.append(layer)
-        return layers
-
-    def load_checkpoint(self, manager):
-        if isinstance(self.flags.load, str):
-            checkpoint = [i for i in manager.checkpoints if self.flags.load in i]
-            assert len(checkpoint) == 1
-            self.checkpoint.restore(checkpoint)
-            print(f"Restored from {checkpoint}")
-        elif self.flags.load < 0:
-            self.checkpoint.restore(manager.latest_checkpoint)
-            print(f"Restored from {manager.latest_checkpoint}")
-        elif self.flags.load > 1:
-            idx = self.flags.load - 1
-            self.checkpoint.restore(manager.checkpoints[idx])
-            print(f"Restored from {manager.checkpoints[idx]}")
-        else:
-            print("Initializing network weights from scratch.")

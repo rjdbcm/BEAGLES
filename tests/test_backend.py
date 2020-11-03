@@ -8,6 +8,7 @@ from zipfile import ZipFile
 from beagles.io.flags import SharedFlagIO
 from beagles.base import BACKEND_ENTRYPOINT, GradientNaN
 from beagles.backend.trainer import Trainer
+from beagles.backend.net import NetBuilder, train
 
 
 class TestBackend(TestCase):
@@ -27,7 +28,7 @@ class TestBackend(TestCase):
         self.flags.dataset = 'tests/resources/BCCD/train'
         self.flags.labels = 'tests/resources/BCCD.classes'
         self.flags.annotation = 'tests/resources/BCCD/train'
-        self.flags.backup = 'tests/resources'
+        self.flags.backup = 'tests/resources/ckpt'
         self.flags.project_name = '_test'
         self.flags.trainer = 'adam'
         self.flags.lr = 0.00001
@@ -41,11 +42,10 @@ class TestBackend(TestCase):
         proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
         proc.communicate()
         self.assertEqual(proc.returncode, 0)
-        self.flags.load = 63
+        self.flags.load = 1
         self.io.io_flags()
         proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
         proc.communicate()
-        self.assertEqual(proc.returncode, 0)
         self.flags.train = False
         self.flags.imgdir = 'tests/resources/BCCD/test'
         self.io.io_flags()
@@ -58,7 +58,7 @@ class TestBackend(TestCase):
         self.flags.dataset = 'tests/resources/BCCD/train'
         self.flags.labels = 'tests/resources/BCCD.classes'
         self.flags.annotation = 'tests/resources/BCCD/train'
-        self.flags.backup = 'tests/resources'
+        self.flags.backup = 'tests/resources/ckpt'
         self.flags.project_name = '_test'
         self.flags.trainer = 'adam'
         self.flags.lr = 100000000.0
@@ -67,33 +67,21 @@ class TestBackend(TestCase):
         self.flags.batch = 4
         self.flags.epoch = 1
         self.flags.train = True
-        t = Trainer(self.flags)
-        self.assertRaises(GradientNaN, t)
-
-    # def testBackendWrapperTrainYoloV1(self):
-    #     self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'
-    #     self.flags.dataset = 'tests/resources/BCCD/train'
-    #     self.flags.labels = 'tests/resources/BCCD.classes'
-    #     self.flags.annotation = 'tests/resources/BCCD/train'
-    #     self.flags.backup = 'tests/resources'
-    #     self.flags.project_name = '_test'
-    #     self.flags.trainer = 'adam'
-    #     self.flags.load = 0
-    #     self.flags.batch = 4
-    #     self.flags.epoch = 1
-    #     self.flags.train = True
-    #     self.io_flags()
+        self.io.io_flags()
+        proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
+        proc.communicate()
+        self.assertNotEqual(proc.returncode, 0)
 
     def tearDown(self) -> None:
         self.io.cleanup_flags()
 
     @classmethod
     def tearDownClass(cls):
-        for f in os.listdir('tests/resources'):
+        for f in os.listdir('tests/resources/ckpt'):
             if f.endswith(('.data-00000-of-00001', '.index', '.meta', '.profile')):
-                f = os.path.join('tests/resources', f)
+                f = os.path.join('tests/resources/ckpt', f)
                 os.remove(f)
-        os.remove('tests/resources/checkpoint')
+        os.remove('tests/resources/ckpt/checkpoint')
         rmtree('tests/resources/BCCD')
         try:
             rmtree('data/summaries/_test')

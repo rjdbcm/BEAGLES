@@ -42,6 +42,22 @@ class reorg(BaseOp):
         msg = 'local flatten {}x{}'
         return msg.format(*args)
 
+class Local(BaseOpV2):
+    def __init__(self, *args):
+        super(Local, self).__init__(*args)
+
+    def build(self, input_shape):
+        ksz = (self.lay.ksize,) * 2
+        filt = self.lay.wshape['kernels'][-1]
+        stride = (self.lay.stride,) * 2
+        self._lay = tf.keras.layers.LocallyConnected2D(filt, ksz, stride,
+                                                       trainable=True, name=self.scope)
+
+    def call(self, inputs, **kwargs):
+        pad = [[self.lay.pad, self.lay.pad]] * 2
+        temp = tf.pad(inputs, [[0, 0]] + pad + [[0, 0]])
+        return self._lay(temp)
+
 
 class local(BaseOp):
     def forward(self):

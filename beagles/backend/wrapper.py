@@ -1,26 +1,24 @@
-#!/usr/bin/env python3
 import os
 import sys
 sys.path.append(os.getcwd())
-from beagles.backend.trainer import Trainer
-from beagles.backend.predictor import Predictor
-from beagles.backend.annotator import Annotator
-from beagles.io.flags import  SharedFlagIO
-from beagles.base.flags import Flags
+from beagles.io.flags import SharedFlagIO
+from beagles.backend.net import NetBuilder, train, predict, annotate
 
 if __name__ == '__main__':
     io = SharedFlagIO(subprogram=True)
     flags = io.read_flags()
     flags.started = True
+    net_builder = NetBuilder(flags=flags)
+    net, framework, manager = net_builder()
+    flags = io.read_flags()
     if flags.train:
-        wrapper = Trainer(flags)
-    elif flags.video != []:
-        wrapper = Annotator(flags)
+        train(net_builder.annotation_data, flags, net, framework, manager)
+    elif flags.video:
+        annotate(flags, net, framework)
     else:
-        wrapper = Predictor(flags)
-    wrapper()
-    io.read_flags()
-    flags.progress = 100
+        predict(flags, net, framework)
+    flags = io.read_flags()
+    flags.progress = 100.0
     flags.done = True
     io.io_flags()
     exit(0)

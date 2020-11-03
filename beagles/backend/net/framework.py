@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from beagles.base import SubsystemPrototype, Subsystem, register_subsystem
 from beagles.backend.net.frameworks import vanilla
 from beagles.backend.net.frameworks import yolo
@@ -19,6 +20,22 @@ class Framework(SubsystemPrototype):
         if not this:
             raise KeyError(f'Unregistered framework type token: {type_token}')
         return this(cls.create_key, meta, flags)
+
+    @abstractmethod
+    def loss(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def is_input(self, name):
+        raise NotImplementedError
+
+    @abstractmethod
+    def preprocess(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def postprocess(self, *args, **kwargs):
+        raise NotImplementedError
 
 @register_subsystem(token='sse l1 l2 smooth sparse softmax', prototype=Framework)
 class NeuralNet(Subsystem):
@@ -56,7 +73,6 @@ class YoloV2(Yolo):
 
     postprocess = Yolo.postprocess
     loss = yolov2.train.loss
-    lossv2 = yolov2.train.lossv2
     is_input = Yolo.is_input
 
     batch = yolov2.data.batch

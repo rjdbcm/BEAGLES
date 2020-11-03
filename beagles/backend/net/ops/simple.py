@@ -1,8 +1,21 @@
-import tensorflow.compat.v1.layers as slim
 from beagles.backend.net.ops.baseop import BaseOp, BaseOpV2
 from deprecated.sphinx import deprecated
 import tensorflow as tf
 
+class Route(BaseOpV2):
+    def __init__(self, *args):
+        super(Route, self).__init__(*args)
+
+    def call(self, inputs, **kwargs):
+        routes = self.lay.routes
+        routes_out = list()
+        for r in routes:
+            this = self.inp
+            while this.lay.number != r:
+                this = this.inp
+                assert this is not None, f'Routing to non-existence {r}'
+            routes_out += [this]
+        return tf.concat(routes_out, 3)
 
 class route(BaseOp):
     def forward(self):
@@ -22,8 +35,8 @@ class route(BaseOp):
         return msg.format(self.lay.routes)
 
 class Connected(BaseOpV2):
-    def __init__(self, layer):
-        super(Connected, self).__init__()
+    def __init__(self, *args):
+        super(Connected, self).__init__(*args)
 
     def build(self, input_shape):
         self.w = self.add_weight(
@@ -76,12 +89,27 @@ class extract(connected):
         return msg.format(*args)
 
 
+class Flatten(BaseOpV2):
+    def __init__(self, *args):
+        super(Flatten, self).__init__(*args)
+
+    def call(self, inputs, **kwargs):
+        return tf.keras.layers.Flatten(tf.transpose(inputs, [0, 3, 1, 2]), name=self.scope)
+
 class flatten(BaseOp):
     def forward(self):
         temp = tf.transpose(self.inp.out, [0, 3, 1, 2])
-        self.out = slim.flatten(temp, name=self.scope)
+        self.out = tf.keras.layers.Flatten(temp, name=self.scope)
 
     def speak(self): return 'flat'
+
+
+class SoftMax(BaseOpV2):
+    def __init__(self, *args):
+        super(SoftMax, self).__init__(*args)
+
+    def call(self, inputs, **kwargs):
+        return tf.nn.softmax(inputs)
 
 
 class softmax(BaseOp):
@@ -89,6 +117,14 @@ class softmax(BaseOp):
         self.out = tf.nn.softmax(self.inp.out)
 
     def speak(self): return 'softmax()'
+
+
+class AvgPool(BaseOpV2):
+    def __init__(self, *args):
+        super(AvgPool, self).__init__(*args)
+
+    def call(self, inputs, **kwargs):
+        return tf.reduce_mean(inputs, [1,2], name=self.scope)
 
 
 class avgpool(BaseOp):
@@ -101,9 +137,19 @@ class avgpool(BaseOp):
     def speak(self): return 'avgpool()'
 
 
+class DropOut(BaseOpV2):
+    def __init__(self, *args):
+        super(DropOut, self).__init__(*args)
+
+    def call(self, inputs, **kwargs):
+        if self.lay.h['pdrop'] is None:
+            self.lay.h['pdrop'] = 0.0
+        return tf.nn.dropout(inputs, self.lay.h['pdrop'], name=self.scope)
+
+
 class dropout(BaseOp):
     def forward(self):
-        if self.lay.h['pdrop'] is None:
+        if self.lay.h[ 'pdrop'] is None:
             self.lay.h['pdrop'] = 1.0
         self.out = tf.nn.dropout(
             self.inp.out,
@@ -113,12 +159,14 @@ class dropout(BaseOp):
 
     def speak(self): return 'drop'
 
-class Crop(tf.keras.layers.Layer):
-    def __init__(self):
-        super(Crop, self).__init__()
 
-    def call(self, inputs):
+class Crop(tf.keras.layers.Layer):
+    def __init__(self, *args):
+        super(Crop, self).__init__(*args)
+
+    def call(self, inputs, **kwargs):
         return inputs * 2.0 - 1.0
+
 
 class crop(BaseOp):
     def forward(self):
@@ -127,14 +175,16 @@ class crop(BaseOp):
     def speak(self):
         return 'scale to (-1, 1)'
 
+
 class MaxPool(BaseOpV2):
+    def __init__(self, *args):
+        super(MaxPool, self).__init__(*args)
+
     def call(self, inputs, **kwargs):
-        return tf.nn.max_pool(
-            inputs, padding='SAME',
-            ksize=[1] + [self.lay.ksize] * 2 + [1],
-            strides=[1] + [self.lay.stride] * 2 + [1],
-            name=self.scope
-        )
+        return tf.nn.max_pool(inputs, padding='SAME',
+                              ksize=[1] + [self.lay.ksize] * 2 + [1],
+                              strides=[1] + [self.lay.stride] * 2 + [1], name=self.scope)
+
 
 class maxpool(BaseOp):
     def forward(self):
@@ -149,6 +199,20 @@ class maxpool(BaseOp):
         l = self.lay
         return 'maxp {}x{}p{}_{}'.format(
             l.ksize, l.ksize, l.pad, l.stride)
+
+
+class Shortcut(BaseOpV2):
+    def __init__(self, *args):
+        super(Shortcut, self).__init__(*args)
+
+    def call(self, inputs, **kwargs):
+        from_layer = self.lay.from_layer
+        this = self.inp
+        # walk backwards thru inputs until we reach the target from_layer
+        while this.lay.number != from_layer:
+            this = this.inp
+            assert this is not None, f'Shortcut to non-existence {self.lay.from_layer}'
+        return tf.add(inputs, this, name=self.scope)
 
 
 class shortcut(BaseOp):
@@ -166,6 +230,15 @@ class shortcut(BaseOp):
         return 'shortcut from {}'.format(l.from_layer)
 
 
+class UpSample(BaseOpV2):
+    def __init__(self, *args):
+        super(UpSample, self).__init__(*args)
+
+    def call(self, inputs, **kwargs):
+        size = (self.lay.height, self.lay.width)
+        tf.image.resize(inputs, size, method='nearest', name=self.scope)
+
+
 class upsample(BaseOp):
     def forward(self):
         size = (self.lay.height, self.lay.width)
@@ -176,6 +249,13 @@ class upsample(BaseOp):
 
 
 # ---Activations---
+class Stair(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        n = tf.floor(inputs)
+        f = tf.floor(tf.divide(inputs, 2), name=self.scope)
+        return f if n % 2 == 0 else tf.add(tf.subtract(inputs, n), f, name=self.scope)
+
+
 class stair(BaseOp):
     def forward(self):
         n = tf.floor(self.inp.out)
@@ -189,6 +269,13 @@ class stair(BaseOp):
         pass
 
 
+class HardTan(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        t = tf.shape(self.inp.out)
+        cond = tf.less(inputs, tf.ones(t)) and tf.greater(inputs, tf.negative(tf.ones(t)))
+        return tf.where(cond, tf.ones(t), tf.zeros(t), name=self.scope)
+
+
 class hardtan(BaseOp):
     def forward(self):
         # self.out = 1 if x > -1 and x < 1 else 0
@@ -200,12 +287,22 @@ class hardtan(BaseOp):
         pass
 
 
+class Relu(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        return tf.nn.relu(inputs, name=self.scope)
+
+
 class relu(BaseOp):
     def forward(self):
         self.out = tf.nn.relu(self.inp.out, name=self.scope)
 
     def verbalise(self):
         pass
+
+
+class Elu(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        return tf.nn.elu(inputs, name=self.scope)
 
 
 class elu(BaseOp):
@@ -216,6 +313,11 @@ class elu(BaseOp):
         pass
 
 
+class Leaky(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        return tf.maximum(.1 * inputs, inputs, name=self.scope)
+
+
 class leaky(BaseOp):
     def forward(self):
         self.out = tf.maximum(.1 * self.inp.out, self.inp.out, name=self.scope)
@@ -223,10 +325,9 @@ class leaky(BaseOp):
     def verbalise(self):
         pass
 
-class Identity(BaseOpV2):
-    def __init__(self, input):
-        return input
-
+# class Identity(BaseOpV2):
+#     def __init__(self, input):
+#         return input
 
 class identity(BaseOp):
     def __init__(self, inp):

@@ -24,9 +24,10 @@ def _name(tensor):
 
 
 class BaseOpV2(tf.keras.layers.Layer):
-    def __init__(self, layer, num, roof):
+    def __init__(self, layer, inp, num, roof):
         super(BaseOpV2, self).__init__()
         self.lay = layer
+        self.inp = inp
         self.num = num
         self.gap = roof - self.num
         self.var = not self.gap > 0

@@ -1,3 +1,5 @@
+from beagles.base.flags import Flags
+
 class DarknetConfigEmpty(Exception):
     """raised when a darknet configuration is empty"""
     def __init__(self, cfg):
@@ -6,7 +8,9 @@ class DarknetConfigEmpty(Exception):
 
 class GradientNaN(Exception):
     """Raised in cases of exploding or vanishing gradient"""
-    def __init__(self, flags):
+    def __init__(self, flags=None):
+        if flags is None:
+            flags = Flags()
         clip = "--clip argument" if flags.cli else "'Clip Gradients' checkbox"
         opt = "." if flags.clip else f" or turning on gradient clipping using the {clip}."
         Exception.__init__(
