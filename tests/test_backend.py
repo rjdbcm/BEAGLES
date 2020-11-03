@@ -51,6 +51,10 @@ class TestBackend(TestCase):
         self.io.io_flags()
         proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
         proc.communicate()
+        self.flags.video = ['tests/resources/test.mp4']
+        self.io.io_flags()
+        proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
+        proc.communicate()
         self.assertEqual(proc.returncode, 0)
 
     def testBackendGradientExplosion(self):

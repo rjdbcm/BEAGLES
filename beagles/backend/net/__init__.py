@@ -19,22 +19,33 @@ from beagles.backend.net.hyperparameters import cyclic_learning_rate as clr
 MOMENTUM = 'momentum'
 NESTEROV = 'nesterov'
 AMSGRAD = 'AMSGrad'
-TRAINERS = dict({
-    'rmsprop': tf.keras.optimizers.RMSprop,
-    'adadelta': tf.keras.optimizers.Adadelta,
-    'adagrad': tf.keras.optimizers.Adagrad,
+RMSPROP = 'rmsprop'
+ADADELTA = 'adadelta'
+ADAGRAD = 'adagrad'
+ADAM = 'adam'
+FTRL = 'ftrl'
+SGD = 'sgd'
+
+MOMENTUM_USERS = [MOMENTUM, RMSPROP, NESTEROV]
+TRAINERS = {
+    RMSPROP:  tf.keras.optimizers.RMSprop,
+    ADADELTA: tf.keras.optimizers.Adadelta,
+    ADAGRAD:  tf.keras.optimizers.Adagrad,
     MOMENTUM: tf.keras.optimizers.SGD,
     NESTEROV: tf.keras.optimizers.SGD,
-    'adam': tf.keras.optimizers.Adam,
-    AMSGRAD: tf.keras.optimizers.Adam,
-    'ftrl': tf.keras.optimizers.Ftrl,
-    'sgd': tf.keras.optimizers.SGD
-})
-MOMENTUM_USERS = [MOMENTUM, 'rmsprop', NESTEROV]
+    ADAM:     tf.keras.optimizers.Adam,
+    AMSGRAD:  tf.keras.optimizers.Adam,
+    FTRL:     tf.keras.optimizers.Ftrl,
+    SGD:      tf.keras.optimizers.SGD
+}
 
 
 class Net(tf.keras.Model):
-    """A simple linear model that initializes with a list of Darknet layer objects."""
+    """A simple model.
+    Args:
+        layers: list of :obj:`beagles.backend.darknet.darknet.Darknet` layers
+        step: scalar holding current step
+    """
     def __init__(self, layers: list, step, **kwargs):
         super(Net, self).__init__(**kwargs)
         for i, layer in enumerate(layers):
@@ -76,6 +87,7 @@ class Net(tf.keras.Model):
 class NetBuilder(tf.Module):
     """Initializes with flags that build a Darknet or with a prebuilt Darknet.
     Constructs the actual :obj:`Net` object upon being called.
+
     """
     def __init__(self, flags, darknet=None):
         super(NetBuilder, self).__init__(name=self.__class__.__name__)
@@ -227,31 +239,27 @@ def annotate(flags, net, framework):
             log.info("Overwriting existing annotations")
             os.remove(annotation_file)
         log.info(f'Annotating {video}')
-        while capture.isOpened():
-            frame_count += 1
-            ret, frame = capture.read()
-            if ret:
-                frame = np.asarray(frame)
-                h, w, _ = frame.shape
-                im = framework.resize_input(frame)
-                this_inp = np.expand_dims(im, 0)
-                boxes = framework.findboxes(net(this_inp))
-                predictions = list()
-                for box in boxes:
-                    processed_box = framework.process_box(box, h, w, flags.threshold)
-                    if processed_box is None:
-                        continue
-                    predictions.append(processed_box)
-                time_elapsed = capture.get(cv2.CAP_PROP_POS_MSEC) / 1000
-                with open(annotation_file, mode='a') as file:
-                    file_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                    for result in predictions:
-                        file_writer.writerow([time_elapsed, *result])
-            else:
-                break
-            flags.progress = round((100 * frame_count / total_frames), 0)
-            if frame_count % 10 == 0:
-                io.io_flags()
-            if flags.kill:
-                break
+        with open(annotation_file, mode='a') as file:
+            file_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            while capture.isOpened():
+                frame_count += 1
+                if frame_count % 10 == 0:
+                    flags.progress = round((100 * frame_count / total_frames), 0)
+                    io.io_flags()
+                ret, frame = capture.read()
+                if ret:
+                    frame = np.asarray(frame)
+                    h, w, _ = frame.shape
+                    im = framework.resize_input(frame)
+                    this_inp = np.expand_dims(im, 0)
+                    boxes = framework.findboxes(np.concatenate(net(this_inp), 0))
+                    pred = [framework.process_box(b, h, w, flags.threshold) for b in boxes]
+                    pred = filter(None, pred)
+                    time_elapsed = capture.get(cv2.CAP_PROP_POS_MSEC) / 1000
+                    [file_writer.writerow([time_elapsed, *result]) for result in pred]
+                else:
+                    break
+                if flags.kill:
+                    capture.release()
+                    exit(1)
         capture.release()

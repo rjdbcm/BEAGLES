@@ -105,7 +105,8 @@ class Convolutional(BaseOpV2):
     def call(self, inputs, **kwargs):
         pad = [[self.lay.pad, self.lay.pad]] * 2
         temp = tf.pad(inputs, [[0, 0]] + pad + [[0, 0]])
-        self.kw = self.add_weight(shape=tuple(self.lay.wshape['kernel']), dtype=tf.float32, name=f'{self.scope}-kweight' )
+        self.kw = self.add_weight(shape=tuple(self.lay.wshape['kernel']), dtype=tf.float32,
+                                  name=f'{self.scope}-kweight' )
         temp = tf.nn.conv2d(temp, self.kw, padding='VALID',
                             name=self.scope, strides=[1] + [self.lay.stride] * 2 + [1])
         if self.lay.batch_norm:
