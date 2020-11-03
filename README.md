@@ -8,10 +8,10 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 
 |  Branch  |                     Status                     |
 |----------|------------------------------------------------|
-| master   |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Documentation Status](https://readthedocs.org/projects/beagles/badge/?version=stable)](https://beagles.readthedocs.io/en/stable/?badge=stable)[![Build Status](https://travis-ci.com/rjdbcm/BEAGLES.svg?branch=master)](https://travis-ci.com/rjdbcm/BEAGLES)
+| master   |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Documentation Status](https://readthedocs.org/projects/beagles/badge/?version=stable)](https://beagles.readthedocs.io/en/stable/?badge=stable)[![Build Status](https://travis-ci.com/rjdbcm/BEAGLES.svg?branch=master)](https://travis-ci.com/rjdbcm/BEAGLES)![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/rjdbcm/BEAGLES)
 | dev      |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Documentation Status](https://readthedocs.org/projects/beagles/badge/?version=latest)](https://beagles.readthedocs.io/en/latest/?badge=latest)[![Build Status](https://travis-ci.com/rjdbcm/BEAGLES.svg?branch=dev)](https://travis-ci.com/rjdbcm/BEAGLES)
 
-## Features:
+## Features
 
 - Darknet-style configuration files 
 - TensorFlow checkpoint files
@@ -22,7 +22,7 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 - Command-line backend interface 
 - Human-in-the-loop prediction and dataset expansion
 
-## Development Goals:
+## Development Goals
 
 - Code coverage of \>60% (*in progress*)
 - Improve maintainability to A rating (*in progress*)
