@@ -51,6 +51,9 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 - Tzutalin. LabelImg. Git code (2015). https://github.com/tzutalin/labelImg
 - Mahmoud Aslan. Cyclic Learning Rate. Git code (2018). https://github.com/mhmoodlan/cyclic-learning-rate
 
+## Social
+
+- ![Twitter Follow](https://img.shields.io/twitter/follow/BEAGLES44967623?label=Follow&style=social)
 
 ## Related
 
