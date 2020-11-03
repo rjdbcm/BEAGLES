@@ -41,7 +41,7 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 - Improve maintainability to A rating (*in progress*)
 - [OBS Studio](https://github.com/obsproject/obs-studio) utility for USB camera arrays (*in progress*)
 - Statistical report generation using [traces](https://github.com/datascopeanalytics/traces) (*in progress*)
-- TensorFlow 2 native code (*separate development branch created*)
+- ~~TensorFlow 2 native code~~ *Done!*
 
 ## License
 
