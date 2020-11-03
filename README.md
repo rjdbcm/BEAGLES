@@ -1,30 +1,17 @@
-
 # BEAGLES
 
 [![GitHub version](https://badge.fury.io/gh/rjdbcm%2FBEAGLES.svg)](https://badge.fury.io/gh/rjdbcm%2FBEAGLES)[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/rjdbcm/BEAGLES/graphs/commit-activity)[![Maintainability](https://api.codeclimate.com/v1/badges/9899a9bd3cdfadaee972/maintainability)](https://codeclimate.com/github/rjdbcm/BEAGLES/maintainability)
 
 BEAGLES stands for **BE**havioral **A**nnotation and **G**esture **LE**arning **S**uite, and is intended for behavioral analysis and quantification. BEAGLES is a graphical image annotation 
 tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and frontend for a fork of 
-[darkflow](https://github.com/thtrieu/darkflow). 
-
-##### Created Using:
-
-[![python](https://img.shields.io/badge/python-3.7%20|%203.8-blue.svg)](https://www.python.org/downloads/release/python-360/)
-[![tensorflow](https://raw.githubusercontent.com/aleen42/badges/master/src/tensorflow.svg?)](https://www.tensorflow.org/)
-[![cython](https://img.shields.io/badge/Cython-0.29.6-%23646464)](https://cython.org)
-[![numpy](https://img.shields.io/badge/NumPy-1.18-013243)](https://numpy.org/)
-[![opencv](https://img.shields.io/badge/OpenCV-4.0-%233a6aeb)](https://opencv.org/)
-[![pyqt5](https://img.shields.io/badge/PyQt-5.12-41cd52.svg)](https://pypi.org/project/PyQt5/)
-[![traces](https://img.shields.io/badge/traces-0.5.0-orange.svg)](https://github.com/datascopeanalytics/traces)
-
-##### Build Status:
+[darkflow](https://github.com/thtrieu/darkflow).
 
 |  Branch  |                     Status                     |
 |----------|------------------------------------------------|
 | master   |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Documentation Status](https://readthedocs.org/projects/beagles/badge/?version=stable)](https://beagles.readthedocs.io/en/stable/?badge=stable)[![Build Status](https://travis-ci.com/rjdbcm/BEAGLES.svg?branch=master)](https://travis-ci.com/rjdbcm/BEAGLES)
 | dev      |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Documentation Status](https://readthedocs.org/projects/beagles/badge/?version=latest)](https://beagles.readthedocs.io/en/latest/?badge=latest)[![Build Status](https://travis-ci.com/rjdbcm/BEAGLES.svg?branch=dev)](https://travis-ci.com/rjdbcm/BEAGLES)
 
-##### Features:
+## Features:
 
 - Darknet-style configuration files 
 - TensorFlow checkpoint files
@@ -35,7 +22,7 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 - Command-line backend interface 
 - Human-in-the-loop prediction and dataset expansion
 
-##### Development Goals:
+## Development Goals:
 
 - Code coverage of \>60% (*in progress*)
 - Improve maintainability to A rating (*in progress*)
@@ -52,6 +39,16 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 ### Based in part on original code by: 
 - Tzutalin. LabelImg. Git code (2015). https://github.com/tzutalin/labelImg
 - Mahmoud Aslan. Cyclic Learning Rate. Git code (2018). https://github.com/mhmoodlan/cyclic-learning-rate
+
+## Created Using:
+
+[![python](https://img.shields.io/badge/python-3.7%20|%203.8-blue.svg)](https://www.python.org/downloads/release/python-360/)
+[![tensorflow](https://raw.githubusercontent.com/aleen42/badges/master/src/tensorflow.svg?)](https://www.tensorflow.org/)
+[![cython](https://img.shields.io/badge/Cython-0.29.6-%23646464)](https://cython.org)
+[![numpy](https://img.shields.io/badge/NumPy-1.18-013243)](https://numpy.org/)
+[![opencv](https://img.shields.io/badge/OpenCV-4.0-%233a6aeb)](https://opencv.org/)
+[![pyqt5](https://img.shields.io/badge/PyQt-5.12-41cd52.svg)](https://pypi.org/project/PyQt5/)
+[![traces](https://img.shields.io/badge/traces-0.5.0-orange.svg)](https://github.com/datascopeanalytics/traces)
 
 ## Social
 
