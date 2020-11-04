@@ -1,6 +1,6 @@
 # BEAGLES!
 
-[GitHub release (latest SemVer)](https://img.shields.io/github/v/release/rjdbcm/BEAGLES)[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/rjdbcm/BEAGLES/graphs/commit-activity)[![Maintainability](https://api.codeclimate.com/v1/badges/9899a9bd3cdfadaee972/maintainability)](https://codeclimate.com/github/rjdbcm/BEAGLES/maintainability)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/rjdbcm/BEAGLES/graphs/commit-activity)[![Maintainability](https://api.codeclimate.com/v1/badges/9899a9bd3cdfadaee972/maintainability)](https://codeclimate.com/github/rjdbcm/BEAGLES/maintainability)[GitHub release (latest SemVer)](https://img.shields.io/github/v/release/rjdbcm/BEAGLES)
 
 BEAGLES stands for **BE**havioral **A**nnotation and **G**esture **LE**arning **S**uite, and is intended for behavioral analysis and quantification. BEAGLES is a graphical image annotation 
 tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and frontend for a fork of 
