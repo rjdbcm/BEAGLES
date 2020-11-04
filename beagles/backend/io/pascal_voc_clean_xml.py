@@ -55,6 +55,7 @@ def pascal_voc_clean_xml(self, annotation_dir, pick, exclusive=False):
     for i in stat:
         self.logger.info('{}: {}'.format(i, stat[i]))
         count += stat[i]
+    weights = {i: stat[i]/count for i in stat}
     try:
         assert count >= len(dumps), f"There are {len(dumps)} images but only {count} annotations"
     except AssertionError as e:
@@ -65,4 +66,4 @@ def pascal_voc_clean_xml(self, annotation_dir, pick, exclusive=False):
     self.logger.info('Dataset size: {}'.format(len(dumps)))
 
     os.chdir(cur_dir)
-    return dumps
+    return dumps, weights

@@ -2,9 +2,8 @@
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/rjdbcm/BEAGLES/graphs/commit-activity)[![Maintainability](https://api.codeclimate.com/v1/badges/9899a9bd3cdfadaee972/maintainability)](https://codeclimate.com/github/rjdbcm/BEAGLES/maintainability)![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/rjdbcm/BEAGLES)
 
-BEAGLES stands for **BE**havioral **A**nnotation and **G**esture **LE**arning **S**uite, and is intended for behavioral analysis and quantification. BEAGLES is a graphical image annotation 
-tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and frontend for a fork of 
-[darkflow](https://github.com/thtrieu/darkflow).
+BEAGLES stands for **BE**havioral **A**nnotation and **G**esture **LE**arning **S**uite, and is intended for behavioral analysis and quantification of video data. The image annotation
+GUI was originally forked from [labelImg](https://github.com/tzutalin/labelImg) and the machine learning backend is based on [darkflow](https://github.com/thtrieu/darkflow) but converts darknet configuration files to TensorFlow 2 networks.
 
 |  Branch  |                     Status                     |
 |----------|------------------------------------------------|
@@ -31,7 +30,7 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 
 ## Development Goals
 
-- Code coverage of \>60% (*in progress*)
+- Code coverage of \>60% (*in progress-TF 1.x code caused setbacks*)
 - Improve maintainability to A rating (*in progress*)
 - [OBS Studio](https://github.com/obsproject/obs-studio) utility for USB camera arrays (*in progress*)
 - Statistical report generation using [traces](https://github.com/datascopeanalytics/traces) (*in progress*)
