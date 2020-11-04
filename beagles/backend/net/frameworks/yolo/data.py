@@ -1,3 +1,4 @@
+import sys
 from beagles.backend.io.pascal_voc_clean_xml import pascal_voc_clean_xml
 from copy import deepcopy
 import numpy as np
@@ -11,8 +12,8 @@ def parse(self, exclusive=False):
     if not os.path.isdir(ann):
         exit(f'Error: Annotation directory not found {ann}')
     self.logger.info(f"{meta['model']} parsing {ann}")
-    dumps = pascal_voc_clean_xml(self, ann, meta['labels'], exclusive)
-    return dumps
+    dumps, weights = pascal_voc_clean_xml(self, ann, meta['labels'], exclusive)
+    return dumps, weights
 
 
 def batch(self, chunk):
@@ -105,7 +106,7 @@ def get_feed_values(self, chunk, dim1, dim2):
 
     return inp_feed_val, loss_feed_val
 
-def shuffle(self, data):
+def shuffle(self, data, weights=None):
     batch = self.flags.batch
     self.flags.size = len(data)
     self.logger.info('Dataset of {} instance(s)'.format(self.flags.size))
@@ -114,7 +115,18 @@ def shuffle(self, data):
     batch_per_epoch = int(self.flags.size / batch)
 
     for i in range(self.flags.epoch):
-        shuffle_idx = np.random.permutation(np.arange(self.flags.size))
+        if weights:
+            _weights = list()
+            score = list()
+            for img in data:
+                for box in img[1][2]:
+                    score.append(weights.get(str(box[0])))
+                _weights.append(np.mean(score))
+            _weights = np.divide(_weights, np.sum(_weights))
+            shuffle_idx = np.random.choice(np.arange(self.flags.size), self.flags.size, p=_weights)
+        else:
+            shuffle_idx = np.random.permutation(np.arange(self.flags.size))
+
         for b in range(batch_per_epoch):
 
             # yield these

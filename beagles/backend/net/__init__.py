@@ -1,6 +1,7 @@
 """Top-level module for machine-learning backend"""
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+import sys
 import csv
 import math
 from functools import partial
@@ -103,7 +104,7 @@ class NetBuilder(tf.Module):
     def __call__(self):
         self.global_step = tf.Variable(0, trainable=False)
         framework = Framework.create(self.darknet.meta, self.flags)
-        self.annotation_data = framework.parse()
+        self.annotation_data, self.class_weights = framework.parse()
         optimizer = self.build_optimizer()
         layers = self.compile_darknet()
         net = Net(layers, self.global_step, dtype=tf.float32)
@@ -169,14 +170,14 @@ class NetBuilder(tf.Module):
             self.logger.info("Initializing network weights from scratch.")
 
 
-def train(data, flags, net: Net, framework: Framework, manager: tf.train.CheckpointManager):
+def train(data, class_weights, flags, net: Net, framework: Framework, manager: tf.train.CheckpointManager):
     log = get_logger()
     io = SharedFlagIO(flags, subprogram=True)
     flags = io.read_flags() if io.read_flags() is not None else flags
     log.info('Building {} train op'.format(flags.model))
     goal = len(data) * flags.epoch
     first = True
-    for i, (x_batch, loss_feed) in enumerate(framework.shuffle(data)):
+    for i, (x_batch, loss_feed) in enumerate(framework.shuffle(data, class_weights)):
         loss = net(x_batch, training=True, **loss_feed)
         step = net.step.numpy()
         lr = net.optimizer.learning_rate.numpy()

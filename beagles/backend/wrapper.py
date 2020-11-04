@@ -12,7 +12,7 @@ if __name__ == '__main__':
     net, framework, manager = net_builder()
     flags = io.read_flags()
     if flags.train:
-        train(net_builder.annotation_data, flags, net, framework, manager)
+        train(net_builder.annotation_data, net_builder.class_weights, flags, net, framework, manager)
     elif flags.video:
         annotate(flags, net, framework)
     else:
