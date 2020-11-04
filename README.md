@@ -7,7 +7,7 @@ GUI was originally forked from [labelImg](https://github.com/tzutalin/labelImg) 
 
 |  Branch  |                     Status                     |
 |----------|------------------------------------------------|
-| master   |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Documentation Status](https://readthedocs.org/projects/beagles/badge/?version=stable)](https://beagles.readthedocs.io/en/stable/?badge=stable)[![Build Status](https://travis-ci.com/rjdbcm/BEAGLES.svg?branch=master)](https://travis-ci.com/rjdbcm/BEAGLES)![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/rjdbcm/BEAGLES)
+| master   |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Documentation Status](https://readthedocs.org/projects/beagles/badge/?version=stable)](https://beagles.readthedocs.io/en/stable/?badge=stable)[![Build Status](https://travis-ci.com/rjdbcm/BEAGLES.svg?branch=master)](https://travis-ci.com/rjdbcm/BEAGLES)
 | dev      |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Documentation Status](https://readthedocs.org/projects/beagles/badge/?version=latest)](https://beagles.readthedocs.io/en/latest/?badge=latest)[![Build Status](https://travis-ci.com/rjdbcm/BEAGLES.svg?branch=dev)](https://travis-ci.com/rjdbcm/BEAGLES)
 
 ## Created Using
@@ -20,10 +20,10 @@ GUI was originally forked from [labelImg](https://github.com/tzutalin/labelImg) 
 [![pyqt5](https://img.shields.io/badge/PyQt-5.12-41cd52.svg)](https://pypi.org/project/PyQt5/)
 
 ## Features
-- Darknet-style configuration files 
+- Darknet-style configuration files
+- Automatic class balance for image classification training
 - TensorFlow checkpoint files
 - YOLO and VOC annotation formats
-- Automatic anchor box generation
 - Preconfigured to output training data to TensorBoard
 - Fixed or cyclic learning rates 
 - Human-in-the-loop prediction and dataset expansion
@@ -31,6 +31,7 @@ GUI was originally forked from [labelImg](https://github.com/tzutalin/labelImg) 
 ## Development Goals
 
 - Code coverage of \>60% (*in progress-TF 1.x code caused setbacks*)
+- Automatic anchor box generation for YOLO (*in progress*)
 - Improve maintainability to A rating (*in progress*)
 - [OBS Studio](https://github.com/obsproject/obs-studio) utility for USB camera arrays (*in progress*)
 - Statistical report generation using [traces](https://github.com/datascopeanalytics/traces) (*in progress*)
