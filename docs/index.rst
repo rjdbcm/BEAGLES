@@ -3,7 +3,7 @@ News
 
 .. raw:: html
 
-   <a class="twitter-timeline" href="https://twitter.com/BEAGLES44967623?ref_src=twsrc%5Etfw">Tweets by BEAGLES44967623</a> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+   <a class="twitter-timeline" data-theme="dark" href="https://twitter.com/BEAGLES44967623?ref_src=twsrc%5Etfw">Tweets by BEAGLES44967623</a> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
 Table of Contents
 -----------------
