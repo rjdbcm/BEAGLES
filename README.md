@@ -11,15 +11,22 @@ tool originally forked from [labelImg](https://github.com/tzutalin/labelImg) and
 | master   |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/master/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Documentation Status](https://readthedocs.org/projects/beagles/badge/?version=stable)](https://beagles.readthedocs.io/en/stable/?badge=stable)[![Build Status](https://travis-ci.com/rjdbcm/BEAGLES.svg?branch=master)](https://travis-ci.com/rjdbcm/BEAGLES)![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/rjdbcm/BEAGLES)
 | dev      |[![codecov](https://codecov.io/gh/rjdbcm/BEAGLES/branch/dev/graph/badge.svg)](https://codecov.io/gh/rjdbcm/BEAGLES)[![Documentation Status](https://readthedocs.org/projects/beagles/badge/?version=latest)](https://beagles.readthedocs.io/en/latest/?badge=latest)[![Build Status](https://travis-ci.com/rjdbcm/BEAGLES.svg?branch=dev)](https://travis-ci.com/rjdbcm/BEAGLES)
 
-## Features
+## Created Using:
 
+[![python](https://img.shields.io/badge/python-3.6%20|%203.7-blue.svg)](https://www.python.org/downloads/release/python-360/)
+[![tensorflow](https://raw.githubusercontent.com/aleen42/badges/master/src/tensorflow.svg?)](https://www.tensorflow.org/)
+[![cython](https://img.shields.io/badge/Cython-0.29.6-%23646464)](https://cython.org)
+[![numpy](https://img.shields.io/badge/NumPy-1.18-013243)](https://numpy.org/)
+[![opencv](https://img.shields.io/badge/OpenCV-4.0-%233a6aeb)](https://opencv.org/)
+[![pyqt5](https://img.shields.io/badge/PyQt-5.12-41cd52.svg)](https://pypi.org/project/PyQt5/)
+
+## Features
 - Darknet-style configuration files 
 - TensorFlow checkpoint files
 - YOLO and VOC annotation formats
 - Automatic anchor box generation
 - Preconfigured to output training data to TensorBoard
 - Fixed or cyclic learning rates 
-- Command-line backend interface 
 - Human-in-the-loop prediction and dataset expansion
 
 ## Development Goals
