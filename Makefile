@@ -1,17 +1,23 @@
-# ex: set ts=8 noet:
 
 all: virtualenv qt5 cython
+
+dev_package: qt5 local_package
+
+local_package:
+	pip3 install -e .
 
 virtualenv:
 	virtualenv --python=python3 .
 	. bin/activate
-	pip3 install -r requirements/requirements.txt
 
 qt5:
-	pyrcc5 -o libs/resources.py resources.qrc
+	pyrcc5 -o beagles/resources.py beagles/resources/resources.qrc
 
 cython:
 	python3 setup.py build_ext --inplace
+
+install:
+	python3 setup.py install
 
 test:
 	python3 -m unittest discover ./tests
@@ -21,9 +27,14 @@ distclean: clean clean_site_packages
 coverage:
 	coverage run -m unittest discover tests
 
+diagrams:
+	pyreverse -ASmy -k -o png -p BEAGLES ./beagles
+
 clean:
-	rm -f ~/.BEAGLESSettings.pkl ./libs/resources.py
-	rm -f ./libs/cythonUtils/*.c
+	find . -name “.DS_Store” -depth -exec rm {} \;
+	rm -f ~/.BEAGLESSettings.json ./libs/resources.py
+	rm -rf ./.pytest_cache
+	rm -f ./libs/backend/net/frameworks/extensions/*.c
 	rm -rf *.egg-info
 	rm -rf BEAGLES-*
 	rm -f ./libs/cythonUtils/*.so

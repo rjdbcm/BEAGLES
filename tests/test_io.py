@@ -2,10 +2,9 @@ import os
 import sys
 from collections import namedtuple
 from unittest import TestCase
-from libs.io.pascalVoc import PascalVocWriter, PascalVocReader
-from libs.io.yolo import YoloWriter, YoloReader
-from libs.scripts.voc_to_yolo import convertAnnotation
-
+from beagles.io.pascalVoc import PascalVocWriter, PascalVocReader
+from beagles.io.yolo import YoloWriter, YoloReader
+from beagles.base.box import PostprocessedBox
 
 class Image(object):
     def __init__(self, h, w, c):
@@ -23,20 +22,15 @@ class Image(object):
         return self._width
 
 
-metadata = namedtuple('metadata', 'label difficult')
-boundingBox = namedtuple('boundingBox', 'xmin ymin xmax ymax')
-
-
 class TestIO(TestCase):
 
     def testPascalVocRW(self):
         # Test Write/Read
         writer = PascalVocWriter('tests', 'test', (512, 512, 1))
-        difficult = 1
-        person_box = boundingBox(60, 40, 430, 504)
-        face_box = boundingBox(113, 40, 450, 403)
-        writer.appendBox(person_box, metadata('person', difficult))
-        writer.appendBox(face_box, metadata('face', difficult))
+        person_box = PostprocessedBox(60, 40, 430, 504, 'person', True)
+        face_box = PostprocessedBox(113, 40, 450, 403, 'face', True)
+        writer.boxes.append(person_box)
+        writer.boxes.append(face_box)
         writer.save('tests/test.xml')
 
         reader = PascalVocReader('tests/test.xml')
@@ -52,10 +46,10 @@ class TestIO(TestCase):
     def testYoloRW(self):
 
         writer = YoloWriter('tests', 'test', (512, 512, 1))
-        person_box = boundingBox(60, 40, 430, 504)
-        face_box = boundingBox(113, 40, 450, 403)
-        writer.appendBox(person_box, metadata('person', 0))
-        writer.appendBox(face_box, metadata('face', 0))
+        person_box = PostprocessedBox(60, 40, 430, 504, 'person', 0)
+        face_box = PostprocessedBox(113, 40, 450, 403, 'face', 0)
+        writer.boxes.append(person_box)
+        writer.boxes.append(face_box)
         writer.save(['person', 'face'], 'tests/test.yolo')
 
         image = Image(512, 512, 1)

@@ -1,0 +1,40 @@
+#! /bin/sh
+NAME="$(basename $0)"
+VOLUMEPATH="/Volumes"
+if [ "$(uname)" != "Darwin" ]; then
+    >&2 echo Error: $0 script is only designed to be run on macOS
+    exit 1
+fi
+
+RAMDisk_mount() {
+    if [ ! -d "$VOLUMEPATH/$NAME" ]; then
+        diskutil eraseVolume HFS+ $NAME `hdiutil attach -nomount ram://$((2048 * 2))`
+      exit
+    else
+
+        exit 1
+    fi
+}
+
+RAMDisk_unmount() {
+    while true
+    do
+        CURDISK=$(diskutil info $NAME | grep -o '/dev/disk[1-99]')
+        if [ "$CURDISK" = "" ]; then
+            >&2 echo $NAME not mounted in $VOLUMEPATH
+            exit 1
+        else
+            echo "$1 $NAME @ $CURDISK"
+            hdiutil detach $CURDISK
+        fi
+    done
+}
+
+eval ${NAME}_${1} ${1}
+#if [[ "$1" = "mount" ]]; then
+#    RAMDisk_mount
+#elif [[ "$1" = "unmount" ]]; then
+#    RAMDisk_unmount
+#else
+#    >&2 echo "line $LINENO: $NAME_$1: command not found"
+#fi

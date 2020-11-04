@@ -1,18 +1,15 @@
-include CONTRIBUTING.md
-include HISTORY.md
-include LICENSE
-include NOTICE
-include README.md
+global-include *.md
+global-exclude *.py[oc] .DS_Store __pycache__
 
 include resources.qrc
+include requirements.txt
 
-recursive-include data *
-recursive-include resources *
-recursive-include libs *
+graft data
+graft beagles
 
-recursive-exclude build-tools *
-recursive-exclude build *
-recursive-exclude dist *
-recursive-exclude tests *
-recursive-exclude * __pycache__
-recursive-exclude * *.py[co]
+prune data/summaries
+prune data/committedframes
+prune data/rawframes
+prune data/ckpt
+prune data/logs
+

@@ -1,6 +1,17 @@
-resources/icons/.DS_Store
+data/predefined_classes.txt
+*.spec
+pyinstaller
+python-2.*
+pywin32*
+virtual-wine
+venv_wine
+PyQt4-*
+lxml-*
+windows_v*
+linux_v*
 
-resources.py
+
+beagles/resources.py
 
 .idea*
 BEAGLES.egg-info*
@@ -10,6 +21,15 @@ BEAGLES.egg-info*
 
 build/
 dist/
+venv/
+data/ckpt/*
+data/logs/*
+data/summaries/*
+data/committedframes/*
+data/rawframes/*
+
+
+docs/.build/
 
 tags
 cscope*
@@ -18,3 +38,4 @@ cscope*
 .vscode
 *.pkl
 *.DS_Store
+.coverage
