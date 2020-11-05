@@ -8,26 +8,26 @@ darknet backend to parity with Darknet proper.
 
 Progress:
 
-   .. image:: https://progress-bar.dev/60
+   .. image:: https://progress-bar.dev/80
 
 The following checklist tracks the progress toward that goal:
    | ☑ activation - Not handled as a layer, more of a decoration for other layers.
 
-      | ☐ logistic
-      | ☐ loggy
+      | ☑ logistic
+      | ☑ loggy
       | ☑ relu
       | ☑ elu
-      | ☐ selu
-      | ☐ gelu
-      | ☐ relie
+      | ☑ selu
+      | ☑ gelu
+      | ☑ relie
       | ☐ ramp
-      | ☐ linear
-      | ☐ tanh
-      | ☐ psle
+      | ☑ linear
+      | ☑ tanh
+      | ☑ psle
       | ☑ leaky
       | ☑ stair
       | ☑ hardtan
-      | ☐ lhtan
+      | ☑ lhtan
 
    | ☑ avgpool
    | ☑ batchnorm - Not handled as a layer, more of a decoration for other layers.

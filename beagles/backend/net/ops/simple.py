@@ -300,6 +300,68 @@ class relu(BaseOp):
         pass
 
 
+class Gelu(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        return tf.identity(0.5 * inputs *(1 + tf.tanh(0.797885 * inputs + 0.035677 * tf.pow(inputs, 3))), name=self.scope)
+
+
+class Selu(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        return tf.nn.selu(inputs, name=self.scope)
+
+
+class Tanh(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        return tf.nn.tanh(inputs, name=self.scope)
+
+
+class Logistic(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        return tf.identity(1.0/(1.0 + tf.exp(-inputs)), name=self.scope)
+
+
+class Loggy(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        return tf.identity(2.0/(1.0 + tf.exp(-inputs)) - 1, name=self.scope)
+
+
+class Relie(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        false = tf.identity(.01*inputs, name=self.scope)
+        true = tf.identity(inputs, name=self.scope)
+        return tf.cond(tf.greater(inputs, 0), true, false)
+
+
+class PSLE(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        default = .125 * inputs + .5
+        lt_value = tf.cond(tf.less(inputs, -4), .01 * (inputs + 4), default)
+        gt_value = tf.cond(tf.greater(inputs, 4), .01 * (inputs -4) + 1, default)
+        if lt_value == gt_value:
+            return default
+        elif lt_value != default:
+            return lt_value
+        elif gt_value != default:
+            return gt_value
+
+
+class LHTan(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        lt_value = tf.cond(tf.less(inputs, 0), .001 * inputs, inputs)
+        gt_value = tf.cond(tf.greater(inputs, 1), .001 * (inputs - 1), inputs)
+        if lt_value == gt_value:
+            return tf.identity(inputs, name=self.scope)
+        elif lt_value != inputs:
+            return lt_value
+        elif gt_value != inputs:
+            return gt_value
+
+
+class Linear(BaseOpV2):
+    def call(self, inputs, **kwargs):
+        return tf.identity(inputs, name=self.scope)
+
+
 class Elu(BaseOpV2):
     def call(self, inputs, **kwargs):
         return tf.nn.elu(inputs, name=self.scope)
