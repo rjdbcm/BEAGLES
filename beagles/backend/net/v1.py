@@ -2,8 +2,8 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import time
 import tensorflow as tf
-from beagles.backend.net.ops import op_create, identity
-from beagles.backend.net.ops.baseop import HEADER, LINE
+from beagles.backend.net.ops_v1 import op_create, identity
+from beagles.backend.net.ops_v1.baseop import HEADER, LINE
 from beagles.backend.net.framework import Framework
 from beagles.backend.darknet.darknet import Darknet
 from beagles.backend.io.loader import Loader

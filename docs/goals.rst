@@ -27,6 +27,7 @@ The following checklist tracks the progress toward that goal:
       | ☑ leaky
       | ☑ stair
       | ☑ hardtan
+      | ☑ softplus
       | ☑ lhtan
 
    | ☑ avgpool
@@ -82,4 +83,17 @@ Update 2020-Nov-03:
 Progress:
 
    .. image:: https://progress-bar.dev/95
+
+###################################
+Extend Darknet Configuration Format
+###################################
+
+Darknet is designed mainly with YOLO in mind and we would like to expand this.
+For one thing, activation functions are canned and don't take arguments in Darknet.
+Activations in BEAGLES are Keras layer objects that use the same BaseOp API as
+all the other layers which allows arbitrary ops to be used as activations.
+
+
+   | ☑ Arbitrary activation ops for darknet layers
+
 

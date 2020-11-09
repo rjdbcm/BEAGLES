@@ -1,6 +1,8 @@
 [run]
 omit =
     *tests*
+    *ops_v1*
+    beagles/backend/net/v1.py
     beagles/resources/*
     beagles/scripts/*
     dev/*
