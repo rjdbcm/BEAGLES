@@ -35,10 +35,6 @@ def _fix_name(section_name: str, snake_case=True, prefix: str = ''):
     name = prefix + name
     return name
 
-def _yield_activation(activation, i):
-    if activation != LINEAR:
-        yield [activation, i]
-
 def _pad(dimension, padding, size, stride):
     return (dimension + 2 * padding - size) // stride + 1
 
@@ -129,7 +125,7 @@ class Select(DarknetConfigLayer):
         l_ = self.select_inps(i)
         yield [self.layer_name, i, l_, section['old_output'], activation, layer,
                section['output'], keep, train_from]
-        _yield_activation(activation, i)
+        yield [activation, i]
         p.l = section['output']
 
     def profile(self, inp, section):
@@ -164,7 +160,7 @@ class Convolutional(DarknetConfigLayer):
         n, size, stride, padding, batch_norm, activation = self._get_conv_properties(section)
         yield [self.layer_name, i, size, p.c, n, stride, padding,
                batch_norm, activation]
-        _yield_activation(activation, i)
+        yield [activation, i]
         w_ = _pad(p.w, padding, size, stride)
         h_ = _pad(p.h, padding, size, stride)
         p.w, p.h, p.c = w_, h_, n
@@ -190,7 +186,7 @@ class Local(DarknetConfigLayer):
         h_ = _local_pad(self.w, pad, size, stride)
         yield [self.layer_name, i, size, p.c, n, stride, pad, w_, h_,
                activation]
-        _yield_activation(activation, i)
+        yield [activation, i]
         p.w, p.h, p.c = w_, h_, n
         p.l = p.w * p.h * p.c
 
@@ -216,7 +212,7 @@ class ConvExtract(DarknetConfigLayer):
         c_ = self.extract_channels(i)
         yield [self.layer_name, i, size, c_, n,
                stride, padding, batch_norm, activation, inp_layer, out_layer]
-        _yield_activation(activation, i)
+        yield [activation, i]
         w_ = _pad(p.w, padding, size, stride)
         h_ = _pad(p.h, padding, size, stride)
         p.w, p.h, p.c = w_, h_, len(out_layer)
@@ -287,7 +283,7 @@ class Connected(DarknetConfigLayer):
             p.flat = True
         activation = section.get(ACTIVATION)
         yield [self.layer_name, i, p.l, section['output'], activation]
-        _yield_activation(activation, i)
+        yield [activation, i]
         p.l = section['output']
 
 @register_subsystem('extract', ConfigParser)
@@ -319,7 +315,7 @@ class Extract(DarknetConfigLayer):
                 raise ValueError(msg)
         section['old'] = old
         yield [self.layer_name, i, *old, activation, inp_layer, out_layer]
-        _yield_activation(activation, i)
+        yield [activation, i]
         p.l = len(out_layer)
 
     def new(self, input_layer, heights, widths):

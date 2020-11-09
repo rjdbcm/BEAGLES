@@ -121,7 +121,7 @@ def shuffle(self, data, weights=None):
             for img in data:
                 for box in img[1][2]:
                     score.append(weights.get(str(box[0])))
-                _weights.append(np.mean(score))
+                _weights.append(np.subtract(1, np.mean(score)))
             _weights = np.divide(_weights, np.sum(_weights))
             shuffle_idx = np.random.choice(np.arange(self.flags.size), self.flags.size, p=_weights)
         else:
