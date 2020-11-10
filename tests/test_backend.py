@@ -6,9 +6,7 @@ from shutil import rmtree
 from subprocess import Popen, PIPE
 from zipfile import ZipFile
 from beagles.io.flags import SharedFlagIO
-from beagles.base import BACKEND_ENTRYPOINT, GradientNaN
-from beagles.backend.trainer import Trainer
-from beagles.backend.net import NetBuilder, train
+from beagles.base import BACKEND_ENTRYPOINT
 
 
 class TestBackend(TestCase):

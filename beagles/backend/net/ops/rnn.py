@@ -1,8 +1,9 @@
-from beagles.backend.net.ops_v1.baseop import BaseOp
+from beagles.backend.net.ops.baseop import BaseOp
 from tensorflow.keras.experimental import PeepholeLSTMCell
 from tensorflow.python.keras.layers.convolutional_recurrent import ConvLSTM2DCell, ConvRNN2D
-from tensorflow.keras.layers import BatchNormalization, SimpleRNN, GRU
+from tensorflow.keras.layers import BatchNormalization, SimpleRNN
 from tensorflow.keras.layers import LSTM as _LSTM
+from tensorflow.keras.layers import GRU as _GRU
 import tensorflow as tf
 
 
@@ -42,5 +43,5 @@ class GRU(BaseOp):
     def call(self, inputs, **kwargs):
         num = self.lay.num_cells
         norm = self.lay.batch_norm
-        temp = GRU(num)(inputs)
+        temp = _GRU(num)(inputs)
         return BatchNormalization(scale=False, center=False)(temp) if norm else temp

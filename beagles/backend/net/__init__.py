@@ -12,7 +12,7 @@ import tensorflow as tf
 from beagles.base import GradientNaN, Timer
 from beagles.io import get_logger
 from beagles.io.flags import SharedFlagIO
-from beagles.backend.darknet.darknet import Darknet
+from beagles.backend.darknet import Darknet
 from beagles.backend.net.ops import op_create
 from beagles.backend.net.framework import Framework
 from beagles.backend.net.hyperparameters import cyclic_learning_rate as clr

@@ -3,7 +3,7 @@ import tensorflow as tf
 import os
 
 
-def loss(self, net_out):
+def loss(self, y_pred, _probs, _confs, _coord, _proid, _areas, _upleft, _botright):
     """
     Takes net.out and placeholders value
     returned in batch() func above,
@@ -17,26 +17,22 @@ def loss(self, net_out):
     scoor = float(m['coord_scale'])
     S, B, C = m['side'], m['num'], m['classes']
     SS = S * S # number of grid cells
-
-    self.logger.info('{} loss hyper-parameters:'.format(m['model']))
-    self.logger.info('side    = {}'.format(m['side']))
-    self.logger.info('box     = {}'.format(m['num']))
-    self.logger.info('classes = {}'.format(m['classes']))
-    self.logger.info('scales  = {}'.format([sprob, sconf, snoob, scoor]))
-
-    size1 = [None, SS, C]
-    size2 = [None, SS, B]
+    if self.first:
+        self.logger.info('{} loss hyper-parameters:'.format(m['model']))
+        self.logger.info('side    = {}'.format(m['side']))
+        self.logger.info('box     = {}'.format(m['num']))
+        self.logger.info('classes = {}'.format(m['classes']))
+        self.logger.info('scales  = {}'.format([sprob, sconf, snoob, scoor]))
+        self.first = False
 
     # return the below placeholders
-    _probs = tf.compat.v1.placeholder(tf.compat.v1.float32, size1)
-    _confs = tf.compat.v1.placeholder(tf.compat.v1.float32, size2)
-    _coord = tf.compat.v1.placeholder(tf.compat.v1.float32, size2 + [4])
-    # weights term for L2 loss
-    _proid = tf.compat.v1.placeholder(tf.compat.v1.float32, size1)
-    # material calculating IOU
-    _areas = tf.compat.v1.placeholder(tf.compat.v1.float32, size2)
-    _upleft = tf.compat.v1.placeholder(tf.compat.v1.float32, size2 + [2])
-    _botright = tf.compat.v1.placeholder(tf.compat.v1.float32, size2 + [2])
+    _probs = tf.cast(_probs, tf.float32)
+    _confs = tf.cast(_confs, tf.float32)
+    _coord = tf.cast(_coord, tf.float32)
+    _proid = tf.cast(_proid, tf.float32)
+    _areas = tf.cast(_areas, tf.float32)
+    _upleft = tf.cast(_upleft, tf.float32)
+    _botright = tf.cast(_botright, tf.float32)
 
     self.placeholders = {
         'probs': _probs, 'confs': _confs, 'coord': _coord, 'proid': _proid,
@@ -44,7 +40,7 @@ def loss(self, net_out):
     }
 
     # Extract the coordinate prediction from net.out
-    coords = net_out[:, SS * (C + B):]
+    coords = y_pred[:, SS * (C + B):]
     coords = tf.reshape(coords, [-1, SS, B, 4])
     wh = tf.math.pow(coords[:, :, :, 2:4], 2) * S  # unit: grid cell
     area_pred = wh[:, :, :, 0] * wh[:, :, :, 1]  # unit: grid cell^2
@@ -83,10 +79,8 @@ def loss(self, net_out):
     true = tf.concat([probs, confs, coord], 1)
     wght = tf.concat([proid, conid, cooid], 1)
     self.logger.info('Building {} loss'.format(m['model']))
-    loss = tf.math.pow(net_out - true, 2)
+    loss = tf.math.pow(y_pred - true, 2)
     loss = tf.math.multiply(loss, wght)
     loss = tf.math.reduce_sum(loss, 1)
     self.loss = .5 * tf.math.reduce_mean(loss)
-    tf.compat.v1.summary.scalar("/".join([os.path.basename(m['model']),
-                                self.flags.trainer,
-                                "loss"]), self.loss)
+    return self.loss

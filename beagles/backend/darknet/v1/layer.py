@@ -8,6 +8,7 @@ class Layer(object):
         self._signature = list(args)
         self.type = list(args)[0]
         self.number = list(args)[1]
+
         self.w = dict()  # weights
         self.h = dict()  # placeholders
         self.wshape = dict()  # weight shape
@@ -18,6 +19,37 @@ class Layer(object):
             shp = self.wshape[var]
             size = np.prod(shp)
             self.wsize[var] = size
+
+    def load(self, src_loader):
+        var_lay = VAR_LAYER
+        if self.type not in var_lay:
+            return
+
+        src_type = type(src_loader)
+        if src_type is WeightsLoader:
+            wdict = self.load_weights(src_loader)
+        else:
+            wdict = self.load_ckpt(src_loader)
+        if wdict is not None:
+            self.recollect(wdict)
+
+    def load_weights(self, src_loader):
+        val = src_loader([self.presenter])
+        if val is None:
+            return None
+        else:
+            return val.w
+
+    def load_ckpt(self, src_loader):
+        result = dict()
+        presenter = self.presenter
+        for var in presenter.wshape:
+            name = presenter.varsig(var)
+            shape = presenter.wshape[var]
+            key = [name, shape]
+            val = src_loader(key)
+            result[var] = val
+        return result
 
     @property
     def signature(self):
