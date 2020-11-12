@@ -1,46 +1,50 @@
 import os
 import time
 import sys
-from beagles.backend.darknet.darkop import *
 from beagles.backend.io.config_parser import ConfigParser
 from beagles.io.flags import SharedFlagIO
-from beagles.backend.io.loader import Loader
+from beagles.backend.darknet.layer import Layer
+from beagles.backend.darknet.convolution import *
+from beagles.backend.darknet.connected import *
+from beagles.backend.darknet.rnn import *
+from beagles.backend.darknet.v1.darkop import *
+from beagles.backend.io.v1.loader import Loader
 from beagles.base.constants import CFG_EXT, WGT_EXT
 
 darkops = darkops
 """:obj:`dict`: darknet layer types
-   
+
    Items:                                                   
          'dropout': :obj:`beagles.backend.darknet.darknet.dropout_layer`
-        
+
          'connected': :obj:`beagles.backend.darknet.darknet.connected_layer`
-        
+
          'maxpool': :obj:`beagles.backend.darknet.darknet.maxpool_layer`
-        
+
          'shortcut': :obj:`beagles.backend.darknet.darknet.shortcut_layer`
-        
+
          'upsample': :obj:`beagles.backend.darknet.darknet.upsample_layer`
-        
+
          'convolutional': :obj:`beagles.backend.darknet.darknet.convolutional_layer`
-        
+
          'avgpool': :obj:`beagles.backend.darknet.darknet.avgpool_layer`
-        
+
          'softmax': :obj:`beagles.backend.darknet.darknet.softmax_layer`
-        
+
          'crop': :obj:`beagles.backend.darknet.darknet.crop_layer`
-        
+
          'local': :obj:`beagles.backend.darknet.darknet.local_layer`
-        
+
          'select': :obj:`beagles.backend.darknet.darknet.select_layer`
-        
+
          'route': :obj:`beagles.backend.darknet.darknet.route_layer`
-        
+
          'reorg': :obj:`beagles.backend.darknet.darknet.reorg_layer`
-        
+
          'conv-select': :obj:`beagles.backend.darknet.darknet.conv_select_layer`
-        
+
          'conv-extract': :obj:`beagles.backend.darknet.darkop.conv_extract_layer`
-        
+
          'extract': :obj:`beagles.backend.darknet.darkop.extract_layer`
 
 """
@@ -50,9 +54,9 @@ create_darkop = create_darkop
 
     Args:
         ltype: layer type one of :obj:`beagles.backend.darknet.darknet.darkops` keys.
-        
+
         num: numerical index of layer
-        
+
         *args: variable list of layer characteristics yielded by :meth:`beagles.backend.io.ConfigParser.parse_layers`
 
 """
@@ -67,7 +71,8 @@ class Darknet(object):
         self.io.logger.info('Parsing {}'.format(self.src_cfg))
         src_parsed = self.create_ops()
         self.meta, self.layers = src_parsed
-        self.load_weights()
+        # uncomment for v1 behavior
+        # self.load_weights()
 
     def get_weight_src(self, flags):
         """
@@ -151,6 +156,7 @@ class Darknet(object):
 
         stop = time.time()
         self.io.logger.info('Finished in {}s'.format(stop - start))
+
 
 Layer = Layer
 """:class:`Layer`"""

@@ -1,6 +1,6 @@
-from beagles.backend.net.ops_v1.simple import *
-from beagles.backend.net.ops_v1.rnn import *
-from beagles.backend.net.ops_v1.convolution import *
+from beagles.backend.net.v1.simple import *
+from beagles.backend.net.v1.rnn import *
+from beagles.backend.net.v1.convolution import *
 
 op_types = {
     'convolutional': convolutional,

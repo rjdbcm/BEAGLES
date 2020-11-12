@@ -6,14 +6,12 @@ from beagles.io.flags import SharedFlagIO
 _LOSS_TYPE = ['sse', 'l2', 'smooth', 'sparse', 'l1', 'softmax']
 
 
-def loss(self, net_out):
-    m = self.meta
+def loss(self, y_pred, y_true):
     losses = self.type.keys()
-    loss_type = m['type'].strip('[]')
-    out_size = m['out_size']
-    H, W, _ = m['inp_size']
+    loss_type = self.meta['type'].strip('[]')
+    out_size = self.meta['out_size']
+    H, W, _ = self.meta['inp_size']
     HW = H * W
-    loss = float()
     try:
         assert loss_type in losses, f'Loss type {loss_type} not implemented'
     except AssertionError as e:
@@ -22,39 +20,28 @@ def loss(self, net_out):
         SharedFlagIO.send_flags(self)
         raise
 
-    self.logger.info('{} loss hyper-parameters:'.format(m['model']))
-    self.logger.info('Input Grid Size   = {}'.format(HW))
-    self.logger.info('Number of Outputs = {}'.format(out_size))
+    if self.first:
+        self.logger.info('{} loss hyper-parameters:'.format(self.meta['model']))
+        self.logger.info('Input Grid Size   = {}'.format(HW))
+        self.logger.info('Number of Outputs = {}'.format(out_size))
+        self.first = False
 
-    out = net_out
-    out_shape = out.get_shape()
-    out_dtype = out.dtype.base_dtype
-    _truth = tf.compat.v1.placeholder(out_dtype, out_shape)
-
-    self.placeholders = dict({
-        'truth': _truth
-    })
-
-    diff = _truth - out
+    diff = y_true - y_pred
     if loss_type in ['sse', '12']:
-        loss = tf.nn.l2_loss(diff)
+        return tf.nn.l2_loss(diff)
     elif loss_type == 'mse':
-        loss = tf.keras.losses.MSE(_truth, out)
+        return tf.keras.losses.MSE(y_true, y_pred)
     elif loss_type == ['smooth']:
         small = tf.cast(diff < 1, tf.float32)
         large = 1. - small
-        loss = L1L2(tf.multiply(diff, large), tf.multiply(diff, small))
+        return L1L2(tf.multiply(diff, large), tf.multiply(diff, small))
     elif loss_type in ['sparse', 'l1']:
-        loss = l1(diff)
+        return l1(diff)
     elif loss_type == 'softmax':
-        loss = tf.nn.softmax_cross_entropy_with_logits(logits=net_out)
-        loss = tf.reduce_mean(loss)
-
-    self.loss = loss
-
+        _loss = tf.nn.softmax_cross_entropy_with_logits(logits=y_pred)
+        return tf.reduce_mean(_loss)
     # elif loss_type == 'svm':
-    #     assert 'train_size' in m, \
-    #         'Must specify'
-    #     size = m['train_size']
+    #     assert 'train_size' in self.meta, 'Must specify'
+    #     size = self.meta['train_size']
     #     self.nu = tf.Variable(tf.ones([self.flags.size, self.num_classes]))
     #     self.loss(hinge(self.nu))
