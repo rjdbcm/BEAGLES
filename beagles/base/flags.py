@@ -66,8 +66,8 @@ def gen_defaults():
 class Flags(dict):
     """
     Allows you to set and get {key: value} pairs like attributes.
+    Compatible with argparse.Namespace objects.
     Enforces type-checking during flag setting.
-    This allows compatibility with argparse.Namespace objects.
     """
 
     def __init__(self, defaults=True):
@@ -87,7 +87,8 @@ class Flags(dict):
         if isinstance(value, dtype):
             self[attr] = value
         else:
-            raise ValueError(f'Expected type {dtype} for {attr} found {type(value)}')
+            self[attr] = dtype(value)
+
 
     def from_json(self, file):
         data = dict(json.load(file))
