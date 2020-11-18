@@ -6,6 +6,12 @@ from beagles.io.flags import SharedFlagIO
 EXEC_PATH = os.path.abspath("../../")
 os.chdir(EXEC_PATH)
 
+form = """
+def do_{0}(self, arg):
+    if arg:
+        self.flags.{0} = arg
+    print('Current Setting: ', self.flags.{0})
+"""
 
 class BeaglesShell(cmd.Cmd):
     intro = f'Welcome to the {APP_NAME} shell.\nType help or ? to list commands.\n'
@@ -13,6 +19,32 @@ class BeaglesShell(cmd.Cmd):
     flags = Flags()
     io = SharedFlagIO(subprogram=False, flags=flags)
     prompt = f'{APP_NAME} >>> '
+
+    @classmethod
+    def _preloop(cls):
+        _locals = {}
+        [exec(form.format(i), globals(), _locals) for i in cls.flags]
+        for name, func in _locals.items():
+            func.__doc__ = DEFAULTS['DESCS'].get(name[len('do_'):])
+            setattr(cls, name, func)
+
+    def preloop(self):
+        self._preloop()
+
+    def precmd(self, line):
+        self.io.io_flags()
+        if self.file and 'playback' not in line:
+            print(line, file=self.file)
+        return line
+
+    def postcmd(self, stop, line):
+        self.io.io_flags()
+
+    def close(self):
+        if self.file:
+            self.file.close()
+            self.file = None
+        exit(0)
 
     def do_exit(self, arg):
         """Stop recording and exit: EXIT"""
@@ -40,36 +72,7 @@ class BeaglesShell(cmd.Cmd):
         with open(arg) as f:
             self.cmdqueue.extend(f.read().splitlines())
 
-    def precmd(self, line):
-        self.io.io_flags()
-        if self.file and 'playback' not in line:
-            print(line, file=self.file)
-        return line
-
-    def postcmd(self, stop, line):
-        self.io.io_flags()
-
-    def close(self):
-        if self.file:
-            self.file.close()
-            self.file = None
-        exit(0)
-
-form = """
-def do_{0}(self, arg):
-    if arg:
-        self.flags.{0} = arg
-    print('Current Setting: ', self.flags.{0})
-"""
-
 if __name__ == '__main__':
-    _locals = {}
-    for i in BeaglesShell.flags:
-        exec(form.format(i), globals(), _locals)
-        for name, func in _locals.items():
-            func.__doc__ = DEFAULTS['DESCS'].get(name[len('do_'):])
-            setattr(BeaglesShell, name, func)
-
     BeaglesShell().cmdloop(intro=r"""
          ________  _______   ________  ________  ___       _______   ________      
         |\   __  \|\  ___ \ |\   __  \|\   ____\|\  \     |\  ___ \ |\   ____\     
