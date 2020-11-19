@@ -10,12 +10,13 @@ from beagles.base.constants import *
 from beagles.ui import newIcon, addActions
 from beagles.ui.widgets.labelDialog import LabelDialog
 from beagles.io.labelFile import LabelFile
-
+from beagles.io.logs import get_logger
 
 class MainWindowFunctions(QWidget, QObject):
     def __init__(self):
         super(MainWindowFunctions, self).__init__()
         self.labelHist = []
+        self.logger = get_logger()
         # Application state.
         self.image = QImage()
         self.recentFiles = []

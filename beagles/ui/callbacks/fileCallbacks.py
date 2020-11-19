@@ -44,7 +44,7 @@ class FileCallbacks(FileFunctions):
             if isinstance(filename, (tuple, list)):
                 video = shutil.copy2(filename[0], target)
                 self.logger.info('Extracting frames from {} to {}'.format(
-                    filename, target))
+                    filename[0], target))
                 self.frameCapture(video)
                 self.importDirImages(target)
         if target is not None and len(target) > 1:

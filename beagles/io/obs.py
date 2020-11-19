@@ -85,5 +85,5 @@ class TiledCaptureArray:
                   f'"crop={w_inc}:{h_inc}:{x}:{y}" -c:a copy -map_metadata 0 ' \
                   f'-map_metadata:s:v 0:s:v -map_metadata:s:a 0:s:a "{output}"'
             self.logger.debug(cmd)
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+            proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, shell=True)
             self.logger.info(f'Started ffmpeg PID: {proc.pid} Output: {output}')
