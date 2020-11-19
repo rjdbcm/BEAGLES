@@ -11,7 +11,7 @@ class GradientNaN(Exception):
     def __init__(self, flags=None):
         if flags is None:
             flags = Flags()
-        clip = "--clip argument" if flags.cli else "'Clip Gradients' checkbox"
+        clip = "clip command" if flags.cli else "'Clip Gradients' checkbox"
         opt = "." if flags.clip else f" or turning on gradient clipping using the {clip}."
         Exception.__init__(
             self, f"Looks like the neural net lost the gradient try restarting"

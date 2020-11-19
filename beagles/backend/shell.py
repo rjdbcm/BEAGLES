@@ -1,10 +1,16 @@
-import cmd
-import shutil
-from subprocess import Popen, PIPE
-from beagles.base import *
-from beagles.io.flags import SharedFlagIO
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import os
 EXEC_PATH = os.path.abspath("../../")
 os.chdir(EXEC_PATH)
+import sys
+sys.path.append(os.getcwd())
+import cmd
+import shutil
+from subprocess import Popen, DEVNULL
+from beagles.backend.net import TRAINERS
+from beagles.base import *
+from beagles.io.flags import SharedFlagIO
 
 form = """
 def do_{0}(self, arg):
@@ -19,6 +25,7 @@ class BeaglesShell(cmd.Cmd):
     flags = Flags()
     io = SharedFlagIO(subprogram=False, flags=flags)
     prompt = f'{APP_NAME} >>> '
+    completekey = 'tab'
 
     @classmethod
     def _preloop(cls):
@@ -29,6 +36,7 @@ class BeaglesShell(cmd.Cmd):
             setattr(cls, name, func)
 
     def preloop(self):
+        self.flags.cli = True
         self._preloop()
 
     def precmd(self, line):
@@ -52,14 +60,22 @@ class BeaglesShell(cmd.Cmd):
         return True
 
     def do_fetch(self, arg):
+        """Start the BEAGLES backend"""
         self.io.send_flags()
         self.flags = self.io.read_flags()
-        Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
+        Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=DEVNULL, shell=False)
 
-    def do_env(self, arg):
+    def do_flags(self, arg):
+        """Show all current flag settings"""
         width = shutil.get_terminal_size()[0]
         fl = dict(zip([i for i in self.flags], [i for i in self.flags.values()]))
         self.columnize([f'{desc}: {val}' for desc, val in fl.items()], displaywidth=width)
+
+    def complete_trainer(self, text, *_):
+        if text:
+            return [name for name in TRAINERS.keys() if name.startswith(text)]
+        else:
+            return TRAINERS.keys()
 
     # ----- record and playback -----
     def do_record(self, arg):
