@@ -1,4 +1,2 @@
-model_checkpoint_path:
-all_model_checkpoint_paths:
-all_model_checkpoint_timestamps:
-last_preserved_timestamp:
+model_checkpoint_path: "tiny-yolov2-0"
+all_model_checkpoint_paths: "tiny-yolov2-0"
