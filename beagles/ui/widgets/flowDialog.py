@@ -114,7 +114,7 @@ class FlowDialog(BackendDialog):
     def accept(self):
         """set flags for darkflow and prevent startup if errors anticipated"""
         self.updateCkptFile()  # Make sure TFNet gets the correct checkpoint
-        self.flags.get_defaults()  # Reset self.flags
+        self.flags = Flags()  # Reset self.flags
         self.assign_flags()
 
         if not self.flowCmb.currentText() == "Train" and self.flags.load == 0:
