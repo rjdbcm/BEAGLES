@@ -1,6 +1,6 @@
 """Top-level module for machine-learning backend"""
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import sys
 import csv
 import math
@@ -154,18 +154,13 @@ class NetBuilder(tf.Module):
         return layers
 
     def load_checkpoint(self, manager):
-        if isinstance(self.flags.load, str):
-            checkpoint = [i for i in manager.checkpoints if self.flags.load in i]
-            assert len(checkpoint) == 1
-            self.checkpoint.restore(checkpoint)
-            self.logger.info(f"Restored from {checkpoint}")
-        elif self.flags.load < 0:
+        if self.flags.load < 0:
             self.checkpoint.restore(manager.latest_checkpoint)
             self.logger.info(f"Restored from {manager.latest_checkpoint}")
         elif self.flags.load >= 1:
-            idx = self.flags.load - 1
-            self.checkpoint.restore(manager.checkpoints[idx])
-            self.logger.info(f"Restored from {manager.checkpoints[idx]}")
+            self.logger.info(f"Restoring from {self.flags.load}")
+            [ckpt] = [i for i in manager.checkpoints if i.endswith(str(self.flags.load))]
+            self.checkpoint.restore(ckpt)
         else:
             self.logger.info("Initializing network weights from scratch.")
 

@@ -40,7 +40,8 @@ class BeaglesShell(cmd.Cmd):
         self._preloop()
 
     def precmd(self, line):
-        self.io.io_flags()
+        avail_flags = self.io.read_flags()
+        self.flags = avail_flags if avail_flags else Flags()
         if self.file and 'playback' not in line:
             print(line, file=self.file)
         return line
@@ -76,6 +77,13 @@ class BeaglesShell(cmd.Cmd):
             return [name for name in TRAINERS.keys() if name.startswith(text)]
         else:
             return TRAINERS.keys()
+
+    def complete_clr_mode(self, text, *_):
+        modes = ["triangular", "triangular2", "exp_range"]
+        if text:
+            return [name for name in modes if name.startswith(text)]
+        else:
+             return modes
 
     # ----- record and playback -----
     def do_record(self, arg):

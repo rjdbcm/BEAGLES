@@ -1,7 +1,10 @@
 import os
+import sys
 import logging
 import inspect
+from subprocess import DEVNULL
 from logging.handlers import RotatingFileHandler
+from logging import StreamHandler
 from beagles.io.flags import Flags
 
 FORMAT = logging.Formatter(
@@ -17,20 +20,16 @@ def get_logger(level=logging.INFO):
     except KeyError:
         caller = 'None'
     logger = logging.getLogger(caller)
-
+    logger.handlers = []
     root, file = os.path.splitext(Flags().log)
-
     handler = ''.join([root, file])
     logfile = RotatingFileHandler(handler, backupCount=20)
     logfile.setFormatter(FORMAT)
-
-    tf_handler = '.tf'.join([root, file])
-    tf_logfile = RotatingFileHandler(tf_handler, backupCount=20)
+    tf_logfile = RotatingFileHandler('.tf'.join([root, file]), backupCount=20)
     tf_logfile.setFormatter(FORMAT)
     # don't re-add the same handler
-    if not str(logfile) in str(logger.handlers):
-        logger.addHandler(logfile)
-
+    logger.addHandler(logfile)
+    logger.addHandler(tf_logfile)
     logger.setLevel(level)
-
+    logger.propagate = False
     return logger
