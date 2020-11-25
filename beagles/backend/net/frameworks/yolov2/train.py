@@ -6,14 +6,12 @@ import os
 def expit_tensor(x):
     return 1. / (1. + tf.math.exp(-x))
 
-@tf.function
 def loss(self, y_pred, _probs, _confs, _coord, _proid, _areas, _upleft, _botright):
     """
     Takes net.out and placeholders value
     returned in batch() func above,
     to build train_op and loss
     """
-
     _probs = tf.cast(_probs, tf.float32)
     _confs = tf.cast(_confs, tf.float32)
     _coord = tf.cast(_coord, tf.float32)
@@ -88,12 +86,8 @@ def loss(self, y_pred, _probs, _confs, _coord, _proid, _areas, _upleft, _botrigh
     true = tf.concat([_coord, tf.expand_dims(confs, 3), _probs], 3)
     wght = tf.concat([cooid, tf.expand_dims(conid, 3), proid], 3)
 
-    self.logger.info('Building {} loss'.format(m['model']))
     loss = tf.math.pow(adjusted_net_out - true, 2)
     loss = tf.math.multiply(loss, wght)
     loss = tf.reshape(loss, [-1, H*W*B*(4 + 1 + C)])
     loss = tf.math.reduce_sum(loss, 1)
-    self.loss = .5 * tf.math.reduce_mean(loss)
-    scope = "/".join([os.path.basename(m['model']), self.flags.trainer, "loss"])
-    tf.compat.v1.summary.scalar(scope, self.loss)
     return .5 * tf.math.reduce_mean(loss)

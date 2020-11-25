@@ -3,6 +3,7 @@ from beagles.backend.io.pascal_voc_clean_xml import pascal_voc_clean_xml
 from copy import deepcopy
 import numpy as np
 import os
+import gc
 import tensorflow as tf
 
 
@@ -154,6 +155,9 @@ def shuffle(self, data, weights=None):
 
             x_batch = np.concatenate(x_batch, 0)
             yield x_batch, feed_batch
+            del x_batch
+            del feed_batch
+            gc.collect()
         
         self.logger.info(f'Finish {i + 1} epoch{"es" if i == 0 else ""}')
 

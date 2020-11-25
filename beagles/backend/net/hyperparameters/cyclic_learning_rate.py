@@ -1,12 +1,7 @@
-import os
-import math
+import gc
 import tensorflow as tf
-from tensorflow.python.framework import ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.eager import context
-import numpy as np
+from tensorflow.keras import backend as K
 
-@tf.function
 def cyclic_learning_rate(global_step,
                          learning_rate=0.01,
                          max_lr=0.1,
@@ -14,53 +9,50 @@ def cyclic_learning_rate(global_step,
                          gamma=0.99994,
                          mode='triangular',
                          name=None):
+    K.clear_session()
+    gc.collect()
     if global_step is None:
         raise ValueError("global_step is required for cyclic_learning_rate.")
-    with ops.name_scope(name, None, [learning_rate, global_step]) as name:
-        learning_rate = ops.convert_to_tensor(learning_rate, name="learning_rate")
-        dtype = learning_rate.dtype
-        max_lr = math_ops.cast(max_lr, dtype)
-        global_step = math_ops.cast(global_step, dtype)
-        step_size = math_ops.cast(step_size, dtype)
+    learning_rate = tf.convert_to_tensor(learning_rate, name="learning_rate")
+    dtype = learning_rate.dtype
+    max_lr = tf.cast(max_lr, dtype)
+    global_step = tf.cast(global_step, dtype)
+    step_size = tf.cast(step_size, dtype)
 
-        def cyclic_lr():
-            """Helper to recompute learning rate; most helpful in eager-mode."""
-            # computing: cycle = floor( 1 + global_step / ( 2 * step_size ) )
-            # print(global_step.numpy())
-            double_step = math_ops.multiply(2., step_size)
-            global_div_double_step = math_ops.divide(global_step,
-                                                     double_step)
-            cycle = math_ops.floor(
-                math_ops.add(1., global_div_double_step))
-            # computing: x = abs( global_step / step_size – 2 * cycle + 1 )
-            double_cycle = math_ops.multiply(2., cycle)
-            global_div_step = math_ops.divide(global_step, step_size)
-            tmp = math_ops.subtract(global_div_step, double_cycle)
-            x = math_ops.abs(math_ops.add(1., tmp))
-            # computing: clr = learning_rate + ( max_lr – learning_rate ) * max( 0, 1 - x )
-            a1 = math_ops.maximum(0., math_ops.subtract(1., x))
-            a2 = math_ops.subtract(max_lr, learning_rate)
-            clr = math_ops.multiply(a1, a2)
-            if mode == 'triangular2':
-                clr = math_ops.divide(clr, math_ops.cast(
-                    math_ops.pow(2, math_ops.cast(
-                        cycle - 1, tf.int32)), tf.float32))
-            if mode == 'exp_range':
-                clr = math_ops.multiply(
-                    math_ops.pow(gamma, global_step), clr)
-            return math_ops.add(clr, learning_rate, name=name)
+    def cyclic_lr():
+        """Helper to recompute learning rate; most helpful in eager-mode."""
+        # computing: cycle = floor( 1 + global_step / ( 2 * step_size ) )
+        # print(global_step.numpy())
+        if learning_rate == max_lr:
+            return learning_rate
+        double_step = tf.multiply(2., step_size)
+        global_div_double_step = tf.divide(global_step,
+                                                 double_step)
+        cycle = tf.floor(tf.add(1., global_div_double_step))
+        # computing: x = abs( global_step / step_size – 2 * cycle + 1 )
+        double_cycle = tf.multiply(2., cycle)
+        global_div_step = tf.divide(global_step, step_size)
+        tmp = tf.subtract(global_div_step, double_cycle)
+        x = tf.abs(tf.add(1., tmp))
+        # computing: clr = learning_rate + ( max_lr – learning_rate ) * max( 0, 1 - x )
+        a1 = tf.maximum(0., tf.subtract(1., x))
+        a2 = tf.subtract(max_lr, learning_rate)
+        clr = tf.multiply(a1, a2)
+        if mode == 'triangular2':
+            clr = tf.divide(clr, tf.cast(tf.pow(2, tf.cast(cycle - 1, tf.int32)), tf.float32))
+        if mode == 'exp_range':
+            clr = tf.multiply(tf.pow(gamma, global_step), clr)
+        return tf.add(clr, learning_rate, name=name)
 
-        if not context.executing_eagerly():
-            cyclic_lr = cyclic_lr()
-        # tf.summary.scalar("/".join([self.flags.trainer,
-        #                             'cyclic_learning_rate']), cyclic_lr)
-        return cyclic_lr
+    if not tf.executing_eagerly():
+        cyclic_lr = cyclic_lr()
+    # tf.summary.scalar("/".join([self.flags.trainer,
+    #                             'cyclic_learning_rate']), cyclic_lr)
+    return cyclic_lr
 
 
 from tensorflow.keras.callbacks import *
-from tensorflow.keras import backend as K
 import numpy as np
-
 
 class CyclicLR(Callback):
     """This callback implements a cyclical learning rate policy (CLR).

@@ -1,10 +1,12 @@
 """Top-level module for machine-learning backend"""
 import os
-# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+import gc
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import sys
 import csv
 import math
 from functools import partial
+from multiprocessing import Process
 from multiprocessing.pool import ThreadPool
 import cv2
 import numpy as np
@@ -65,6 +67,10 @@ class Net(tf.keras.Model):
         variables = self.trainable_variables
         gradients = tape.gradient(loss, variables)
         self.optimizer.apply_gradients(zip(gradients, variables))
+        if not self.first:
+            # just remembering weights on the first train step
+            self.step.assign_add(1)
+        self.first = False
         return loss
 
     def call(self, x, training=False, **loss_feed):
@@ -101,23 +107,35 @@ class NetBuilder(tf.Module):
         self.num_layer = self.ntrain = len(self.darknet.layers) or 0
         self.meta = self.darknet.meta
 
-    def __call__(self):
-        self.global_step = tf.Variable(0, trainable=False)
-        framework = Framework.create(self.darknet.meta, self.flags)
-        self.annotation_data, self.class_weights = framework.parse()
-        optimizer = self.build_optimizer()
-        layers = self.compile_darknet()
-        net = Net(layers, self.global_step, dtype=tf.float32)
-        ckpt_kwargs = {'net': net, 'optimizer': optimizer}
-        self.checkpoint = tf.train.Checkpoint(**ckpt_kwargs)
-        name = f"{self.meta['name']}"
-        manager = tf.train.CheckpointManager(self.checkpoint, self.flags.backup,
-                                             self.flags.keep, checkpoint_name=name)
+    def __call__(self, rebuild=False):
+        if not rebuild:
+            self.global_step = tf.Variable(0, trainable=False)
+            self.framework = Framework.create(self.darknet.meta, self.flags)
+            self.annotation_data, self.class_weights = self.framework.parse()
+
+        self.build()
         # try to load a checkpoint from flags.load
-        self.load_checkpoint(manager)
-        self.logger.info('Compiling Net...')
-        net.compile(loss=framework.loss, optimizer=optimizer)
-        return net, framework, manager
+        if not rebuild:
+            self.load_checkpoint(self.manager)
+            self.logger.info('Compiling Net...')
+
+    def build(self):
+        self.optimizer = self.build_optimizer()
+        self.layers = self.compile_darknet()
+        self.net = Net(self.layers, self.global_step, dtype=tf.float32)
+        self.net.compile(loss=self.framework.loss, optimizer=self.optimizer)
+        self.build_manager()
+
+    def destroy(self):
+        delattr(self, 'net')
+        delattr(self, 'optimizer')
+        delattr(self, 'layers')
+
+    def build_manager(self):
+        ckpt_kwargs = {'net': self.net, 'optimizer': self.optimizer}
+        self.checkpoint = tf.train.Checkpoint(**ckpt_kwargs)
+        args = [self.checkpoint, self.flags.backup, self.flags.keep]
+        self.manager = tf.train.CheckpointManager(*args, checkpoint_name=f"{self.meta['name']}")
 
     def build_optimizer(self):
         # setup kwargs for trainer
@@ -141,7 +159,7 @@ class NetBuilder(tf.Module):
             'name': self.flags.model
         }
         # setup trainer
-        return TRAINERS[self.flags.trainer](learning_rate=lambda: clr(**clr_kwargs), **kwargs)
+        return TRAINERS[self.flags.trainer](learning_rate=clr(**clr_kwargs), **kwargs)
 
     def compile_darknet(self):
         layers = list()
@@ -164,34 +182,36 @@ class NetBuilder(tf.Module):
         else:
             self.logger.info("Initializing network weights from scratch.")
 
-
-def train(data, class_weights, flags, net: Net, framework: Framework, manager: tf.train.CheckpointManager):
-    log = get_logger()
-    io = SharedFlagIO(flags, subprogram=True)
-    flags = io.read_flags() if io.read_flags() is not None else flags
-    log.info('Building {} train op'.format(flags.model))
-    goal = len(data) * flags.epoch
-    first = True
-    for i, (x_batch, loss_feed) in enumerate(framework.shuffle(data, class_weights)):
-        loss = net(x_batch, training=True, **loss_feed)
-        step = net.step.numpy()
-        lr = net.optimizer.learning_rate.numpy()
-        line = 'step: {} loss: {:f} lr: {:.2e} progress: {:.2f}%'
-        if not first:
-            flags.progress = i * flags.batch / goal * 100
-            log.info(line.format(step, loss, lr, flags.progress))
-        else:
-            log.info(f"Following gradient from step {step}...")
-        io.send_flags()
-        flags = io.read_flags()
-        ckpt = bool(not step % flags.save)
-        if ckpt and not first:
-            save = manager.save()
-            log.info(f"Saved checkpoint: {save}")
-        first = False
-    if not ckpt:
-        save = manager.save()
-        log.info(f"Finished training at checkpoint: {save}")
+    def train(self):
+        self.io.io_flags()
+        self.logger.info('Building {} train op'.format(self.flags.model))
+        goal = len(self.annotation_data) * self.flags.epoch
+        saved_last_time = False
+        first = True
+        batch_per_epoch = int(len(self.annotation_data) / self.flags.batch)
+        for i, (x_batch, loss_feed) in enumerate(self.framework.shuffle(self.annotation_data, self.class_weights)):
+            if saved_last_time and not first:
+                self.destroy()
+                self(rebuild=True)
+                self.checkpoint.restore(self.manager.latest_checkpoint)
+                saved_last_time = False
+                first = True
+            loss = self.net.train_step((x_batch, loss_feed))
+            step = self.net.step.numpy()
+            lr = self.net.optimizer.learning_rate.numpy()
+            line = 'step: {} loss: {:f} lr: {:.2e} progress: {:.2f}%'
+            if not first:
+                self.flags.progress = i * self.flags.batch / goal * 100
+                self.logger.info(line.format(step, loss, lr, self.flags.progress))
+            else:
+                self.logger.info(f"Following gradient from step {step}...")
+            self.io.io_flags()
+            saving = not bool((i + 1) % (batch_per_epoch * self.flags.save))
+            if saving:
+                save = self.manager.save()
+                self.logger.info(f"Saved checkpoint: {save}")
+                saved_last_time = True
+            first = False
 
 def predict(flags, net: Net, framework: Framework):
     log = get_logger()

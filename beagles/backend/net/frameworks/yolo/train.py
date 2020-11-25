@@ -82,5 +82,5 @@ def loss(self, y_pred, _probs, _confs, _coord, _proid, _areas, _upleft, _botrigh
     loss = tf.math.pow(y_pred - true, 2)
     loss = tf.math.multiply(loss, wght)
     loss = tf.math.reduce_sum(loss, 1)
-    self.loss = .5 * tf.math.reduce_mean(loss)
-    return self.loss
+    loss = .5 * tf.math.reduce_mean(loss)
+    return loss

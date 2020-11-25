@@ -25,7 +25,7 @@
 <file alias="openDir">icons/open.png</file>
 <file alias="changeSaveDir">icons/changeSaveDir.png</file>
 <file alias="openAnnotation">icons/openAnnotation.png</file>
-<file alias="impVideo">icons/impvideo.png</file>
+<file alias="impVideo">icons/impVideo.png</file>
 <file alias="switchmeon">icons/switchmeon.png</file>
 <file alias="switchmeoff">icons/switchmeoff.png</file>
 <file alias="trainModel">icons/trainModel.png</file>

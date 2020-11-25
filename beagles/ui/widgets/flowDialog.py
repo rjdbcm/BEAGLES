@@ -133,12 +133,12 @@ class FlowDialog(BackendDialog):
             self.flags.imgdir = dirname
             pass
         if self.flowCmb.currentText() == "Train":
-            if not self.flags.save % self.flags.batch == 0:
-                QMessageBox.warning(self, 'Error',
-                                    "The value of 'Save Every' should be "
-                                    "divisible by the value of 'Batch Size'",
-                                    QMessageBox.Ok)
-                return
+            # if not self.flags.save % self.flags.batch == 0:
+            #     QMessageBox.warning(self, 'Error',
+            #                         "The value of 'Save Every' should be "
+            #                         "divisible by the value of 'Batch Size'",
+            #                         QMessageBox.Ok)
+            #     return
             dataset = [f for f in os.listdir(self.flags.dataset)
                        if not f.startswith('.')]
             if not dataset:
