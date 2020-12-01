@@ -160,5 +160,5 @@ def shuffle(self, data, weights=None):
             x_batch = np.concatenate(x_batch, 0)
             yield x_batch, feed_batch
         
-        self.logger.info(f'Finish {i + 1} epoch of {self.flags.epoch}')
+        self.logger.info(f'Finish epoch {i + 1} of {self.flags.epoch}')
 

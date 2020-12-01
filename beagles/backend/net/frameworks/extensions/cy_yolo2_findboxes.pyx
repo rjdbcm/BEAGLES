@@ -5,12 +5,17 @@ ctypedef np.float_t DTYPE_t
 from libc.math cimport exp, fmax
 from nms cimport nms
 
+cdef:
+   np.intp_t max = np.iinfo(np.intp).max
+   np.intp_t min = np.iinfo(np.intp).min
+   np.ndarray EXPIT_LUT = np.ascontiguousarray(1/(1 + np.exp(-np.linspace(min, max, 1000))))
+
 #expit
 @cython.boundscheck(False) # turn off bounds-checking for entire function
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
 @cython.cdivision(True)
 cdef float expit_c(float x):
-    cdef float y = 1 / (1 + np.exp(-x))
+    cdef float y = np.take(EXPIT_LUT, x)
     return y
 
 #CONSTRUCTOR
@@ -26,6 +31,7 @@ def box_constructor(meta, np.ndarray[float,ndim=3] net_out_in):
         float n = 0
         double[:] anchors = np.asarray(meta['anchors'])
         list boxes = list()
+
 
     H, W, _ = meta['out_size']
     C = meta['classes']
