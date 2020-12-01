@@ -1,5 +1,3 @@
-import os
-import sys
 import unittest
 from beagles.ui.functions.mainWindowFunctions import MainWindowFunctions
 
@@ -11,6 +9,3 @@ class TestLib(unittest.TestCase):
         self.assertTrue(res.green() >= 0)
         self.assertTrue(res.red() >= 0)
         self.assertTrue(res.blue() >= 0)
-
-if __name__ == '__main__':
-    unittest.main()

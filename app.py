@@ -28,7 +28,7 @@ class MainWindow(BeaglesMainWindow):
     def __init__(self, filename=None, predefined_class_file=None,
                  save_directory=None, darkmode=None):
         super(MainWindow, self).__init__()
-        self.io.logger.info("Initializing GUI")
+        self.io.log.info("Initializing GUI")
         self.setWindowTitle(APP_NAME)
         self.predefinedClasses = predefined_class_file
         self.defaultSaveDir = save_directory

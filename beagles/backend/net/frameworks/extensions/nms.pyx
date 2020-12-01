@@ -41,13 +41,10 @@ def intersection_c(a_x, a_y, a_w, a_h, b_x, b_y, b_w, b_h):
 @cython.cdivision(True)
 cdef float box_union_c(float a_x, float a_y, float a_w, float a_h, float b_x, float b_y, float b_w, float b_h):
     cdef:
-        float i,u
+        float i,u,w,h,area
     i = box_intersection_c(a_x, a_y, a_w, a_h, b_x, b_y, b_w, b_h)
-    u = a_w * a_h + b_w * b_h -i
+    u = a_w * a_h + b_w * b_h - i
     return u
-
-def union_c(a_x, a_y, a_w, a_h, b_x, b_y, b_w, b_h):
-    return box_union_c(a_x, a_y, a_w, a_h, b_x, b_y, b_w, b_h)
 
 #BOX IOU
 @cython.boundscheck(False) # turn off bounds-checking for entire function
@@ -55,9 +52,6 @@ def union_c(a_x, a_y, a_w, a_h, b_x, b_y, b_w, b_h):
 @cython.cdivision(True)
 cdef float box_iou_c(float a_x, float a_y, float a_w, float a_h, float b_x, float b_y, float b_w, float b_h):
     return box_intersection_c(a_x, a_y, a_w, a_h, b_x, b_y, b_w, b_h) / box_union_c(a_x, a_y, a_w, a_h, b_x, b_y, b_w, b_h)
-
-def iou_c(a_x, a_y, a_w, a_h, b_x, b_y, b_w, b_h):
-    return box_iou_c(a_x, a_y, a_w, a_h, b_x, b_y, b_w, b_h)
 
 #NMS
 @cython.boundscheck(False) # turn off bounds-checking for entire function
@@ -67,31 +61,33 @@ cdef nms(float[:, ::1] final_probs , float[:, ::1] final_bbox):
 
     cdef set indices = set()
     cdef:
-        np.intp_t pred_length,class_length,class_loop,index,index2
+        np.intp_t pred_length,class_length,i,j,k
 
     pred_length = final_bbox.shape[0]
     class_length = final_probs.shape[1]
     boxes = list()
-    for class_loop in range(class_length):
-        for index in range(pred_length):
-            if final_probs[index,class_loop] == 0: continue
-            for index2 in range(index+1,pred_length):
-                if final_probs[index2,class_loop] == 0: continue
-                if index==index2 : continue
-                if box_iou_c(final_bbox[index,0],final_bbox[index,1],final_bbox[index,2],final_bbox[index,3],final_bbox[index2,0],final_bbox[index2,1],final_bbox[index2,2],final_bbox[index2,3]) >= 0.4:
-                    if final_probs[index2,class_loop] > final_probs[index, class_loop] :
-                        final_probs[index, class_loop] =0
+
+    for i in range(class_length):
+        for j in range(pred_length):
+            if final_probs[j,i] == 0: 
+               continue
+            for k in range(j+1, pred_length):
+                if final_probs[k,i] == 0: 
+                    continue
+                if j == k :
+                    continue
+                if box_iou_c(final_bbox[j,0],final_bbox[j,1],final_bbox[j,2],final_bbox[j,3],final_bbox[k,0],final_bbox[k,1],final_bbox[k,2],final_bbox[k,3]) >= 0.4:
+                    if final_probs[k,i] > final_probs[j,i]:
+                        final_probs[j,i] = 0
                         break
-                    final_probs[index2,class_loop]=0
-            if index not in indices:
-                bb = PreprocessedBox(x=final_bbox[index, 0],
-                                     y=final_bbox[index, 1],
-                                     w=final_bbox[index, 2],
-                                     h=final_bbox[index, 3],
-                                     c=final_bbox[index, 4],
-                                     probs=np.asarray(final_probs[index,:]))
+                    final_probs[k,i] = 0
+            if j not in indices:
+                bb = PreprocessedBox(x=final_bbox[j, 0], y=final_bbox[j, 1],
+                                     w=final_bbox[j, 2], h=final_bbox[j, 3],
+                                     c=final_bbox[j, 4],
+                                     probs=np.asarray(final_probs[j,:]))
                 boxes.append(bb)
-                indices.add(index)
+                indices.add(j)
     return boxes
 
 @cython.boundscheck(False)
@@ -101,35 +97,35 @@ cdef soft_nms(float[:, ::1] final_probs , float[:, ::1] final_bbox):
     cdef list boxes = list()
     cdef set indices = set()
     cdef:
-        np.intp_t pred_length,class_length,class_loop,index,index2
+        np.intp_t pred_length,class_length,i,j,k
 
 
     pred_length = final_bbox.shape[0]
     class_length = final_probs.shape[1]
-    for class_loop in range(class_length):
+    for i in range(class_length):
         # first box
-        for index in range(pred_length):
-            if final_probs[index,class_loop] == 0:
+        for j in range(pred_length):
+            if final_probs[j,i] == 0:
                 continue
             # second box
-            for index2 in range(index + 1, pred_length):
-                if final_probs[index2,class_loop] == 0:
+            for k in range(j + 1, pred_length):
+                if final_probs[k,i] == 0:
                     continue
-                if index==index2 :
+                if j==k :
                     continue
                 else:
-                    final_probs[index, class_loop] = final_probs[index, class_loop] * box_iou_c(final_bbox[index,0],final_bbox[index,1],final_bbox[index,2],final_bbox[index,3],final_bbox[index2,0],final_bbox[index2,1],final_bbox[index2,2],final_bbox[index2,3])
-                    final_probs[index2, class_loop] = final_probs[index2, class_loop] * box_iou_c(final_bbox[index,0],final_bbox[index,1],final_bbox[index,2],final_bbox[index,3],final_bbox[index2,0],final_bbox[index2,1],final_bbox[index2,2],final_bbox[index2,3])
+                    final_probs[j, i] = final_probs[j, i] * box_iou_c(final_bbox[j,0],final_bbox[j,1],final_bbox[j,2],final_bbox[j,3],final_bbox[k,0],final_bbox[k,1],final_bbox[k,2],final_bbox[k,3])
+                    final_probs[k, i] = final_probs[k, i] * box_iou_c(final_bbox[j,0],final_bbox[j,1],final_bbox[j,2],final_bbox[j,3],final_bbox[k,0],final_bbox[k,1],final_bbox[k,2],final_bbox[k,3])
                     break
 
-            if index or index2 not in indices:
-                for i in [index, index2]:
-                    bb = PreprocessedBox(x=final_bbox[i, 0],
-                                         y=final_bbox[i, 1],
-                                         w=final_bbox[i, 2],
-                                         h=final_bbox[i, 3],
-                                         c=final_bbox[i, 4],
-                                         probs=np.asarray(final_probs[i,:]))
+            if j or k not in indices:
+                for l in [j, k]:
+                    bb = PreprocessedBox(x=final_bbox[l, 0],
+                                         y=final_bbox[l, 1],
+                                         w=final_bbox[l, 2],
+                                         h=final_bbox[l, 3],
+                                         c=final_bbox[l, 4],
+                                         probs=np.asarray(final_probs[l,:]))
                     boxes.append(bb)
-                    indices.add(i)
+                    indices.add(l)
     return boxes

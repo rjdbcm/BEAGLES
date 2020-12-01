@@ -2,8 +2,14 @@ from os.path import expanduser, join
 from os import getcwd
 from datetime import datetime
 import re
+import logging
 
+INFO = logging.INFO
+WARN = logging.WARN
+DEBUG = logging.DEBUG
+ERROR = logging.ERROR
 APP_NAME = 'BEAGLES'
+FLAG_FILE = ".flags.json"
 SAVE_SETTINGS_PATH = join(expanduser("~"), '.BEAGLESSettings.json')
 DEFAULT_FLAGS_PATH = join(getcwd(), 'resources/flags.json')
 BACKEND_ENTRYPOINT = 'beagles/backend/wrapper.py'

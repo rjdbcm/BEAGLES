@@ -1,26 +1,24 @@
 import tensorflow as tf
 import numpy as np
-import os
+try:
+    import tensorflow.experimental.numpy as tnp
+    TF_NUMPY = True
+except AttributeError:
+    TF_NUMPY = False
 
+_np = np
+np = tnp if TF_NUMPY else np
 
 def expit_tensor(x):
-    return 1. / (1. + tf.math.exp(-x))
+    return 1. / (1. + np.exp(-x))
 
 def loss(self, y_pred, _probs, _confs, _coord, _proid, _areas, _upleft, _botright):
+
     """
     Takes net.out and placeholders value
     returned in batch() func above,
     to build train_op and loss
     """
-    _probs = tf.cast(_probs, tf.float32)
-    _confs = tf.cast(_confs, tf.float32)
-    _coord = tf.cast(_coord, tf.float32)
-    _proid = tf.cast(_proid, tf.float32)
-    _areas = tf.cast(_areas, tf.float32)
-    _upleft = tf.cast(_upleft, tf.float32)
-    _botright = tf.cast(_botright, tf.float32)
-
-    # meta
     m = self.meta
     sprob = float(m['class_scale'])
     sconf = float(m['object_scale'])

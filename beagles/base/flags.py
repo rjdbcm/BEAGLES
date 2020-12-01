@@ -7,7 +7,6 @@ _FLAGS = {
         'dataset': ('./data/committedframes/',      str, 'Images Path'),
         'backup': ('./data/ckpt/',                  str, 'Checkpoints Path'),
         'summary': ('./data/summaries/',            str, 'Tensorboard Summaries Path'),
-        'log': ('./data/logs/flow.log',             str, 'Log File Path'),
         'config': ('./data/cfg/',                   str, 'Model Config Path'),
         'binary': ('./data/bin/',                   str, 'Binary Weights Path'),
         'built_graph': ('./data/built_graph/',      str, 'Protobuf Output Path'),
@@ -84,10 +83,13 @@ class Flags(dict):
 
     def __setattr__(self, attr, value):
         attr, _, dtype, _ = get_defaults(attr)
-        if isinstance(value, dtype):
-            self[attr] = value
-        else:
-            self[attr] = dtype(value)
+        try:
+            if isinstance(value, dtype):
+                self[attr] = value
+            else:
+                self[attr] = dtype(value)
+        except TypeError:
+            raise RuntimeError(f'Flags().{attr} is not supported.')
 
 
     def from_json(self, file):

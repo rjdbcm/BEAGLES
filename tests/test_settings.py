@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 import os
 import sys
-import time
-import unittest
+from unittest import TestCase
 dir_name = os.path.abspath(os.path.dirname(__file__))
 libs_path = os.path.join(dir_name, '..', 'libs')
 sys.path.insert(0, libs_path)
 from beagles.io.settings import Settings
 
 
-class TestSettings(unittest.TestCase):
+class TestSettings(TestCase):
 
     def test_basic(self):
         settings = Settings()
@@ -24,7 +23,4 @@ class TestSettings(unittest.TestCase):
         self.assertEqual(settings.get('test1'), 10)
 
         settings.reset()
-        
 
-if __name__ == '__main__':
-    unittest.main()

@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 from PyQt5.QtWidgets import (
     QMainWindow, QListWidget, QVBoxLayout, QWidget, QToolButton,
@@ -37,7 +38,7 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks):
                 callback = 'self.' + act
                 cmd_string = cmd.format(_str, action_str, callback, shortcut, icon,
                                         detail, checkable, enabled)
-                self.io.logger.debug(cmd_string)
+                self.io.log.debug(cmd_string)
                 exec(cmd_string)
         with open('beagles/resources/actions/actions.json', 'r') as json_file:
             self.actionFile = json.load(json_file)
@@ -293,7 +294,7 @@ class BeaglesMainWindow(QMainWindow, ActionCallbacks):
         super(BeaglesMainWindow, self).resizeEvent(event)
 
     def closeEvent(self, event):
-        for handler in self.io.logger.handlers:
+        for handler in self.io.log.handlers:
             handler.doRollover()
         if not self.mayContinue():
             event.ignore()

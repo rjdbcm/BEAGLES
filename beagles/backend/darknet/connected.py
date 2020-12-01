@@ -1,6 +1,13 @@
 from beagles.backend.darknet.layer import Layer
 from deprecated.sphinx import deprecated
 import numpy as np
+_np = np # always the original numpy API
+try: # falls back to numpy if tensorflow version is less than 2.4.0
+    import tensorflow.experimental.numpy as tnp
+    TF_NUMPY = True
+except AttributeError:
+    TF_NUMPY = False
+np = tnp if TF_NUMPY else np
 
 DEPRECATION = """
 select and extract classes should no longer be used. Use the tf.summary API and

@@ -1,11 +1,12 @@
 from unittest import TestCase, mock
 import os
+import sys
 import glob
 from beagles.ui.functions.fileFunctions import FileFunctions
 from app import get_main_app
+from beagles.io.logs import get_logger
 import argparse
 from beagles.base.flags import Flags
-
 
 class TestMainWindow(TestCase):
 
@@ -23,6 +24,8 @@ class TestMainWindow(TestCase):
                     darkmode=True))
     def setUpClass(cls, args):
         cls.app, cls.win = get_main_app()
+        cls.log = get_logger()
+        cls.log.info('Setting up Qt app unittests')
 
     def testCanvas(self):
         self.assertRaises(AssertionError, self.win.canvas.resetAllLines)

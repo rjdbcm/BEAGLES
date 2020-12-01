@@ -66,6 +66,7 @@ class FlowDialog(BackendDialog):
     def flowSelect(self):
         if self.flowCmb.currentText() == "Predict":
             self.flowGroupBox.show()
+            self.thresholdSpd.setDisabled(False)
         else:
             self.flowGroupBox.hide()
 

@@ -2,6 +2,7 @@ from subprocess import Popen, PIPE, STDOUT
 from contextlib import contextmanager
 import sys
 import os
+from beagles.io.logs import get_logger
 
 MAC_PATH = "/Volumes/RAMDisk"
 LINUX_PATH = "/dev/shm"
@@ -10,6 +11,7 @@ LINUX_PATH = "/dev/shm"
 class SharedMemory:
     """Stateful interface for shared memory on mac or linux"""
     def __init__(self):
+        self.log = get_logger()
         if sys.platform == 'darwin':
             self._path = MAC_PATH
             self._mount_point = str()
@@ -80,13 +82,14 @@ class SharedMemory:
         self.info.clear()
         proc = Popen(['./beagles/scripts/RAMDisk', 'mount'], stdout=PIPE, stderr=STDOUT, text=True)
         stdout, stderr = proc.communicate()
-        if proc.poll():
-            print(stdout)
+        [self.log.info(line) for line in stdout.splitlines()]
+        [self.log.info(line) for line in self.__repr__().splitlines()]
+
+
 
     def _unmount(self):
         proc = Popen(['./beagles/scripts/RAMDisk', 'unmount'], stdout=PIPE, stderr=STDOUT, text=True)
         stdout, stderr = proc.communicate()
-        if proc.poll():
-            print(stdout)
+        [self.log.info(line) for line in stdout.splitlines()]
         self.info.clear()
 

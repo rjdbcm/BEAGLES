@@ -1,5 +1,6 @@
 # noinspection PyUnresolvedReferences
 import os
+from beagles.backend.net.ops import op_create
 from beagles.backend.darknet.layer import Layer
 from beagles.backend.darknet.convolution import *
 from beagles.backend.darknet.connected import *
@@ -186,9 +187,20 @@ class Darknet(object):
         self.io = SharedFlagIO(subprogram=True)
         self.get_weight_src(flags)
         self.modify = False
-        self.io.logger.info('Parsing {}'.format(self.src_cfg))
+        self.io.log.info('Parsing {}'.format(self.src_cfg))
         src_parsed = self.create_ops()
         self.meta, self.layers = src_parsed
+
+    def compile(self):
+        num_layer = n_train = len(self.layers) or 0
+        layers = list()
+        roof = num_layer - n_train
+        prev = None
+        for i, lay in enumerate(self.layers):
+            lay = op_create(lay, prev, i, roof)
+            layers.append(lay)
+            prev = lay
+        return layers
 
     def get_weight_src(self, flags):
         """

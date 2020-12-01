@@ -1,11 +1,16 @@
-import sys
+import os
+import warnings
 from beagles.backend.io.pascal_voc_clean_xml import pascal_voc_clean_xml
 from copy import deepcopy
-import numpy as np
-import os
-import gc
 import tensorflow as tf
-
+import numpy as np
+_np = np # always the original numpy API
+try: # falls back to numpy if tensorflow version is less than 2.4.0
+    import tensorflow.experimental.numpy as tnp
+    TF_NUMPY = True
+except AttributeError:
+    TF_NUMPY = False
+np = tnp if TF_NUMPY else np
 
 def parse(self, exclusive=False):
     meta = self.meta
@@ -70,11 +75,11 @@ def get_feed_values(self, chunk, dim1, dim2):
     # show(im, allobj, S, w, h, cellx, celly) # unit test
 
     # Calculate placeholders' values
-    probs = np.zeros([H * W, B, C])
-    confs = np.zeros([H * W, B])
-    coord = np.zeros([H * W, B, 4])
-    proid = np.zeros([H * W, B, C])
-    prear = np.zeros([H * W, 4])
+    probs = _np.zeros([H * W, B, C])
+    confs = _np.zeros([H * W, B])
+    coord = _np.zeros([H * W, B, 4])
+    proid = _np.zeros([H * W, B, C])
+    prear = _np.zeros([H * W, 4])
     for obj in allobj:
         probs[obj[5], :, :] = [[0.] * C] * B
         probs[obj[5], :, labels.index(obj[0])] = 1.
@@ -108,12 +113,11 @@ def get_feed_values(self, chunk, dim1, dim2):
     return inp_feed_val, loss_feed_val
 
 def shuffle(self, data, weights=None):
-    batch = self.flags.batch
     self.flags.size = len(data)
     self.logger.info('Dataset of {} instance(s)'.format(self.flags.size))
-    if batch > self.flags.size:
-        self.flags.batch = batch = self.flags.size
-    batch_per_epoch = int(self.flags.size / batch)
+    if self.flags.batch > self.flags.size:
+        self.flags.batch = self.flags.size
+    batch_per_epoch = int(self.flags.size / self.flags.batch)
 
     for i in range(self.flags.epoch):
         if weights:
@@ -124,9 +128,9 @@ def shuffle(self, data, weights=None):
                     score.append(weights.get(str(box[0])))
                 _weights.append(np.subtract(1, np.mean(score)))
             _weights = np.divide(_weights, np.sum(_weights))
-            shuffle_idx = np.random.choice(np.arange(self.flags.size), self.flags.size, p=_weights)
+            shuffle_idx = _np.random.choice(np.arange(self.flags.size), self.flags.size, p=_weights)
         else:
-            shuffle_idx = np.random.permutation(np.arange(self.flags.size))
+            shuffle_idx = _np.random.permutation(np.arange(self.flags.size))
 
         for b in range(batch_per_epoch):
 
@@ -155,9 +159,6 @@ def shuffle(self, data, weights=None):
 
             x_batch = np.concatenate(x_batch, 0)
             yield x_batch, feed_batch
-            del x_batch
-            del feed_batch
-            gc.collect()
         
-        self.logger.info(f'Finish {i + 1} epoch{"es" if i == 0 else ""}')
+        self.logger.info(f'Finish {i + 1} epoch of {self.flags.epoch}')
 

@@ -30,6 +30,3 @@ class TestStringBundle(unittest.TestCase):
         os.environ['LC_ALL'] = prev_lc
         os.environ['LANG'] = prev_lang
 
-
-if __name__ == '__main__':
-    unittest.main()

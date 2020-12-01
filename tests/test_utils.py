@@ -1,5 +1,3 @@
-import os
-import sys
 import unittest
 from beagles.ui.functions.fileFunctions import naturalSort, FileFunctions
 
@@ -18,7 +16,3 @@ class TestUtils(unittest.TestCase):
         naturalSort(l1)
         for idx, val in enumerate(l1):
             self.assertTrue(val == exptected_l1[idx])
-
-
-if __name__ == '__main__':
-    unittest.main()

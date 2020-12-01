@@ -1,12 +1,8 @@
-import os
 import time
 from json.decoder import JSONDecodeError
-import logging
-from beagles.base.flags import Flags
+from beagles.base import *
 from beagles.io.sharedmemory import SharedMemory
 from beagles.io.logs import get_logger
-
-FLAG_FILE = ".flags.json"
 
 
 class SharedFlagIO(object):
@@ -15,7 +11,7 @@ class SharedFlagIO(object):
     def __init__(self, flags=None, subprogram=False):
         self.subprogram = subprogram
         self.flags = flags if flags else Flags()
-        self.logger = get_logger()
+        self.log = get_logger()
         self.shm = SharedMemory()
         if not self.subprogram and not self.shm.mounted:
             self.shm.mount()
@@ -25,9 +21,9 @@ class SharedFlagIO(object):
             self.read_flags()
             try:
                 if self.flags.verbalise:
-                    self.logger.setLevel(logging.DEBUG)
+                    self.log.setLevel(DEBUG)
             except AttributeError:
-                self.logger.setLevel(logging.DEBUG)
+                self.log.setLevel(DEBUG)
             try:
                 f = open(self.flag_path)
                 f.close()
@@ -35,7 +31,7 @@ class SharedFlagIO(object):
                 time.sleep(1)
 
     def send_flags(self):
-        self.logger.debug(self.flags)
+        self.log.debug(self.flags)
         try:
             with open(r"{}".format(self.flag_path), "w") as outfile:
                 self.flags.to_json(outfile)
@@ -53,12 +49,12 @@ class SharedFlagIO(object):
                         flags = self.flags.from_json(file)
                     except JSONDecodeError as e:
                         if not e.pos:  # char 0 == flags busy
-                            self.logger.warning("Flags Busy: Reusing old")
+                            self.log.warning(f"{self.flag_path} Busy: Retrying...")
                             flags = self.flags
                         else:
                             raise
                     self.flags = flags
-                    self.logger.debug(self.flags)
+                    self.log.debug(self.flags)
                     return self.flags
             except FileNotFoundError:
                 if count > 10:

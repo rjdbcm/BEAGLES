@@ -5,14 +5,12 @@ from abc import abstractmethod
 class Layer(object):
     """Parent class for all darknet layers."""
     def __init__(self, *args):
-        self._signature = list(args)
-        self.type = list(args)[0]
-        self.number = list(args)[1]
+        self.type, self.number, *setup_args = self._signature = list(args)
         self.w = dict()  # weights
         self.h = dict()  # placeholders
         self.wshape = dict()  # weight shape
         self.wsize = dict()  # weight size
-        self.setup(*args[2:])  # set attr up
+        self.setup(*setup_args)  # set attr up
         self.present()
         for var in self.wshape:
             shp = self.wshape[var]

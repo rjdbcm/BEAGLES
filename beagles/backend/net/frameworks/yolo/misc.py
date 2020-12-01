@@ -1,4 +1,3 @@
-# import filetype
 import cv2
 import os
 

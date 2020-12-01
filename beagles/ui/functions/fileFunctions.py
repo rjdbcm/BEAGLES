@@ -1,4 +1,5 @@
 import os
+import sys
 import codecs
 import cv2
 from functools import partial
@@ -19,6 +20,7 @@ class FileFunctions(MainWindowFunctions):
 
     @staticmethod
     def frameCapture(path):
+        pass
         vidObj = cv2.VideoCapture(path)
         count = 1
         success = 1

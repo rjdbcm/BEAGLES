@@ -1,10 +1,8 @@
-import os
-import sys
-from collections import namedtuple
 from unittest import TestCase
 from beagles.io.pascalVoc import PascalVocWriter, PascalVocReader
 from beagles.io.yolo import YoloWriter, YoloReader
-from beagles.base.box import PostprocessedBox
+from beagles.base import Flags, PostprocessedBox, DarknetConfigEmpty
+from beagles.backend.io.darknet_config_file import DarknetConfigFile
 
 class Image(object):
     def __init__(self, h, w, c):
@@ -44,7 +42,6 @@ class TestIO(TestCase):
         self.assertEqual(face[1], [(113, 40), (450, 40), (450, 403), (113, 403)])
 
     def testYoloRW(self):
-
         writer = YoloWriter('tests', 'test', (512, 512, 1))
         person_box = PostprocessedBox(60, 40, 430, 504, 'person', 0)
         face_box = PostprocessedBox(113, 40, 450, 403, 'face', 0)
@@ -68,4 +65,14 @@ class TestIO(TestCase):
         self.assertEqual(face[1],
                          [(113, 40), (450, 40), (450, 402), (113, 402)])
 
+    def testEmptyDarknetConfigFile(self):
+        self.assertRaises(DarknetConfigEmpty, DarknetConfigFile, 'tests/resources/empty.cfg')
 
+    def testDarknetConfigToAndFromJson(self):
+        self.flags = Flags()
+        self.flags.model = 'tests/resources/test.cfg'
+        cfg = DarknetConfigFile(self.flags.model)
+        json_cfg_file = cfg.to_json()
+        json_cfg = DarknetConfigFile(json_cfg_file)
+        self.assertEqual(cfg, json_cfg, 'layers mismatch')
+        self.assertRaises(FileNotFoundError, DarknetConfigFile, 'tests/resources/phonybologna.cfg')
