@@ -138,7 +138,7 @@ def shuffle(self, data, weights=None):
             x_batch = list()
             feed_batch = dict()
 
-            for j in range(b*batch, b*batch+batch):
+            for j in range(b*self.flags.batch, b*self.flags.batch+self.flags.batch):
                 train_instance = data[shuffle_idx[j]]
                 try:
                     inp, new_feed = self.batch(train_instance)

@@ -66,6 +66,13 @@ This will open TensorBoard in the default web browser for your system.
 
 Or just navigate to: `<http://localhost:6006>`_
 
+You can also monitor progress from the terminal by just watching the logfiles:
+
+	.. code-block:: bash
+
+		watch -n1 `-x tail -n50 BEAGLES/data/logs/flow.log`
+
+
 #########
 Recording
 #########

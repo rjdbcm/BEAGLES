@@ -122,12 +122,16 @@ class NetBuilder(tf.Module):
         kwargs = dict()
         if self.flags.trainer in MOMENTUM_USERS:
             kwargs.update({MOMENTUM: self.flags.momentum})
-        if self.flags.trainer is NESTEROV:
+        elif self.flags.trainer is NESTEROV:
             kwargs.update({self.flags.trainer: True})
-        if self.flags.trainer is AMSGRAD:
+        elif self.flags.trainer is AMSGRAD:
             kwargs.update({AMSGRAD.lower(): True})
+        elif self.flags.trainer is ADAM:
+            kwargs.update({'epsilon': 1.0})
+
         if self.flags.clip:
             kwargs.update({'clipnorm': self.flags.clip_norm})
+
         ssc = self.flags.step_size_coefficient
         step_size = int(ssc * (len(self.annotation_data) // self.flags.batch))
         clr_kwargs = {
@@ -147,7 +151,13 @@ class NetBuilder(tf.Module):
             self.io.log.info(f"Restored from {self.manager.latest_checkpoint}")
         elif self.flags.load >= 1:
             self.io.log.info(f"Restoring from {self.flags.load}")
-            [ckpt] = [i for i in self.manager.checkpoints if i.endswith(str(self.flags.load))]
+            try:
+                [ckpt] = [i for i in self.manager.checkpoints if i.endswith(str(self.flags.load))]
+            except ValueError:
+                name, _ = os.path.splitext(os.path.basename(self.flags.model))
+                name = f"{name}-{self.flags.load}"
+                path = os.path.join(self.flags.backup, name)
+                raise FileNotFoundError(f'Checkpoint {path} does not exist.') from None
             self.checkpoint.restore(ckpt)
         else:
             self.io.log.info("Initializing network weights from scratch.")

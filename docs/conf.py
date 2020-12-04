@@ -16,16 +16,20 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 import subprocess
+os.chdir('../')
+subprocess.call(['make', 'cython', 'qt5'])
+os.chdir('docs')
 from beagles.base.version import __version__
+from beagles.base import APP_NAME
 
 # -- Project information -----------------------------------------------------
 
-project = u'BEAGLES'
+project = APP_NAME
 copyright = u'2020, Ross J. Duff'
 author = u'Ross J. Duff'
 
 # The short X.Y version
-version = u''
+version = '.'.join(__version__.split('.')[:2])
 # The full version, including alpha/beta/rc tags
 release = __version__
 
@@ -144,8 +148,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'BEAGLES.tex', u'BEAGLES Documentation',
-     u'Ross J. Duff', 'manual'),
+    (master_doc, 'BEAGLES.tex', u'BEAGLES Documentation', u'Ross J. Duff', 'manual'),
 ]
 
 
@@ -154,8 +157,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'beagles', u'BEAGLES Documentation',
-     [author], 1)
+    (master_doc, 'beagles', u'BEAGLES Documentation', [author], 1)
 ]
 
 
@@ -206,8 +208,3 @@ intersphinx_mapping = {"python":(
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
-
-
-os.chdir('../')
-subprocess.call(['make', 'cython', 'qt5'])
-os.chdir('docs')

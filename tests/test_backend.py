@@ -28,7 +28,7 @@ class TestBackend(TestCase):
         self.printer("Setting up backend unittests...")
         self.io.io_flags()
 
-    def testWrapperYoloV2Train(self):
+    def testWrapperYoloV2_A_Train(self):
         self.printer("Testing train and resume from checkpoint...")
         self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'
         self.flags.dataset = 'tests/resources/BCCD/train'
@@ -45,7 +45,6 @@ class TestBackend(TestCase):
         self.flags.epoch = 1
         self.flags.save = 1
         self.flags.train = True
-        self.flags.train = True
         self.io.io_flags()
         proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
         proc.communicate()
@@ -55,7 +54,7 @@ class TestBackend(TestCase):
         proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
         proc.communicate()
 
-    def testWrapperYoloV2Predict(self):
+    def testWrapperYoloV2_B_Predict(self):
         self.printer("Testing predict method...")
         self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'
         self.flags.dataset = 'tests/resources/BCCD/train'
@@ -64,10 +63,8 @@ class TestBackend(TestCase):
         self.flags.backup = 'tests/resources/ckpt'
         self.flags.project_name = '_test'
         self.flags.trainer = 'adam'
-        self.flags.lr = 0.00001
-        self.flags.max_lr = 0.0001
-        self.flags.step_size_coefficient = 10
-        self.flags.load = 0
+        self.flags.threshold = .01
+        self.flags.load = 1
         self.flags.batch = 4
         self.flags.epoch = 1
         self.flags.save = 1
@@ -77,7 +74,7 @@ class TestBackend(TestCase):
         proc.communicate()
         self.assertEqual(proc.returncode, 0)
 
-    def testWrapperYoloV2Annotate(self):
+    def testWrapperYoloV2_C_Annotate(self):
         self.printer("Testing annotate method...")
         self.flags.model = 'tests/resources/yolov2-lite-3c.cfg'
         self.flags.dataset = 'tests/resources/BCCD/train'
@@ -89,7 +86,7 @@ class TestBackend(TestCase):
         self.flags.lr = 0.00001
         self.flags.max_lr = 0.0001
         self.flags.step_size_coefficient = 10
-        self.flags.load = 0
+        self.flags.load = 1
         self.flags.batch = 4
         self.flags.epoch = 1
         self.flags.save = 1
@@ -123,18 +120,18 @@ class TestBackend(TestCase):
     def tearDown(self) -> None:
         self.io.cleanup_flags()
 
-    @classmethod
-    def tearDownClass(cls):
-        for f in os.listdir('tests/resources/ckpt'):
-            if f.endswith(('.data-00000-of-00001', '.index', '.meta', '.profile')):
-                f = os.path.join('tests/resources/ckpt', f)
-                os.remove(f)
-        try:
-            os.remove('tests/resources/ckpt/checkpoint')
-        except FileNotFoundError:
-            pass
-        rmtree('tests/resources/BCCD')
-        try:
-            rmtree('data/summaries/_test')
-        except FileNotFoundError:
-            pass
+    # @classmethod
+    # def tearDownClass(cls):
+    #     for f in os.listdir('tests/resources/ckpt'):
+    #         if f.endswith(('.data-00000-of-00001', '.index', '.meta', '.profile')):
+    #             f = os.path.join('tests/resources/ckpt', f)
+    #             os.remove(f)
+    #     try:
+    #         os.remove('tests/resources/ckpt/checkpoint')
+    #     except FileNotFoundError:
+    #         pass
+    #     rmtree('tests/resources/BCCD')
+    #     try:
+    #         rmtree('data/summaries/_test')
+    #     except FileNotFoundError:
+    #         pass
