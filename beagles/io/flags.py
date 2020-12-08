@@ -65,7 +65,8 @@ class SharedFlagIO(object):
         self.flags = self.read_flags()
 
     def cleanup_flags(self):
-        os.remove(self.flag_path)
+        if os.path.exists(self.flag_path):
+            os.remove(self.flag_path)
         self.shm.unmount()
 
 

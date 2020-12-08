@@ -1,7 +1,6 @@
 import os
-import sys
 import codecs
-import cv2
+import av
 from functools import partial
 from PyQt5.QtCore import QFileInfo, QPointF
 from PyQt5.QtGui import QImage, QColor, QPixmap, QImageReader
@@ -18,19 +17,17 @@ from beagles.io.yolo import TXT_EXT, YoloReader
 class FileFunctions(MainWindowFunctions):
     def __init__(self): super(FileFunctions, self).__init__()
 
+    def frameCapture(self, path):
+        worker = self.worker.get(self._frameCapture, path)
+        self.pool.start(worker)
+
     @staticmethod
-    def frameCapture(path):
-        pass
-        vidObj = cv2.VideoCapture(path)
-        count = 1
-        success = 1
+    def _frameCapture(path):
         name = os.path.splitext(path)[0]
-        total_zeros = len(str(int(vidObj.get(cv2.CAP_PROP_FRAME_COUNT))))
-        while success:
-            success, image = vidObj.read()
-            fileno = str(count)
-            cv2.imwrite(f"{name}_frame_{fileno.zfill(total_zeros)}.jpg", image)
-            count += 1
+        container = av.open(path)
+        total_zeros = len(str(int(container.streams.video[0].frames)))
+        for frame in container.decode(video=0):
+            frame.to_image().save(f'{name}_frame_{str(frame.index).zfill(total_zeros)}.jpg')
 
     @staticmethod
     def scanAllImages(folderPath):

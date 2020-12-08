@@ -1,8 +1,8 @@
 import os
 import sys
 import hashlib
-import platform
-from PyQt5.QtCore import QObject, QTimer
+import functools
+from PyQt5.QtCore import QObject, QTimer, QThreadPool, QRunnable, pyqtSlot
 from PyQt5.QtGui import QImage, QColor
 from PyQt5.QtWidgets import QWidget, QMessageBox, QListWidgetItem
 from beagles.base import Flags
@@ -12,11 +12,32 @@ from beagles.ui.widgets.labelDialog import LabelDialog
 from beagles.io.labelFile import LabelFile
 from beagles.io.logs import get_logger
 
+class Worker(QRunnable):
+    create_key = object()
+    def __init__(self, create_key, func, *args, **kwargs):
+        if not create_key == self.create_key:
+            raise NotImplementedError
+        super(Worker, self).__init__()
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+
+    @classmethod
+    def get(cls, func, *args, **kwargs):
+        return cls(cls.create_key, func, *args, **kwargs)
+
+    @pyqtSlot()
+    def run(self):
+        self.func(*self.args, **self.kwargs)
+
+
 class MainWindowFunctions(QWidget, QObject):
     def __init__(self):
         super(MainWindowFunctions, self).__init__()
         self.labelHist = []
         self.logger = get_logger()
+        self.worker = Worker
+        self.pool = QThreadPool.globalInstance()
         # Application state.
         self.image = QImage()
         self.recentFiles = []

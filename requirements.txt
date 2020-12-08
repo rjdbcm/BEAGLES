@@ -1,5 +1,7 @@
 importlib_metadata==0.18
 zipp==0.5.1
+av==8.0.1
+Pillow==8.0.1
 Deprecated==1.2.10
 Cython==0.29.21
 typing_extensions==3.7.4.3

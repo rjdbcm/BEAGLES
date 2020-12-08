@@ -1,6 +1,5 @@
 import sys
 import webbrowser
-import cv2
 from cython import __version__ as cy_version
 from PyQt5.QtCore import PYQT_VERSION_STR, QT_VERSION_STR
 from PyQt5.QtWidgets import QMessageBox
@@ -19,7 +18,6 @@ PyQt Version: {PYQT_VERSION_STR}
 Tensorflow Version: {tfVersion.VERSION}
 Tensorflow Compiler Version: 
 {tfVersion.COMPILER_VERSION}
-OpenCV Version: {cv2.__version__}
 Cython Version: {cy_version}
 Traces Version: {traces.__version__}
 """

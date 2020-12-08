@@ -1,4 +1,4 @@
-import cv2
+import av
 import math
 import os
 import re
@@ -33,7 +33,7 @@ class TiledCaptureArray:
         :math:`\\begin{bmatrix} 1 & 2 & 3 \\\\ 4 & 5 & 6 \\\\ 7 & 8 & 9 \\end{bmatrix}`
     """
     def __init__(self, num_divisions: int, video: os.PathLike, unused_cameras: List[int]):
-        self.logger = SharedFlagIO().logger
+        self.logger = SharedFlagIO().log
         # make sure the number of camera divisions is always an integer
         root = math.sqrt(num_divisions)
         self.div = root if isinstance(root, int) else int(math.ceil(root))
@@ -50,9 +50,13 @@ class TiledCaptureArray:
 
     @staticmethod
     def _get_resolution(target):
-        vid = cv2.VideoCapture(target)
-        height = vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        width = vid.get(cv2.CAP_PROP_FRAME_WIDTH)
+        width = height = 0
+        container = av.open(target)
+        for frame in container.decode(video=0):
+            if isinstance(frame, av.VideoFrame):
+                width = frame.width
+                height = frame.height
+                break
         return width, height
 
     def crop(self):
