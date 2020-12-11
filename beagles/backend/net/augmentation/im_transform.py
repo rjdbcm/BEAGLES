@@ -1,12 +1,10 @@
 import numpy as np
 import cv2
 import sys
+from typing import List, AnyStr
 from functools import partial
 from albumentations.core.transforms_interface import ImageOnlyTransform, DualTransform
 import albumentations as A
-
-all_pixel_transforms = [cls.__name__ for cls in ImageOnlyTransform.__subclasses__()]
-all_spatial_transforms = [cls.__name__ for cls in DualTransform.__subclasses__()]
 
 
 class RandomChannelAmplify(ImageOnlyTransform):
@@ -37,22 +35,28 @@ class RandomChannelAmplify(ImageOnlyTransform):
 		return np.array(im * 255.0, np.uint8)
 
 
-def pixel_transform(image: np.ndarray, *args):
-	args = filter(lambda i: i in all_pixel_transforms, args)
-	get_concrete = partial(getattr, A)
-	args = [cls() for cls in list(map(get_concrete, args))]
-	transform = A.Compose([RandomChannelAmplify(), *args])
-	return transform(image=image)
+all_pixel_transforms = [cls.__name__ for cls in ImageOnlyTransform.__subclasses__()]
+all_spatial_transforms = [cls.__name__ for cls in DualTransform.__subclasses__()]
 
-def spatial_transform(image: np.ndarray, annotation, *args):
-	"""Scale and translate image"""
-	args = filter(lambda i: i in all_spatial_transforms, args)
-	get_concrete = partial(getattr, A)
-	args = [cls() for cls in list(map(get_concrete, args))]
-	class_labels = [i[0] for i in annotation]
-	annotation = [i[-4:] for i in annotation]
-	bbox_params = A.BboxParams(format='pascal_voc', label_fields=['class_labels'])
-	transform = A.Compose([A.RandomScale(), A.HorizontalFlip(), *args], bbox_params=bbox_params)
-	transformed = transform(image=image, bboxes=annotation, class_labels=class_labels)
-	bboxes = [[class_labels[i], *box] for i, box in enumerate(transformed["bboxes"])]
-	return transformed["image"], bboxes
+
+class Transform:
+	def __init__(self, *args: List[AnyStr]):
+		augments = partial(getattr, A)
+		pixel_args = filter(lambda i: i in all_pixel_transforms, args)
+		self.pixel_args = [cls() for cls in list(map(augments, pixel_args))]
+		spatial_args = filter(lambda i: i in all_spatial_transforms, args)
+		self.spatial_args = [cls() for cls in list(map(augments, spatial_args))]
+
+	def pixel(self, image: np.ndarray):
+		transform = A.Compose([RandomChannelAmplify(), *self.pixel_args])
+		return transform(image=image)
+
+	def spatial(self, image: np.ndarray, annotation):
+		"""Scale and translate image"""
+		class_labels = [i[0] for i in annotation]
+		annotation = [i[-4:] for i in annotation]
+		bbox_params = A.BboxParams(format='pascal_voc', label_fields=['class_labels'])
+		transform = A.Compose([*self.spatial_args], bbox_params=bbox_params)
+		transformed = transform(image=image, bboxes=annotation, class_labels=class_labels)
+		bboxes = [[class_labels[i], *box] for i, box in enumerate(transformed["bboxes"])]
+		return transformed["image"], bboxes

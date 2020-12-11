@@ -79,6 +79,10 @@ class DarknetConfigFile:
                         w = layer['width']
                         c = layer['channels']
                         meta['net'] = layer
+                        try:
+                            meta['net']['augment'] = [str(i.strip(' ')) for i in meta['net']['augment'].split(',')]
+                        except KeyError:
+                            pass
                     else:
                         if layer['type'] == '[crop]':
                             h = layer['crop_height']

@@ -1,8 +1,10 @@
 from beagles.backend.net.frameworks.yolo import data, misc, train, predict
+from beagles.backend.net.augmentation.im_transform import Transform
 from beagles.io.flags import SharedFlagIO
 from beagles.io.logs import get_logger
 import numpy as np
 import os
+import sys
 
 """ YOLO framework __init__ equivalent"""
 
@@ -14,6 +16,11 @@ def constructor(self, meta, flags):
     meta['name'] = model
     self.flags = flags
     self.meta = meta
+    try: # look for darknet config file albumentations extensions
+        tx_args = self.meta['net']['augment']
+    except KeyError:
+        tx_args = []
+    self.transform = Transform(*tx_args)
 
     def _to_color(idx, base):
         """ return (b, r, g) tuple"""

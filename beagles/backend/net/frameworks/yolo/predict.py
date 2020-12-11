@@ -6,7 +6,7 @@ from functools import partial
 from collections import namedtuple
 import cv2
 import numpy as np
-from beagles.backend.net.augmentation.im_transform import pixel_transform, spatial_transform
+from beagles.backend.net.augmentation.im_transform import Transform
 from beagles.backend.net.frameworks.extensions.cy_yolo_findboxes import yolo_box_constructor
 from beagles.io.pascalVoc import PascalVocWriter, XML_EXT
 from beagles.base.box import PostprocessedBox, ProcessedBox
@@ -82,8 +82,8 @@ def preprocess(self, image: Union[np.ndarray, Any], allobj: List = None) -> Tupl
         image = cv2.imread(image) # BRG
 
     if allobj is not None:  # in training mode
-        image, bboxes = spatial_transform(image, allobj) #TODO: add meta for augmentations
-        transformed = pixel_transform(image)
+        image, bboxes = self.transform.spatial(image, allobj)
+        transformed = self.transform.pixel(image)
         image = transformed["image"]
 
     image = self.resize_input(image)
