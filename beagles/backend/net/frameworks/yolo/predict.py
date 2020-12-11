@@ -82,7 +82,7 @@ def preprocess(self, image: Union[np.ndarray, Any], allobj: List = None) -> Tupl
         image = cv2.imread(image) # BRG
 
     if allobj is not None:  # in training mode
-        image, bboxes = spatial_transform(image, allobj, "VerticalFlip")
+        image, bboxes = spatial_transform(image, allobj) #TODO: add meta for augmentations
         transformed = pixel_transform(image)
         image = transformed["image"]
 
