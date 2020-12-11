@@ -221,10 +221,8 @@ class FlowDialog(BackendDialog):
             acceptEvent(True)
 
     def rolloverLogs(self):
-        logs = [self.thread.logfile, self.thread.tf_logfile]
-        for log in logs:
-            if os.stat(log.baseFilename).st_size > 0:
-                log.doRollover()
+        if os.stat(self.thread.logfile.baseFilename).st_size > 0:
+            self.thread.logfile.doRollover()
 
     def onFinished(self):
         self.flags = self.thread.flags

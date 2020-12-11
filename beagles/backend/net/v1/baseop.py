@@ -37,7 +37,7 @@ class BaseOp(tf.Module):
         self.inp = inp  # BaseOp
         self.num = num  # int
         self.out = None  # tf.Tensor
-        self.logger = get_logger()
+        self.logger, self.logfile = get_logger()
         self.lay = layer
         self.scope = '{}-{}'.format(str(self.num), self.lay.type)
         self.gap = roof - self.num

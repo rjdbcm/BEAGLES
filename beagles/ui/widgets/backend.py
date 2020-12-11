@@ -32,8 +32,6 @@ class BackendThread(QThread, SharedFlagIO):
         self.proc.terminate()
         if os.stat(self.logfile.baseFilename).st_size > 0:
             self.logfile.doRollover()
-        if os.stat(self.tf_logfile.baseFilename).st_size > 0:
-            self.tf_logfile.doRollover()
         self.cleanup_flags()
 
     def run(self):
@@ -106,8 +104,9 @@ class BackendDialog(QDialog):
         self.modelCmb.currentIndexChanged.connect(self.findCkpt)
         self.loadCmb.setToolTip("Choose a checkpoint")
         self.loadCmb.setMinimumWidth(100)
-        self.thresholdSpd.setRange(0.0, .99)
-        self.thresholdSpd.setSingleStep(0.01)
+        self.thresholdSpd.setDecimals(4)
+        self.thresholdSpd.setSingleStep(0.0001)
+        self.thresholdSpd.setRange(0.0001, 0.9999)
         self.thresholdSpd.setValue(self.flags.threshold)
         self.thresholdSpd.setDisabled(True)
 

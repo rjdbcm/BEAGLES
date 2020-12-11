@@ -1,0 +1,6 @@
+model tests/resources/yolov2-lite-3c.cfg
+dataset tests/resources/BCCD/train
+labels tests/resources/BCCD.classes
+annotation tests/resources/BCCD/train
+backup tests/resources/ckpt
+paths

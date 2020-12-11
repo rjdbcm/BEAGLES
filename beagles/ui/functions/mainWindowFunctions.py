@@ -35,7 +35,7 @@ class MainWindowFunctions(QWidget, QObject):
     def __init__(self):
         super(MainWindowFunctions, self).__init__()
         self.labelHist = []
-        self.logger = get_logger()
+        self.logger, self.logfile = get_logger()
         self.worker = Worker
         self.pool = QThreadPool.globalInstance()
         # Application state.

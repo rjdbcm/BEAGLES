@@ -1,11 +1,12 @@
 import os
+import sys
 import json
-from typing import Union, List, Any
+from typing import Union, List, Any, Tuple
 from functools import partial
 from collections import namedtuple
 import cv2
 import numpy as np
-from beagles.backend.net.augmentation.im_transform import imcv2_recolor, imcv2_affine_trans
+from beagles.backend.net.augmentation.im_transform import pixel_transform, spatial_transform
 from beagles.backend.net.frameworks.extensions.cy_yolo_findboxes import yolo_box_constructor
 from beagles.io.pascalVoc import PascalVocWriter, XML_EXT
 from beagles.base.box import PostprocessedBox, ProcessedBox
@@ -54,45 +55,43 @@ def findboxes(self, net_out):
     return boxes
 
 
-def preprocess(self, image: Union[np.ndarray, Any], allobj: List = None) -> np.ndarray:
+def preprocess(self, image: Union[np.ndarray, Any], allobj: List = None) -> Tuple[np.ndarray, list]:
     """
     Takes an image, return it as a numpy tensor that is readily
-    to be fed into tfnet.
+    to be fed into a tensorflow graph. Expects a BGR colorspace for augmentations.
 
     Note:
         If there is an accompanied annotation (allobj),
         meaning this preprocessing is being used for training, then this
-        image will be transformed with random noise to augment training data,
-        using scale, translation, flipping and recolor.
+        image and accompanying bounding boxes will be transformed.
 
     Args:
         image: An np.ndarray or file-like image object.
 
         allobj: List of annotated objects.
 
-    Returns:
+    Returns (if allobj == None):
         image: A randomly transformed and recolored np.ndarray
+
+    Returns (if allobj != None):
+        image: A randomly transformed and recolored np.ndarray
+        bboxes: Transformed bounding boxes
     """
+    bboxes = None
     if type(image) is not np.ndarray:
-        image = cv2.imread(image)
+        image = cv2.imread(image) # BRG
 
     if allobj is not None:  # in training mode
-        result = imcv2_affine_trans(image)
-        image, dims, trans_param = result
-        scale, offs, flip = trans_param
-        for obj in allobj:
-            _fix(obj, dims, scale, offs)
-            if not flip:
-                continue
-            obj_1_ = obj[1]
-            obj[1] = dims[0] - obj[3]
-            obj[3] = dims[0] - obj_1_
-        image = imcv2_recolor(image)
+        image, bboxes = spatial_transform(image, allobj, "VerticalFlip")
+        transformed = pixel_transform(image)
+        image = transformed["image"]
 
     image = self.resize_input(image)
+
     if allobj is None:
         return image
-    return image  # , np.array(im) # for unit testing
+    else:
+        return image, bboxes  # , np.array(im) # for unit testing
 
 def postprocess(self, net_out, im: os.PathLike, save: bool = True) -> np.ndarray:
     """Takes net output, draw predictions, saves to disk

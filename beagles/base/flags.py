@@ -41,7 +41,7 @@ _FLAGS = {
         'size': (1,                                 int, 'Dataset Size (Images)'),
         'started': (False,                          int, 'Started Signal'),
         'step_size_coefficient': (2,                int, 'Cyclic Learning Coefficient'),
-        'threshold': (0.4,                        float, 'Detection Record Threshold'),
+        'threshold': (0.4000,                     float, 'Detection Record Threshold'),
         'trainer': ('adam',                         str, 'Optimization Algorithm'),
         'verbalise': (False,                       bool, 'Verbose Output'),
         'train': (False,                           bool, 'Training Mode')

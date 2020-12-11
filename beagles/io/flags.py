@@ -2,7 +2,7 @@ import time
 from json.decoder import JSONDecodeError
 from beagles.base import *
 from beagles.io.sharedmemory import SharedMemory
-from beagles.io.logs import get_logger
+from beagles.io.logs import get_logger, LOGDIR
 
 
 class SharedFlagIO(object):
@@ -11,7 +11,7 @@ class SharedFlagIO(object):
     def __init__(self, flags=None, subprogram=False):
         self.subprogram = subprogram
         self.flags = flags if flags else Flags()
-        self.log = get_logger()
+        self.log, self.logfile = get_logger()
         self.shm = SharedMemory()
         if not self.subprogram and not self.shm.mounted:
             self.shm.mount()

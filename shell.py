@@ -9,9 +9,11 @@ import time
 import select
 import shutil
 import signal
+import warnings
 try:
     import readline
 except ImportError:
+    warnings.warn('Could not load readline module.')
     readline = None
 from subprocess import Popen, DEVNULL
 from beagles.backend.net import TRAINERS
@@ -288,11 +290,11 @@ class BeaglesShell(cmd.Cmd):
         _processes = self.processes.copy()
         if arg == "all":
             for name in _processes.keys():
-                self.stdout.write(f'Terminating {name} PID: {self.processes.get(name).pid}\n')
+                self.stdout.write(f' Terminating {name} PID: {self.processes.get(name).pid}\n')
                 self.processes.pop(name).terminate()
         else:
             try:
-                self.stdout.write(f'Terminating {arg} PID: {self.processes.get(arg).pid}\n')
+                self.stdout.write(f' Terminating {arg} PID: {self.processes.get(arg).pid}\n')
                 self.processes.pop(arg).terminate()
             except AttributeError:
                 if not arg == "all":
@@ -307,10 +309,10 @@ class BeaglesShell(cmd.Cmd):
         """Start the BEAGLES backend"""
         forbidden = ['all', '']
         if arg in self.processes.keys():
-            print(f'The process name {arg} is already taken.')
+            self.stdout.write(f' The process name {arg} is already taken.\n')
             return
         if arg in forbidden:
-            print(f'The process name "{arg}" is invalid.')
+            self.stdout.write(f' The process name "{arg}" is invalid.\n')
             return
         self.do_send()
         self.do_read()
@@ -321,7 +323,7 @@ class BeaglesShell(cmd.Cmd):
 
     def do_watch(self, arg):
         if not self.processes:
-            self.stdout.write("No processes to watch.\n")
+            self.stdout.write(" No processes to watch.\n")
         else:
             while True:
                 # read flags and try to catch pid
@@ -381,9 +383,17 @@ class BeaglesShell(cmd.Cmd):
 
     def do_playback(self, arg):
         """Playback commands from a file: PLAYBACK rose.cmd"""
-        self.close()
-        with open(arg) as f:
-            self.cmdqueue.extend(f.read().splitlines())
+        if self.file:
+            self.file.close()
+            self.file = None
+
+        if os.path.isfile(arg):
+            self.stdout.write(f' Running commands from {arg}\n')
+            with open(arg) as f:
+                self.cmdqueue.extend(f.read().splitlines())
+        else:
+            self.stdout.write(f' File {arg} not found\n')
+
 
 if __name__ == '__main__':
     caught_sig = CatchSignals

@@ -6,7 +6,7 @@ import csv
 import math
 from functools import partial
 from multiprocessing.pool import ThreadPool
-import cv2
+import av
 import numpy as np
 import tensorflow as tf
 from beagles.base import GradientNaN, Timer
@@ -172,7 +172,7 @@ class NetBuilder(tf.Module):
         first = True
         batch_per_epoch = int(len(self.annotation_data) / self.flags.batch)
         for i, (x_batch, loss_feed) in enumerate(self.framework.shuffle(self.annotation_data, self.class_weights)):
-            self.io.io_flags()
+            self.io.send_flags()
             if saved_last_time and not first:
                 self._destroy()
                 self._build(rebuild=True)
@@ -246,41 +246,36 @@ class NetBuilder(tf.Module):
         self.io.log.info(f'Mean postprocess rate: {np.average(postprocess_times):.2f} inputs/sec')
         self.io.log.info(f'Mean overall rate:     {np.average(all_times):.2f} inputs/sec')
 
-
     def annotate(self, update=10):
         self._build()
         self._load_checkpoint()
-        for video in self.flags.video:
-            frame_count = 0
-            capture = cv2.VideoCapture(video)
-            total_frames = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
-            annotation_file = f'{os.path.splitext(video)[0]}_annotations.csv'
+        frmwrk = self.framework
+        flags = self.flags
+        for target in flags.video:
+            container = av.open(target)
+            total_frames = container.streams.video[0].frames
+            container.streams.video[0].thread_type = 'AUTO'
+            annotation_file = f'{os.path.splitext(target)[0]}_annotations.csv'
             if os.path.exists(annotation_file):
                 self.io.log.info("Overwriting existing annotations")
                 os.remove(annotation_file)
-            self.io.log.info(f'Annotating {video}')
-            with open(annotation_file, mode='a') as file:
-                file_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=0)
-            for i in range(total_frames):
-                frame_count += 1
-                if frame_count % update == 0:
-                    frame_prog = (update / total_frames) * (1 / len(self.flags.video))
-                    self.flags.progress += round(100 * frame_prog, 0)
+            self.io.log.info(f'Annotating {target}')
+            file = open(annotation_file, mode='a')
+            file_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=0)
+            for i, frame in enumerate(container.decode(video=0)):
+                if i % update == 0:
+                    frame_prog = (update / total_frames) * (1 / len(flags.video))
+                    flags.progress += round(100 * frame_prog, 0)
                     self.io.io_flags()
-                ret, frame = capture.read()
-                if ret:
-                    frame = np.asarray(frame)
-                    h, w, _ = frame.shape
-                    im = self.framework.resize_input(frame)
-                    this_inp = np.expand_dims(im, 0)
-                    boxes = self.framework.findboxes(np.concatenate(self.net(this_inp), 0))
-                    pred = [self.framework.process_box(b, h, w, self.flags.threshold) for b in boxes]
-                    pred = filter(None, pred)
-                    time_elapsed = capture.get(cv2.CAP_PROP_POS_MSEC) / 1000
-                    for result in pred:
-                        file_writer.writerow([time_elapsed, *result])
-            capture.release()
+                timestamp = float(frame.pts * frame.time_base)
+                frame = frame.to_rgb().to_ndarray()[:,:,::-1] # convert to BGR
+                h, w, _ = frame.shape
+                im = frmwrk.resize_input(frame)
+                this_inp = np.expand_dims(im, 0)
+                boxes = frmwrk.findboxes(np.concatenate(self.net(this_inp), 0))
+                pred = [frmwrk.process_box(b, h, w, flags.threshold) for b in boxes]
+                [file_writer.writerow([timestamp, *res]) for res in filter(None, pred)]
             file.close()
-            self.flags.progress = 0.0
+            flags.progress = 0.0
             self.io.io_flags()
             self.io.log.info("Done!")

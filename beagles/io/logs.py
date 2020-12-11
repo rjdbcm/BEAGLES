@@ -25,4 +25,4 @@ def get_logger(level=logging.INFO):
     logger.addHandler(logfile)
     logger.setLevel(level)
     logger.propagate = False
-    return logger
+    return logger, logfile

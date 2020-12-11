@@ -11,7 +11,7 @@ LINUX_PATH = "/dev/shm"
 class SharedMemory:
     """Stateful interface for shared memory on mac or linux"""
     def __init__(self):
-        self.log = get_logger()
+        self.log, self.logfile = get_logger()
         if sys.platform == 'darwin':
             self._path = MAC_PATH
             self._mount_point = str()

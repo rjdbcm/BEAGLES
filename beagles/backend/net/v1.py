@@ -37,7 +37,7 @@ class TFNet:
         tf.compat.v1.disable_eager_execution()
         self.flags = self.io.read_flags() if self.io.read_flags() is not None else flags
         self.io_flags = self.io.io_flags
-        self.logger = get_logger()
+        self.logger, self.logfile = get_logger()
         self.ntrain = 0
         darknet = Darknet(flags) if darknet is None else darknet
         self.ntrain = len(darknet.layers)

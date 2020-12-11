@@ -39,7 +39,7 @@ def get_preprocessed_img(self, chunk):
     w, h, allobj_ = chunk[1]
     allobj = deepcopy(allobj_)
     path = os.path.join(self.flags.dataset, jpg)
-    img = self.preprocess(path, allobj)
+    img, allobj = self.preprocess(path, allobj)
     return img, w, h, allobj
 
 

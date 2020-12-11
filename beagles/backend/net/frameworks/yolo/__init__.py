@@ -8,7 +8,7 @@ import os
 
 
 def constructor(self, meta, flags):
-    self.logger = get_logger()
+    self.logger, self.logfile = get_logger()
     model = os.path.basename(meta['model'])
     model = '.'.join(model.split('.')[:-1])
     meta['name'] = model
