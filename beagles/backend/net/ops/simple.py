@@ -1,5 +1,7 @@
 from beagles.backend.net.ops.baseop import BaseOp
 import tensorflow as tf
+import sys
+
 
 class Route(BaseOp):
     def __init__(self, *args):
@@ -7,13 +9,13 @@ class Route(BaseOp):
 
     def call(self, inputs, **kwargs):
         routes = self.lay.routes
-        routes_out = list()
+        routes_out = [inputs]
         for r in routes:
             this = self.inp
             while this.lay.number != r:
                 this = this.inp
                 assert this is not None, f'Routing to non-existence {r}'
-            routes_out += [this]
+            routes_out += [this.output]
         return tf.concat(routes_out, 3)
 
 

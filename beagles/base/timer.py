@@ -12,3 +12,10 @@ class Timer(object):
         end = self.timer()
         self.elapsed_secs = end - self.start
         self.elapsed = self.elapsed_secs * 1000  # millisecs
+
+    @classmethod
+    def __call__(cls, func, *args, numerator=1):
+        with cls() as t:
+            x = func(*args)
+        t = numerator / t.elapsed_secs
+        return x, t

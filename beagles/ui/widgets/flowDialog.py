@@ -159,14 +159,13 @@ class FlowDialog(BackendDialog):
                                                    'BEAGLES Annotate - Choose Video file',
                                                    os.getcwd(), filters, options=options)
             self.flags.video = filename[0]
-        if [self.flowCmb.currentText() == "Train"]:
-            proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
-            self.thread = BackendThread(self, proc=proc, flags=self.flags)
-            self.thread.setTerminationEnabled(True)
-            self.thread.finished.connect(self.onFinished)
-            self.thread.connection.progressUpdate.connect(
-                self.updateProgress)
-            self.thread.start()
+
+        proc = Popen([sys.executable, BACKEND_ENTRYPOINT], stdout=PIPE, shell=False)
+        self.thread = BackendThread(self, proc=proc, flags=self.flags)
+        self.thread.setTerminationEnabled(True)
+        self.thread.finished.connect(self.onFinished)
+        self.thread.connection.progressUpdate.connect(self.updateProgress)
+        self.thread.start()
         self.flowPrg.setMaximum(0)
         self.buttonRun.setEnabled(False)
         self.buttonRun.hide()

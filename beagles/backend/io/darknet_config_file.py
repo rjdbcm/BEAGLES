@@ -1,5 +1,6 @@
 import os
 import json
+import sys
 from beagles.base.errors import DarknetConfigEmpty
 
 
@@ -60,7 +61,6 @@ class DarknetConfigFile:
     def __tokenize(self):
         def split_on_eq(line, i=1):
             return line.split('=')[i].strip()
-
         with open(self.config_file, 'rb') as f:
             lines = f.readlines()
         lines = [line.decode() for line in lines]
@@ -74,7 +74,7 @@ class DarknetConfigFile:
             line = line.split('#')[0]
             if '[' in line:
                 if layer != dict():
-                    if layer['type'] == '[net]':
+                    if layer['type'] == '[net]': # net info layer
                         h = layer['height']
                         w = layer['width']
                         c = layer['channels']
@@ -83,7 +83,7 @@ class DarknetConfigFile:
                             meta['net']['augment'] = [str(i.strip(' ')) for i in meta['net']['augment'].split(',')]
                         except KeyError:
                             pass
-                    else:
+                    else: # other layers
                         if layer['type'] == '[crop]':
                             h = layer['crop_height']
                             w = layer['crop_width']

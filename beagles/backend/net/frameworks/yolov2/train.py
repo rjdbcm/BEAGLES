@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+from scipy.special import expit
 try:
     import tensorflow.experimental.numpy as tnp
     TF_NUMPY = True
@@ -8,9 +9,6 @@ except AttributeError:
 
 _np = np
 np = tnp if TF_NUMPY else np
-
-def expit_tensor(x):
-    return 1. / (1. + np.exp(-x))
 
 def loss(self, y_pred, _probs, _confs, _coord, _proid, _areas, _upleft, _botright):
 
@@ -29,24 +27,25 @@ def loss(self, y_pred, _probs, _confs, _coord, _proid, _areas, _upleft, _botrigh
     HW = H * W  # number of grid cells
     anchors = m['anchors']
     if self.first:
-        self.logger.info('{} loss hyper-parameters:'.format(m['model']))
-        self.logger.info('H       = {}'.format(H))
-        self.logger.info('W       = {}'.format(W))
-        self.logger.info('box     = {}'.format(m['num']))
-        self.logger.info('classes = {}'.format(m['classes']))
-        self.logger.info('scales  = {}'.format([sprob, sconf, snoob, scoor]))
+        # log metadata
+        self.logger.info(f'{m["model"]} loss hyper-parameters:')
+        self.logger.info(f'\tH       = {H}')
+        self.logger.info(f'\tW       = {W}')
+        self.logger.info(f'\tbox     = {m["num"]}')
+        self.logger.info(f'\tclasses = {m["classes"]}')
+        self.logger.info(f'\tscales  = {[sprob, sconf, snoob, scoor]}')
         # Anchors logged as a list of ordered pairs for readability
-        self.logger.info('anchors = {}'.format(list(zip(*[iter(anchors)]*2))))
+        self.logger.info(f'\tanchors = {list(zip(*[iter(anchors)]*2))}')
         self.first = False
     # Extract the coordinate prediction from net.out
     net_out_reshape = tf.reshape(y_pred, [-1, H, W, B, (4 + 1 + C)])
     coords = net_out_reshape[:, :, :, :, :4]
     coords = tf.reshape(coords, [-1, H*W, B, 4])
-    adjusted_coords_xy = expit_tensor(coords[:, :, :, 0:2])
+    adjusted_coords_xy = expit(coords[:, :, :, 0:2])
     adjusted_coords_wh = tf.math.sqrt(tf.math.exp(coords[:, :, :, 2:4]) * np.reshape(anchors, [1, 1, B, 2]) / np.reshape([W, H], [1, 1, 1, 2]))
     coords = tf.concat([adjusted_coords_xy, adjusted_coords_wh], 3)
 
-    adjusted_c = expit_tensor(net_out_reshape[:, :, :, :, 4])
+    adjusted_c = expit(net_out_reshape[:, :, :, :, 4])
     adjusted_c = tf.reshape(adjusted_c, [-1, H*W, B, 1])
 
     adjusted_prob = tf.math.softmax(net_out_reshape[:, :, :, :, 5:])

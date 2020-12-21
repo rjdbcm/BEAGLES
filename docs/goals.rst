@@ -78,7 +78,7 @@ Update 2020-Oct-22:
 Update 2020-Nov-03:
    Converted all code to TF 2.0. Keeping legacy code in case anyone still wants
    to toy with TF 1.x.
-   3x the FPS performance for YOLOV2 detection.
+   3x the FPS performance for YOLOv2 detection.
 
 Progress:
 
@@ -93,7 +93,75 @@ For one thing, activation functions are canned and don't take arguments in Darkn
 Activations in BEAGLES are Keras layer objects that use the same BaseOp API as
 all the other layers which allows arbitrary ops to be used as activations.
 
+We have also added support for `Albumentations <https://albumentations.ai>`_
+image augmentation pipelines for dataset expansion as the 'augment' keyword in
+the [net] config file section. You can test the various augmentations `here <https://albumentations-demo.herokuapp.com>`_.
 
    | ☑ Arbitrary activation ops for darknet layers
+   | ☑ Soft-NMS as a configuration file option using keyword 'soft_nms' for [detection] and [region] layers.
+   | ☑ Image augmentations using [net] section keyword 'augment' and comma-separated `Albumentations <https://albumentations.ai>`_ transforms.
 
-
+      | ☑ Tested :class:`Blur`
+      | ☑ Tested :class:`ChannelDropout`
+      | ☑ Tested :class:`ChannelShuffle`
+      | ☑ Tested :class:`CLAHE`
+      | ☑ Tested :class:`CoarseDropout` (not supported)
+      | ☑ Tested :class:`ColorJitter`
+      | ☑ Tested :class:`Crop` (not supported)
+      | ☑ Tested :class:`CropNonEmptyMaskIfExists` (not supported)
+      | ☑ Tested :class:`Cutout`
+      | ☑ Tested :class:`Downscale`
+      | ☑ Tested :class:`ElasticTransform` (not supported)
+      | ☑ Tested :class:`Equalize`
+      | ☑ Tested :class:`FancyPCA`
+      | ☑ Tested :class:`Flip`
+      | ☑ Tested :class:`FromFloat` (not supported)
+      | ☑ Tested :class:`GaussianBlur`
+      | ☑ Tested :class:`GaussNoise`
+      | ☑ Tested :class:`GlassBlur`
+      | ☑ Tested :class:`GridDistortion` (not supported)
+      | ☑ Tested :class:`GridDropout` (not supported)
+      | ☑ Tested :class:`HorizontalFlip`
+      | ☑ Tested :class:`HueSaturationValue`
+      | ☑ Tested :class:`ImageCompression`
+      | ☑ Tested :class:`InvertImg`
+      | ☑ Tested :class:`ISONoise`
+      | ☑ Tested :class:`JpegCompression`
+      | ☑ Tested :class:`Lambda` (not supported)
+      | ☑ Tested :class:`LongestMaxSize` (not supported)
+      | ☑ Tested :class:`MaskDropout` (not supported)
+      | ☑ Tested :class:`MedianBlur`
+      | ☑ Tested :class:`MotionBlur`
+      | ☑ Tested :class:`MultiplicativeNoise`
+      | ☑ Tested :class:`Normalize`
+      | ☑ Tested :class:`OpticalDistortion`
+      | ☑ Tested :class:`PadIfNeeded` (not supported)
+      | ☑ Tested :class:`Posterize`
+      | ☑ Tested :class:`RandomBrightness`
+      | ☑ Tested :class:`RandomBrightnessContrast`
+      | ☑ Tested :class:`RandomContrast`
+      | ☑ Tested :class:`RandomCrop` (not supported)
+      | ☑ Tested :class:`RandomCropNearBBox` (not supported)
+      | ☑ Tested :class:`RandomFog`
+      | ☑ Tested :class:`RandomGamma`
+      | ☑ Tested :class:`RandomGridShuffle`
+      | ☑ Tested :class:`RandomRain`
+      | ☑ Tested :class:`RandomResizedCrop` (not supported)
+      | ☑ Tested :class:`RandomRotate90`
+      | ☑ Tested :class:`RandomScale`
+      | ☑ Tested :class:`RandomShadow`
+      | ☑ Tested :class:`RandomSizedBBoxSafeCrop` (not supported)
+      | ☑ Tested :class:`RandomSizedCrop` (not supported)
+      | ☑ Tested :class:`RandomSnow`
+      | ☑ Tested :class:`RandomSunFlare`
+      | ☑ Tested :class:`Resize` (not supported)
+      | ☑ Tested :class:`RGBShift`
+      | ☑ Tested :class:`Rotate`
+      | ☑ Tested :class:`ShiftScaleRotate`
+      | ☑ Tested :class:`SmallestMaxSize` (not supported)
+      | ☑ Tested :class:`Solarize`
+      | ☑ Tested :class:`ToFloat` (not supported)
+      | ☑ Tested :class:`ToGray`
+      | ☑ Tested :class:`ToSepia`
+      | ☑ Tested :class:`Transpose`
+      | ☑ Tested :class:`VerticalFlip`

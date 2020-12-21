@@ -100,11 +100,11 @@ class Annotator:
         feed_dict = {self.net.inp: this_inp}
 
         out = self.net.sess.run(self.net.out, feed_dict)[0]
-        boxes = self.net.framework.findboxes(out)
+        boxes = self.net.framework.find(out)
         threshold = self.flags.threshold
         predictions = list()
         for box in boxes:
-            processed_box = self.net.framework.process_box(box, h, w, threshold)
+            processed_box = self.net.framework.process(box, h, w, threshold)
             if processed_box is None:
                 continue
             predictions.append(processed_box)

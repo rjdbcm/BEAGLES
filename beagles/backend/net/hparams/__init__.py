@@ -1,4 +1,4 @@
-from beagles.backend.net.hyperparameters.cyclic_learning_rate import *
+from beagles.backend.net.hparams.cyclic_learning_rate import *
 
 cyclic_learning_rate = cyclic_learning_rate
 """Applies cyclic learning rate (CLR).

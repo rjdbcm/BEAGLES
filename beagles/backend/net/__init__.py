@@ -13,7 +13,7 @@ from beagles.base import GradientNaN, Timer
 from beagles.io.flags import SharedFlagIO
 from beagles.backend.darknet import Darknet
 from beagles.backend.net.framework import Framework
-from beagles.backend.net.hyperparameters import cyclic_learning_rate as clr
+from beagles.backend.net.hparams import cyclic_learning_rate as clr
 
 MOMENTUM = 'momentum'
 NESTEROV = 'nesterov'
@@ -90,10 +90,13 @@ class NetBuilder(tf.Module):
         super(NetBuilder, self).__init__(name=self.__class__.__name__)
         flags = flags if flags else None
         self.io = SharedFlagIO(subprogram=True)
+        self.info = self.io.log.info
+        self.pool = ThreadPool()
         self.flags = self.io.read_flags() if self.io.read_flags() is not None else flags
         self.darknet = Darknet(flags) if darknet is None else darknet
         self.num_layer = self.ntrain = len(self.darknet.layers) or 0
         self.meta = self.darknet.meta
+
 
     def _build(self, rebuild=False):
         if not rebuild:
@@ -101,7 +104,7 @@ class NetBuilder(tf.Module):
             self.framework = Framework.create(self.darknet.meta, self.flags)
             self.annotation_data, self.class_weights = self.framework.parse()
         self.io.log.info('Compiling Net...')
-        self.optimizer = self._build_optimizer()
+        self.build_optimizer()
         self.layers = self.darknet.compile()
         self.net = Net(self.layers, self.global_step, dtype=tf.float32)
         self.net.compile(loss=self.framework.loss, optimizer=self.optimizer)
@@ -116,6 +119,11 @@ class NetBuilder(tf.Module):
         del self.layers
         tf.keras.backend.clear_session()
         gc.collect()
+
+    def build_optimizer(self, rebuild=False):
+        if rebuild:
+            del self.optimizer
+        self.optimizer = self._build_optimizer()
 
     def _build_optimizer(self):
         # setup kwargs for trainer
@@ -148,30 +156,40 @@ class NetBuilder(tf.Module):
     def _load_checkpoint(self):
         if self.flags.load < 0:
             self.checkpoint.restore(self.manager.latest_checkpoint)
-            self.io.log.info(f"Restored from {self.manager.latest_checkpoint}")
+            self.info(f"Restored from {self.manager.latest_checkpoint}")
         elif self.flags.load >= 1:
-            self.io.log.info(f"Restoring from {self.flags.load}")
+            self.info(f"Restoring from {self.flags.load}")
             try:
-                [ckpt] = [i for i in self.manager.checkpoints if i.endswith(str(self.flags.load))]
+                [ckpt] = [i for i in self.manager.checkpoints if i.endswith('-'+str(self.flags.load))]
             except ValueError:
                 name, _ = os.path.splitext(os.path.basename(self.flags.model))
                 name = f"{name}-{self.flags.load}"
                 path = os.path.join(self.flags.backup, name)
-                raise FileNotFoundError(f'Checkpoint {path} does not exist.') from None
+                raise FileNotFoundError(f'Checkpoint {path} does not exist in {self.manager.checkpoints}.') from None
             self.checkpoint.restore(ckpt)
         else:
-            self.io.log.info("Initializing network weights from scratch.")
+            self.info("Initializing network weights from scratch.")
+
+    def preprocess_batch(self, batch):
+        preprocess = lambda inp: self.framework.preprocess(os.path.join(self.flags.imgdir, inp))
+        return self.pool.map(preprocess, batch)
+
+    def postprocess_batch(self, batch, net_out):
+        postprocess = lambda i, pred: self.framework.postprocess(pred, os.path.join(self.flags.imgdir, batch[i]))
+        return self.pool.map(lambda p: postprocess(*p), enumerate(net_out))
 
     def train(self):
         self._build()
         self._load_checkpoint()
         self.io.io_flags()
-        self.io.log.info('Building {} train op'.format(self.flags.model))
-        goal = len(self.annotation_data) * self.flags.epoch
+        self.info('Building {} train op'.format(self.flags.model))
+        n = len(self.annotation_data)
+        m = len(self.framework.augment)
+        goal = n*(2**m) * self.flags.epoch
+        batch_per_epoch = int(n*(2**m)/self.flags.batch)
         saved_last_time = False
         first = True
-        batch_per_epoch = int(len(self.annotation_data) / self.flags.batch)
-        for i, (x_batch, loss_feed) in enumerate(self.framework.shuffle(self.annotation_data, self.class_weights)):
+        for i, (x_batch, loss_feed) in enumerate(self.framework.shuffle(self.annotation_data, weights=self.class_weights)):
             self.io.send_flags()
             if saved_last_time and not first:
                 self._destroy()
@@ -180,71 +198,72 @@ class NetBuilder(tf.Module):
                 saved_last_time = False
                 first = True
             loss = self.net.train_step((x_batch, loss_feed))
-            if not tf.math.is_finite(loss):
-                self.io.log.info("Gradient could not be followed.")
-                try:
-                    raise GradientNaN(flags=self.flags)
-                except GradientNaN as e:
-                    self.flags.error = e.message
-                    self.flags.kill = True
-                    self.io.send_flags()
-                    raise
+            self.io.raise_if(not tf.math.is_finite(loss), GradientNaN,
+                             "Gradient could not be followed.")
+            self.build_optimizer(rebuild=True)
             step = self.net.step.numpy()
             lr = self.net.optimizer.learning_rate.numpy()
-            line = 'step: {} loss: {:f} lr: {:.2e} progress: {:.2f}%'
+            line = '\tstep: {} loss: {:f} lr: {:.2e} progress: {:.2f}%'
             if not first:
                 self.flags.progress = i * self.flags.batch / goal * 100
-                self.io.log.info(line.format(step, loss, lr, self.flags.progress))
+                self.info(line.format(step, loss, lr, self.flags.progress))
             else:
-                self.io.log.info(f"Following gradient from step {step}...")
+                self.info(f"Following gradient from step {step}...")
             saving = not bool((i + 1) % (batch_per_epoch * self.flags.save))
             if saving:
                 save = self.manager.save()
-                self.io.log.info(f"Saved checkpoint: {save}")
+                self.info(f"Saved checkpoint: {save}")
                 saved_last_time = True
             first = False
+
+    def img_path(self, image):
+        return os.path.join(self.flags.imgdir, image)
+
+    def _postprocess(self, idx, pred, batch):
+        return self.framework.postprocess(pred, self.img_path(batch[idx]))
+
+    def _preprocess(self, inp):
+        return self.framework.preprocess(self.img_path(inp))
 
     def predict(self):
         self._build()
         self._load_checkpoint()
-        img_path = partial(os.path.join, self.flags.imgdir)
-        pool = ThreadPool()
-        inputs = [i for i in os.listdir(self.flags.imgdir) if self.framework.is_input(i)]
-        if not inputs:
-            raise FileNotFoundError(f'Failed to find any valid images in {self.flags.imgdir}')
-        batch = min(self.flags.batch, len(inputs))
-        n_batch = int(math.ceil(len(inputs) / batch))
-        preprocess_times = []
-        postprocess_times = []
-        forwarding_times= []
+        frmwrk = self.framework
+        fl = self.flags
+        inputs = [i for i in os.listdir(fl.imgdir) if frmwrk.is_input(self.img_path(i))]
+        n = len(inputs)
+        self.info(f'Predicting annotations for {n} inputs in {fl.imgdir}')
+        self.io.raise_if(not inputs, FileNotFoundError,
+                         f'Failed to find any valid images in {fl.imgdir}')
+        batch = min(fl.batch, n)
+        n_batch = int(math.ceil(n / batch))
+        preprocess_times, forwarding_times, postprocess_times = [], [], []
+        times = [preprocess_times, forwarding_times, postprocess_times]
         for j in range(n_batch):
             start = j * batch
             stop = min(start + batch, len(inputs))
             this_batch = inputs[start:stop]
             self.io.log.info(f'Preprocessing {batch} inputs...')
             with Timer() as t:
-                preprocess = lambda inp: self.framework.preprocess(img_path(inp))
-                x = pool.map(preprocess, this_batch)
+                x = self.pool.map(self._preprocess, this_batch)
             self.io.log.info(f'Done! ({batch/t.elapsed_secs:.2f} inputs/s)')
             preprocess_times += [batch/t.elapsed_secs]
             self.io.log.info(f'Forwarding {batch} inputs...')
             with Timer() as t:
-                x = [np.concatenate(self.net(np.expand_dims(i, 0)), 0) for i in x]
+                x = [self.net(np.expand_dims(i, 0)) for i in x]
             self.io.log.info(f'Done! ({batch/t.elapsed_secs:.2f} inputs/s)')
             forwarding_times += [batch/t.elapsed_secs]
             self.io.log.info(f'Postprocessing {batch} inputs...')
             with Timer() as t:
-                postprocess = lambda i, pred: self.framework.postprocess(pred, img_path(this_batch[i]))
-                pool.map(lambda p: postprocess(*p), enumerate(x))
+                self.pool.map(lambda p: self._postprocess(*p, this_batch), enumerate(x))
             self.io.log.info(f'Done! ({batch/t.elapsed_secs:.2f} inputs/s)')
             postprocess_times += [batch/t.elapsed_secs]
             self.flags.progress += (batch / len(inputs)) * 100.0
             self.io.io_flags()
-        all_times = [*preprocess_times, *forwarding_times, *postprocess_times]
-        self.io.log.info(f'Mean preprocess rate:  {np.average(preprocess_times):.2f} inputs/sec')
-        self.io.log.info(f'Mean forwarding rate:  {np.average(forwarding_times):.2f} inputs/sec')
-        self.io.log.info(f'Mean postprocess rate: {np.average(postprocess_times):.2f} inputs/sec')
-        self.io.log.info(f'Mean overall rate:     {np.average(all_times):.2f} inputs/sec')
+        self.info(f'Mean preprocess rate:  {np.average(times[0]):.2f} inputs/sec')
+        self.info(f'Mean forwarding rate:  {np.average(times[1]):.2f} inputs/sec')
+        self.info(f'Mean postprocess rate: {np.average(times[2]):.2f} inputs/sec')
+        self.info(f'Mean overall rate:     {np.average(np.concatenate(times)):.2f} inputs/sec')
 
     def annotate(self, update=10):
         self._build()
@@ -252,6 +271,7 @@ class NetBuilder(tf.Module):
         frmwrk = self.framework
         flags = self.flags
         for target in flags.video:
+            # noinspection PyUnresolvedReferences
             container = av.open(target)
             total_frames = container.streams.video[0].frames
             container.streams.video[0].thread_type = 'AUTO'
@@ -268,12 +288,12 @@ class NetBuilder(tf.Module):
                     flags.progress += round(100 * frame_prog, 0)
                     self.io.io_flags()
                 timestamp = float(frame.pts * frame.time_base)
-                frame = frame.to_rgb().to_ndarray()[:,:,::-1] # convert to BGR
+                frame = frame.to_rgb().to_ndarray()
                 h, w, _ = frame.shape
                 im = frmwrk.resize_input(frame)
                 this_inp = np.expand_dims(im, 0)
-                boxes = frmwrk.findboxes(np.concatenate(self.net(this_inp), 0))
-                pred = [frmwrk.process_box(b, h, w, flags.threshold) for b in boxes]
+                boxes = frmwrk.find(self.net(this_inp))
+                pred = [frmwrk.process(b, h, w, flags.threshold) for b in boxes]
                 [file_writer.writerow([timestamp, *res]) for res in filter(None, pred)]
             file.close()
             flags.progress = 0.0

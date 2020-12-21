@@ -19,10 +19,10 @@ def loss(self, y_pred, _probs, _confs, _coord, _proid, _areas, _upleft, _botrigh
     SS = S * S # number of grid cells
     if self.first:
         self.logger.info('{} loss hyper-parameters:'.format(m['model']))
-        self.logger.info('side    = {}'.format(m['side']))
-        self.logger.info('box     = {}'.format(m['num']))
-        self.logger.info('classes = {}'.format(m['classes']))
-        self.logger.info('scales  = {}'.format([sprob, sconf, snoob, scoor]))
+        self.logger.info('\tside    = {}'.format(m['side']))
+        self.logger.info('\tbox     = {}'.format(m['num']))
+        self.logger.info('\tclasses = {}'.format(m['classes']))
+        self.logger.info('\tscales  = {}'.format([sprob, sconf, snoob, scoor]))
         self.first = False
 
     # return the below placeholders

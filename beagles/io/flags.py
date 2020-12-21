@@ -69,4 +69,15 @@ class SharedFlagIO(object):
             os.remove(self.flag_path)
         self.shm.unmount()
 
+    def raise_if(self, cond, error, message):
+        if cond:
+            self.log.info(message)
+            try:
+                raise error(flags=self.flags)
+            except error as e:
+                self.flags.error = e.message
+                self.flags.kill = True
+                self.send_flags()
+                raise
+
 

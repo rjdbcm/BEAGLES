@@ -9,7 +9,7 @@ from nms cimport nms
 @cython.cdivision(True)
 @cython.boundscheck(False) # turn off bounds-checking for entire function
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
-def yolo_box_constructor(meta,np.ndarray[float] net_out, float threshold):
+def box_constructor(meta,np.ndarray[float] net_out, float threshold):
 
     cdef:
         float sqrt

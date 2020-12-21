@@ -1,5 +1,6 @@
 from beagles.base.flags import Flags
 
+
 class DarknetConfigEmpty(Exception):
     """raised when a darknet configuration is empty"""
     def __init__(self, cfg):

@@ -24,6 +24,9 @@ test:
 
 distclean: clean clean_site_packages
 
+docs:
+	cd ./docs && make html
+
 coverage:
 	coverage run -m unittest discover tests
 
@@ -45,6 +48,8 @@ clean:
 
 clean_site_packages:
 	rm -rf ./lib
+
+.PHONY: docs
 
 .PHONY: test
 

@@ -4,6 +4,7 @@ from beagles.backend.net.frameworks import vanilla
 from beagles.backend.net.frameworks import yolo
 from beagles.backend.net.frameworks import yolov2
 
+
 class Framework(SubsystemPrototype):
     """
     SubsystemPrototype that uses Darknet configuration metadata type token to find a framework
@@ -37,6 +38,35 @@ class Framework(SubsystemPrototype):
     def postprocess(self, *args, **kwargs):
         raise NotImplementedError
 
+    @abstractmethod
+    def parse(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def batch(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def shuffle(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_feed_values(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_preprocessed(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def find(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def process(self, *args, **kwargs):
+        raise NotImplementedError
+
+
 @register_subsystem(token='sse l1 l2 smooth sparse softmax', prototype=Framework)
 class NeuralNet(Subsystem):
     constructor = vanilla.constructor
@@ -47,43 +77,57 @@ class NeuralNet(Subsystem):
 class Yolo(NeuralNet):
     constructor = yolo.constructor
 
+    loss = yolo.train.loss
+
     parse = yolo.data.parse
     shuffle = yolo.data.shuffle
-
-    postprocess = yolo.predict.postprocess
-    loss = yolo.train.loss
-    is_input = yolo.misc.is_input
-
+    is_input = yolo.data.is_input
     batch = yolo.data.batch
     get_feed_values = yolo.data.get_feed_values
-    get_preprocessed_img = yolo.data.get_preprocessed_img
-    preprocess = yolo.predict.preprocess
-    resize_input = yolo.predict.resize_input
+    get_preprocessed = yolo.data.get_preprocessed
 
-    findboxes = yolo.predict.findboxes
-    process_box = yolo.predict.process_box
+    find = yolo.predict.find
+    resize_input = yolo.predict.resize_input
+    preprocess = yolo.predict.preprocess
+    process = yolo.predict.process
+    postprocess = yolo.predict.postprocess
 
 
 @register_subsystem(token='[region]', prototype=Framework)
 class YoloV2(Yolo):
     constructor = Yolo.constructor
 
-    parse = Yolo.parse
-    shuffle = Yolo.shuffle
-
-    postprocess = Yolo.postprocess
     loss = yolov2.train.loss
-    is_input = Yolo.is_input
 
+    parse = yolo.data.parse
+    shuffle = yolo.data.shuffle
+    is_input = yolo.data.is_input
     batch = yolov2.data.batch
-    get_feed_values = Yolo.get_feed_values
-    get_preprocessed_img = Yolo.get_preprocessed_img
-    preprocess = Yolo.preprocess
-    resize_input = Yolo.resize_input
+    get_feed_values = yolo.data.get_feed_values
+    get_preprocessed = yolo.data.get_preprocessed
 
-    findboxes = yolov2.predict.findboxes
-    process_box = Yolo.process_box
+    find = yolov2.predict.find
+    resize_input = yolo.predict.resize_input
+    preprocess = yolo.predict.preprocess
+    process = yolo.predict.process
+    postprocess = yolo.predict.postprocess
 
 
+@register_subsystem(token='[yolo]', prototype=Framework)
+class YoloV3(YoloV2):
+    constructor = yolo.constructor
 
+    # loss =
 
+    parse = yolo.data.parse
+    shuffle = yolo.data.shuffle
+    is_input = yolo.data.is_input
+    batch = yolov2.data.batch
+    get_feed_values = yolo.data.get_feed_values
+    get_preprocessed = yolo.data.get_preprocessed
+
+    # find =
+    resize_input = yolo.predict.resize_input
+    # preprocess =
+    # process =
+    # postprocess =

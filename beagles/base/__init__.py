@@ -1,6 +1,9 @@
 """Base classes and methods for other BEAGLES modules"""
 from typing import Union, AnyStr, List, Type, Callable
+from inspect import getcallargs
+from functools import reduce
 from abc import abstractmethod
+from beagles.base.typing import *
 from beagles.base.box import *
 from beagles.base.constants import *
 from beagles.base.errors import *

@@ -1,4 +1,5 @@
 import os
+import cv2
 import warnings
 from beagles.backend.io.pascal_voc_clean_xml import pascal_voc_clean_xml
 from copy import deepcopy
@@ -12,12 +13,15 @@ except AttributeError:
     TF_NUMPY = False
 np = tnp if TF_NUMPY else np
 
+def is_input(self, name):
+    """Checks if input is a valid image file"""
+    return cv2.haveImageReader(name)
+
 def parse(self, exclusive=False):
     meta = self.meta
     ann = self.flags.annotation
     if not os.path.isdir(ann):
-        exit(f'Error: Annotation directory not found {ann}')
-    self.logger.info(f"{meta['model']} parsing {ann}")
+        raise NotADirectoryError(f'Annotation directory not found {ann}')
     dumps, weights = pascal_voc_clean_xml(self, ann, meta['labels'], exclusive)
     return dumps, weights
 
@@ -34,7 +38,7 @@ def batch(self, chunk):
     return self.get_feed_values(chunk, S, S)
 
 
-def get_preprocessed_img(self, chunk):
+def get_preprocessed(self, chunk):
     jpg = chunk[0]
     w, h, allobj_ = chunk[1]
     allobj = deepcopy(allobj_)
@@ -52,7 +56,10 @@ def get_feed_values(self, chunk, dim1, dim2):
     labels = self.meta['labels']
 
     # preprocess
-    img, w, h, allobj = self.get_preprocessed_img(chunk)
+    img, w, h, allobj = self.get_preprocessed(chunk)
+
+    if not allobj:
+        allobj = []
 
     # Calculate regression target
     cellx = 1. * w / W
@@ -80,6 +87,7 @@ def get_feed_values(self, chunk, dim1, dim2):
     coord = _np.zeros([H * W, B, 4])
     proid = _np.zeros([H * W, B, C])
     prear = _np.zeros([H * W, 4])
+
     for obj in allobj:
         probs[obj[5], :, :] = [[0.] * C] * B
         probs[obj[5], :, labels.index(obj[0])] = 1.
@@ -113,12 +121,15 @@ def get_feed_values(self, chunk, dim1, dim2):
     return inp_feed_val, loss_feed_val
 
 def shuffle(self, data, weights=None):
-    self.flags.size = len(data)
-    self.logger.info('Dataset of {} instance(s)'.format(self.flags.size))
+    n = len(data)
+    m = len(self.augment)
+    self.flags.size = n * (2 ** m)
+    data = data * (2 ** m) # make sure there are enough images to feed for augmentation
+    supers = lambda x: str(x).translate(str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹"))
+    self.logger.info(f'Dataset of {self.flags.size} = {n}·2{supers(m)} instances')
     if self.flags.batch > self.flags.size:
         self.flags.batch = self.flags.size
     batch_per_epoch = int(self.flags.size / self.flags.batch)
-
     for i in range(self.flags.epoch):
         if weights:
             _weights = list()

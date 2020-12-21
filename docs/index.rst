@@ -15,7 +15,7 @@ Table of Contents
 
 .. toctree::
    :maxdepth: 2
-   :caption: Project Goals
+   :caption: Project Features & Goals
 
    goals
 

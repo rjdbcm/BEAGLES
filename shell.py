@@ -48,7 +48,10 @@ class BeaglesShell(cmd.Cmd):
         return glob.glob(os.path.join(path, "*"))
 
     def draw_line(self):
-        self.stdout.write(SHELL_HLINE + '\n')
+        self.print(SHELL_HLINE, prefix='')
+
+    def print(self, line, prefix='\t', suffix='\n'):
+        self.stdout.write(prefix + line + suffix)
 
     def close(self):
         if self.file:
@@ -59,7 +62,7 @@ class BeaglesShell(cmd.Cmd):
         exit(0)
 
     def progress(self, total=100.0):
-        bar_form = ' Progress: {} {}% \r'
+        bar_form = '        Progress: {} {}%        \r'
         bar_len = shutil.get_terminal_size()[0] - len(bar_form) - 4
         self.reset_progress()
         filled_len = int(round(bar_len * self.flags.progress / float(total)))
@@ -71,6 +74,7 @@ class BeaglesShell(cmd.Cmd):
         self.stdout.flush()
 
     def reset_progress(self, default=100.0):
+        self.io.io_flags()
         if self.flags.progress >= 100.0:
             self.flags.progress = default
 
@@ -81,7 +85,7 @@ class BeaglesShell(cmd.Cmd):
     def remove_process(self, name: str, process: Popen):
         if process.poll() is not None:
             proc = self.processes.pop(name)
-            self.stdout.write(f'\n Removing finished process. Name: {name} PID: {proc.pid}\n')
+            self.print(f'Removing finished process. Name: {name} PID: {proc.pid}', prefix='\n\t')
 
     def create_process(self, name: str, process: Popen):
         self.flags.pid = process.pid
@@ -117,11 +121,11 @@ class BeaglesShell(cmd.Cmd):
                 try:
                     doc=getattr(self, 'do_' + arg).__doc__
                     if doc:
-                        self.stdout.write(" %s\n"%str(doc))
+                        self.print(f'{str(doc)}')
                         return
                 except AttributeError:
                     pass
-                self.stdout.write(" %s\n"%str(self.nohelp % (arg,)))
+                self.print(f'{str(self.nohelp % (arg,))}')
                 return
             func()
         else:
@@ -148,7 +152,7 @@ class BeaglesShell(cmd.Cmd):
                         cmds_doc.append(cmd)
                     else:
                         cmds_undoc.append(cmd)
-            self.stdout.write("%s\n"%str(self.doc_leader))
+            self.print(f'{str(self.doc_leader)}', prefix='')
             wid, len = shutil.get_terminal_size()
             self.print_topics(self.doc_header, cmds_doc, len, wid)
             self.print_topics(self.misc_header, list(help.keys()), len, wid)
@@ -179,7 +183,7 @@ class BeaglesShell(cmd.Cmd):
                             % ", ".join(map(str, nonstrings)))
         size = len(list)
         if size == 1:
-            self.stdout.write(' %s\n'%str(list[0]))
+            self.print(f'{str(list[0])}')
             return
         # Try every row count from 1 upwards
         for nrows in range(1, len(list)):
@@ -217,7 +221,7 @@ class BeaglesShell(cmd.Cmd):
                 del texts[-1]
             for col in range(len(texts)):
                 texts[col] = texts[col].ljust(colwidths[col])
-            self.stdout.write(" %s\n"%str("  ".join(texts)))
+            self.print(f'{str("  ".join(texts))}', prefix='')
 
     def default(self, line):
         """Called on an input line when the command prefix is not recognized.
@@ -226,11 +230,10 @@ class BeaglesShell(cmd.Cmd):
         returns.
 
         """
-        self.stdout.write(f' *** Unknown syntax: {line}\n')
+        self.print(f'*** Unknown syntax: {line}')
         self.do_help('')
 
     def precmd(self, line):
-        self.do_read()
         self.draw_line()
         if self.file and 'playback' not in line:
             print(line, file=self.file)
@@ -239,6 +242,7 @@ class BeaglesShell(cmd.Cmd):
     def postcmd(self, stop, line):
         self.poll_processes()
         self.draw_line()
+        self.do_read()
         self.do_send()
 
     # ----- flag commands -----
@@ -260,7 +264,7 @@ class BeaglesShell(cmd.Cmd):
                         except ValueError:
                             print(' ERROR: Invalid setting for {0}: ', arg)
                     self.do_help('{0}')
-                    print(' Current Setting: ', self.flags.{0})
+                    print('\tCurrent Setting: ', self.flags.{0})
                 """
         _locals = {}
         [exec(form.format(i), globals(), _locals) for i in cls.flags]
@@ -290,40 +294,43 @@ class BeaglesShell(cmd.Cmd):
         _processes = self.processes.copy()
         if arg == "all":
             for name in _processes.keys():
-                self.stdout.write(f' Terminating {name} PID: {self.processes.get(name).pid}\n')
+                self.print(f'Terminating {name} PID: {self.processes.get(name).pid}')
                 self.processes.pop(name).terminate()
         else:
             try:
-                self.stdout.write(f' Terminating {arg} PID: {self.processes.get(arg).pid}\n')
+                self.print(f'Terminating {arg} PID: {self.processes.get(arg).pid}')
                 self.processes.pop(arg).terminate()
             except AttributeError:
                 if not arg == "all":
-                    self.stdout.write(f'No process named {arg}\n')
+                    self.print(f'No process named {arg}', prefix='')
 
-    def do_exit(self, arg):
-        """Stop recording and exit: EXIT"""
+    def do_close(self, arg):
+        """Stop recording and exit"""
         self.close()
         return True
 
     def do_fetch(self, arg):
         """Start the BEAGLES backend"""
+        self.io.io_flags()
         forbidden = ['all', '']
         if arg in self.processes.keys():
-            self.stdout.write(f' The process name {arg} is already taken.\n')
+            self.print(f'The process name {arg} is already taken.')
             return
         if arg in forbidden:
-            self.stdout.write(f' The process name "{arg}" is invalid.\n')
+            self.print(f'The process name "{arg}" is invalid.')
             return
         self.do_send()
         self.do_read()
         command = [sys.executable, BACKEND_ENTRYPOINT]
-        process = Popen(command, stdout=DEVNULL, stderr=DEVNULL, shell=False)
+        process = Popen(command, stdout=sys.stdout, stderr=sys.stderr, shell=False)
         process.poll()
+        time.sleep(1)
         self.create_process(arg, process)
 
     def do_watch(self, arg):
+        self.io.io_flags()
         if not self.processes:
-            self.stdout.write(" No processes to watch.\n")
+            self.print('No processes to watch.')
         else:
             while True:
                 # read flags and try to catch pid
@@ -343,6 +350,12 @@ class BeaglesShell(cmd.Cmd):
             return [os.path.join(model_dir, text) for p in os.listdir(model_dir) if p.startswith(text) and p.endswith('.cfg')]
         else:
             return [p for p in os.listdir(model_dir) if p.endswith('.cfg')]
+
+    def complete_playback(self, text, *_):
+        if text:
+            return [os.path.join(text, i) for i in os.listdir(text) if i.endswith('.bgl')]
+        else:
+            return ['tests/setup.bgl']
 
     def complete_load(self, text, *_):
         model, _ = os.path.basename(self.flags.model).split('.')
@@ -388,11 +401,11 @@ class BeaglesShell(cmd.Cmd):
             self.file = None
 
         if os.path.isfile(arg):
-            self.stdout.write(f' Running commands from {arg}\n')
+            self.print(f'Running commands from {arg}')
             with open(arg) as f:
                 self.cmdqueue.extend(f.read().splitlines())
         else:
-            self.stdout.write(f' File {arg} not found\n')
+            self.print(f'File {arg} not found')
 
 
 if __name__ == '__main__':

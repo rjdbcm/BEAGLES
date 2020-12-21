@@ -24,7 +24,7 @@ class TestMainWindow(TestCase):
                     darkmode=True))
     def setUpClass(cls, args):
         cls.app, cls.win = get_main_app()
-        cls.log = get_logger()
+        cls.log, cls.logfile = get_logger()
         cls.log.info('Setting up Qt app unittests')
 
     def testCanvas(self):

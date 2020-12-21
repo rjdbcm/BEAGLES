@@ -16,17 +16,8 @@ from traces import TimeSeries
 from matplotlib import font_manager
 from beagles.io.obs import datetime_from_filename, DATETIME_FORMAT
 
-COLUMNS = {
-    'time': 0,
-    'beh': 1,
-    'prob': 2,
-    'center_x': 3,
-    'center_y': 4,
-    'left': 5,
-    'top': 6,
-    'right': 7,
-    'bottom': 8
-}
+_COLUMNS = ['time', 'beh', 'prob', 'center_x', 'center_y', 'left', 'top', 'right', 'bottom']
+COLUMNS = {name: idx for idx, name in enumerate(_COLUMNS)}
 
 
 class BehaviorAnalysis:

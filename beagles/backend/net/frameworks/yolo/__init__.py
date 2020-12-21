@@ -1,6 +1,5 @@
-from beagles.backend.net.frameworks.yolo import data, misc, train, predict
-from beagles.backend.net.augmentation.im_transform import Transform
-from beagles.io.flags import SharedFlagIO
+from beagles.backend.net.frameworks.yolo import data, train, predict
+from beagles.backend.net.augment import Augment
 from beagles.io.logs import get_logger
 import numpy as np
 import os
@@ -10,46 +9,61 @@ import sys
 
 
 def constructor(self, meta, flags):
+
+    def to_color(idx, b):
+        """Returns (blu, red, grn) tuple"""
+        b2 = b * b
+        blu = 2 - idx / b2
+        red = 2 - (idx % b2) / b
+        grn = 2 - (idx % b2) % b
+        return blu * 127, red * 127, grn * 127
+
+    self.flags = flags
     self.logger, self.logfile = get_logger()
     model = os.path.basename(meta['model'])
     model = '.'.join(model.split('.')[:-1])
     meta['name'] = model
-    self.flags = flags
-    self.meta = meta
-    try: # look for darknet config file albumentations extensions
-        tx_args = self.meta['net']['augment']
-    except KeyError:
-        tx_args = []
-    self.transform = Transform(*tx_args)
 
-    def _to_color(idx, base):
-        """ return (b, r, g) tuple"""
-        base2 = base * base
-        b = 2 - idx / base2
-        r = 2 - (idx % base2) / base
-        g = 2 - (idx % base2) % base
-        return b * 127, r * 127, g * 127
+    try:
+        meta['soft_nms'] = meta['soft_nms']
+    except KeyError:
+        meta['soft_nms'] = 0
+
+    tx_args = []
+    try: # look for optional darknet config file albumentations extensions
+        tx_args = meta['net']['augment']
+    except KeyError:
+        pass
+    self.augment = Augment(*tx_args)
+    if tx_args:
+        for line in repr(self.augment).splitlines():
+            self.logger.info(line)
 
     if 'labels' not in meta:
-        misc.labels(meta, flags)  # We're not loading from a .pb so we do need to load the labels
+        with open(flags.labels, 'r') as f:
+            meta['labels'] = list()
+            labs = [l.strip() for l in f.readlines()]
+            for lab in labs:
+                if lab.startswith("#"):
+                    continue
+                meta['labels'] += [lab]
+    # We're not loading from a .pb so we do need to load the labels
     try:
-        assert len(meta['labels']) == meta['classes'], (
-                '{} and {} indicate inconsistent class numbers').format(flags.labels, meta['model'])
+        assert len(meta['labels']) == meta['classes'], \
+            f'{self.flags.labels} and {meta["model"]} indicate inconsistent class numbers'
     except AssertionError as e:
         self.flags.error = str(e)
         self.logger.error(str(e))
-        # SharedFlagIO.send_flags(self)
+        self.flags.kill = True
+        self.io.send_flags()
         raise
 
     # assign a color for each label
-    colors = list()
-    _base = int(np.ceil(pow(meta['classes'], 1. / 3)))
-    for x in range(len(meta['labels'])):
-        colors += [_to_color(x, _base)]
-    meta['colors'] = colors
+    base = int(np.ceil(pow(meta['classes'], 1. / 3)))
+    meta['colors'] = [to_color(x, base) for x in range(len(meta['labels']))]
     self.fetch = list()
-    self.meta, self.flags = meta, flags
+    self.meta = meta
 
     # over-ride the threshold in meta if flags has it.
-    if flags.threshold > 0.0:
-        self.meta['thresh'] = flags.threshold
+    if self.flags.threshold > 0.0:
+        self.meta['thresh'] = self.flags.threshold

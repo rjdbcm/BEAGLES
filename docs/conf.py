@@ -197,11 +197,17 @@ epub_exclude_files = ['search.html']
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {"python":(
-                        'https://docs.python.org/', None),
+                        'https://docs.python.org/',
+                        None
+                                ),
                        "tensorflow": (
                            "https://www.tensorflow.org/api_docs/python",
                            "https://github.com/mr-ubik/tensorflow-intersphinx/raw/master/tf2_py_objects.inv"
-                                    )
+                                     ),
+                       "albumentations":(
+                           "https://albumentations.readthedocs.io/en/latest",
+                           None
+                                        )
                        }
 
 # -- Options for todo extension ----------------------------------------------

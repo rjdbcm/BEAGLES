@@ -6,7 +6,7 @@ from beagles.backend.net import NetBuilder
 
 if __name__ == '__main__':
     io = SharedFlagIO(subprogram=False)
-    flags = io.read_flags()
+    flags = io.read_flags() if io.read_flags() else io.flags
     flags.started = True
     net_builder = NetBuilder(flags=flags)
     flags = io.read_flags()

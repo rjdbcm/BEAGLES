@@ -53,7 +53,7 @@ def pascal_voc_clean_xml(self, annotation_dir, pick, exclusive=False):
                     stat[current[0]] = 1
     count = 0
     for i in stat:
-        self.logger.info('{}: {}'.format(i, stat[i]))
+        self.logger.info(f'\t{i}: {stat[i]}')
         count += stat[i]
     weights = {i: stat[i]/count for i in stat}
     try:
@@ -63,7 +63,7 @@ def pascal_voc_clean_xml(self, annotation_dir, pick, exclusive=False):
         self.logger.error(str(e))
         self.send_flags()
         raise
-    self.logger.info('Dataset size: {}'.format(len(dumps)))
+    self.logger.info(f'\tDataset size: {len(dumps)}')
 
     os.chdir(cur_dir)
     return dumps, weights

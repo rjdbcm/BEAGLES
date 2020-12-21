@@ -35,10 +35,10 @@ net
 	:undoc-members:
 
 
-hyperparameters
----------------
+augmentation
+------------
 
-.. automodule:: beagles.backend.net.hyperparameters
+.. automodule:: beagles.backend.net.augmentation
 	:members:
 
 
@@ -48,10 +48,13 @@ framework
 .. automodule:: beagles.backend.net.framework
 	:members:
 
-tfnet
------
-.. automodule:: beagles.backend.net.tfnet
+
+hyperparameters
+---------------
+
+.. automodule:: beagles.backend.net.hyperparameters
 	:members:
+
 
 ####
 base
