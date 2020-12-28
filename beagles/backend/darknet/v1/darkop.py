@@ -71,11 +71,7 @@ class softmax_layer(Layer):
 
 class dropout_layer(Layer):
     def setup(self, p):
-        self.h['pdrop'] = dict({
-            'feed': p,  # for training
-            'dfault': 1.0,  # for testing
-            'shape': ()
-        })
+        self.h['pdrop'] = p
 
     def finalize(self, *args):
         """Not Implemented"""

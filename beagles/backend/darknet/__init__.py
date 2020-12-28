@@ -76,11 +76,7 @@ class softmax_layer(Layer):
 
 class dropout_layer(Layer):
     def setup(self, p):
-        self.h['pdrop'] = dict({
-            'feed': p,  # for training
-            'dfault': 1.0,  # for testing
-            'shape': ()
-        })
+        self.h['pdrop'] = p
 
     def finalize(self, *args):
         """Not Implemented"""
@@ -264,8 +260,8 @@ class Darknet(object):
                     new = create_darkop(*info)
                 layers.append(new)
         except TypeError as e:
-            self.io.flags.error = str(e)
-            self.io.logger.error(str(e))
+            self.io.flags.error = str(e) + str(cfg_layers)
+            self.io.log.error(str(e))
             self.io.send_flags()
             raise
         return meta, layers

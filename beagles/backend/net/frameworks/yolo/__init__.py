@@ -1,6 +1,7 @@
 from beagles.backend.net.frameworks.yolo import data, train, predict
 from beagles.backend.net.augment import Augment
 from beagles.io.logs import get_logger
+from beagles.io.flags import SharedFlagIO
 import numpy as np
 import os
 import sys
@@ -19,6 +20,7 @@ def constructor(self, meta, flags):
         return blu * 127, red * 127, grn * 127
 
     self.flags = flags
+    self.io = SharedFlagIO()
     self.logger, self.logfile = get_logger()
     model = os.path.basename(meta['model'])
     model = '.'.join(model.split('.')[:-1])

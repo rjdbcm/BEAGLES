@@ -129,7 +129,16 @@ def shuffle(self, data, weights=None):
     self.logger.info(f'Dataset of {self.flags.size} = {n}·2{supers(m)} instances')
     if self.flags.batch > self.flags.size:
         self.flags.batch = self.flags.size
-    batch_per_epoch = int(self.flags.size / self.flags.batch)
+    try:
+        batch_per_epoch = int(self.flags.size / self.flags.batch)
+    except ZeroDivisionError:
+        self.flags.error = "No image data to shuffle."
+        self.logger.error("No image data to shuffle.")
+        self.flags.kill = True
+        self.io.send_flags()
+        raise
+
+    rng = _np.random.default_rng()
     for i in range(self.flags.epoch):
         if weights:
             _weights = list()
@@ -139,12 +148,11 @@ def shuffle(self, data, weights=None):
                     score.append(weights.get(str(box[0])))
                 _weights.append(np.subtract(1, np.mean(score)))
             _weights = np.divide(_weights, np.sum(_weights))
-            shuffle_idx = _np.random.choice(np.arange(self.flags.size), self.flags.size, p=_weights)
+            shuffle_idx = rng.choice(np.arange(self.flags.size), self.flags.size,
+                                     p=_weights)
         else:
-            shuffle_idx = _np.random.permutation(np.arange(self.flags.size))
-
+            shuffle_idx = rng.permutation(np.arange(self.flags.size))
         for b in range(batch_per_epoch):
-
             # yield these
             x_batch = list()
             feed_batch = dict()

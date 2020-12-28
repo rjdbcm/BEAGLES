@@ -36,11 +36,11 @@ def box_constructor(meta, np.ndarray[float,ndim=3] net_out_in):
             for k in range(B): # boxes
                 m=0
                 n=0
-                pred[i,j,k,0] = (j + scipy.expit(pred[i,j,k,0])) / W
-                pred[i,j,k,1] = (i + scipy.expit(pred[i,j,k,1])) / H
-                pred[i,j,k,2] = exp(pred[i,j,k,2]) * anchors[2*k+0] / W
-                pred[i,j,k,3] = exp(pred[i,j,k,3]) * anchors[2*k+1] / H
-                pred[i,j,k,4] = scipy.expit(pred[i,j,k,4])
+                pred[i,j,k,0] = (j + scipy.expit(pred[i,j,k,0])) / W # x
+                pred[i,j,k,1] = (i + scipy.expit(pred[i,j,k,1])) / H # y
+                pred[i,j,k,2] = exp(pred[i,j,k,2]) * anchors[2*k+0] / W # width
+                pred[i,j,k,3] = exp(pred[i,j,k,3]) * anchors[2*k+1] / H # height
+                pred[i,j,k,4] = scipy.expit(pred[i,j,k,4]) # objectness
 
                 for l in range(C): # classes
                     m = fmax(m, classes[i,j,k,l])
@@ -48,10 +48,8 @@ def box_constructor(meta, np.ndarray[float,ndim=3] net_out_in):
                         classes[i,j,k,l] = exp(classes[i,j,k,l] - m)
                         n += classes[i,j,k,l]
                         conf = classes[i,j,k,l] * pred[i,j,k,4] / n
-                        if conf > thresh:
-                            probs[i,j,k,l] = conf
-                        else: # only zero
-                            probs[i,j,k,l] = 0.0
+                        probs[i,j,k,l] = np.where(conf > thresh, conf, 0.0)
+
     #NMS
     if soft:
       return soft_nms(np.ascontiguousarray(probs).reshape(H*W*B, C), np.ascontiguousarray(pred).reshape(H*W*B, 5))

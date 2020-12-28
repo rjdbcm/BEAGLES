@@ -1,4 +1,5 @@
 from beagles.backend.net.ops.baseop import BaseOp
+from tensorflow.python.framework.errors_impl import InvalidArgumentError, UnimplementedError
 import tensorflow as tf
 import numpy as np
 
@@ -45,8 +46,16 @@ class Convolutional(BaseOp):
         temp = tf.pad(inputs, [[0, 0]] + pad + [[0, 0]])
         self.kw = self.add_weight(shape=tuple(self.lay.wshape['kernel']), dtype=tf.float32,
                                   name=f'{self.scope}-kweight' )
-        temp = tf.nn.conv2d(temp, self.kw, padding='VALID',
-                            name=self.scope, strides=[1] + [self.lay.stride] * 2 + [1])
+        try:
+            temp = tf.nn.conv2d(temp, self.kw, padding='VALID', name=self.scope,
+                                strides=[1] + [self.lay.stride] * 2 + [1])
+        except (InvalidArgumentError, UnimplementedError) as e:
+            msg = str(e) + "\nCheck your model configuration file."
+            self.io.flags.error = msg
+            self.io.log.error(msg)
+            self.io.flags.kill = True
+            self.io.send_flags()
+            raise RuntimeError(msg) from None
         if self.lay.batch_norm:
             temp = self.batchnorm(temp)
         return tf.nn.bias_add(temp, self.b)

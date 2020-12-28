@@ -1,4 +1,5 @@
 from beagles.backend.net.ops.baseop import BaseOp
+from tensorflow.python.framework.errors_impl import UnimplementedError
 import tensorflow as tf
 import sys
 
@@ -9,14 +10,19 @@ class Route(BaseOp):
 
     def call(self, inputs, **kwargs):
         routes = self.lay.routes
-        routes_out = [inputs]
+        routes_out = list()
+        _this = None
         for r in routes:
             this = self.inp
             while this.lay.number != r:
+                _this = this
                 this = this.inp
                 assert this is not None, f'Routing to non-existence {r}'
-            routes_out += [this.output]
-        return tf.concat(routes_out, 3)
+            try:
+                routes_out += [this(inputs)]
+            except UnimplementedError as e:
+                raise e
+        return tf.keras.layers.Concatenate(3)(routes_out)
 
 
 class Connected(BaseOp):

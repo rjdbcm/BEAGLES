@@ -15,6 +15,7 @@ from beagles.backend.darknet import Darknet
 from beagles.backend.net.framework import Framework
 from beagles.backend.net.hparams import cyclic_learning_rate as clr
 
+
 MOMENTUM = 'momentum'
 NESTEROV = 'nesterov'
 AMSGRAD = 'AMSGrad'
@@ -117,17 +118,20 @@ class NetBuilder(tf.Module):
         del self.net
         del self.optimizer
         del self.layers
+        del self.checkpoint
+        del self.manager
         tf.keras.backend.clear_session()
         gc.collect()
 
-    def build_optimizer(self, rebuild=False):
-        if rebuild:
-            del self.optimizer
+    def build_optimizer(self):
         self.optimizer = self._build_optimizer()
 
     def _build_optimizer(self):
         # setup kwargs for trainer
         kwargs = dict()
+        if self.flags.clip:
+            kwargs.update({'clipnorm': self.flags.clip_norm})
+
         if self.flags.trainer in MOMENTUM_USERS:
             kwargs.update({MOMENTUM: self.flags.momentum})
         elif self.flags.trainer is NESTEROV:
@@ -136,9 +140,6 @@ class NetBuilder(tf.Module):
             kwargs.update({AMSGRAD.lower(): True})
         elif self.flags.trainer is ADAM:
             kwargs.update({'epsilon': 1.0})
-
-        if self.flags.clip:
-            kwargs.update({'clipnorm': self.flags.clip_norm})
 
         ssc = self.flags.step_size_coefficient
         step_size = int(ssc * (len(self.annotation_data) // self.flags.batch))
@@ -155,7 +156,7 @@ class NetBuilder(tf.Module):
 
     def _load_checkpoint(self):
         if self.flags.load < 0:
-            self.checkpoint.restore(self.manager.latest_checkpoint)
+            self.checkpoint.restore(self.manager.latest_checkpoint).expect_partial()
             self.info(f"Restored from {self.manager.latest_checkpoint}")
         elif self.flags.load >= 1:
             self.info(f"Restoring from {self.flags.load}")
@@ -166,7 +167,7 @@ class NetBuilder(tf.Module):
                 name = f"{name}-{self.flags.load}"
                 path = os.path.join(self.flags.backup, name)
                 raise FileNotFoundError(f'Checkpoint {path} does not exist in {self.manager.checkpoints}.') from None
-            self.checkpoint.restore(ckpt)
+            self.checkpoint.restore(ckpt).expect_partial()
         else:
             self.info("Initializing network weights from scratch.")
 
@@ -200,7 +201,6 @@ class NetBuilder(tf.Module):
             loss = self.net.train_step((x_batch, loss_feed))
             self.io.raise_if(not tf.math.is_finite(loss), GradientNaN,
                              "Gradient could not be followed.")
-            self.build_optimizer(rebuild=True)
             step = self.net.step.numpy()
             lr = self.net.optimizer.learning_rate.numpy()
             line = '\tstep: {} loss: {:f} lr: {:.2e} progress: {:.2f}%'

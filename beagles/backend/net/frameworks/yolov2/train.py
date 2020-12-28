@@ -1,4 +1,5 @@
 import tensorflow as tf
+from tensorflow.python.framework.errors_impl import InvalidArgumentError
 import numpy as np
 from scipy.special import expit
 try:
@@ -38,7 +39,15 @@ def loss(self, y_pred, _probs, _confs, _coord, _proid, _areas, _upleft, _botrigh
         self.logger.info(f'\tanchors = {list(zip(*[iter(anchors)]*2))}')
         self.first = False
     # Extract the coordinate prediction from net.out
-    net_out_reshape = tf.reshape(y_pred, [-1, H, W, B, (4 + 1 + C)])
+    try:
+        net_out_reshape = tf.reshape(y_pred, [-1, H, W, B, (4 + 1 + C)])
+    except InvalidArgumentError as e:
+        msg = "\nCheck your model configuration file."
+        self.flags.error = str(e) + msg
+        self.logger.error(str(e))
+        self.flags.kill = True
+        self.io.send_flags()
+        raise RuntimeError(self.flags.error)
     coords = net_out_reshape[:, :, :, :, :4]
     coords = tf.reshape(coords, [-1, H*W, B, 4])
     adjusted_coords_xy = expit(coords[:, :, :, 0:2])

@@ -1,4 +1,5 @@
 import tensorflow as tf
+from beagles.io.flags import SharedFlagIO
 
 
 class BaseOp(tf.keras.Model):
@@ -11,6 +12,7 @@ class BaseOp(tf.keras.Model):
 
     def __init__(self, layer, inp, num, roof):
         super(BaseOp, self).__init__()
+        self.io = SharedFlagIO()
         self.lay = layer
         self.inp = inp
         self.num = num
