@@ -1,6 +1,8 @@
 import os
 import cv2
-import warnings
+from random import random
+from typing import SupportsInt, List, SupportsFloat
+from collections import Iterator
 from beagles.backend.io.pascal_voc_clean_xml import pascal_voc_clean_xml
 from copy import deepcopy
 import tensorflow as tf
@@ -112,72 +114,102 @@ def get_feed_values(self, chunk, dim1, dim2):
     inp_feed_val = img
     # value for placeholder at loss layer
     loss_feed_val = {
-        '_probs': probs, '_confs': confs,
-        '_coord': coord, '_proid': proid,
-        '_areas': areas, '_upleft': upleft,
-        '_botright': botright
+        '_probs': tf.cast(probs, tf.float32), '_confs': tf.cast(confs, tf.float32),
+        '_coord': tf.cast(coord, tf.float32), '_proid': tf.cast(proid, tf.float32),
+        '_areas': tf.cast(areas, tf.float32), '_upleft': tf.cast(upleft, tf.float32),
+        '_botright': tf.cast(botright, tf.float32)
     }
 
     return inp_feed_val, loss_feed_val
 
-def shuffle(self, data, weights=None):
-    n = len(data)
-    m = len(self.augment)
-    self.flags.size = n * (2 ** m)
-    data = data * (2 ** m) # make sure there are enough images to feed for augmentation
-    supers = lambda x: str(x).translate(str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹"))
-    self.logger.info(f'Dataset of {self.flags.size} = {n}·2{supers(m)} instances')
-    if self.flags.batch > self.flags.size:
-        self.flags.batch = self.flags.size
+class Sample(Iterator):
+    """
+    an iterator class that returns k random samples from another iterator
+    that has no random-access. Requires: the iterator length as an input
+
+    similar to random.sample and can be overloaded to work like numpy.random.choice
+    Args:
+
+        seq: iterator object
+        n: size of the sequence object
+        k: output sequence size (number of samples in the subset)
+        p: probabilities associated with seq
+
+    """
+
+    def __init__(self, seq: Iterator, n: int, k: int, p: List[float]=None):
+        self.seq = seq
+        self.N = n
+        self._N = n
+        self.K = k
+        if p is not None:
+            if len(p) != n:
+                raise IndexError("The len(p) must be equal to n")
+            if np.sum(p) != 1.0:
+                raise IndexError("The sum(p) must be equal to 1.0")
+            self.p = p
+        else:
+            self.p = [1.0] * self._N
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        while True:
+            r = random()
+            item = next(self.seq)
+            idx = self._N - self.N if self.N > 0 else self._N - 1
+            if r**self.p[idx] <= float(self.K) / self.N:
+                self.K -= 1
+                self.N -= 1
+                return item
+            else:
+                self.N -= 1
+
+def shuffle(self, data, class_weights=None):
+    self.flags.size = size = len(data)
+    _batch = self.flags.batch
+    self.logger.info(f'Dataset of {size} instances')
+    if _batch > size:
+        _batch = size
     try:
-        batch_per_epoch = int(self.flags.size / self.flags.batch)
+        batch_per_epoch = int(size / _batch)
     except ZeroDivisionError:
         self.flags.error = "No image data to shuffle."
         self.logger.error("No image data to shuffle.")
         self.flags.kill = True
         self.io.send_flags()
         raise
+    probs = None
+    if class_weights is not None:
+        probs = list()
+        score = list()
+        for i in data:
+            for box in i[1][2]:
+                score.append(class_weights.get(str(box[0])))
+            probs.append(np.subtract(1, np.mean(score)))
+        probs = np.divide(probs, np.sum(probs))
 
-    rng = _np.random.default_rng()
-    for i in range(self.flags.epoch):
-        if weights:
-            _weights = list()
-            score = list()
-            for img in data:
-                for box in img[1][2]:
-                    score.append(weights.get(str(box[0])))
-                _weights.append(np.subtract(1, np.mean(score)))
-            _weights = np.divide(_weights, np.sum(_weights))
-            shuffle_idx = rng.choice(np.arange(self.flags.size), self.flags.size,
-                                     p=_weights)
-        else:
-            shuffle_idx = rng.permutation(np.arange(self.flags.size))
+    for e in range(self.flags.epoch):
         for b in range(batch_per_epoch):
-            # yield these
+            feed = dict()
             x_batch = list()
-            feed_batch = dict()
-
-            for j in range(b*self.flags.batch, b*self.flags.batch+self.flags.batch):
-                train_instance = data[shuffle_idx[j]]
+            sample = Sample(iter(data), size, _batch, probs)
+            for j in sample:
                 try:
-                    inp, new_feed = self.batch(train_instance)
+                    inp, new_feed = self.batch(j)
                 except ZeroDivisionError:
-                    self.logger.error("This image's width or height are zeros: ", train_instance[0])
-                    self.logger.error('train_instance:', train_instance)
+                    self.logger.error("This image's width or height are zeros: ", j[0])
+                    self.logger.error('train_instance:', j)
                     self.logger.error('Please remove or fix it then try again.')
                     raise
-
                 if inp is None:
                     continue
                 x_batch += [np.expand_dims(inp, 0)]
-
                 for key in new_feed:
                     new = new_feed[key]
-                    old_feed = feed_batch.get(key, np.zeros((0,) + new.shape))
-                    feed_batch[key] = np.concatenate([old_feed, [new]])
-
+                    old_feed = feed.get(key, np.zeros((0,) + new.shape))
+                    feed[key] = np.concatenate([old_feed, [new]])
             x_batch = np.concatenate(x_batch, 0)
-            yield x_batch, feed_batch
-        
-        self.logger.info(f'Finish epoch {i + 1} of {self.flags.epoch}')
-
+            yield x_batch, feed.values()
+        self.logger.info(f'Finish epoch {e + 1} of {self.flags.epoch}')

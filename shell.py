@@ -42,8 +42,8 @@ class BeaglesShell(cmd.Cmd):
     prompt = f'{APP_NAME} >>> '
     completekey = 'tab'
     data_folders = glob.glob('./data/*', recursive=True) + glob.glob('./tests/*', recursive=True)
-
     # ----- helper methods -----
+
     def list_dir(self, path):
         return glob.glob(os.path.join(path, "*"))
 
@@ -242,18 +242,17 @@ class BeaglesShell(cmd.Cmd):
     def postcmd(self, stop, line):
         self.poll_processes()
         self.draw_line()
-        self.do_read()
         self.do_send()
+        self.do_read()
 
     # ----- flag commands -----
     def do_send(self, _=None):
         """No operation just sends flags to SharedFlagIO"""
-        pass
+        self.io.send_flags()
 
     def do_read(self, _=None):
         """Reads flags from SharedFlagIO if available otherwise defaults"""
-        avail_flags = self.io.read_flags()
-        self.flags = avail_flags if avail_flags else self.flags
+        self.flags = self.io.read_flags() if self.io.read_flags() else Flags()
 
     @classmethod
     def _do_flag_methods(cls):

@@ -64,7 +64,7 @@ class Net(tf.keras.Model):
         x, y = data
         with tf.GradientTape() as tape:
             x = self._call(x)
-            loss = self.loss(x, **y)
+            loss = self.loss(x, *y)
             variables = self.trainable_variables
             gradients = tape.gradient(loss, variables)
             self.optimizer.apply_gradients(zip(gradients, variables))
@@ -185,12 +185,11 @@ class NetBuilder(tf.Module):
         self.io.io_flags()
         self.info('Building {} train op'.format(self.flags.model))
         n = len(self.annotation_data)
-        m = len(self.framework.augment)
-        goal = n*(2**m) * self.flags.epoch
-        batch_per_epoch = int(n*(2**m)/self.flags.batch)
+        goal = n * self.flags.epoch
+        batch_per_epoch = int(n/self.flags.batch)
         saved_last_time = False
         first = True
-        for i, (x_batch, loss_feed) in enumerate(self.framework.shuffle(self.annotation_data, weights=self.class_weights)):
+        for i, (x_batch, loss_feed) in enumerate(self.framework.shuffle(self.annotation_data, class_weights=self.class_weights)):
             self.io.send_flags()
             if saved_last_time and not first:
                 self._destroy()
