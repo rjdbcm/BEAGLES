@@ -1,5 +1,6 @@
 import os
 import cv2
+from math import log10
 from random import random
 from typing import SupportsInt, List, SupportsFloat
 from collections import Iterator
@@ -145,8 +146,8 @@ class Sample(Iterator):
         if p is not None:
             if len(p) != n:
                 raise IndexError("The len(p) must be equal to n")
-            if np.sum(p) != 1.0:
-                raise IndexError("The sum(p) must be equal to 1.0")
+            if not np.isclose(np.sum(p), 1.0):
+                raise IndexError(f"The sum(p)[=={np.sum(p)}] must be close to 1.0")
             self.p = p
         else:
             self.p = [1.0] * self._N
@@ -158,13 +159,15 @@ class Sample(Iterator):
         while True:
             r = random()
             item = next(self.seq)
-            idx = self._N - self.N if self.N > 0 else self._N - 1
-            if r**self.p[idx] <= float(self.K) / self.N:
+            i = self._N - self.N if self.N > 0 else self._N - 1
+            num =  float(self.K) / self.N
+            if r**self.p[i] <= num:
                 self.K -= 1
-                self.N -= 1
+                self.N -= 1 + int(r * -log10(num))
                 return item
             else:
                 self.N -= 1
+                del item
 
 def shuffle(self, data, class_weights=None):
     self.flags.size = size = len(data)
