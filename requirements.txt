@@ -9,3 +9,4 @@ traces>=0.5.0
 googletrans~=3.0.0
 setuptools~=41.0.1
 deprecated>=1.2.0
+httpx>=0.23.0 # not directly required, pinned by Snyk to avoid a vulnerability
