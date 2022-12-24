@@ -7,5 +7,5 @@ tensorflow>2.0.0b
 numpy>=1.16.2
 traces>=0.5.0
 googletrans~=3.0.0
-setuptools~=41.0.1
+setuptools~=65.5.1
 deprecated>=1.2.0
